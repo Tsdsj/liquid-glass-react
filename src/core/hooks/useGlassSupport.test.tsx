@@ -1,0 +1,134 @@
+import { type ReactNode } from 'react';
+import { renderToString } from 'react-dom/server';
+import { renderHook, waitFor } from '@testing-library/react';
+import { afterEach, describe, expect, it, vi } from 'vitest';
+import { LiquidGlassConfig } from '../config/LiquidGlassConfig';
+import {
+  __resetGlassSupportCache,
+  detectGlassSupport,
+  useGlassSupport,
+} from './useGlassSupport';
+
+interface BrowserSupportOptions {
+  backdropFilter?: boolean;
+  brands?: { brand: string }[];
+  userAgent?: string;
+}
+
+function stubBrowserSupport({
+  backdropFilter = true,
+  brands,
+  userAgent = '',
+}: BrowserSupportOptions = {}): void {
+  vi.stubGlobal('CSS', {
+    supports: vi.fn(() => backdropFilter),
+  });
+  vi.stubGlobal('navigator', {
+    userAgent,
+    userAgentData: brands ? { brands } : undefined,
+  });
+}
+
+describe('detectGlassSupport', () => {
+  afterEach(() => {
+    __resetGlassSupportCache();
+    vi.unstubAllGlobals();
+  });
+
+  it('uses Chromium UA client hints when available', () => {
+    stubBrowserSupport({ brands: [{ brand: 'Chromium' }] });
+
+    expect(detectGlassSupport()).toBe(true);
+  });
+
+  it('recognizes Edge through the user agent fallback', () => {
+    stubBrowserSupport({ userAgent: 'Mozilla/5.0 Chrome/136.0.0.0 Safari/537.36 Edg/136.0' });
+
+    expect(detectGlassSupport()).toBe(true);
+  });
+
+  it('rejects Safari and Firefox user agents', () => {
+    stubBrowserSupport({
+      userAgent: 'Mozilla/5.0 Version/18.5 Safari/605.1.15',
+    });
+    expect(detectGlassSupport()).toBe(false);
+
+    __resetGlassSupportCache();
+    stubBrowserSupport({ userAgent: 'Mozilla/5.0 Firefox/137.0' });
+    expect(detectGlassSupport()).toBe(false);
+  });
+
+  it('rejects engines without backdrop-filter support', () => {
+    stubBrowserSupport({
+      backdropFilter: false,
+      brands: [{ brand: 'Chromium' }],
+    });
+
+    expect(detectGlassSupport()).toBe(false);
+  });
+
+  it('does not cache the server-side fallback result', () => {
+    vi.stubGlobal('window', undefined);
+    expect(detectGlassSupport()).toBe(false);
+
+    vi.unstubAllGlobals();
+    stubBrowserSupport({ brands: [{ brand: 'Chromium' }] });
+    expect(detectGlassSupport()).toBe(true);
+  });
+});
+
+describe('useGlassSupport', () => {
+  afterEach(() => {
+    __resetGlassSupportCache();
+    vi.unstubAllGlobals();
+  });
+
+  it('starts in fallback mode and enables refraction after mount', async () => {
+    stubBrowserSupport({ brands: [{ brand: 'Chromium' }] });
+    function SupportProbe() {
+      const support = useGlassSupport();
+      return <span data-refraction={support.refraction ? 'on' : 'off'} />;
+    }
+
+    expect(renderToString(<SupportProbe />)).toContain('data-refraction="off"');
+    const { result } = renderHook(() => useGlassSupport());
+
+    await waitFor(() => expect(result.current.refraction).toBe(true));
+  });
+
+  it('honors reduced transparency preferences', async () => {
+    stubBrowserSupport({ brands: [{ brand: 'Chromium' }] });
+    const matchMedia = vi.fn(
+      (query: string): MediaQueryList => ({
+        matches: true,
+        media: query,
+        onchange: null,
+        addListener: () => undefined,
+        removeListener: () => undefined,
+        addEventListener: () => undefined,
+        removeEventListener: () => undefined,
+        dispatchEvent: () => false,
+      }),
+    );
+    Object.defineProperty(window, 'matchMedia', {
+      configurable: true,
+      value: matchMedia,
+    });
+
+    const { result } = renderHook(() => useGlassSupport());
+
+    await waitFor(() => expect(matchMedia).toHaveBeenCalled());
+    expect(result.current.refraction).toBe(false);
+  });
+
+  it('honors LiquidGlassConfig forceFallback', async () => {
+    stubBrowserSupport({ brands: [{ brand: 'Chromium' }] });
+    const wrapper = ({ children }: { children: ReactNode }) => (
+      <LiquidGlassConfig forceFallback>{children}</LiquidGlassConfig>
+    );
+    const { result } = renderHook(() => useGlassSupport(), { wrapper });
+
+    await waitFor(() => expect(CSS.supports).toHaveBeenCalled());
+    expect(result.current.refraction).toBe(false);
+  });
+});

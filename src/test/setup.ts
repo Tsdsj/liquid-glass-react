@@ -48,6 +48,10 @@ class OffscreenCanvasMock {
       putImageData: () => undefined,
     };
   }
+
+  toDataURL(): string {
+    return 'data:image/png;base64,mock';
+  }
 }
 
 Object.defineProperty(globalThis, 'OffscreenCanvas', {
@@ -59,3 +63,18 @@ Object.defineProperty(window, 'scrollTo', {
   configurable: true,
   value: () => undefined,
 });
+
+if (typeof globalThis.requestAnimationFrame === 'undefined') {
+  Object.defineProperty(globalThis, 'requestAnimationFrame', {
+    configurable: true,
+    value: (callback: FrameRequestCallback): number =>
+      window.setTimeout(() => callback(performance.now()), 0),
+  });
+}
+
+if (typeof globalThis.cancelAnimationFrame === 'undefined') {
+  Object.defineProperty(globalThis, 'cancelAnimationFrame', {
+    configurable: true,
+    value: (handle: number) => window.clearTimeout(handle),
+  });
+}

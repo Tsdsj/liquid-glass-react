@@ -1,5 +1,5 @@
 ---
-status: todo
+status: done
 depends: [M0]
 ---
 
@@ -47,4 +47,9 @@ GlassSurface 原语在 Chromium 上呈现真实边缘折射、其他浏览器优
 
 ## 完成记录
 
-（完成后填写）
+- 2026-07-13：完成全量 light/dark token、`cx`、受控状态与尺寸 hooks、位移贴图/LRU、filter registry、SVG defs 单例宿主、降级检测、`LiquidGlassConfig`、`GlassSurface` 组件/CSS/公共导出及 6 个 Storybook stories。
+- 测试：新增 6 个测试文件、25 个 case，覆盖位移方向与缓存、filter 共享/引用计数/延迟移除、UA/SSR/降低透明度分支、受控状态、border-box 测量、GlassSurface 嵌套与 resize 后 filter 切换。
+- 验证：`pnpm typecheck`、`pnpm build`、`pnpm test` 全部通过；构建产出 ESM/CJS/types/style.css。
+- 浏览器：Playground 为 `data-refraction="on"`，`320x200` 宿主对应 `320x200` filter；ManyInstances 的 20 个实例共享 1 个 SVG/filter；ForcedFallback 无 filter 且使用 `blur(16px)`；Nested 内层 computed `backdrop-filter: none`；dark token 与 `prefers-reduced-transparency: reduce` 模拟均正确，控制台无错误或警告。
+- 调参：按 TuningLab 与 photo/gradient、light/dark 组合检查后保留 `tokens.md` 的定稿默认值，未做设计偏移。
+- 规格记录：`glass-engine.md` 的 `FilterEntry.scaleVar: true` 与后文 `f.scale`/scale 入 key 冲突；按后文行为实现为 `scale: number`。当前浏览器自动化无法抓取原生 CSS resize 手柄，改由 ResizeObserver + 150ms 防抖的集成测试验证 `320x200 -> 420x260` filter 切换。

@@ -1,1 +1,31 @@
-/* Theme overrides are added in M1. */
+[data-theme='dark'] {
+  --lg-saturation: 1.3;
+  --lg-tint: rgb(40 40 40 / 0.35);
+  --lg-tint-hover: rgb(60 60 60 / 0.5);
+  --lg-highlight: rgb(255 255 255 / 0.25);
+  --lg-shade: rgb(0 0 0 / 0.35);
+  --lg-drop-shadow: rgb(0 0 0 / 0.5);
+  --lg-danger: #ff453a;
+  --lg-success: #30d158;
+  --lg-warning: #ff9f0a;
+  --lg-text: rgb(255 255 255 / 0.9);
+  --lg-text-secondary: rgb(255 255 255 / 0.55);
+  --lg-text-disabled: rgb(255 255 255 / 0.3);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme]) {
+    --lg-saturation: 1.3;
+    --lg-tint: rgb(40 40 40 / 0.35);
+    --lg-tint-hover: rgb(60 60 60 / 0.5);
+    --lg-highlight: rgb(255 255 255 / 0.25);
+    --lg-shade: rgb(0 0 0 / 0.35);
+    --lg-drop-shadow: rgb(0 0 0 / 0.5);
+    --lg-danger: #ff453a;
+    --lg-success: #30d158;
+    --lg-warning: #ff9f0a;
+    --lg-text: rgb(255 255 255 / 0.9);
+    --lg-text-secondary: rgb(255 255 255 / 0.55);
+    --lg-text-disabled: rgb(255 255 255 / 0.3);
+  }
+}
