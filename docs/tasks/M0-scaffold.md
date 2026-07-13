@@ -1,5 +1,5 @@
 ---
-status: todo
+status: done
 depends: []
 ---
 
@@ -50,4 +50,7 @@ depends: []
 
 ## 完成记录
 
-（完成后填写：修改文件、验证输出摘要、遗留问题）
+- 2026-07-13：新增 pnpm 包配置与锁文件、TypeScript/Vite/Vitest 构建测试配置、`src` 样式与测试骨架、Storybook 配置和临时 Welcome story。
+- 验证：`pnpm typecheck`、`pnpm build`、`pnpm test` 全部通过；构建产出 `dist/index.js`、`dist/index.cjs`、`dist/index.d.ts`、`dist/style.css`。
+- Storybook：在 `http://127.0.0.1:6006/` 完成浏览器冒烟验证，theme/wallpaper toolbar 均可切换，控制台无错误或警告。
+- 遗留问题：无。
