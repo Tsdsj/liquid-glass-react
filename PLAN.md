@@ -355,9 +355,15 @@ Popover/Tooltip/Modal/Toast。
 - **玻璃引擎单测**：SDF/透镜剖面纯函数数值断言（中心像素 128/128、边缘位移方向）、filter-registry 引用计数与去重、useGlassSupport mock UA 分支。jsdom 无 canvas 渲染，贴图生成用依赖注入的假实现只测像素数组计算。
 - **视觉**：Storybook 人工验收，双主题 × 多壁纸矩阵。不上截图对比（小范围库维护成本大于收益）。
 
-## 9. 执行策略
+## 9. 执行策略（Codex harness）
 
-- auto mode：主会话（Fable 5）负责规划、任务拆分、派发与验收；**实现工作派发给 Sonnet 5 子代理**执行。
-- 按里程碑 M0→M5 顺序推进；里程碑内可独立的组件任务并行派发（如 M2 的四个组件各一个子代理）。
-- M0/M1 是地基，串行执行且由主会话严格验收（build/test/Storybook 实测）后才进入组件批次。
-- 每个子代理任务附带：本计划对应章节的设计约定、验收标准、测试要求；完成后主会话运行 `pnpm build && pnpm test` 验收，并按里程碑提交 git。
+- 实现由 Codex 执行，本仓库以文档 harness 约束其工作：
+  - **`AGENTS.md`**：Codex 工作入口——文档索引、工作流程、命令、硬性约束、提交规范。
+  - **`docs/architecture.md`**：模块分层、依赖规则、导出清单、构建管线、SSR 约定。
+  - **`docs/conventions.md`**：TS/React/CSS/Storybook/命名规范。
+  - **`docs/glass-engine.md`**：玻璃引擎完整规格（算法公式、API 签名、行为契约）。
+  - **`docs/tokens.md`**：token 定义表（light/dark 全值，单一事实源）。
+  - **`docs/component-guide.md`**：组件开发 checklist 与通用约定。
+  - **`docs/testing.md`**：测试范围与环境补丁。
+  - **`docs/tasks/M0..M5.md`**：可逐个执行的任务卡（frontmatter 状态标记 + 步骤 + 验收标准 + 完成记录），Codex 每次取编号最小的未完成任务卡开工。
+- 里程碑严格串行 M0→M5；里程碑内组件可并行。每个任务完成必须通过 `pnpm typecheck && pnpm build && pnpm test` 并更新任务卡状态后提交 git。
