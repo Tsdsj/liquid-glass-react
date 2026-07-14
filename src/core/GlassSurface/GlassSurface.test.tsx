@@ -661,4 +661,100 @@ describe('GlassSurface', () => {
 
     await advanceTime(16);
   });
+
+  it('presses via keyboard with the same feedback path as pointers', async () => {
+    vi.useFakeTimers();
+    stubChromiumEnvironment();
+    stubMeasuredSize(320, 200);
+    render(
+      <GlassSurface
+        as="button"
+        radius={14}
+        interactive
+        style={PRESS_REFRACTION_STYLE}
+        data-testid="surface"
+      >
+        Press
+      </GlassSurface>,
+    );
+    const surface = screen.getByTestId('surface');
+
+    await settleRefraction();
+    const [base] = filterRegistry.getSnapshot();
+
+    fireEvent.keyDown(surface, { key: ' ' });
+    expect(surface).toHaveAttribute('data-pressed');
+    await advanceTime(16);
+    expect(filterRegistry.getSnapshot()).toHaveLength(2);
+    expect(surface.style.getPropertyValue('--lg-filter-url')).not.toBe(`url(#${base.id})`);
+
+    fireEvent.keyUp(surface, { key: ' ' });
+    expect(surface).not.toHaveAttribute('data-pressed');
+    expect(surface.style.getPropertyValue('--lg-filter-url')).toBe(`url(#${base.id})`);
+
+    fireEvent.keyDown(surface, { key: 'Enter' });
+    expect(surface).toHaveAttribute('data-pressed');
+    fireEvent.keyUp(surface, { key: 'Enter' });
+    expect(surface).not.toHaveAttribute('data-pressed');
+
+    await advanceTime(16);
+  });
+
+  it('ignores key repeats, child-originated keys, and releases on blur', async () => {
+    vi.useFakeTimers();
+    stubChromiumEnvironment();
+    stubMeasuredSize(320, 200);
+    const onKeyDown = vi.fn();
+    render(
+      <GlassSurface
+        radius={14}
+        interactive
+        style={PRESS_REFRACTION_STYLE}
+        onKeyDown={onKeyDown}
+        data-testid="surface"
+      >
+        <input data-testid="inner" type="text" />
+      </GlassSurface>,
+    );
+    const surface = screen.getByTestId('surface');
+
+    await settleRefraction();
+
+    fireEvent.keyDown(surface, { key: ' ', repeat: true });
+    expect(surface).not.toHaveAttribute('data-pressed');
+
+    fireEvent.keyDown(surface, { key: 'a' });
+    expect(surface).not.toHaveAttribute('data-pressed');
+
+    fireEvent.keyDown(screen.getByTestId('inner'), { key: ' ' });
+    expect(surface).not.toHaveAttribute('data-pressed');
+
+    fireEvent.keyDown(surface, { key: ' ' });
+    expect(surface).toHaveAttribute('data-pressed');
+    fireEvent.blur(surface);
+    expect(surface).not.toHaveAttribute('data-pressed');
+
+    expect(onKeyDown).toHaveBeenCalledTimes(4);
+
+    await advanceTime(16);
+  });
+
+  it('does not respond to keyboard presses when not interactive', async () => {
+    vi.useFakeTimers();
+    stubChromiumEnvironment();
+    stubMeasuredSize(320, 200);
+    render(
+      <GlassSurface radius={14} style={PRESS_REFRACTION_STYLE} data-testid="surface">
+        Static
+      </GlassSurface>,
+    );
+    const surface = screen.getByTestId('surface');
+
+    await settleRefraction();
+    fireEvent.keyDown(surface, { key: ' ' });
+    expect(surface).not.toHaveAttribute('data-pressed');
+    expect(filterRegistry.getSnapshot()).toHaveLength(1);
+
+    await advanceTime(16);
+  });
 });

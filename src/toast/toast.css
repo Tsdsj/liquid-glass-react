@@ -43,7 +43,9 @@
   font-family: var(--lg-font);
   font-size: var(--lg-font-size-md);
   pointer-events: auto;
-  animation: lg-toast-enter var(--lg-duration-slow) var(--lg-ease) both;
+  /* Enter overshoots via the bounce ease (opacity overshoot clamps to [0,1]);
+     the exit transition below keeps the plain ease. */
+  animation: lg-toast-enter var(--lg-duration-slow) var(--lg-ease-bounce) both;
   transition:
     opacity var(--lg-duration) var(--lg-ease),
     transform var(--lg-duration) var(--lg-ease);
@@ -121,6 +123,7 @@
 @media (prefers-reduced-motion: reduce) {
   .lg-toast {
     animation-name: lg-toast-fade;
+    animation-timing-function: var(--lg-ease);
     transition-property: opacity;
   }
 }

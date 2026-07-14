@@ -144,6 +144,10 @@
 .lg-select__panel[data-status='open']:not([data-refraction-pending]) {
   opacity: 1;
   transform: translateY(0) scale(1);
+  /* Enter overshoots on transform only; exits fall back to the base ease. */
+  transition:
+    opacity var(--lg-duration-slow) var(--lg-ease),
+    transform var(--lg-duration-slow) var(--lg-ease-bounce);
 }
 
 .lg-select__panel > .lg-surface__content {
@@ -196,6 +200,11 @@
   .lg-select__panel {
     transform: none;
     transform-origin: center;
+    transition-property: opacity;
+  }
+
+  .lg-select__panel[data-status='open']:not([data-refraction-pending]) {
+    transform: none;
     transition-property: opacity;
   }
 

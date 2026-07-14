@@ -45,6 +45,9 @@
 
 .lg-popover[data-status='open']:not(:has(.lg-popover__panel[data-refraction-pending])) {
   transform: translateY(0) scale(1);
+  /* Enter overshoots (the transition reads the destination state's value);
+     exits fall back to the base rule's plain ease. */
+  transition: transform var(--lg-duration-slow) var(--lg-ease-bounce);
 }
 
 /* The glass panel carries the backdrop-filter, so the enter/exit fade runs on
@@ -76,6 +79,11 @@
   .lg-popover {
     transform: none;
     transform-origin: center;
+    transition: none;
+  }
+
+  .lg-popover[data-status='open']:not(:has(.lg-popover__panel[data-refraction-pending])) {
+    transform: none;
     transition: none;
   }
 }

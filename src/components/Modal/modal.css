@@ -61,6 +61,10 @@
 .lg-modal__panel[data-status='open']:not([data-refraction-pending]) {
   opacity: 1;
   transform: translateY(0) scale(1);
+  /* Enter overshoots on transform only; exits fall back to the base ease. */
+  transition:
+    opacity var(--lg-duration-slow) var(--lg-ease),
+    transform var(--lg-duration-slow) var(--lg-ease-bounce);
 }
 
 .lg-modal__panel > .lg-surface__content {
@@ -118,6 +122,11 @@
 
 @media (prefers-reduced-motion: reduce) {
   .lg-modal__panel {
+    transform: none;
+    transition-property: opacity;
+  }
+
+  .lg-modal__panel[data-status='open']:not([data-refraction-pending]) {
     transform: none;
     transition-property: opacity;
   }

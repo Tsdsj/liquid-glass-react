@@ -5,28 +5,40 @@
 
   z-index: var(--lg-z-overlay);
   color: var(--lg-tooltip-color);
-  opacity: 0;
   font-family: var(--lg-font);
   font-size: var(--lg-font-size-sm);
   pointer-events: none;
   transform: translateY(var(--lg-tooltip-shift)) scale(0.96);
-  transition:
-    opacity var(--lg-duration-slow) var(--lg-ease),
-    transform var(--lg-duration-slow) var(--lg-ease);
+  transition: transform var(--lg-duration-slow) var(--lg-ease);
 }
 
 .lg-tooltip[data-status='open'] {
-  opacity: 1;
   transform: translateY(0) scale(1);
+  transition: transform var(--lg-duration-slow) var(--lg-ease-bounce);
 }
 
+/* The glass panel carries the backdrop-filter, so the fade runs on its own
+   opacity: an ancestor with opacity < 1 forms a backdrop root and would blank
+   the blur for the whole animation. */
 .lg-tooltip__panel {
   box-sizing: border-box;
   padding: var(--lg-space-2) var(--lg-space-3);
+  opacity: 0;
+  transition: opacity var(--lg-duration-slow) var(--lg-ease);
+}
+
+.lg-tooltip[data-status='open'] .lg-tooltip__panel {
+  opacity: 1;
 }
 
 .lg-tooltip__arrow {
   fill: var(--lg-tooltip-bg);
+  opacity: 0;
+  transition: opacity var(--lg-duration-slow) var(--lg-ease);
+}
+
+.lg-tooltip[data-status='open'] .lg-tooltip__arrow {
+  opacity: 1;
 }
 
 [data-theme='dark'] .lg-tooltip {
@@ -44,6 +56,11 @@
 @media (prefers-reduced-motion: reduce) {
   .lg-tooltip {
     transform: none;
-    transition-property: opacity;
+    transition: none;
+  }
+
+  .lg-tooltip[data-status='open'] {
+    transform: none;
+    transition: none;
   }
 }

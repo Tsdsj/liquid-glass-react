@@ -7,8 +7,10 @@ import {
   useState,
   type CSSProperties,
   type ElementType,
+  type FocusEvent as ReactFocusEvent,
   type ForwardedRef,
   type HTMLAttributes,
+  type KeyboardEvent as ReactKeyboardEvent,
   type PointerEvent as ReactPointerEvent,
 } from 'react';
 import {
@@ -101,6 +103,9 @@ export const GlassSurface = forwardRef<HTMLElement, GlassSurfaceProps>(function 
     onPointerDown,
     onPointerUp,
     onPointerCancel,
+    onKeyDown,
+    onKeyUp,
+    onBlur,
     ...rest
   },
   forwardedRef,
@@ -220,6 +225,45 @@ export const GlassSurface = forwardRef<HTMLElement, GlassSurfaceProps>(function 
       event.currentTarget.removeAttribute('data-pressed');
       setIsPressed(false);
       schedulePointerPosition({ x: 50, y: 0 });
+    }
+  };
+
+  const isActivationKey = (key: string) => key === ' ' || key === 'Enter';
+
+  // Keyboard activation gets the same pressed feedback (scale, tint, refraction
+  // boost) as pointers. The pointer highlight keeps its resting position since
+  // keys carry no coordinates.
+  const handleKeyDown = (event: ReactKeyboardEvent<HTMLElement>) => {
+    onKeyDown?.(event);
+    if (
+      interactive &&
+      !event.repeat &&
+      // Keys typed into nested content (e.g. an input inside an interactive
+      // card) must not press the surface.
+      event.target === event.currentTarget &&
+      isActivationKey(event.key)
+    ) {
+      event.currentTarget.setAttribute('data-pressed', '');
+      setIsPressed(true);
+      setPressBoostRequested(true);
+    }
+  };
+
+  const handleKeyUp = (event: ReactKeyboardEvent<HTMLElement>) => {
+    onKeyUp?.(event);
+    if (interactive && isActivationKey(event.key)) {
+      event.currentTarget.removeAttribute('data-pressed');
+      setIsPressed(false);
+    }
+  };
+
+  // Enter may navigate or move focus before its keyup arrives; losing focus
+  // always releases the pressed state.
+  const handleBlur = (event: ReactFocusEvent<HTMLElement>) => {
+    onBlur?.(event);
+    if (interactive) {
+      event.currentTarget.removeAttribute('data-pressed');
+      setIsPressed(false);
     }
   };
 
@@ -525,6 +569,9 @@ export const GlassSurface = forwardRef<HTMLElement, GlassSurfaceProps>(function 
         onPointerDown={handlePointerDown}
         onPointerUp={handlePointerUp}
         onPointerCancel={handlePointerCancel}
+        onKeyDown={handleKeyDown}
+        onKeyUp={handleKeyUp}
+        onBlur={handleBlur}
         data-refraction={isRefractionActive ? 'on' : 'off'}
         data-refraction-pending={isRefractionPending ? '' : undefined}
         data-interactive={interactive ? '' : undefined}
