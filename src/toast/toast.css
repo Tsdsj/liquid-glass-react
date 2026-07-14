@@ -1,0 +1,123 @@
+.lg-toaster {
+  position: fixed;
+  z-index: var(--lg-z-overlay);
+  display: flex;
+  width: min(420px, calc(100vw - (var(--lg-space-4) * 2)));
+  flex-direction: column;
+  gap: var(--lg-space-2);
+  pointer-events: none;
+}
+
+.lg-toaster[data-position^='top'] {
+  top: var(--lg-space-4);
+}
+
+.lg-toaster[data-position^='bottom'] {
+  bottom: var(--lg-space-4);
+}
+
+.lg-toaster[data-position$='left'] {
+  left: var(--lg-space-4);
+}
+
+.lg-toaster[data-position$='right'] {
+  right: var(--lg-space-4);
+}
+
+.lg-toaster[data-position$='center'] {
+  left: 50%;
+  transform: translateX(-50%);
+}
+
+.lg-toast {
+  width: fit-content;
+  max-width: 100%;
+  align-self: center;
+  box-sizing: border-box;
+  padding: var(--lg-space-3) var(--lg-space-4);
+  color: var(--lg-text);
+  font-family: var(--lg-font);
+  font-size: var(--lg-font-size-md);
+  pointer-events: auto;
+  animation: lg-toast-enter var(--lg-duration-slow) var(--lg-ease) both;
+  transition:
+    opacity var(--lg-duration) var(--lg-ease),
+    transform var(--lg-duration) var(--lg-ease);
+}
+
+.lg-toaster[data-position$='left'] .lg-toast {
+  align-self: flex-start;
+}
+
+.lg-toaster[data-position$='right'] .lg-toast {
+  align-self: flex-end;
+}
+
+.lg-toast > .lg-surface__content {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  gap: var(--lg-space-2);
+}
+
+.lg-toast[data-exiting] {
+  opacity: 0;
+  transform: translateY(calc(var(--lg-space-2) * -1)) scale(0.96);
+  will-change: opacity, transform;
+}
+
+.lg-toast__icon {
+  display: inline-grid;
+  width: 1.2em;
+  height: 1.2em;
+  flex: 0 0 auto;
+  place-items: center;
+  color: var(--lg-text-secondary);
+  font-weight: 700;
+}
+
+.lg-toast[data-kind='success'] .lg-toast__icon {
+  color: var(--lg-success);
+}
+
+.lg-toast[data-kind='error'] .lg-toast__icon {
+  color: var(--lg-danger);
+}
+
+.lg-toast[data-kind='info'] .lg-toast__icon {
+  color: var(--lg-accent);
+}
+
+.lg-toast__content {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+@keyframes lg-toast-enter {
+  from {
+    opacity: 0;
+    transform: translateY(calc(var(--lg-space-2) * -1)) scale(0.96);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .lg-toast {
+    animation-name: lg-toast-fade;
+    transition-property: opacity;
+  }
+}
+
+@keyframes lg-toast-fade {
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
+}

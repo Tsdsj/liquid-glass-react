@@ -27,3 +27,7 @@ export { Textarea } from './components/Textarea';
 export type { TextareaProps } from './components/Textarea';
 export { Tooltip } from './components/Tooltip';
 export type { TooltipProps } from './components/Tooltip';
+export { toast } from './toast/toast';
+export type { ToastKind, ToastOptions } from './toast/toast';
+export { Toaster } from './toast/Toaster';
+export type { ToasterPosition, ToasterProps } from './toast/Toaster';
