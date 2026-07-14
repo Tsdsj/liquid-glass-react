@@ -1,0 +1,144 @@
+.lg-drawer__overlay {
+  --lg-drawer-overlay-bg: var(--lg-drop-shadow);
+  --lg-drawer-overlay-blur: var(--lg-space-2);
+
+  z-index: var(--lg-z-overlay);
+
+  /* Same scrim technique as Modal: fade background-color + blur radius, never
+     opacity, so the panel's backdrop refraction is not blanked mid-animation. */
+  background-color: transparent;
+  -webkit-backdrop-filter: blur(0px);
+  backdrop-filter: blur(0px);
+  transition:
+    background-color var(--lg-duration-slow) var(--lg-ease),
+    backdrop-filter var(--lg-duration-slow) var(--lg-ease),
+    -webkit-backdrop-filter var(--lg-duration-slow) var(--lg-ease);
+}
+
+.lg-drawer__overlay[data-status='open']:not(:has(.lg-drawer__panel[data-refraction-pending])) {
+  background-color: var(--lg-drawer-overlay-bg);
+  -webkit-backdrop-filter: blur(var(--lg-drawer-overlay-blur));
+  backdrop-filter: blur(var(--lg-drawer-overlay-blur));
+}
+
+.lg-drawer__panel {
+  --lg-drawer-size: 380px;
+  --lg-drawer-warmup-opacity: 0.01;
+
+  position: fixed;
+  box-sizing: border-box;
+  color: var(--lg-text);
+  opacity: var(--lg-drawer-warmup-opacity);
+  font-family: var(--lg-font);
+  font-size: var(--lg-font-size-md);
+  transition:
+    opacity var(--lg-duration-slow) var(--lg-ease),
+    transform var(--lg-duration-slow) var(--lg-ease);
+}
+
+.lg-drawer__panel[data-placement='left'],
+.lg-drawer__panel[data-placement='right'] {
+  top: 0;
+  bottom: 0;
+  width: min(var(--lg-drawer-size), 100vw);
+  max-height: 100vh;
+}
+
+.lg-drawer__panel[data-placement='top'],
+.lg-drawer__panel[data-placement='bottom'] {
+  left: 0;
+  right: 0;
+  height: min(var(--lg-drawer-size), 100vh);
+}
+
+.lg-drawer__panel[data-placement='left'] {
+  left: 0;
+  transform: translateX(-100%);
+}
+
+.lg-drawer__panel[data-placement='right'] {
+  right: 0;
+  transform: translateX(100%);
+}
+
+.lg-drawer__panel[data-placement='top'] {
+  top: 0;
+  transform: translateY(-100%);
+}
+
+.lg-drawer__panel[data-placement='bottom'] {
+  bottom: 0;
+  transform: translateY(100%);
+}
+
+.lg-drawer__panel[data-status='open']:not([data-refraction-pending]) {
+  opacity: 1;
+  transform: translate(0, 0);
+  /* Enter overshoots on transform only; exits fall back to the base ease. */
+  transition:
+    opacity var(--lg-duration-slow) var(--lg-ease),
+    transform var(--lg-duration-slow) var(--lg-ease-bounce);
+}
+
+.lg-drawer__panel > .lg-surface__content {
+  display: flex;
+  max-height: inherit;
+  height: 100%;
+  flex-direction: column;
+}
+
+.lg-drawer__header,
+.lg-drawer__footer {
+  display: flex;
+  flex: 0 0 auto;
+  align-items: center;
+  gap: var(--lg-space-3);
+  padding: var(--lg-space-4);
+}
+
+.lg-drawer__header {
+  padding-bottom: var(--lg-space-2);
+}
+
+.lg-drawer__title {
+  min-width: 0;
+  margin: 0;
+  font-size: var(--lg-font-size-lg);
+  font-weight: 600;
+}
+
+.lg-drawer__close {
+  flex: 0 0 auto;
+  margin-inline-start: auto;
+  padding: 0;
+  border-radius: max(var(--lg-radius-sm), calc(var(--lg-r, var(--lg-radius-md)) - var(--lg-space-2)));
+}
+
+.lg-drawer__body-scroll {
+  min-height: 0;
+  flex: 1 1 auto;
+}
+
+.lg-drawer__body {
+  min-height: 0;
+  flex: 1 1 auto;
+  overflow-y: auto;
+  padding: var(--lg-space-2) var(--lg-space-4) var(--lg-space-4);
+}
+
+.lg-drawer__footer {
+  justify-content: flex-end;
+  padding-top: 0;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .lg-drawer__panel {
+    transform: none;
+    transition-property: opacity;
+  }
+
+  .lg-drawer__panel[data-status='open']:not([data-refraction-pending]) {
+    transform: none;
+    transition-property: opacity;
+  }
+}

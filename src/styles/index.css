@@ -8,7 +8,9 @@
 @import '../components/Button/button.css';
 @import '../components/Card/card.css';
 @import '../components/Checkbox/checkbox.css';
+@import '../components/Drawer/drawer.css';
 @import '../components/Input/input.css';
+@import '../components/Menu/menu.css';
 @import '../components/Modal/modal.css';
 @import '../components/Pagination/pagination.css';
 @import '../components/Popover/popover.css';
