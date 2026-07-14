@@ -15,6 +15,9 @@
   --lg-surface-tint-hover: var(--lg-tint-hover);
   --lg-surface-pointer-highlight: transparent;
   --lg-surface-pointer-shade: transparent;
+  --lg-surface-shadow-x: 0;
+  --lg-surface-shadow-y: var(--lg-space-2);
+  --lg-surface-shadow-blur: calc(var(--lg-space-4) + var(--lg-space-2));
   --lg-pointer-x: 50%;
   --lg-pointer-y: 0%;
 
@@ -90,7 +93,8 @@
   box-shadow:
     inset 1px 1px 1px var(--lg-highlight),
     inset -1px -1px 1px var(--lg-shade),
-    0 8px 24px var(--lg-drop-shadow);
+    var(--lg-surface-shadow-x) var(--lg-surface-shadow-y)
+      var(--lg-surface-shadow-blur) var(--lg-drop-shadow);
   content: '';
   pointer-events: none;
   -webkit-mask:
@@ -120,6 +124,12 @@
 
 .lg-surface[data-interactive][data-pressed] {
   transform: scale(var(--lg-interaction-scale));
+}
+
+.lg-surface[data-expanded] {
+  --lg-surface-pointer-highlight: transparent;
+  --lg-surface-pointer-shade: transparent;
+  --lg-surface-tint-hover: var(--lg-surface-tint);
 }
 
 .lg-surface[data-transparency='reduced'] {

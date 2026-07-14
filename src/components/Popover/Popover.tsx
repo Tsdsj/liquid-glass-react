@@ -39,7 +39,10 @@ export interface PopoverProps {
   showArrow?: boolean;
 }
 
-type TriggerProps = HTMLAttributes<HTMLElement> & { ref?: Ref<HTMLElement> };
+type TriggerProps = HTMLAttributes<HTMLElement> & {
+  ref?: Ref<HTMLElement>;
+  'data-expanded'?: string;
+};
 
 const POPOVER_TRANSITION_DURATION = 350;
 
@@ -70,7 +73,7 @@ export const Popover = forwardRef<HTMLDivElement, PopoverProps>(function Popover
     ],
     [showArrow],
   );
-  const { refs, floatingStyles, context } = useFloating({
+  const { refs, floatingStyles, context, placement: resolvedPlacement } = useFloating({
     open: isOpen,
     onOpenChange: setIsOpen,
     placement,
@@ -88,10 +91,13 @@ export const Popover = forwardRef<HTMLDivElement, PopoverProps>(function Popover
   const trigger = children as ReactElement<TriggerProps>;
   const referenceRef = useMergeRefs([refs.setReference, trigger.props.ref]);
   const floatingRef = useMergeRefs([refs.setFloating, forwardedRef]);
-  const triggerProps = getReferenceProps({
-    ...trigger.props,
-    ref: referenceRef,
-  }) as TriggerProps;
+  const triggerProps = {
+    ...getReferenceProps({
+      ...trigger.props,
+      ref: referenceRef,
+    }),
+    'data-expanded': isOpen ? '' : undefined,
+  } as TriggerProps;
   const floatingProps = getFloatingProps() as HTMLAttributes<HTMLDivElement>;
 
   return (
@@ -106,6 +112,7 @@ export const Popover = forwardRef<HTMLDivElement, PopoverProps>(function Popover
               className="lg-popover"
               style={floatingStyles}
               data-status={status}
+              data-placement={resolvedPlacement}
             >
               <GlassSurface refraction="auto" bezel={16} className="lg-popover__panel">
                 {content}

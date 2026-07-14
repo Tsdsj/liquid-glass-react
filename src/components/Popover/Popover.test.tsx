@@ -22,7 +22,9 @@ describe('Popover', () => {
     expect(trigger).toHaveClass('trigger');
     await user.click(trigger);
 
+    expect(trigger).toHaveAttribute('data-expanded');
     expect(screen.getByRole('dialog')).toBeInTheDocument();
+    expect(screen.getByRole('dialog')).toHaveAttribute('data-placement', 'bottom');
     expect(ref.current).toBe(screen.getByRole('dialog'));
     expect(screen.getByRole('button', { name: 'Action' })).toHaveFocus();
   });
@@ -54,6 +56,7 @@ describe('Popover', () => {
     await user.keyboard('{Escape}');
 
     await waitForClose();
+    expect(trigger).not.toHaveAttribute('data-expanded');
     expect(trigger).toHaveFocus();
   });
 

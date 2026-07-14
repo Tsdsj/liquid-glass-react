@@ -126,7 +126,7 @@ export const Select = forwardRef<HTMLButtonElement, SelectProps>(function Select
         : null,
     );
   };
-  const { refs, floatingStyles, context } = useFloating({
+  const { refs, floatingStyles, context, placement: resolvedPlacement } = useFloating({
     open: isOpen,
     onOpenChange: handleOpenChange,
     placement: 'bottom-start',
@@ -190,6 +190,12 @@ export const Select = forwardRef<HTMLButtonElement, SelectProps>(function Select
     setActiveIndex(null);
   };
   const handleOptionKeyDown = (event: KeyboardEvent<HTMLElement>, index: number) => {
+    if (event.key === 'Tab') {
+      setIsOpen(false);
+      setActiveIndex(null);
+      return;
+    }
+
     if (event.key === 'Enter' || event.key === ' ') {
       event.preventDefault();
       selectOption(index);
@@ -211,6 +217,7 @@ export const Select = forwardRef<HTMLButtonElement, SelectProps>(function Select
         interactive={!disabled}
         className="lg-select__trigger"
         data-placeholder={selectedOption ? undefined : ''}
+        data-expanded={isOpen ? '' : undefined}
       >
         <span className="lg-select__value">
           {selectedOption ? selectedOption.label : displayPlaceholder}
@@ -228,6 +235,7 @@ export const Select = forwardRef<HTMLButtonElement, SelectProps>(function Select
               className="lg-select__panel"
               style={floatingStyles}
               data-status={status}
+              data-placement={resolvedPlacement}
             >
               {options.map((option, index) => {
                 const itemProps = getItemProps({

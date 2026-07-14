@@ -46,10 +46,13 @@ describe('Select', () => {
     const trigger = screen.getByRole('combobox', { name: 'Fruit' });
 
     await user.click(trigger);
+    expect(trigger).toHaveAttribute('data-expanded');
+    expect(screen.getByRole('listbox')).toHaveAttribute('data-placement', 'bottom-start');
     await user.click(screen.getByRole('option', { name: 'Cherry' }));
 
     expect(onChange).toHaveBeenCalledWith('cherry');
     expect(trigger).toHaveTextContent('Cherry');
+    expect(trigger).not.toHaveAttribute('data-expanded');
     await waitForClose();
   });
 
