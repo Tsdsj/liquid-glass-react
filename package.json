@@ -19,6 +19,8 @@
   "scripts": {
     "dev": "storybook dev -p 6006",
     "storybook": "storybook dev -p 6006",
+    "site": "vite --config site/vite.config.ts",
+    "site:build": "vite build --config site/vite.config.ts",
     "build": "vite build",
     "test": "vitest run",
     "test:watch": "vitest",

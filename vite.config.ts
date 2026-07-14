@@ -1,8 +1,16 @@
+import { fileURLToPath } from 'node:url';
 import react from '@vitejs/plugin-react';
 import { configDefaults, defineConfig } from 'vitest/config';
 import dts from 'vite-plugin-dts';
 
 export default defineConfig({
+  resolve: {
+    // Lets site/ sources (and their vitest smoke tests) import the library by
+    // its published name; the lib build itself never imports this alias.
+    alias: {
+      '@ttq/liquid-glass-react': fileURLToPath(new URL('./src/index.ts', import.meta.url)),
+    },
+  },
   plugins: [
     react(),
     dts({
