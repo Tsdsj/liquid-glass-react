@@ -1,5 +1,5 @@
 ---
-status: todo
+status: done
 depends: [M3]
 ---
 
@@ -92,3 +92,5 @@ interface ToasterProps { position?: 'top-left'|'top-center'|'top-right'|'bottom-
 ## 完成记录
 
 - 需求补充（2026-07-14）：补齐 M1/M2 已有组件 Stories 的中英文文案并默认中文；M4 内置的可访问性文案跟随 `LiquidGlassConfig.locale`，业务内容仍由调用方传入。
+- 完成（2026-07-14）：实现 Popover、Tooltip、Modal 与命令式 Toast/Toaster，补齐公共导出、统一样式入口、双语 Stories 和交互测试；Modal 关闭按钮随 locale 显示“关闭”或“Close”。
+- 验证：`pnpm typecheck`、`pnpm build`、`pnpm test` 通过（18 个测试文件、108 项测试）；Chromium Storybook 在 1280×720 与 390×844 下完成中英文、键盘、定位、焦点、滚动锁和溢出检查，无控制台错误。
