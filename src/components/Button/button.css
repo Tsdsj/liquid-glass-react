@@ -1,0 +1,106 @@
+.lg-button {
+  --lg-button-bg: var(--lg-tint);
+  --lg-button-color: var(--lg-text);
+  --lg-button-radius: var(--lg-radius-full);
+  --lg-button-height: var(--lg-control-h-md);
+  --lg-button-font-size: var(--lg-font-size-md);
+  --lg-button-gap: var(--lg-space-2);
+  --lg-button-ghost-blur: 0px;
+  --lg-button-ghost-saturation: 1;
+
+  min-width: var(--lg-button-height);
+  min-height: var(--lg-button-height);
+  padding: 0 16px;
+  color: var(--lg-button-color);
+  background: none;
+  cursor: pointer;
+  font-family: var(--lg-font);
+  font-size: var(--lg-button-font-size);
+  line-height: 1;
+  white-space: nowrap;
+  --lg-tint: var(--lg-button-bg);
+}
+
+.lg-button > .lg-surface__content {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--lg-button-gap);
+}
+
+.lg-button[data-size='sm'] {
+  --lg-button-height: var(--lg-control-h-sm);
+  --lg-button-font-size: var(--lg-font-size-sm);
+
+  padding-inline: 12px;
+}
+
+.lg-button[data-size='lg'] {
+  --lg-button-height: var(--lg-control-h-lg);
+  --lg-button-font-size: var(--lg-font-size-lg);
+
+  padding-inline: 20px;
+}
+
+.lg-button[data-variant='accent'] {
+  --lg-button-bg: var(--lg-accent);
+  --lg-button-color: var(--lg-accent-contrast);
+}
+
+.lg-button[data-variant='danger'] {
+  --lg-button-bg: var(--lg-danger);
+  --lg-button-color: var(--lg-accent-contrast);
+}
+
+.lg-button[data-variant='ghost'] {
+  --lg-button-bg: transparent;
+  --lg-fallback-blur: var(--lg-button-ghost-blur);
+  --lg-saturation: var(--lg-button-ghost-saturation);
+}
+
+.lg-button[data-variant='ghost']::after {
+  display: none;
+}
+
+.lg-button[data-disabled] {
+  color: var(--lg-text-disabled);
+  cursor: not-allowed;
+}
+
+.lg-button[data-loading] {
+  cursor: progress;
+}
+
+.lg-button__icon {
+  display: inline-grid;
+  flex: 0 0 auto;
+  place-items: center;
+  width: 1em;
+  height: 1em;
+}
+
+.lg-button__label {
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.lg-button__spinner {
+  width: 0.85em;
+  height: 0.85em;
+  border: 2px solid currentColor;
+  border-right-color: transparent;
+  border-radius: var(--lg-radius-full);
+  animation: lg-button-spin var(--lg-duration-slow) linear infinite;
+}
+
+@keyframes lg-button-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .lg-button__spinner {
+    animation: none;
+  }
+}
