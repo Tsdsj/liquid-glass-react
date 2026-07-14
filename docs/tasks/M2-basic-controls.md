@@ -1,5 +1,5 @@
 ---
-status: todo
+status: done
 depends: [M1]
 ---
 
@@ -81,4 +81,6 @@ interface CheckboxProps extends Omit<React.InputHTMLAttributes<HTMLInputElement>
 
 ## 完成记录
 
-（完成后填写）
+- 新增 `Button`、`Switch`、`Slider`、`Checkbox` 四组件的实现、纯 CSS 样式、Storybook stories、单元测试和公共导出。
+- `pnpm typecheck`、`pnpm build`、`pnpm test` 全部通过；共 10 个测试文件、50 项测试通过。
+- Storybook 在 1280×720 下完成 light/dark × photo/gradient 组合验收，并验证 Enter、Space、方向键、Home、End、focus、disabled、loading 和 indeterminate 状态；390×844 移动视口无横向溢出。
