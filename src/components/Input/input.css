@@ -1,0 +1,81 @@
+.lg-input {
+  --lg-input-height: var(--lg-control-h-md);
+  --lg-input-font-size: var(--lg-font-size-md);
+  --lg-input-padding: var(--lg-space-3);
+  --lg-input-gap: var(--lg-space-2);
+  --lg-input-focus-width: 2px;
+  --lg-input-disabled-opacity: 0.55;
+
+  width: 100%;
+  min-width: 0;
+  height: var(--lg-input-height);
+  box-sizing: border-box;
+  padding-inline: var(--lg-input-padding);
+  color: var(--lg-text);
+  cursor: text;
+  font-family: var(--lg-font);
+  font-size: var(--lg-input-font-size);
+}
+
+.lg-input > .lg-surface__content {
+  display: flex;
+  width: 100%;
+  height: 100%;
+  align-items: center;
+  gap: var(--lg-input-gap);
+}
+
+.lg-input[data-size='sm'] {
+  --lg-input-height: var(--lg-control-h-sm);
+  --lg-input-font-size: var(--lg-font-size-sm);
+  --lg-input-padding: var(--lg-space-2);
+}
+
+.lg-input[data-size='lg'] {
+  --lg-input-height: var(--lg-control-h-lg);
+  --lg-input-font-size: var(--lg-font-size-lg);
+  --lg-input-padding: var(--lg-space-4);
+}
+
+.lg-input:focus-within {
+  box-shadow: 0 0 0 var(--lg-input-focus-width) var(--lg-accent);
+}
+
+.lg-input[data-invalid] {
+  box-shadow: 0 0 0 var(--lg-input-focus-width) var(--lg-danger);
+}
+
+.lg-input[data-disabled] {
+  color: var(--lg-text-disabled);
+  cursor: not-allowed;
+  opacity: var(--lg-input-disabled-opacity);
+}
+
+.lg-input__el {
+  min-width: 0;
+  height: 100%;
+  flex: 1 1 auto;
+  box-sizing: border-box;
+  padding: 0;
+  border: 0;
+  outline: 0;
+  color: inherit;
+  background: transparent;
+  font: inherit;
+}
+
+.lg-input__el::placeholder {
+  color: var(--lg-text-secondary);
+}
+
+.lg-input__el:disabled {
+  cursor: inherit;
+}
+
+.lg-input__prefix,
+.lg-input__suffix {
+  display: inline-flex;
+  flex: 0 0 auto;
+  align-items: center;
+  color: var(--lg-text-secondary);
+}

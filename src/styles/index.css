@@ -3,5 +3,6 @@
 @import '../core/GlassSurface/glass-surface.css';
 @import '../components/Button/button.css';
 @import '../components/Checkbox/checkbox.css';
+@import '../components/Input/input.css';
 @import '../components/Slider/slider.css';
 @import '../components/Switch/switch.css';

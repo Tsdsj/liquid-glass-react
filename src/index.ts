@@ -11,6 +11,8 @@ export { Button } from './components/Button';
 export type { ButtonProps } from './components/Button';
 export { Checkbox } from './components/Checkbox';
 export type { CheckboxProps } from './components/Checkbox';
+export { Input } from './components/Input';
+export type { InputProps } from './components/Input';
 export { Slider } from './components/Slider';
 export type { SliderProps } from './components/Slider';
 export { Switch } from './components/Switch';
