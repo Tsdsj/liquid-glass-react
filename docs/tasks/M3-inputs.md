@@ -70,4 +70,4 @@ interface SelectProps {
 
 ## 完成记录
 
-（完成后填写）
+- 需求补充（2026-07-14）：`LiquidGlassConfig` 新增 `locale?: 'zh-CN' | 'en-US'`，默认 `zh-CN`；Select 未传 `placeholder` 时按 locale 显示“请选择 / Select”。Input、Textarea 的业务文案仍由调用方通过原生属性传入。Storybook 提供中英文切换并默认中文。

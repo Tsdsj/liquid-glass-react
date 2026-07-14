@@ -1,5 +1,9 @@
 import { useEffect, type ReactNode } from 'react';
 import type { Decorator, Preview } from '@storybook/react-vite';
+import {
+  LiquidGlassConfig,
+  type LiquidGlassLocale,
+} from '../src/core/config/LiquidGlassConfig';
 import '../src/styles/index.css';
 
 const WALLPAPERS = {
@@ -20,12 +24,17 @@ interface PreviewFrameProps {
   children: ReactNode;
   theme: Theme;
   wallpaper: Wallpaper;
+  locale: LiquidGlassLocale;
 }
 
-function PreviewFrame({ children, theme, wallpaper }: PreviewFrameProps) {
+function PreviewFrame({ children, theme, wallpaper, locale }: PreviewFrameProps) {
   useEffect(() => {
     document.documentElement.dataset.theme = theme;
   }, [theme]);
+
+  useEffect(() => {
+    document.documentElement.lang = locale;
+  }, [locale]);
 
   return (
     <div
@@ -47,6 +56,8 @@ function PreviewFrame({ children, theme, wallpaper }: PreviewFrameProps) {
 
 const withPreviewFrame: Decorator = (Story, context) => {
   const theme: Theme = context.globals.theme === 'dark' ? 'dark' : 'light';
+  const locale: LiquidGlassLocale =
+    context.globals.locale === 'en-US' ? 'en-US' : 'zh-CN';
   const wallpaper: Wallpaper =
     context.globals.wallpaper === 'gradient' ||
     context.globals.wallpaper === 'plain-light' ||
@@ -55,9 +66,11 @@ const withPreviewFrame: Decorator = (Story, context) => {
       : 'photo';
 
   return (
-    <PreviewFrame theme={theme} wallpaper={wallpaper}>
-      <Story />
-    </PreviewFrame>
+    <LiquidGlassConfig locale={locale}>
+      <PreviewFrame theme={theme} wallpaper={wallpaper} locale={locale}>
+        <Story />
+      </PreviewFrame>
+    </LiquidGlassConfig>
   );
 };
 
@@ -86,10 +99,21 @@ const preview = {
         ],
       },
     },
+    locale: {
+      description: 'Preview locale',
+      toolbar: {
+        icon: 'globe',
+        items: [
+          { value: 'zh-CN', title: '中文' },
+          { value: 'en-US', title: 'English' },
+        ],
+      },
+    },
   },
   initialGlobals: {
     theme: 'light',
     wallpaper: 'photo',
+    locale: 'zh-CN',
   },
   parameters: {
     backgrounds: {

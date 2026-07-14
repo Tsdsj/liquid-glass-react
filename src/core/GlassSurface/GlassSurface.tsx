@@ -202,8 +202,12 @@ export const GlassSurface = forwardRef<HTMLElement, GlassSurfaceProps>(function 
     canUseRefraction && stableSize.width > 0 && stableSize.height > 0,
   );
   const nestedContext = useMemo<LiquidGlassContextValue>(
-    () => ({ forceFallback: context.forceFallback, insideGlass: true }),
-    [context.forceFallback],
+    () => ({
+      forceFallback: context.forceFallback,
+      insideGlass: true,
+      locale: context.locale,
+    }),
+    [context.forceFallback, context.locale],
   );
   const radiusValue =
     typeof radius === 'number'
