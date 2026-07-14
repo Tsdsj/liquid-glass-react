@@ -1,6 +1,6 @@
 import { type ReactNode } from 'react';
 import { renderToString } from 'react-dom/server';
-import { renderHook, waitFor } from '@testing-library/react';
+import { act, renderHook, waitFor } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { LiquidGlassConfig } from '../config/LiquidGlassConfig';
 import {
@@ -87,26 +87,41 @@ describe('useGlassSupport', () => {
     stubBrowserSupport({ brands: [{ brand: 'Chromium' }] });
     function SupportProbe() {
       const support = useGlassSupport();
-      return <span data-refraction={support.refraction ? 'on' : 'off'} />;
+      return (
+        <span
+          data-refraction={support.refraction ? 'on' : 'off'}
+          data-transparency={support.reducedTransparency ? 'reduced' : 'normal'}
+        />
+      );
     }
 
     expect(renderToString(<SupportProbe />)).toContain('data-refraction="off"');
+    expect(renderToString(<SupportProbe />)).toContain('data-transparency="normal"');
     const { result } = renderHook(() => useGlassSupport());
 
     await waitFor(() => expect(result.current.refraction).toBe(true));
+    expect(result.current.reducedTransparency).toBe(false);
   });
 
-  it('honors reduced transparency preferences', async () => {
+  it('reacts to reduced transparency preference changes', async () => {
     stubBrowserSupport({ brands: [{ brand: 'Chromium' }] });
+    let changeListener: ((event: MediaQueryListEvent) => void) | undefined;
     const matchMedia = vi.fn(
       (query: string): MediaQueryList => ({
-        matches: true,
+        matches: false,
         media: query,
         onchange: null,
         addListener: () => undefined,
         removeListener: () => undefined,
-        addEventListener: () => undefined,
-        removeEventListener: () => undefined,
+        addEventListener: (
+          _type: string,
+          listener: EventListenerOrEventListenerObject,
+        ) => {
+          changeListener = listener as unknown as (event: MediaQueryListEvent) => void;
+        },
+        removeEventListener: () => {
+          changeListener = undefined;
+        },
         dispatchEvent: () => false,
       }),
     );
@@ -118,6 +133,14 @@ describe('useGlassSupport', () => {
     const { result } = renderHook(() => useGlassSupport());
 
     await waitFor(() => expect(matchMedia).toHaveBeenCalled());
+    expect(result.current.refraction).toBe(true);
+    expect(result.current.reducedTransparency).toBe(false);
+
+    act(() => {
+      changeListener?.({ matches: true } as MediaQueryListEvent);
+    });
+
+    await waitFor(() => expect(result.current.reducedTransparency).toBe(true));
     expect(result.current.refraction).toBe(false);
   });
 
@@ -129,6 +152,31 @@ describe('useGlassSupport', () => {
     const { result } = renderHook(() => useGlassSupport(), { wrapper });
 
     await waitFor(() => expect(CSS.supports).toHaveBeenCalled());
+    expect(result.current.refraction).toBe(false);
+    expect(result.current.reducedTransparency).toBe(false);
+  });
+
+  it('honors forced reduced transparency during SSR and after mount', async () => {
+    stubBrowserSupport({ brands: [{ brand: 'Chromium' }] });
+    const wrapper = ({ children }: { children: ReactNode }) => (
+      <LiquidGlassConfig forceReducedTransparency>{children}</LiquidGlassConfig>
+    );
+    function SupportProbe() {
+      const support = useGlassSupport();
+      return <span data-transparency={support.reducedTransparency ? 'reduced' : 'normal'} />;
+    }
+
+    expect(
+      renderToString(
+        <LiquidGlassConfig forceReducedTransparency>
+          <SupportProbe />
+        </LiquidGlassConfig>,
+      ),
+    ).toContain('data-transparency="reduced"');
+    const { result } = renderHook(() => useGlassSupport(), { wrapper });
+
+    await waitFor(() => expect(CSS.supports).toHaveBeenCalled());
+    expect(result.current.reducedTransparency).toBe(true);
     expect(result.current.refraction).toBe(false);
   });
 });

@@ -1,11 +1,43 @@
+@property --lg-pointer-x {
+  syntax: '<percentage>';
+  inherits: true;
+  initial-value: 50%;
+}
+
+@property --lg-pointer-y {
+  syntax: '<percentage>';
+  inherits: true;
+  initial-value: 0%;
+}
+
 .lg-surface {
+  --lg-surface-tint: var(--lg-tint);
+  --lg-surface-tint-hover: var(--lg-tint-hover);
+  --lg-surface-pointer-highlight: transparent;
+  --lg-surface-pointer-shade: transparent;
+  --lg-pointer-x: 50%;
+  --lg-pointer-y: 0%;
+
   position: relative;
   isolation: isolate;
   border: none;
   border-radius: var(--lg-r, var(--lg-radius-md));
   -webkit-backdrop-filter: blur(var(--lg-fallback-blur)) saturate(var(--lg-saturation));
   backdrop-filter: blur(var(--lg-fallback-blur)) saturate(var(--lg-saturation));
-  transition: transform var(--lg-duration) var(--lg-ease);
+  transition:
+    transform var(--lg-duration) var(--lg-ease),
+    --lg-pointer-x var(--lg-duration) var(--lg-ease),
+    --lg-pointer-y var(--lg-duration) var(--lg-ease);
+}
+
+.lg-surface[data-material='clear'] {
+  --lg-surface-tint: var(--lg-clear-tint);
+  --lg-surface-tint-hover: var(--lg-clear-tint-hover);
+}
+
+.lg-surface[data-interactive] {
+  --lg-surface-pointer-highlight: var(--lg-pointer-highlight);
+  --lg-surface-pointer-shade: var(--lg-pointer-shade);
 }
 
 .lg-surface[data-refraction='on'] {
@@ -24,8 +56,9 @@
   z-index: -1;
   inset: 0;
   border-radius: inherit;
-  background: var(--lg-tint);
+  background: var(--lg-surface-tint);
   content: '';
+  transition: background var(--lg-duration) var(--lg-ease);
 }
 
 .lg-surface::after {
@@ -33,14 +66,27 @@
   inset: 0;
   border: 1px solid transparent;
   border-radius: inherit;
-  background: linear-gradient(
-      135deg,
-      var(--lg-highlight),
-      transparent 40%,
-      transparent 60%,
-      var(--lg-shade)
-    )
-    border-box;
+  background:
+    radial-gradient(
+        circle at var(--lg-pointer-x) var(--lg-pointer-y),
+        var(--lg-surface-pointer-highlight),
+        transparent 38%
+      )
+      border-box,
+    radial-gradient(
+        circle at calc(100% - var(--lg-pointer-x)) calc(100% - var(--lg-pointer-y)),
+        var(--lg-surface-pointer-shade),
+        transparent 48%
+      )
+      border-box,
+    linear-gradient(
+        135deg,
+        var(--lg-highlight),
+        transparent 40%,
+        transparent 60%,
+        var(--lg-shade)
+      )
+      border-box;
   box-shadow:
     inset 1px 1px 1px var(--lg-highlight),
     inset -1px -1px 1px var(--lg-shade),
@@ -69,15 +115,116 @@
 }
 
 .lg-surface[data-interactive]:hover::before {
-  background: var(--lg-tint-hover);
+  background: var(--lg-surface-tint-hover);
 }
 
-.lg-surface[data-interactive]:active {
-  transform: scale(0.98);
+.lg-surface[data-interactive][data-pressed] {
+  transform: scale(var(--lg-interaction-scale));
+}
+
+.lg-surface[data-transparency='reduced'] {
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+}
+
+.lg-surface[data-transparency='reduced']::before {
+  background: var(--lg-opaque-surface);
+}
+
+.lg-surface[data-transparency='reduced']::after {
+  border-color: var(--lg-highlight);
+  background: none;
+  -webkit-mask: none;
+  mask: none;
+}
+
+@media (prefers-reduced-transparency: reduce) {
+  .lg-surface {
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+  }
+
+  .lg-surface::before {
+    background: var(--lg-opaque-surface);
+  }
+
+  .lg-surface::after {
+    border-color: var(--lg-highlight);
+    background: none;
+    -webkit-mask: none;
+    mask: none;
+  }
+}
+
+@media (prefers-contrast: more) {
+  .lg-surface::before {
+    background: var(--lg-opaque-surface);
+  }
+
+  .lg-surface::after {
+    border-color: var(--lg-text-secondary);
+    -webkit-mask: none;
+    mask: none;
+  }
+}
+
+@media (forced-colors: active) {
+  .lg-surface,
+  .lg-surface[data-refraction='on'],
+  .lg-surface[data-nested] {
+    color: CanvasText;
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+    forced-color-adjust: auto;
+  }
+
+  .lg-surface::before {
+    background: Canvas;
+  }
+
+  .lg-surface::after {
+    border-color: ButtonBorder;
+    background: none;
+    box-shadow: none;
+    -webkit-mask: none;
+    mask: none;
+  }
+
+  .lg-surface:focus-visible {
+    outline-color: Highlight;
+  }
+}
+
+@media (hover: none) {
+  .lg-surface[data-interactive] {
+    --lg-surface-pointer-highlight: transparent;
+    --lg-surface-pointer-shade: transparent;
+  }
+
+  .lg-surface[data-interactive]:hover::before {
+    background: var(--lg-surface-tint);
+  }
+
+  .lg-surface[data-interactive][data-pressed] {
+    --lg-surface-pointer-highlight: var(--lg-pointer-highlight);
+    --lg-surface-pointer-shade: var(--lg-pointer-shade);
+  }
+
+  .lg-surface[data-interactive][data-pressed]::before {
+    background: var(--lg-surface-tint-hover);
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {
   .lg-surface {
     transition: none;
+  }
+
+  .lg-surface::before {
+    transition: none;
+  }
+
+  .lg-surface[data-interactive][data-pressed] {
+    transform: none;
   }
 }

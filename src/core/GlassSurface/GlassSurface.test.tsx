@@ -1,5 +1,5 @@
 import { createRef, type CSSProperties } from 'react';
-import { act, render, screen } from '@testing-library/react';
+import { act, fireEvent, render, screen } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { LiquidGlassConfig } from '../config/LiquidGlassConfig';
 import { filterRegistry } from '../filter/filter-registry';
@@ -37,6 +37,7 @@ describe('GlassSurface', () => {
     expect(surface).toHaveClass('lg-surface', 'custom-surface');
     expect(surface).toHaveAttribute('aria-label', 'Preview panel');
     expect(surface).toHaveAttribute('data-interactive');
+    expect(surface).toHaveAttribute('data-material', 'regular');
     expect(surface).toHaveAttribute('data-refraction', 'off');
     expect(surface.style.getPropertyValue('--lg-r')).toBe('18px');
     expect(surface.style.getPropertyValue('--lg-tint')).toBe('rgb(255 255 255 / 0.3)');
@@ -56,6 +57,20 @@ describe('GlassSurface', () => {
     expect(screen.getByTestId('inner')).toHaveAttribute('data-refraction', 'off');
   });
 
+  it('supports regular and clear material semantics', () => {
+    render(
+      <>
+        <GlassSurface data-testid="regular">Regular</GlassSurface>
+        <GlassSurface material="clear" data-testid="clear">
+          Clear
+        </GlassSurface>
+      </>,
+    );
+
+    expect(screen.getByTestId('regular')).toHaveAttribute('data-material', 'regular');
+    expect(screen.getByTestId('clear')).toHaveAttribute('data-material', 'clear');
+  });
+
   it('stays in fallback mode when forced by configuration', () => {
     render(
       <LiquidGlassConfig forceFallback>
@@ -64,6 +79,84 @@ describe('GlassSurface', () => {
     );
 
     expect(screen.getByTestId('surface')).toHaveAttribute('data-refraction', 'off');
+    expect(screen.getByTestId('surface')).not.toHaveAttribute('data-transparency');
+  });
+
+  it('marks forced reduced transparency and disables refraction', () => {
+    render(
+      <LiquidGlassConfig forceReducedTransparency>
+        <GlassSurface data-testid="surface">Opaque</GlassSurface>
+      </LiquidGlassConfig>,
+    );
+
+    expect(screen.getByTestId('surface')).toHaveAttribute(
+      'data-transparency',
+      'reduced',
+    );
+    expect(screen.getByTestId('surface')).toHaveAttribute('data-refraction', 'off');
+  });
+
+  it('coalesces pointer light updates and preserves user handlers', () => {
+    vi.stubGlobal('PointerEvent', MouseEvent);
+    let pendingFrame: FrameRequestCallback | undefined;
+    const requestFrame = vi
+      .spyOn(globalThis, 'requestAnimationFrame')
+      .mockImplementation((callback) => {
+        pendingFrame = callback;
+        return 1;
+      });
+    const onPointerMove = vi.fn();
+    const onPointerEnter = vi.fn();
+    const onPointerLeave = vi.fn();
+    const onPointerDown = vi.fn();
+    const onPointerUp = vi.fn();
+    const onPointerCancel = vi.fn();
+    vi.spyOn(HTMLElement.prototype, 'getBoundingClientRect').mockReturnValue(
+      new DOMRect(10, 20, 200, 100),
+    );
+    render(
+      <GlassSurface
+        interactive
+        data-testid="surface"
+        onPointerMove={onPointerMove}
+        onPointerEnter={onPointerEnter}
+        onPointerLeave={onPointerLeave}
+        onPointerDown={onPointerDown}
+        onPointerUp={onPointerUp}
+        onPointerCancel={onPointerCancel}
+      >
+        Interactive
+      </GlassSurface>,
+    );
+    const surface = screen.getByTestId('surface');
+    const framesBeforePointerInteraction = requestFrame.mock.calls.length;
+
+    fireEvent.pointerEnter(surface, { clientX: 30, clientY: 30 });
+    fireEvent.pointerMove(surface, { clientX: 60, clientY: 70 });
+    expect(requestFrame).toHaveBeenCalledTimes(framesBeforePointerInteraction + 1);
+
+    act(() => pendingFrame?.(performance.now()));
+    expect(surface.style.getPropertyValue('--lg-pointer-x')).toBe('25%');
+    expect(surface.style.getPropertyValue('--lg-pointer-y')).toBe('50%');
+
+    fireEvent.pointerDown(surface, { clientX: 60, clientY: 70 });
+    expect(surface).toHaveAttribute('data-pressed');
+    fireEvent.pointerUp(surface, { clientX: 60, clientY: 70 });
+    expect(surface).not.toHaveAttribute('data-pressed');
+    fireEvent.pointerDown(surface, { clientX: 60, clientY: 70 });
+    fireEvent.pointerCancel(surface);
+    expect(surface).not.toHaveAttribute('data-pressed');
+    fireEvent.pointerLeave(surface);
+    act(() => pendingFrame?.(performance.now()));
+    expect(surface.style.getPropertyValue('--lg-pointer-x')).toBe('50%');
+    expect(surface.style.getPropertyValue('--lg-pointer-y')).toBe('0%');
+
+    expect(onPointerEnter).toHaveBeenCalledTimes(1);
+    expect(onPointerMove).toHaveBeenCalledTimes(1);
+    expect(onPointerDown).toHaveBeenCalledTimes(2);
+    expect(onPointerUp).toHaveBeenCalledTimes(1);
+    expect(onPointerCancel).toHaveBeenCalledTimes(1);
+    expect(onPointerLeave).toHaveBeenCalledTimes(1);
   });
 
   it('warns once and disables refraction for string radii', () => {

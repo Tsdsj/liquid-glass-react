@@ -47,10 +47,15 @@ export function detectGlassSupport(): boolean {
   return cachedSupport;
 }
 
-export function useGlassSupport(): { refraction: boolean } {
-  const { forceFallback } = useLiquidGlassContext();
+export interface GlassSupport {
+  refraction: boolean;
+  reducedTransparency: boolean;
+}
+
+export function useGlassSupport(): GlassSupport {
+  const { forceFallback, forceReducedTransparency } = useLiquidGlassContext();
   const [isSupported, setIsSupported] = useState(false);
-  const [reducedTransparency, setReducedTransparency] = useState(false);
+  const [prefersReducedTransparency, setPrefersReducedTransparency] = useState(false);
 
   useEffect(() => {
     if (typeof window === 'undefined') {
@@ -59,7 +64,7 @@ export function useGlassSupport(): { refraction: boolean } {
 
     const mediaQuery = window.matchMedia('(prefers-reduced-transparency: reduce)');
     const updateReducedTransparency = (event: MediaQueryListEvent | MediaQueryList) => {
-      setReducedTransparency(event.matches);
+      setPrefersReducedTransparency(event.matches);
     };
 
     setIsSupported(detectGlassSupport());
@@ -69,8 +74,11 @@ export function useGlassSupport(): { refraction: boolean } {
     return () => mediaQuery.removeEventListener('change', updateReducedTransparency);
   }, []);
 
+  const reducedTransparency = forceReducedTransparency || prefersReducedTransparency;
+
   return {
     refraction: isSupported && !forceFallback && !reducedTransparency,
+    reducedTransparency,
   };
 }
 

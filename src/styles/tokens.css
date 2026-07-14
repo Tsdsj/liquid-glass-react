@@ -6,8 +6,13 @@
   --lg-refraction: 40;
   --lg-tint: rgb(255 255 255 / 0.25);
   --lg-tint-hover: rgb(255 255 255 / 0.4);
+  --lg-clear-tint: rgb(255 255 255 / 0.12);
+  --lg-clear-tint-hover: rgb(255 255 255 / 0.22);
+  --lg-opaque-surface: rgb(245 247 250 / 0.96);
   --lg-highlight: rgb(255 255 255 / 0.75);
   --lg-shade: rgb(0 0 0 / 0.08);
+  --lg-pointer-highlight: rgb(255 255 255 / 0.55);
+  --lg-pointer-shade: rgb(0 0 0 / 0.12);
   --lg-drop-shadow: rgb(0 0 0 / 0.15);
 
   /* Geometry */
@@ -29,6 +34,8 @@
   --lg-danger: #ff3b30;
   --lg-success: #34c759;
   --lg-warning: #ff9500;
+  --lg-accent-glass: color-mix(in srgb, var(--lg-accent) 72%, transparent);
+  --lg-danger-glass: color-mix(in srgb, var(--lg-danger) 72%, transparent);
   --lg-text: rgb(0 0 0 / 0.85);
   --lg-text-secondary: rgb(0 0 0 / 0.5);
   --lg-text-disabled: rgb(0 0 0 / 0.3);
@@ -42,5 +49,6 @@
   --lg-ease-bounce: cubic-bezier(0.34, 1.56, 0.64, 1);
   --lg-duration: 200ms;
   --lg-duration-slow: 350ms;
+  --lg-interaction-scale: 0.98;
   --lg-z-overlay: 1000;
 }

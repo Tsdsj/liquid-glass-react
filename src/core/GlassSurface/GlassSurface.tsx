@@ -9,6 +9,7 @@ import {
   type ElementType,
   type ForwardedRef,
   type HTMLAttributes,
+  type PointerEvent as ReactPointerEvent,
 } from 'react';
 import {
   LiquidGlassContext,
@@ -29,16 +30,23 @@ export interface GlassSurfaceProps extends HTMLAttributes<HTMLElement> {
   bezel?: number;
   tint?: string;
   interactive?: boolean;
+  material?: 'regular' | 'clear';
 }
 
 interface GlassSurfaceStyle extends CSSProperties {
   '--lg-r'?: string;
   '--lg-tint'?: string;
+  '--lg-surface-tint'?: string;
   '--lg-filter-url'?: string;
 }
 
 interface ActiveFilter {
   id: string;
+}
+
+interface PointerPosition {
+  x: number;
+  y: number;
 }
 
 const RESIZE_SETTLE_DELAY = 150;
@@ -56,6 +64,14 @@ function sizesMatch(first: ElementSize, second: ElementSize): boolean {
   return first.width === second.width && first.height === second.height;
 }
 
+function clampPercentage(value: number): number {
+  return Math.min(100, Math.max(0, value));
+}
+
+function formatPercentage(value: number): string {
+  return `${Math.round(clampPercentage(value) * 100) / 100}%`;
+}
+
 export const GlassSurface = forwardRef<HTMLElement, GlassSurfaceProps>(function GlassSurface(
   {
     as,
@@ -65,9 +81,16 @@ export const GlassSurface = forwardRef<HTMLElement, GlassSurfaceProps>(function 
     bezel = 12,
     tint,
     interactive = false,
+    material = 'regular',
     className,
     style,
     children,
+    onPointerMove,
+    onPointerEnter,
+    onPointerLeave,
+    onPointerDown,
+    onPointerUp,
+    onPointerCancel,
     ...rest
   },
   forwardedRef,
@@ -81,6 +104,8 @@ export const GlassSurface = forwardRef<HTMLElement, GlassSurfaceProps>(function 
   const [defaultRadius, setDefaultRadius] = useState<number | null>(null);
   const [refractionBase, setRefractionBase] = useState<number | null>(null);
   const [activeFilter, setActiveFilter] = useState<ActiveFilter | null>(null);
+  const pointerFrameRef = useRef<number | null>(null);
+  const pointerPositionRef = useRef<PointerPosition>({ x: 50, y: 0 });
 
   const setHostRef = useCallback(
     (element: HTMLElement | null) => {
@@ -88,6 +113,110 @@ export const GlassSurface = forwardRef<HTMLElement, GlassSurfaceProps>(function 
       assignRef(forwardedRef, element);
     },
     [forwardedRef],
+  );
+
+  const applyPointerPosition = useCallback(() => {
+    pointerFrameRef.current = null;
+    const element = hostRef.current;
+    if (!element) {
+      return;
+    }
+
+    const { x, y } = pointerPositionRef.current;
+    element.style.setProperty('--lg-pointer-x', formatPercentage(x));
+    element.style.setProperty('--lg-pointer-y', formatPercentage(y));
+  }, []);
+
+  const schedulePointerPosition = useCallback(
+    (position: PointerPosition) => {
+      pointerPositionRef.current = position;
+      if (pointerFrameRef.current === null) {
+        pointerFrameRef.current = requestAnimationFrame(applyPointerPosition);
+      }
+    },
+    [applyPointerPosition],
+  );
+
+  const schedulePointerEventPosition = useCallback(
+    (event: ReactPointerEvent<HTMLElement>) => {
+      const rect = event.currentTarget.getBoundingClientRect();
+      if (rect.width <= 0 || rect.height <= 0) {
+        schedulePointerPosition({ x: 50, y: 0 });
+        return;
+      }
+
+      schedulePointerPosition({
+        x: ((event.clientX - rect.left) / rect.width) * 100,
+        y: ((event.clientY - rect.top) / rect.height) * 100,
+      });
+    },
+    [schedulePointerPosition],
+  );
+
+  const handlePointerMove = (event: ReactPointerEvent<HTMLElement>) => {
+    onPointerMove?.(event);
+    if (interactive) {
+      schedulePointerEventPosition(event);
+    }
+  };
+
+  const handlePointerEnter = (event: ReactPointerEvent<HTMLElement>) => {
+    onPointerEnter?.(event);
+    if (interactive) {
+      schedulePointerEventPosition(event);
+    }
+  };
+
+  const handlePointerLeave = (event: ReactPointerEvent<HTMLElement>) => {
+    onPointerLeave?.(event);
+    if (interactive) {
+      event.currentTarget.removeAttribute('data-pressed');
+      schedulePointerPosition({ x: 50, y: 0 });
+    }
+  };
+
+  const handlePointerDown = (event: ReactPointerEvent<HTMLElement>) => {
+    onPointerDown?.(event);
+    if (interactive) {
+      event.currentTarget.setAttribute('data-pressed', '');
+      schedulePointerEventPosition(event);
+    }
+  };
+
+  const handlePointerUp = (event: ReactPointerEvent<HTMLElement>) => {
+    onPointerUp?.(event);
+    if (interactive) {
+      event.currentTarget.removeAttribute('data-pressed');
+      schedulePointerEventPosition(event);
+    }
+  };
+
+  const handlePointerCancel = (event: ReactPointerEvent<HTMLElement>) => {
+    onPointerCancel?.(event);
+    if (interactive) {
+      event.currentTarget.removeAttribute('data-pressed');
+      schedulePointerPosition({ x: 50, y: 0 });
+    }
+  };
+
+  useEffect(() => {
+    if (interactive) {
+      return;
+    }
+
+    const element = hostRef.current;
+    element?.removeAttribute('data-pressed');
+    element?.style.removeProperty('--lg-pointer-x');
+    element?.style.removeProperty('--lg-pointer-y');
+  }, [interactive]);
+
+  useEffect(
+    () => () => {
+      if (pointerFrameRef.current !== null) {
+        cancelAnimationFrame(pointerFrameRef.current);
+      }
+    },
+    [],
   );
 
   useEffect(() => {
@@ -204,10 +333,11 @@ export const GlassSurface = forwardRef<HTMLElement, GlassSurfaceProps>(function 
   const nestedContext = useMemo<LiquidGlassContextValue>(
     () => ({
       forceFallback: context.forceFallback,
+      forceReducedTransparency: context.forceReducedTransparency,
       insideGlass: true,
       locale: context.locale,
     }),
-    [context.forceFallback, context.locale],
+    [context.forceFallback, context.forceReducedTransparency, context.locale],
   );
   const radiusValue =
     typeof radius === 'number'
@@ -218,6 +348,7 @@ export const GlassSurface = forwardRef<HTMLElement, GlassSurfaceProps>(function 
   const surfaceStyle: GlassSurfaceStyle = {
     '--lg-r': radiusValue,
     '--lg-tint': tint,
+    '--lg-surface-tint': tint,
     '--lg-filter-url': activeFilter ? `url(#${activeFilter.id})` : undefined,
     ...style,
   };
@@ -231,9 +362,17 @@ export const GlassSurface = forwardRef<HTMLElement, GlassSurfaceProps>(function 
         ref={setHostRef}
         className={cx('lg-surface', className)}
         style={surfaceStyle}
+        onPointerMove={handlePointerMove}
+        onPointerEnter={handlePointerEnter}
+        onPointerLeave={handlePointerLeave}
+        onPointerDown={handlePointerDown}
+        onPointerUp={handlePointerUp}
+        onPointerCancel={handlePointerCancel}
         data-refraction={isRefractionActive ? 'on' : 'off'}
         data-interactive={interactive ? '' : undefined}
+        data-material={material}
         data-nested={context.insideGlass ? '' : undefined}
+        data-transparency={glassSupport.reducedTransparency ? 'reduced' : undefined}
       >
         <LiquidGlassContext.Provider value={nestedContext}>
           <div className="lg-surface__content">{children}</div>

@@ -4,18 +4,21 @@ export type LiquidGlassLocale = 'zh-CN' | 'en-US';
 
 export interface LiquidGlassConfigProps {
   forceFallback?: boolean;
+  forceReducedTransparency?: boolean;
   locale?: LiquidGlassLocale;
   children: ReactNode;
 }
 
 export interface LiquidGlassContextValue {
   forceFallback: boolean;
+  forceReducedTransparency: boolean;
   insideGlass: boolean;
   locale: LiquidGlassLocale;
 }
 
 const DEFAULT_CONTEXT: LiquidGlassContextValue = {
   forceFallback: false,
+  forceReducedTransparency: false,
   insideGlass: false,
   locale: 'zh-CN',
 };
@@ -28,6 +31,7 @@ export function useLiquidGlassContext(): LiquidGlassContextValue {
 
 export function LiquidGlassConfig({
   forceFallback = false,
+  forceReducedTransparency = false,
   locale,
   children,
 }: LiquidGlassConfigProps) {
@@ -35,10 +39,20 @@ export function LiquidGlassConfig({
   const value = useMemo<LiquidGlassContextValue>(
     () => ({
       forceFallback: parent.forceFallback || forceFallback,
+      forceReducedTransparency:
+        parent.forceReducedTransparency || forceReducedTransparency,
       insideGlass: parent.insideGlass,
       locale: locale ?? parent.locale,
     }),
-    [forceFallback, locale, parent.forceFallback, parent.insideGlass, parent.locale],
+    [
+      forceFallback,
+      forceReducedTransparency,
+      locale,
+      parent.forceFallback,
+      parent.forceReducedTransparency,
+      parent.insideGlass,
+      parent.locale,
+    ],
   );
 
   return <LiquidGlassContext.Provider value={value}>{children}</LiquidGlassContext.Provider>;
