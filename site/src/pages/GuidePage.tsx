@@ -1,3 +1,4 @@
+import { AmbientDemo } from '../components/AmbientDemo';
 import { SITE_COPY, useT, type Bilingual } from '../site-i18n';
 
 interface GuideSection {
@@ -124,6 +125,7 @@ export function GuidePage() {
             ) : null}
           </section>
         ))}
+        <AmbientDemo />
       </article>
     </div>
   );

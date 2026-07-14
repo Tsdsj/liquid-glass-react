@@ -143,6 +143,7 @@ describe('docs site', () => {
       'pnpm add @ttq/liquid-glass-react',
     );
     expect(screen.getByTestId('guide-browsers')).toBeInTheDocument();
+    expect(screen.getByTestId('ambient-demo')).toBeInTheDocument();
   });
 
   it('navigates between pages on hash changes', async () => {

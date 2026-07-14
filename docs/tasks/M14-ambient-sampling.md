@@ -1,5 +1,5 @@
 ---
-status: todo
+status: done
 depends: [M12]
 ---
 
@@ -74,3 +74,35 @@ utils,记录"自动取样不进入运行时,--lg-ambient 维持手动 token",hoo
 
 - 读取任意 DOM 背景;实时逐帧取样;跟随滚动动态更新;(b) 路线的
   getComputedStyle 解析实现。
+
+## 完成记录
+
+- 纯函数 `src/core/utils/ambient-color.ts`:`computeAmbientColor(data, width, height, options?)`
+  → `rgb(r g b / a)`。`strategy`:`average` 全图均值 / `edge`(默认)按 Chebyshev 距中心的
+  边缘权重加权(中心权重≈0、边缘≈1),避免均值发灰;`alpha` 默认 0.16;跳过全透明像素;
+  空数据/零权重兜底 `transparent`。7 条纯函数单测(RED→GREEN,含 average vs edge 精确数值:
+  4×4 红边蓝心 → average `rgb(150 0 50)`、edge `rgb(180 0 20)`)。
+- 内部 hook `src/core/hooks/useAmbientFromImage.ts`(不公开导出):`new Image()` +
+  `crossOrigin='anonymous'`,降采样到 ≤64×64 `drawImage` → `getImageData` → computeAmbientColor;
+  CORS 污染(getImageData 抛 SecurityError)/解码失败/无 2D context/`url==null`/SSR 均静默
+  返回 null(调用方回退手动 token);卸载置空 handlers + cancelled 守卫,无迟到 setState。
+  5 条 hook 单测(mock Image + canvas getContext):成功写色、CORS 抛错→null、onerror→null、
+  null url 不建 Image、卸载 detach。
+- **零改动**:未动 `LiquidGlassConfig` / `GlassSurface`;`--lg-ambient` 默认行为不变(不消费
+  该 hook 的表面零影响);`src/index.ts` 无新增导出。
+- 消费者:
+  - site `site/src/components/AmbientDemo.tsx`(挂在 Guide 页末尾):开关自动取样,取到色写入
+    容器 `--lg-ambient`、取不到显式提示「保持手动值(降级路径)」,壁纸为同源 bundled webp
+    故本地可真正取色。壁纸原始 URL 经 `PHOTO_WALLPAPER_URL` 暴露;App.test 加 `ambient-demo`
+    存在断言。中英文案。
+  - Storybook `Core/AmbientSampling`:Playground(开关 + 取样色显示)+ EdgeVsAverage(edge vs
+    average 并排对比)。中英文案。
+- (b) 纯色/渐变背景 getComputedStyle 解析:**按定稿不实现**,仅记录为可行但未做的第二条路线。
+- L2 式实时逐帧/跟随滚动:非目标,未做。
+- 验证:`pnpm typecheck` ✓、`pnpm build` ✓(dist 无变化)、`pnpm test` 单线程全量全绿
+  (唯一并行 flake 为 M4 既有 Modal 焦点,非本卡)。
+- **留本地目检(退出条件判据)**:在 `pnpm site` Guide 页与 Storybook `Core/AmbientSampling`
+  下观察——① photo 壁纸下玻璃是否带上可信的环境暖色;② `average` 是否发灰、`edge` 是否更准。
+  若实测偏差大且 edge 加权不解决 → 按退出条件:纯函数保留在 utils,hook 降级为 story 级实验,
+  运行时不自动取样、`--lg-ambient` 维持手动 token(当前已内部化、site demo 可一键关,回退成本低)。
+  服务器无浏览器,取色观感无法自动验。
