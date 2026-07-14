@@ -1,5 +1,5 @@
 ---
-status: todo
+status: done
 depends: [M2]
 ---
 
@@ -71,3 +71,7 @@ interface SelectProps {
 ## 完成记录
 
 - 需求补充（2026-07-14）：`LiquidGlassConfig` 新增 `locale?: 'zh-CN' | 'en-US'`，默认 `zh-CN`；Select 未传 `placeholder` 时按 locale 显示“请选择 / Select”。Input、Textarea 的业务文案仍由调用方通过原生属性传入。Storybook 提供中英文切换并默认中文。
+- 新增 Input、Textarea、Select 的实现、纯 CSS 样式、三件套 stories、表单场景、单元测试和公共导出；Input/Textarea 输入区域固定 `refraction="off"`，Select 面板使用 Floating UI 与 GlassSurface。
+- `pnpm typecheck`、`pnpm build`、`pnpm test` 全部通过；共 14 个测试文件、80 项测试通过，其中 Select 13 项覆盖受控/非受控、Enter、Space、方向键、Esc、Tab、typeahead、禁用项跳过与外点关闭。
+- Storybook 在 1280×760 与 390×844 下完成中文默认、英文切换、dark/photo、light/gradient、输入焦点、invalid、autoResize、Select 浮层定位和键盘链路验收；控制台与页面错误均为 0。
+- TODO（M4）：Select 继续保留当前 Floating UI 原语实现，抽取 Popover 时不回头重构。
