@@ -13,6 +13,8 @@ export { Checkbox } from './components/Checkbox';
 export type { CheckboxProps } from './components/Checkbox';
 export { Input } from './components/Input';
 export type { InputProps } from './components/Input';
+export { Popover } from './components/Popover';
+export type { PopoverProps } from './components/Popover';
 export { Select } from './components/Select';
 export type { SelectOption, SelectProps } from './components/Select';
 export { Slider } from './components/Slider';
