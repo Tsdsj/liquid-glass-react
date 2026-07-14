@@ -1,0 +1,27 @@
+.lg-card {
+  --lg-card-padding: var(--lg-space-4);
+
+  display: block;
+  color: var(--lg-text);
+  font-family: var(--lg-font);
+}
+
+.lg-card > .lg-surface__content {
+  padding: var(--lg-card-padding);
+}
+
+.lg-card[data-padding='none'] {
+  --lg-card-padding: 0;
+}
+
+.lg-card[data-padding='sm'] {
+  --lg-card-padding: var(--lg-space-2);
+}
+
+.lg-card[data-padding='md'] {
+  --lg-card-padding: var(--lg-space-4);
+}
+
+.lg-card[data-padding='lg'] {
+  --lg-card-padding: calc(var(--lg-space-4) + var(--lg-space-2));
+}

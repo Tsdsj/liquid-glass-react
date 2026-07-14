@@ -7,16 +7,24 @@ export type {
   LiquidGlassConfigProps,
   LiquidGlassLocale,
 } from './core/config/LiquidGlassConfig';
+export { Avatar } from './components/Avatar';
+export type { AvatarProps } from './components/Avatar';
 export { Badge } from './components/Badge';
 export type { BadgeProps } from './components/Badge';
+export { Breadcrumb } from './components/Breadcrumb';
+export type { BreadcrumbItem, BreadcrumbProps } from './components/Breadcrumb';
 export { Button } from './components/Button';
 export type { ButtonProps } from './components/Button';
+export { Card } from './components/Card';
+export type { CardProps } from './components/Card';
 export { Checkbox } from './components/Checkbox';
 export type { CheckboxProps } from './components/Checkbox';
 export { Input } from './components/Input';
 export type { InputProps } from './components/Input';
 export { Modal } from './components/Modal';
 export type { ModalProps } from './components/Modal';
+export { Pagination } from './components/Pagination';
+export type { PaginationProps } from './components/Pagination';
 export { Popover } from './components/Popover';
 export type { PopoverProps } from './components/Popover';
 export { Progress } from './components/Progress';
@@ -27,6 +35,8 @@ export { Segmented } from './components/Segmented';
 export type { SegmentedOption, SegmentedProps } from './components/Segmented';
 export { Select } from './components/Select';
 export type { SelectOption, SelectProps } from './components/Select';
+export { SideNav } from './components/SideNav';
+export type { SideNavItem, SideNavProps } from './components/SideNav';
 export { Skeleton } from './components/Skeleton';
 export type { SkeletonProps } from './components/Skeleton';
 export { Slider } from './components/Slider';

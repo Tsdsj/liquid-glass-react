@@ -80,6 +80,17 @@ describe('computeIndicatorStyle', () => {
     expect(style.width).toBe('30px');
     expect(style.height).toBe('20px');
   });
+
+  it('translates along the vertical axis for stacked items (SideNav)', () => {
+    const style = computeIndicatorStyle(
+      rect({ left: 0, top: 0, width: 200, height: 240 }),
+      rect({ left: 0, top: 96, width: 200, height: 40 }),
+    );
+
+    expect(style.transform).toBe('translate(0px, 96px)');
+    expect(style.width).toBe('200px');
+    expect(style.height).toBe('40px');
+  });
 });
 
 describe('useSlidingIndicator', () => {
