@@ -33,6 +33,8 @@ type MapFactory = (w: number, h: number, r: number, bezel: number) => string;
 
 const REMOVE_DELAY = 2000;
 
+let resetSingleton: () => void = () => {};
+
 function normalizeShape(shape: FilterShape): FilterShape {
   return {
     ...shape,
@@ -45,7 +47,10 @@ function shapeKey(shape: FilterShape): string {
   return `${shape.w}x${shape.h}r${shape.r}b${shape.bezel}s${shape.scale}`;
 }
 
-export function createFilterRegistry(mapFactory: MapFactory = makeDisplacementMap): FilterRegistry {
+export function createFilterRegistry(
+  mapFactory: MapFactory = makeDisplacementMap,
+  registerReset?: (reset: () => void) => void,
+): FilterRegistry {
   const records = new Map<string, RegistryRecord>();
   const listeners = new Set<() => void>();
   let snapshot: readonly FilterEntry[] = [];
@@ -55,6 +60,20 @@ export function createFilterRegistry(mapFactory: MapFactory = makeDisplacementMa
     snapshot = Array.from(records.values(), ({ entry }) => entry);
     listeners.forEach((listener) => listener());
   };
+
+  registerReset?.(() => {
+    records.forEach((record) => {
+      if (record.removalTimer !== null) {
+        clearTimeout(record.removalTimer);
+      }
+    });
+    records.clear();
+    nextId = 0;
+    // Reset is a test-teardown utility: clear the snapshot without notifying
+    // live subscribers, which would trigger unwrapped act() updates as the
+    // surrounding components are about to unmount anyway.
+    snapshot = [];
+  });
 
   return {
     acquire(inputShape) {
@@ -124,4 +143,11 @@ export function createFilterRegistry(mapFactory: MapFactory = makeDisplacementMa
   };
 }
 
-export const filterRegistry = createFilterRegistry();
+export const filterRegistry = createFilterRegistry(makeDisplacementMap, (reset) => {
+  resetSingleton = reset;
+});
+
+/** Test-only: clears every registered filter and pending removal timer. */
+export function __resetFilterRegistry(): void {
+  resetSingleton();
+}

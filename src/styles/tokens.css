@@ -4,6 +4,7 @@
   --lg-fallback-blur: 16px;
   --lg-saturation: 1.5;
   --lg-refraction: 40;
+  --lg-refraction-press: 1.35;
   --lg-tint: rgb(255 255 255 / 0.25);
   --lg-tint-hover: rgb(255 255 255 / 0.4);
   --lg-clear-tint: rgb(255 255 255 / 0.12);

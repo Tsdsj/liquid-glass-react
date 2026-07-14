@@ -2,12 +2,20 @@ import { createRef, type CSSProperties } from 'react';
 import { act, fireEvent, render, screen } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { LiquidGlassConfig } from '../config/LiquidGlassConfig';
-import { filterRegistry } from '../filter/filter-registry';
+import { __resetFilterRegistry, filterRegistry } from '../filter/filter-registry';
 import { __resetGlassSupportCache } from '../hooks/useGlassSupport';
 import { GlassSurface } from './GlassSurface';
 
 const REFRACTION_STYLE: CSSProperties & { '--lg-refraction': string } = {
   '--lg-refraction': '40',
+};
+
+const PRESS_REFRACTION_STYLE: CSSProperties & {
+  '--lg-refraction': string;
+  '--lg-refraction-press': string;
+} = {
+  '--lg-refraction': '40',
+  '--lg-refraction-press': '1.35',
 };
 
 function stubChromiumEnvironment(): void {
@@ -42,6 +50,7 @@ async function advanceTime(milliseconds: number): Promise<void> {
 describe('GlassSurface', () => {
   afterEach(() => {
     __resetGlassSupportCache();
+    __resetFilterRegistry();
     vi.restoreAllMocks();
     vi.unstubAllGlobals();
     vi.useRealTimers();
@@ -426,5 +435,195 @@ describe('GlassSurface', () => {
     await advanceTime(1);
     expect(surface).not.toHaveAttribute('data-refraction-pending');
     expect(surface).toHaveAttribute('data-refraction', 'off');
+  });
+
+  async function settleRefraction(): Promise<void> {
+    await advanceTime(16);
+    await advanceTime(16);
+    await advanceTime(16);
+    await advanceTime(16);
+  }
+
+  it('boosts the refraction scale while pressed and reuses the base displacement map', async () => {
+    vi.useFakeTimers();
+    vi.stubGlobal('PointerEvent', MouseEvent);
+    stubChromiumEnvironment();
+    stubMeasuredSize(320, 200);
+    render(
+      <GlassSurface
+        radius={14}
+        interactive
+        style={PRESS_REFRACTION_STYLE}
+        data-testid="surface"
+      >
+        Press
+      </GlassSurface>,
+    );
+    const surface = screen.getByTestId('surface');
+
+    await settleRefraction();
+    const [base] = filterRegistry.getSnapshot();
+    expect(filterRegistry.getSnapshot()).toHaveLength(1);
+    expect(base.scale).toBe(40);
+    expect(surface.style.getPropertyValue('--lg-filter-url')).toBe(`url(#${base.id})`);
+
+    fireEvent.pointerDown(surface, { clientX: 10, clientY: 10 });
+    await advanceTime(16);
+
+    const snapshot = filterRegistry.getSnapshot();
+    expect(snapshot).toHaveLength(2);
+    const boosted = snapshot.find((entry) => entry.id !== base.id);
+    expect(boosted).toBeDefined();
+    expect(boosted?.scale).toBeCloseTo(40 * 1.35, 5);
+    expect(boosted?.mapURI).toBe(base.mapURI);
+    expect(surface.style.getPropertyValue('--lg-filter-url')).toBe(`url(#${boosted?.id})`);
+
+    fireEvent.pointerUp(surface, { clientX: 10, clientY: 10 });
+    expect(surface.style.getPropertyValue('--lg-filter-url')).toBe(`url(#${base.id})`);
+    expect(filterRegistry.getSnapshot()).toHaveLength(2);
+
+    await advanceTime(16);
+  });
+
+  it('does not rebuild the map or pile up filters during rapid press cycles', async () => {
+    vi.useFakeTimers();
+    vi.stubGlobal('PointerEvent', MouseEvent);
+    stubChromiumEnvironment();
+    stubMeasuredSize(320, 200);
+    render(
+      <GlassSurface
+        radius={14}
+        interactive
+        style={PRESS_REFRACTION_STYLE}
+        data-testid="surface"
+      >
+        Press
+      </GlassSurface>,
+    );
+    const surface = screen.getByTestId('surface');
+
+    await settleRefraction();
+    const [base] = filterRegistry.getSnapshot();
+
+    fireEvent.pointerDown(surface, { clientX: 10, clientY: 10 });
+    await advanceTime(16);
+    const boostedMapURI = filterRegistry
+      .getSnapshot()
+      .find((entry) => entry.id !== base.id)?.mapURI;
+
+    for (let cycle = 0; cycle < 5; cycle += 1) {
+      fireEvent.pointerUp(surface, { clientX: 10, clientY: 10 });
+      fireEvent.pointerDown(surface, { clientX: 10, clientY: 10 });
+      await advanceTime(16);
+    }
+
+    const snapshot = filterRegistry.getSnapshot();
+    expect(snapshot).toHaveLength(2);
+    expect(snapshot.find((entry) => entry.id !== base.id)?.mapURI).toBe(boostedMapURI);
+
+    await advanceTime(16);
+  });
+
+  it('reverts to the base filter and releases cleanly on pointercancel', async () => {
+    vi.useFakeTimers();
+    vi.stubGlobal('PointerEvent', MouseEvent);
+    stubChromiumEnvironment();
+    stubMeasuredSize(320, 200);
+    render(
+      <GlassSurface
+        radius={14}
+        interactive
+        style={PRESS_REFRACTION_STYLE}
+        data-testid="surface"
+      >
+        Press
+      </GlassSurface>,
+    );
+    const surface = screen.getByTestId('surface');
+
+    await settleRefraction();
+    const [base] = filterRegistry.getSnapshot();
+
+    fireEvent.pointerDown(surface, { clientX: 10, clientY: 10 });
+    await advanceTime(16);
+    expect(surface.style.getPropertyValue('--lg-filter-url')).not.toBe(`url(#${base.id})`);
+
+    fireEvent.pointerCancel(surface);
+    expect(surface.style.getPropertyValue('--lg-filter-url')).toBe(`url(#${base.id})`);
+
+    await advanceTime(16);
+  });
+
+  it('releases the boosted filter without warnings when unmounted mid-press', async () => {
+    vi.useFakeTimers();
+    vi.stubGlobal('PointerEvent', MouseEvent);
+    stubChromiumEnvironment();
+    stubMeasuredSize(320, 200);
+    const errorSpy = vi.spyOn(console, 'error').mockImplementation(() => undefined);
+    const { unmount } = render(
+      <GlassSurface
+        radius={14}
+        interactive
+        style={PRESS_REFRACTION_STYLE}
+        data-testid="surface"
+      >
+        Press
+      </GlassSurface>,
+    );
+    const surface = screen.getByTestId('surface');
+
+    await settleRefraction();
+    fireEvent.pointerDown(surface, { clientX: 10, clientY: 10 });
+    await advanceTime(16);
+    expect(filterRegistry.getSnapshot()).toHaveLength(2);
+
+    unmount();
+    await act(async () => {
+      await vi.runAllTimersAsync();
+    });
+
+    expect(filterRegistry.getSnapshot()).toHaveLength(0);
+    expect(errorSpy).not.toHaveBeenCalled();
+  });
+
+  it('never acquires a boosted filter when refraction is unavailable', async () => {
+    vi.useFakeTimers();
+    vi.stubGlobal('PointerEvent', MouseEvent);
+    stubChromiumEnvironment();
+    stubMeasuredSize(320, 200);
+    render(
+      <>
+        <LiquidGlassConfig forceFallback>
+          <GlassSurface
+            radius={14}
+            interactive
+            style={PRESS_REFRACTION_STYLE}
+            data-testid="fallback"
+          >
+            Fallback
+          </GlassSurface>
+        </LiquidGlassConfig>
+        <GlassSurface
+          radius={14}
+          interactive
+          refraction="off"
+          style={PRESS_REFRACTION_STYLE}
+          data-testid="off"
+        >
+          Off
+        </GlassSurface>
+      </>,
+    );
+
+    await settleRefraction();
+    expect(filterRegistry.getSnapshot()).toHaveLength(0);
+
+    fireEvent.pointerDown(screen.getByTestId('fallback'), { clientX: 10, clientY: 10 });
+    fireEvent.pointerDown(screen.getByTestId('off'), { clientX: 10, clientY: 10 });
+    await advanceTime(16);
+
+    expect(filterRegistry.getSnapshot()).toHaveLength(0);
+
+    await advanceTime(16);
   });
 });

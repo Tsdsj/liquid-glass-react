@@ -111,7 +111,14 @@ export const GlassSurface = forwardRef<HTMLElement, GlassSurfaceProps>(function 
   const [stableSize, setStableSize] = useState<ElementSize>({ width: 0, height: 0 });
   const [defaultRadius, setDefaultRadius] = useState<number | null>(null);
   const [refractionBase, setRefractionBase] = useState<number | null>(null);
+  const [pressBoost, setPressBoost] = useState(1);
   const [activeFilter, setActiveFilter] = useState<ActiveFilter | null>(null);
+  const [isPressed, setIsPressed] = useState(false);
+  // Latches true on the first press so the enhanced (boosted) filter is
+  // acquired once and then kept until the shape changes or the surface
+  // unmounts, instead of being torn down on every pointerup.
+  const [pressBoostRequested, setPressBoostRequested] = useState(false);
+  const [boostedFilter, setBoostedFilter] = useState<ActiveFilter | null>(null);
   const [hasResolvedClientSupport, setHasResolvedClientSupport] = useState(false);
   const [isFilterSettled, setIsFilterSettled] = useState(false);
   const pointerFrameRef = useRef<number | null>(null);
@@ -181,6 +188,7 @@ export const GlassSurface = forwardRef<HTMLElement, GlassSurfaceProps>(function 
     onPointerLeave?.(event);
     if (interactive) {
       event.currentTarget.removeAttribute('data-pressed');
+      setIsPressed(false);
       schedulePointerPosition({ x: 50, y: 0 });
     }
   };
@@ -189,6 +197,8 @@ export const GlassSurface = forwardRef<HTMLElement, GlassSurfaceProps>(function 
     onPointerDown?.(event);
     if (interactive) {
       event.currentTarget.setAttribute('data-pressed', '');
+      setIsPressed(true);
+      setPressBoostRequested(true);
       schedulePointerEventPosition(event);
     }
   };
@@ -197,6 +207,7 @@ export const GlassSurface = forwardRef<HTMLElement, GlassSurfaceProps>(function 
     onPointerUp?.(event);
     if (interactive) {
       event.currentTarget.removeAttribute('data-pressed');
+      setIsPressed(false);
       schedulePointerEventPosition(event);
     }
   };
@@ -205,6 +216,7 @@ export const GlassSurface = forwardRef<HTMLElement, GlassSurfaceProps>(function 
     onPointerCancel?.(event);
     if (interactive) {
       event.currentTarget.removeAttribute('data-pressed');
+      setIsPressed(false);
       schedulePointerPosition({ x: 50, y: 0 });
     }
   };
@@ -214,6 +226,8 @@ export const GlassSurface = forwardRef<HTMLElement, GlassSurfaceProps>(function 
       return;
     }
 
+    setIsPressed(false);
+    setPressBoostRequested(false);
     const element = hostRef.current;
     element?.removeAttribute('data-pressed');
     element?.style.removeProperty('--lg-pointer-x');
@@ -266,6 +280,14 @@ export const GlassSurface = forwardRef<HTMLElement, GlassSurfaceProps>(function 
         current === parsedRefraction ? current : parsedRefraction,
       );
     }
+
+    const parsedPressBoost = Number.parseFloat(
+      computedStyle.getPropertyValue('--lg-refraction-press').trim(),
+    );
+    // Missing/invalid token means no press enhancement (boost factor 1).
+    const nextPressBoost =
+      Number.isFinite(parsedPressBoost) && parsedPressBoost > 0 ? parsedPressBoost : 1;
+    setPressBoost((current) => (current === nextPressBoost ? current : nextPressBoost));
   });
 
   useEffect(() => {
@@ -350,6 +372,65 @@ export const GlassSurface = forwardRef<HTMLElement, GlassSurfaceProps>(function 
     stableSize.width,
   ]);
 
+  useEffect(() => {
+    if (
+      !pressBoostRequested ||
+      !canUseRefraction ||
+      numericRadius === null ||
+      refractionBase === null ||
+      stableSize.width === 0 ||
+      stableSize.height === 0
+    ) {
+      setBoostedFilter(null);
+      return undefined;
+    }
+
+    // The press-boost filter differs from the base filter only in its
+    // feDisplacementMap `scale`. makeDisplacementMap caches by (w,h,r,bezel) and
+    // ignores scale, so this shape reuses the SAME already-decoded displacement
+    // map URI as the base filter. Switching --lg-filter-url to it therefore
+    // decodes no new feImage and shows no first-frame flash — that map reuse is
+    // exactly what makes swapping to the boosted filter on press safe.
+    const shape: FilterShape = {
+      w: stableSize.width,
+      h: stableSize.height,
+      r: numericRadius,
+      bezel,
+      scale: depth * refractionBase * pressBoost,
+    };
+    let acquired = false;
+    let cancelled = false;
+    const animationFrame = requestAnimationFrame(() => {
+      const id = filterRegistry.acquire(shape);
+      acquired = true;
+
+      if (cancelled) {
+        filterRegistry.release(shape);
+        return;
+      }
+
+      setBoostedFilter({ id });
+    });
+
+    return () => {
+      cancelled = true;
+      cancelAnimationFrame(animationFrame);
+      if (acquired) {
+        filterRegistry.release(shape);
+      }
+    };
+  }, [
+    bezel,
+    canUseRefraction,
+    depth,
+    numericRadius,
+    pressBoost,
+    pressBoostRequested,
+    refractionBase,
+    stableSize.height,
+    stableSize.width,
+  ]);
+
   const isRefractionActive = canUseRefraction && activeFilter !== null;
   const requestsRefraction =
     refraction === 'auto' &&
@@ -418,11 +499,14 @@ export const GlassSurface = forwardRef<HTMLElement, GlassSurfaceProps>(function 
       : radius === undefined
         ? 'var(--lg-radius-md)'
         : radius;
+  // While pressed, point at the boosted filter (url() is not interpolatable, so
+  // the swap is instant); otherwise use the base filter.
+  const displayedFilter = isPressed && boostedFilter ? boostedFilter : activeFilter;
   const surfaceStyle: GlassSurfaceStyle = {
     '--lg-r': radiusValue,
     '--lg-tint': tint,
     '--lg-surface-tint': tint,
-    '--lg-filter-url': activeFilter ? `url(#${activeFilter.id})` : undefined,
+    '--lg-filter-url': displayedFilter ? `url(#${displayedFilter.id})` : undefined,
     ...style,
   };
   return (

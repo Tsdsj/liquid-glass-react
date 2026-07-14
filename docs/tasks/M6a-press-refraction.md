@@ -1,5 +1,5 @@
 ---
-status: todo
+status: done
 depends: [M4-improve]
 ---
 
@@ -89,3 +89,29 @@ M4-improve 已实现指针跟随高光、按压缩放（`--lg-interaction-scale`
 - Switch/Slider thumb 的真折射（嵌套玻璃内，规格禁止）。
 - hover 阶段的折射变化（Apple 仅在按压/拖动时增强）。
 - 任何新的公共 props。
+
+## 完成记录（2026-07-14）
+
+改动文件：
+
+- `src/styles/tokens.css`：新增 `--lg-refraction-press: 1.35;`（亮暗同值）。
+- `src/core/GlassSurface/GlassSurface.tsx`：
+  - 新增低频 `isPressed` 状态（pointerdown 置真，pointerup/cancel/leave 置假；
+    `interactive` 关闭时归零）。既有 `data-pressed` 直写 DOM 的高频路径保持不变。
+  - 在既有 computed-style effect 中解析 `--lg-refraction-press`，非法/缺失回退 1。
+  - 新增 `pressBoostRequested` 闩锁（首次按压置真）驱动第二个 acquire effect，
+    scale = `depth * refractionBase * pressBoost`；与基础滤镜同 `w,h,r,bezel`，
+    因 `makeDisplacementMap` 按形状（不含 scale）缓存而复用同一张贴图 URI，
+    切换无 feImage 首帧问题（代码注释已说明）。生命周期与基础滤镜一致
+    （shape 变化 / unmount 配对 release，靠 registry 2s 延迟移除防抖，无自建计时器）。
+  - `--lg-filter-url`：按压且增强滤镜就绪时指向增强 id，否则指向基础 id。
+- `src/core/filter/filter-registry.ts`：新增测试专用 `__resetFilterRegistry`
+  （不导出到 index，用于测试隔离；teardown 语义下清空且不通知订阅者，避免 act 警告）。
+- `src/core/GlassSurface/GlassSurface.test.tsx`：新增 5 条单测覆盖增强、连续按压不堆积、
+  pointercancel 回退、按压中 unmount 释放、fallback/refraction=off 不 acquire；
+  afterEach 接入 registry 重置。
+
+验证结果：`pnpm typecheck && pnpm build && pnpm test` 全部通过（138 tests，无 act 警告）。
+首帧门控（pending 两帧 + 400ms 出口）语义未改动，相关回归测试保持通过。
+Button（非 ghost，interactive + refraction auto）无需改调用代码即获得该行为，
+ghost（refraction=off）与嵌套/降级路径均不触发 acquire。
