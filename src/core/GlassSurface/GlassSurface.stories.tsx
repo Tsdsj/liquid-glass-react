@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState, type ChangeEvent, type ReactNode } from 'react';
 import type { Meta, StoryObj } from '@storybook/react-vite';
-import { LiquidGlassConfig } from '../config/LiquidGlassConfig';
-import { GlassSurface } from './GlassSurface';
+import { LiquidGlassConfig, useLiquidGlassContext } from '../config/LiquidGlassConfig';
+import { GlassSurface, type GlassSurfaceProps } from './GlassSurface';
 
 const PANEL_STYLE = {
   display: 'grid',
@@ -28,6 +28,35 @@ const INSTANCE_STYLE = {
 
 const INSTANCE_IDS = Array.from({ length: 20 }, (_, index) => index + 1);
 const TUNING_TOKENS = ['--lg-blur', '--lg-refraction', '--lg-saturation', '--lg-tint'] as const;
+
+const COPY = {
+  'zh-CN': {
+    playground: '边缘折射会弯曲背景，同时让中央内容保持清晰可读。',
+    tuning: {
+      blur: 'Blur 模糊',
+      refraction: 'Refraction 折射',
+      saturation: 'Saturation 饱和度',
+      tintAlpha: 'Tint alpha 色调透明度',
+      description: '调整材质参数，同时保持内容清晰可读。',
+    },
+    fallback: '降级模式仍保留 CSS 模糊、饱和度、色调和高光效果。',
+    resize: '拖动右下角即可调整尺寸。',
+    nested: '嵌套表面会保留色调和高光，但不会重复使用背景滤镜。',
+  },
+  'en-US': {
+    playground: 'Edge refraction bends the wallpaper while the center stays readable.',
+    tuning: {
+      blur: 'Blur',
+      refraction: 'Refraction',
+      saturation: 'Saturation',
+      tintAlpha: 'Tint alpha',
+      description: 'Tune the material while keeping the content clear.',
+    },
+    fallback: 'CSS blur, saturation, tint, and specular highlights remain available.',
+    resize: 'Drag the lower-right corner to resize.',
+    nested: 'Nested surfaces keep tint and highlights without another backdrop filter.',
+  },
+} as const;
 
 interface ControlRowProps {
   label: string;
@@ -61,6 +90,8 @@ function ControlRow({ label, value, min, max, step, onChange, children }: Contro
 }
 
 function TuningLabStory() {
+  const { locale } = useLiquidGlassContext();
+  const copy = COPY[locale].tuning;
   const [blur, setBlur] = useState(4);
   const [refraction, setRefraction] = useState(40);
   const [saturation, setSaturation] = useState(1.5);
@@ -107,11 +138,11 @@ function TuningLabStory() {
       }}
     >
       <div style={{ display: 'grid', gap: '16px' }}>
-        <ControlRow label="Blur" value={blur} min={0} max={24} step={1} onChange={setBlur}>
+        <ControlRow label={copy.blur} value={blur} min={0} max={24} step={1} onChange={setBlur}>
           {blur}px
         </ControlRow>
         <ControlRow
-          label="Refraction"
+          label={copy.refraction}
           value={refraction}
           min={0}
           max={100}
@@ -119,7 +150,7 @@ function TuningLabStory() {
           onChange={setRefraction}
         />
         <ControlRow
-          label="Saturation"
+          label={copy.saturation}
           value={saturation}
           min={0.5}
           max={2.5}
@@ -127,7 +158,7 @@ function TuningLabStory() {
           onChange={setSaturation}
         />
         <ControlRow
-          label="Tint alpha"
+          label={copy.tintAlpha}
           value={tintAlpha}
           min={0}
           max={0.8}
@@ -136,9 +167,56 @@ function TuningLabStory() {
         />
       </div>
       <GlassSurface radius={22} bezel={16} interactive style={PANEL_STYLE}>
-        Tune the material while keeping the content clear.
+        {copy.description}
       </GlassSurface>
     </div>
+  );
+}
+
+function LocalizedSurface({ copyKey, ...props }: GlassSurfaceProps & { copyKey: 'playground' | 'fallback' }) {
+  const { locale } = useLiquidGlassContext();
+  return (
+    <GlassSurface {...props} style={PANEL_STYLE}>
+      {COPY[locale][copyKey]}
+    </GlassSurface>
+  );
+}
+
+function ResizableStory() {
+  const { locale } = useLiquidGlassContext();
+  return (
+    <div
+      style={{
+        width: '320px',
+        height: '200px',
+        minWidth: '220px',
+        minHeight: '140px',
+        resize: 'both',
+        overflow: 'hidden',
+      }}
+    >
+      <GlassSurface
+        radius={22}
+        bezel={16}
+        style={{ ...PANEL_STYLE, width: '100%', height: '100%' }}
+      >
+        {COPY[locale].resize}
+      </GlassSurface>
+    </div>
+  );
+}
+
+function NestedStory() {
+  const { locale } = useLiquidGlassContext();
+  return (
+    <GlassSurface radius={28} bezel={18} style={{ ...PANEL_STYLE, width: '420px', height: '280px' }}>
+      <GlassSurface
+        radius={18}
+        style={{ ...PANEL_STYLE, width: '240px', height: '120px', padding: '20px' }}
+      >
+        {COPY[locale].nested}
+      </GlassSurface>
+    </GlassSurface>
   );
 }
 
@@ -166,11 +244,7 @@ export default meta;
 type Story = StoryObj<typeof meta>;
 
 export const Playground: Story = {
-  render: (args) => (
-    <GlassSurface {...args} style={PANEL_STYLE}>
-      Edge refraction bends the wallpaper while the center stays readable.
-    </GlassSurface>
-  ),
+  render: (args) => <LocalizedSurface {...args} copyKey="playground" />,
 };
 
 export const TuningLab: Story = {
@@ -181,9 +255,7 @@ export const TuningLab: Story = {
 export const ForcedFallback: Story = {
   render: (args) => (
     <LiquidGlassConfig forceFallback>
-      <GlassSurface {...args} style={PANEL_STYLE}>
-        CSS blur, saturation, tint, and specular highlights remain available.
-      </GlassSurface>
+      <LocalizedSurface {...args} copyKey="fallback" />
     </LiquidGlassConfig>
   ),
 };
@@ -208,39 +280,11 @@ export const ManyInstances: Story = {
 };
 
 export const Resizable: Story = {
-  render: () => (
-    <div
-      style={{
-        width: '320px',
-        height: '200px',
-        minWidth: '220px',
-        minHeight: '140px',
-        resize: 'both',
-        overflow: 'hidden',
-      }}
-    >
-      <GlassSurface
-        radius={22}
-        bezel={16}
-        style={{ ...PANEL_STYLE, width: '100%', height: '100%' }}
-      >
-        Drag the lower-right corner to resize.
-      </GlassSurface>
-    </div>
-  ),
+  render: () => <ResizableStory />,
   parameters: { controls: { disable: true } },
 };
 
 export const Nested: Story = {
-  render: () => (
-    <GlassSurface radius={28} bezel={18} style={{ ...PANEL_STYLE, width: '420px', height: '280px' }}>
-      <GlassSurface
-        radius={18}
-        style={{ ...PANEL_STYLE, width: '240px', height: '120px', padding: '20px' }}
-      >
-        Nested surfaces keep tint and highlights without another backdrop filter.
-      </GlassSurface>
-    </GlassSurface>
-  ),
+  render: () => <NestedStory />,
   parameters: { controls: { disable: true } },
 };

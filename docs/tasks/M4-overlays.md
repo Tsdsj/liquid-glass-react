@@ -91,4 +91,4 @@ interface ToasterProps { position?: 'top-left'|'top-center'|'top-right'|'bottom-
 
 ## 完成记录
 
-（完成后填写）
+- 需求补充（2026-07-14）：补齐 M1/M2 已有组件 Stories 的中英文文案并默认中文；M4 内置的可访问性文案跟随 `LiquidGlassConfig.locale`，业务内容仍由调用方传入。
