@@ -4,8 +4,8 @@ import { Button } from './Button';
 const VARIANTS = ['glass', 'accent', 'ghost', 'danger'] as const;
 const SIZES = ['sm', 'md', 'lg'] as const;
 const MATRIX_STYLE = {
-  display: 'grid',
-  gridTemplateColumns: 'repeat(3, max-content)',
+  display: 'flex',
+  flexWrap: 'wrap',
   gap: '16px',
   alignItems: 'center',
 } as const;

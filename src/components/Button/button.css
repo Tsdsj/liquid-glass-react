@@ -80,8 +80,7 @@
 }
 
 .lg-button__label {
-  overflow: hidden;
-  text-overflow: ellipsis;
+  line-height: 1.2;
 }
 
 .lg-button__spinner {
