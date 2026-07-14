@@ -258,7 +258,7 @@ function MaterialsStory() {
         minHeight: '520px',
         overflow: 'hidden',
         boxSizing: 'border-box',
-        padding: '48px',
+        padding: 'clamp(var(--lg-space-3), 5vw, 48px)',
         backgroundImage: `url("${detailWallpaper}")`,
         backgroundPosition: 'center',
         backgroundSize: 'cover',
@@ -284,7 +284,8 @@ function MaterialsStory() {
         style={{
           position: 'relative',
           display: 'grid',
-          gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))',
+          gridTemplateColumns:
+            'repeat(auto-fit, minmax(min(220px, 100%), 1fr))',
           gap: 'var(--lg-space-4)',
           alignSelf: 'center',
         }}

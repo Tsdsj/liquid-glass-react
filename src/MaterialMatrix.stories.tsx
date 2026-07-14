@@ -111,7 +111,8 @@ function ThemeBand({ locale, theme }: ThemeBandProps) {
       <div
         style={{
           display: 'grid',
-          gridTemplateColumns: 'repeat(4, minmax(150px, 1fr))',
+          gridTemplateColumns:
+            'repeat(auto-fit, minmax(min(150px, 100%), 1fr))',
           gap: 'var(--lg-space-3)',
         }}
       >
@@ -129,7 +130,8 @@ function InteractionBand({ locale }: { locale: LiquidGlassLocale }) {
     <section
       style={{
         display: 'grid',
-        gridTemplateColumns: 'repeat(4, minmax(150px, 1fr))',
+        gridTemplateColumns:
+          'repeat(auto-fit, minmax(min(150px, 100%), 1fr))',
         gap: 'var(--lg-space-3)',
       }}
     >

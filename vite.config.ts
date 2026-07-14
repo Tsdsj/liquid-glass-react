@@ -1,5 +1,5 @@
 import react from '@vitejs/plugin-react';
-import { defineConfig } from 'vitest/config';
+import { configDefaults, defineConfig } from 'vitest/config';
 import dts from 'vite-plugin-dts';
 
 export default defineConfig({
@@ -29,6 +29,7 @@ export default defineConfig({
   },
   test: {
     environment: 'jsdom',
+    exclude: [...configDefaults.exclude, 'visual-tests/**'],
     setupFiles: ['src/test/setup.ts'],
     globals: true,
     passWithNoTests: true,
