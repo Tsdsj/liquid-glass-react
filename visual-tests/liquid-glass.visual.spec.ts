@@ -22,6 +22,71 @@ async function openStory(page: Page, id: string): Promise<void> {
   expect(await page.locator('#storybook-root > *').count()).toBeGreaterThan(0);
 }
 
+interface FloatingFrame {
+  opacity: number;
+  pending: boolean;
+  refraction: string | null;
+}
+
+interface FloatingFrameOptions {
+  triggerSelector?: string;
+  triggerText?: string;
+  hostSelector: string;
+  panelSelector: string;
+}
+
+async function captureFloatingFrames(
+  page: Page,
+  options: FloatingFrameOptions,
+): Promise<FloatingFrame[]> {
+  return page.evaluate(async (input) => {
+    const trigger = input.triggerSelector
+      ? document.querySelector(input.triggerSelector)
+      : [...document.querySelectorAll('button')].find(
+          (button) => button.textContent?.trim() === input.triggerText,
+        );
+    if (!(trigger instanceof HTMLElement)) {
+      throw new Error('Floating trigger not found.');
+    }
+
+    const frames: FloatingFrame[] = [];
+    const startedAt = performance.now();
+    trigger.click();
+
+    await new Promise<void>((resolve) => {
+      const record = () => {
+        const host = document.querySelector(input.hostSelector);
+        const panel = document.querySelector(input.panelSelector);
+        if (host instanceof HTMLElement && panel instanceof HTMLElement) {
+          frames.push({
+            opacity: Number(getComputedStyle(host).opacity),
+            pending: panel.hasAttribute('data-refraction-pending'),
+            refraction: panel.dataset.refraction ?? null,
+          });
+        }
+
+        if (performance.now() - startedAt < 500) {
+          requestAnimationFrame(record);
+        } else {
+          resolve();
+        }
+      };
+      requestAnimationFrame(record);
+    });
+
+    return frames;
+  }, options);
+}
+
+function expectNoVisibleFallback(frames: FloatingFrame[], label: string): void {
+  const visibleFrames = frames.filter(({ opacity }) => opacity > 0.01);
+  expect(visibleFrames.length, `${label} never became visible`).toBeGreaterThan(0);
+  expect(
+    visibleFrames.every(({ pending, refraction }) => !pending && refraction === 'on'),
+    `${label} exposed fallback material while visible`,
+  ).toBe(true);
+}
+
 test('GlassSurface material matrix', async ({ page }) => {
   await openStory(page, 'visual-materialmatrix--material-matrix');
   await expect(page.getByTestId('matrix-regular-light')).toHaveAttribute(
@@ -118,4 +183,87 @@ test('Popover expanded from its trigger', async ({ page }) => {
   await expect(page.getByRole('dialog')).toBeVisible();
 
   await expect(page).toHaveScreenshot('popover-expanded.png');
+});
+
+test('Default-open Popover waits for refraction before becoming visible', async ({
+  page,
+}) => {
+  await page.addInitScript(() => {
+    const frames: FloatingFrame[] = [];
+    const startedAt = performance.now();
+    Object.assign(window, { __liquidGlassFrames: frames });
+
+    const record = () => {
+      const host = document.querySelector('.lg-popover');
+      const panel = document.querySelector('.lg-popover__panel');
+      if (host instanceof HTMLElement && panel instanceof HTMLElement) {
+        frames.push({
+          opacity: Number(getComputedStyle(host).opacity),
+          pending: panel.hasAttribute('data-refraction-pending'),
+          refraction: panel.dataset.refraction ?? null,
+        });
+      }
+
+      if (performance.now() - startedAt < 1000) {
+        requestAnimationFrame(record);
+      }
+    };
+    requestAnimationFrame(record);
+  });
+
+  await openStory(page, 'components-popover--states');
+  const frames = await page.evaluate(
+    () =>
+      (
+        window as Window & {
+          __liquidGlassFrames?: FloatingFrame[];
+        }
+      ).__liquidGlassFrames ?? [],
+  );
+  expectNoVisibleFallback(frames, 'Default-open Popover');
+});
+
+test('Floating panels wait for refraction before becoming visible', async ({ page }) => {
+  const cases = [
+    {
+      story: 'components-select--form',
+      options: {
+        triggerSelector: '.lg-select__trigger',
+        hostSelector: '.lg-select__panel',
+        panelSelector: '.lg-select__panel',
+      },
+    },
+    {
+      story: 'components-popover--viewport-edge',
+      options: {
+        triggerText: '边缘触发器',
+        hostSelector: '.lg-popover',
+        panelSelector: '.lg-popover__panel',
+      },
+    },
+    {
+      story: 'components-modal--playground',
+      options: {
+        triggerText: '打开弹窗',
+        hostSelector: '.lg-modal__panel',
+        panelSelector: '.lg-modal__panel',
+      },
+    },
+    {
+      story: 'feedback-toaster--playground',
+      options: {
+        triggerText: '显示通知',
+        hostSelector: '.lg-toast',
+        panelSelector: '.lg-toast',
+      },
+    },
+  ] satisfies Array<{ story: string; options: FloatingFrameOptions }>;
+
+  for (const item of cases) {
+    await openStory(page, item.story);
+    expectNoVisibleFallback(
+      await captureFloatingFrames(page, item.options),
+      item.story,
+    );
+  }
 });

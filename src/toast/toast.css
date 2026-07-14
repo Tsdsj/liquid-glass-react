@@ -45,6 +45,12 @@
     transform var(--lg-duration) var(--lg-ease);
 }
 
+.lg-toast[data-refraction-pending] {
+  opacity: 0;
+  transform: translateY(calc(var(--lg-space-2) * -1)) scale(0.96);
+  animation: none;
+}
+
 .lg-toaster[data-position$='left'] .lg-toast {
   align-self: flex-start;
 }

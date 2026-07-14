@@ -42,7 +42,7 @@
   --lg-surface-shadow-y: 0;
 }
 
-.lg-popover[data-status='open'] {
+.lg-popover[data-status='open']:not(:has(.lg-popover__panel[data-refraction-pending])) {
   opacity: 1;
   transform: translateY(0) scale(1);
 }

@@ -39,6 +39,7 @@ describe('GlassSurface', () => {
     expect(surface).toHaveAttribute('data-interactive');
     expect(surface).toHaveAttribute('data-material', 'regular');
     expect(surface).toHaveAttribute('data-refraction', 'off');
+    expect(surface).not.toHaveAttribute('data-refraction-pending');
     expect(surface.style.getPropertyValue('--lg-r')).toBe('18px');
     expect(surface.style.getPropertyValue('--lg-tint')).toBe('rgb(255 255 255 / 0.3)');
     expect(ref.current).toBe(surface);
@@ -79,6 +80,9 @@ describe('GlassSurface', () => {
     );
 
     expect(screen.getByTestId('surface')).toHaveAttribute('data-refraction', 'off');
+    expect(screen.getByTestId('surface')).not.toHaveAttribute(
+      'data-refraction-pending',
+    );
     expect(screen.getByTestId('surface')).not.toHaveAttribute('data-transparency');
   });
 
@@ -94,6 +98,9 @@ describe('GlassSurface', () => {
       'reduced',
     );
     expect(screen.getByTestId('surface')).toHaveAttribute('data-refraction', 'off');
+    expect(screen.getByTestId('surface')).not.toHaveAttribute(
+      'data-refraction-pending',
+    );
   });
 
   it('coalesces pointer light updates and preserves user handlers', () => {
@@ -209,6 +216,8 @@ describe('GlassSurface', () => {
         Resizable
       </GlassSurface>,
     );
+    const surface = screen.getByTestId('surface');
+    expect(surface).toHaveAttribute('data-refraction-pending');
     const advanceTime = async (milliseconds: number) => {
       await act(async () => {
         await vi.advanceTimersByTimeAsync(milliseconds);
@@ -223,10 +232,11 @@ describe('GlassSurface', () => {
     expect(filterRegistry.getSnapshot()).toEqual([
       expect.objectContaining({ w: 320, h: 200, scale: 40 }),
     ]);
+    expect(surface).toHaveAttribute('data-refraction', 'on');
+    expect(surface).not.toHaveAttribute('data-refraction-pending');
     expect(document.querySelectorAll('svg[aria-hidden="true"]')).toHaveLength(1);
 
     rect = new DOMRect(0, 0, 420, 260);
-    const surface = screen.getByTestId('surface');
     const entry = {
       target: surface,
       contentRect: new DOMRect(0, 0, 356, 196),

@@ -104,6 +104,7 @@ export const GlassSurface = forwardRef<HTMLElement, GlassSurfaceProps>(function 
   const [defaultRadius, setDefaultRadius] = useState<number | null>(null);
   const [refractionBase, setRefractionBase] = useState<number | null>(null);
   const [activeFilter, setActiveFilter] = useState<ActiveFilter | null>(null);
+  const [hasResolvedClientSupport, setHasResolvedClientSupport] = useState(false);
   const pointerFrameRef = useRef<number | null>(null);
   const pointerPositionRef = useRef<PointerPosition>({ x: 50, y: 0 });
 
@@ -218,6 +219,10 @@ export const GlassSurface = forwardRef<HTMLElement, GlassSurfaceProps>(function 
     },
     [],
   );
+
+  useEffect(() => {
+    setHasResolvedClientSupport(true);
+  }, []);
 
   useEffect(() => {
     if (
@@ -362,6 +367,15 @@ export const GlassSurface = forwardRef<HTMLElement, GlassSurfaceProps>(function 
     ...style,
   };
   const isRefractionActive = canUseRefraction && activeFilter !== null;
+  const requestsRefraction =
+    refraction === 'auto' &&
+    !context.insideGlass &&
+    typeof radius !== 'string' &&
+    !context.forceFallback &&
+    !context.forceReducedTransparency;
+  const isRefractionPending =
+    requestsRefraction &&
+    (!hasResolvedClientSupport || (glassSupport.refraction && !isRefractionActive));
 
   return (
     <>
@@ -378,6 +392,7 @@ export const GlassSurface = forwardRef<HTMLElement, GlassSurfaceProps>(function 
         onPointerUp={handlePointerUp}
         onPointerCancel={handlePointerCancel}
         data-refraction={isRefractionActive ? 'on' : 'off'}
+        data-refraction-pending={isRefractionPending ? '' : undefined}
         data-interactive={interactive ? '' : undefined}
         data-material={material}
         data-nested={context.insideGlass ? '' : undefined}

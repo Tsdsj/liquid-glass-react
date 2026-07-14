@@ -133,7 +133,7 @@
   --lg-surface-shadow-y: 0;
 }
 
-.lg-select__panel[data-status='open'] {
+.lg-select__panel[data-status='open']:not([data-refraction-pending]) {
   opacity: 1;
   transform: translateY(0) scale(1);
 }

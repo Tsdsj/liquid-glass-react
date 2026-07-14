@@ -15,7 +15,7 @@
   transition: opacity var(--lg-duration-slow) var(--lg-ease);
 }
 
-.lg-modal__overlay[data-status='open'] {
+.lg-modal__overlay[data-status='open']:not(:has(.lg-modal__panel[data-refraction-pending])) {
   opacity: 1;
 }
 
@@ -44,7 +44,7 @@
   --lg-modal-max-width: 720px;
 }
 
-.lg-modal__panel[data-status='open'] {
+.lg-modal__panel[data-status='open']:not([data-refraction-pending]) {
   opacity: 1;
   transform: translateY(0) scale(1);
 }
