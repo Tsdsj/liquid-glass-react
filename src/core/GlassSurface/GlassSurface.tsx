@@ -50,6 +50,14 @@ interface PointerPosition {
 }
 
 const RESIZE_SETTLE_DELAY = 150;
+// Chromium composites a freshly inserted SVG filter (feImage decode included)
+// only on the frames after the React commit, so overlays stay gated for two
+// animation frames once the filter is active.
+const REFRACTION_SETTLE_FRAME_COUNT = 2;
+// Safety valve: never keep overlays gated forever (background tabs, zero-size
+// hosts, filters that never activate). After this delay the fallback material
+// becomes visible instead.
+const REFRACTION_PENDING_TIMEOUT = 400;
 let hasWarnedAboutStringRadius = false;
 
 function assignRef(ref: ForwardedRef<HTMLElement>, value: HTMLElement | null): void {
@@ -105,6 +113,7 @@ export const GlassSurface = forwardRef<HTMLElement, GlassSurfaceProps>(function 
   const [refractionBase, setRefractionBase] = useState<number | null>(null);
   const [activeFilter, setActiveFilter] = useState<ActiveFilter | null>(null);
   const [hasResolvedClientSupport, setHasResolvedClientSupport] = useState(false);
+  const [isFilterSettled, setIsFilterSettled] = useState(false);
   const pointerFrameRef = useRef<number | null>(null);
   const pointerPositionRef = useRef<PointerPosition>({ x: 50, y: 0 });
 
@@ -341,6 +350,56 @@ export const GlassSurface = forwardRef<HTMLElement, GlassSurfaceProps>(function 
     stableSize.width,
   ]);
 
+  const isRefractionActive = canUseRefraction && activeFilter !== null;
+  const requestsRefraction =
+    refraction === 'auto' &&
+    !context.insideGlass &&
+    typeof radius !== 'string' &&
+    !context.forceFallback &&
+    !context.forceReducedTransparency;
+  const isRefractionPending =
+    requestsRefraction &&
+    !isFilterSettled &&
+    (!hasResolvedClientSupport || glassSupport.refraction);
+
+  useEffect(() => {
+    if (!isRefractionActive || isFilterSettled) {
+      return undefined;
+    }
+
+    let remainingFrames = REFRACTION_SETTLE_FRAME_COUNT;
+    let frame: number | null = null;
+    const step = () => {
+      remainingFrames -= 1;
+      if (remainingFrames <= 0) {
+        frame = null;
+        setIsFilterSettled(true);
+        return;
+      }
+
+      frame = requestAnimationFrame(step);
+    };
+    frame = requestAnimationFrame(step);
+
+    return () => {
+      if (frame !== null) {
+        cancelAnimationFrame(frame);
+      }
+    };
+  }, [isFilterSettled, isRefractionActive]);
+
+  useEffect(() => {
+    if (!isRefractionPending) {
+      return undefined;
+    }
+
+    const timeout = window.setTimeout(() => {
+      setIsFilterSettled(true);
+    }, REFRACTION_PENDING_TIMEOUT);
+
+    return () => window.clearTimeout(timeout);
+  }, [isRefractionPending]);
+
   const shouldRenderFilterDefs = useFilterDefsHost(
     canUseRefraction && stableSize.width > 0 && stableSize.height > 0,
   );
@@ -366,17 +425,6 @@ export const GlassSurface = forwardRef<HTMLElement, GlassSurfaceProps>(function 
     '--lg-filter-url': activeFilter ? `url(#${activeFilter.id})` : undefined,
     ...style,
   };
-  const isRefractionActive = canUseRefraction && activeFilter !== null;
-  const requestsRefraction =
-    refraction === 'auto' &&
-    !context.insideGlass &&
-    typeof radius !== 'string' &&
-    !context.forceFallback &&
-    !context.forceReducedTransparency;
-  const isRefractionPending =
-    requestsRefraction &&
-    (!hasResolvedClientSupport || (glassSupport.refraction && !isRefractionActive));
-
   return (
     <>
       {shouldRenderFilterDefs ? <GlassFilterDefs /> : null}

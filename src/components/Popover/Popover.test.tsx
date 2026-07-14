@@ -1,7 +1,8 @@
 import { createRef } from 'react';
 import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { __resetGlassSupportCache } from '../../core/hooks/useGlassSupport';
 import { Popover } from './Popover';
 
 async function waitForClose(): Promise<void> {
@@ -107,5 +108,55 @@ describe('Popover', () => {
 
     expect(screen.getByRole('dialog')).toBeInTheDocument();
     expect(container.querySelector('.lg-popover__arrow')).not.toBeInTheDocument();
+  });
+});
+
+describe('Popover refraction gating', () => {
+  beforeEach(() => {
+    __resetGlassSupportCache();
+    vi.stubGlobal('CSS', { supports: vi.fn(() => true) });
+    vi.stubGlobal('navigator', {
+      userAgent: 'Mozilla/5.0 Chrome/136.0.0.0 Safari/537.36',
+      userAgentData: { brands: [{ brand: 'Chromium' }] },
+    });
+  });
+
+  afterEach(() => {
+    vi.unstubAllGlobals();
+    __resetGlassSupportCache();
+  });
+
+  it('mounts a default-open popover gated on the glass panel, then always releases it', async () => {
+    render(
+      <Popover defaultOpen content="内容">
+        <button type="button">触发</button>
+      </Popover>,
+    );
+
+    const dialog = screen.getByRole('dialog');
+    expect(dialog).toHaveClass('lg-popover');
+    expect(dialog).toHaveAttribute('data-status');
+
+    const panel = dialog.querySelector('.lg-popover__panel');
+    expect(panel).toHaveClass('lg-surface');
+    expect(panel).toHaveAttribute('data-refraction-pending');
+
+    await waitFor(
+      () => expect(panel).not.toHaveAttribute('data-refraction-pending'),
+      { timeout: 2000 },
+    );
+  });
+
+  it('does not gate the panel when glass support is absent', async () => {
+    vi.stubGlobal('CSS', { supports: vi.fn(() => false) });
+    __resetGlassSupportCache();
+    render(
+      <Popover defaultOpen content="内容">
+        <button type="button">触发</button>
+      </Popover>,
+    );
+
+    const panel = screen.getByRole('dialog').querySelector('.lg-popover__panel');
+    expect(panel).not.toHaveAttribute('data-refraction-pending');
   });
 });

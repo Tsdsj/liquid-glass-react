@@ -30,6 +30,10 @@
 }
 
 .lg-toast {
+  /* Imperceptible but still composited, so Chromium warms the SVG
+     backdrop-filter (feImage decode) before the enter animation runs. */
+  --lg-toast-warmup-opacity: 0.01;
+
   width: fit-content;
   max-width: 100%;
   align-self: center;
@@ -46,7 +50,7 @@
 }
 
 .lg-toast[data-refraction-pending] {
-  opacity: 0;
+  opacity: var(--lg-toast-warmup-opacity);
   transform: translateY(calc(var(--lg-space-2) * -1)) scale(0.96);
   animation: none;
 }
@@ -101,7 +105,7 @@
 
 @keyframes lg-toast-enter {
   from {
-    opacity: 0;
+    opacity: var(--lg-toast-warmup-opacity);
     transform: translateY(calc(var(--lg-space-2) * -1)) scale(0.96);
   }
 
@@ -120,7 +124,7 @@
 
 @keyframes lg-toast-fade {
   from {
-    opacity: 0;
+    opacity: var(--lg-toast-warmup-opacity);
   }
 
   to {

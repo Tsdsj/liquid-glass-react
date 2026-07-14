@@ -6,6 +6,39 @@ import { filterRegistry } from '../filter/filter-registry';
 import { __resetGlassSupportCache } from '../hooks/useGlassSupport';
 import { GlassSurface } from './GlassSurface';
 
+const REFRACTION_STYLE: CSSProperties & { '--lg-refraction': string } = {
+  '--lg-refraction': '40',
+};
+
+function stubChromiumEnvironment(): void {
+  vi.stubGlobal('CSS', { supports: vi.fn(() => true) });
+  vi.stubGlobal('navigator', {
+    userAgent: 'Mozilla/5.0 Chrome/136.0.0.0 Safari/537.36',
+    userAgentData: { brands: [{ brand: 'Chromium' }] },
+  });
+}
+
+function stubMeasuredSize(width: number, height: number): void {
+  class ResizeObserverMock {
+    observe(): void {}
+
+    unobserve(): void {}
+
+    disconnect(): void {}
+  }
+
+  vi.stubGlobal('ResizeObserver', ResizeObserverMock);
+  vi.spyOn(HTMLElement.prototype, 'getBoundingClientRect').mockReturnValue(
+    new DOMRect(0, 0, width, height),
+  );
+}
+
+async function advanceTime(milliseconds: number): Promise<void> {
+  await act(async () => {
+    await vi.advanceTimersByTimeAsync(milliseconds);
+  });
+}
+
 describe('GlassSurface', () => {
   afterEach(() => {
     __resetGlassSupportCache();
@@ -56,6 +89,7 @@ describe('GlassSurface', () => {
     expect(screen.getByTestId('outer')).not.toHaveAttribute('data-nested');
     expect(screen.getByTestId('inner')).toHaveAttribute('data-nested');
     expect(screen.getByTestId('inner')).toHaveAttribute('data-refraction', 'off');
+    expect(screen.getByTestId('inner')).not.toHaveAttribute('data-refraction-pending');
   });
 
   it('supports regular and clear material semantics', () => {
@@ -268,5 +302,129 @@ describe('GlassSurface', () => {
     await act(async () => {
       await vi.runAllTimersAsync();
     });
+  });
+
+  it('keeps refraction pending until the fresh filter had frames to composite', async () => {
+    vi.useFakeTimers();
+    stubChromiumEnvironment();
+    stubMeasuredSize(320, 200);
+    render(
+      <GlassSurface radius={14} style={REFRACTION_STYLE} data-testid="surface">
+        Panel
+      </GlassSurface>,
+    );
+    const surface = screen.getByTestId('surface');
+    expect(surface).toHaveAttribute('data-refraction-pending');
+
+    await advanceTime(16);
+    await advanceTime(16);
+
+    expect(surface).toHaveAttribute('data-refraction', 'on');
+    expect(surface).toHaveAttribute('data-refraction-pending');
+
+    await advanceTime(16);
+    await advanceTime(16);
+
+    expect(surface).toHaveAttribute('data-refraction', 'on');
+    expect(surface).not.toHaveAttribute('data-refraction-pending');
+  });
+
+  it('stays settled when a resize swaps the active filter', async () => {
+    vi.useFakeTimers();
+    stubChromiumEnvironment();
+    let rect = new DOMRect(0, 0, 320, 200);
+    let resizeCallback: ResizeObserverCallback | null = null;
+    class ResizeObserverMock {
+      constructor(callback: ResizeObserverCallback) {
+        resizeCallback = callback;
+      }
+
+      observe(): void {}
+
+      unobserve(): void {}
+
+      disconnect(): void {}
+    }
+
+    vi.stubGlobal('ResizeObserver', ResizeObserverMock);
+    vi.spyOn(HTMLElement.prototype, 'getBoundingClientRect').mockImplementation(() => rect);
+    render(
+      <GlassSurface radius={14} style={REFRACTION_STYLE} data-testid="surface">
+        Panel
+      </GlassSurface>,
+    );
+    const surface = screen.getByTestId('surface');
+
+    await advanceTime(16);
+    await advanceTime(16);
+    await advanceTime(16);
+    await advanceTime(16);
+    expect(surface).not.toHaveAttribute('data-refraction-pending');
+
+    rect = new DOMRect(0, 0, 480, 240);
+    act(() => {
+      resizeCallback?.(
+        [{ target: surface } as unknown as ResizeObserverEntry],
+        {} as ResizeObserver,
+      );
+    });
+    await advanceTime(16);
+    await advanceTime(151);
+    await advanceTime(16);
+
+    expect(filterRegistry.getSnapshot()).toEqual(
+      expect.arrayContaining([expect.objectContaining({ w: 480, h: 240 })]),
+    );
+    expect(surface).not.toHaveAttribute('data-refraction-pending');
+  });
+
+  it('cancels the settle frames when unmounted while pending', async () => {
+    vi.useFakeTimers();
+    stubChromiumEnvironment();
+    stubMeasuredSize(320, 200);
+    const errorSpy = vi.spyOn(console, 'error').mockImplementation(() => undefined);
+    const cancelFrame = vi.spyOn(globalThis, 'cancelAnimationFrame');
+    const { unmount } = render(
+      <GlassSurface radius={14} style={REFRACTION_STYLE} data-testid="surface">
+        Panel
+      </GlassSurface>,
+    );
+
+    await advanceTime(16);
+    await advanceTime(16);
+    expect(screen.getByTestId('surface')).toHaveAttribute('data-refraction-pending');
+
+    unmount();
+    expect(cancelFrame).toHaveBeenCalled();
+
+    await act(async () => {
+      await vi.runAllTimersAsync();
+    });
+    expect(errorSpy).not.toHaveBeenCalled();
+  });
+
+  it('releases the pending gate via timeout when frames never arrive', async () => {
+    vi.useFakeTimers();
+    stubChromiumEnvironment();
+    stubMeasuredSize(320, 200);
+    vi.stubGlobal(
+      'requestAnimationFrame',
+      vi.fn(() => 1),
+    );
+    vi.stubGlobal('cancelAnimationFrame', vi.fn());
+    render(
+      <GlassSurface radius={14} style={REFRACTION_STYLE} data-testid="surface">
+        Panel
+      </GlassSurface>,
+    );
+    const surface = screen.getByTestId('surface');
+    expect(surface).toHaveAttribute('data-refraction-pending');
+
+    await advanceTime(399);
+    expect(surface).toHaveAttribute('data-refraction-pending');
+
+    await advanceTime(1);
+    expect(surface).not.toHaveAttribute('data-refraction-pending');
+    expect(surface).toHaveAttribute('data-refraction', 'off');
   });
 });

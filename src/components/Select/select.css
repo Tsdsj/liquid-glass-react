@@ -93,12 +93,16 @@
   --lg-select-panel-shift-x: 0;
   --lg-select-panel-shift-y: calc(var(--lg-select-panel-shift) * -1);
 
+  /* Imperceptible but still composited, so Chromium warms the SVG
+     backdrop-filter (feImage decode) before the glass fades in. */
+  --lg-select-warmup-opacity: 0.01;
+
   z-index: var(--lg-z-overlay);
   box-sizing: border-box;
   overflow-y: auto;
   padding: var(--lg-space-1);
   color: var(--lg-text);
-  opacity: 0;
+  opacity: var(--lg-select-warmup-opacity);
   font-family: var(--lg-font);
   font-size: var(--lg-font-size-md);
   transform: translate(var(--lg-select-panel-shift-x), var(--lg-select-panel-shift-y))

@@ -1,8 +1,9 @@
 import { createRef } from 'react';
-import { render, screen, waitFor } from '@testing-library/react';
+import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { LiquidGlassConfig } from '../../core/config/LiquidGlassConfig';
+import { __resetGlassSupportCache } from '../../core/hooks/useGlassSupport';
 import { Select, type SelectOption } from './Select';
 
 const OPTIONS: SelectOption[] = [
@@ -176,5 +177,40 @@ describe('Select', () => {
     expect(trigger).toBeDisabled();
     expect(screen.queryByRole('listbox')).not.toBeInTheDocument();
     expect(onChange).not.toHaveBeenCalled();
+  });
+});
+
+describe('Select refraction gating', () => {
+  beforeEach(() => {
+    __resetGlassSupportCache();
+    vi.stubGlobal('CSS', { supports: vi.fn(() => true) });
+    vi.stubGlobal('navigator', {
+      userAgent: 'Mozilla/5.0 Chrome/136.0.0.0 Safari/537.36',
+      userAgentData: { brands: [{ brand: 'Chromium' }] },
+    });
+  });
+
+  afterEach(() => {
+    vi.unstubAllGlobals();
+    __resetGlassSupportCache();
+  });
+
+  it('gates only the floating panel, never the trigger, and always releases it', async () => {
+    render(<Select options={OPTIONS} aria-label="Fruit" />);
+    const trigger = screen.getByRole('combobox', { name: 'Fruit' });
+    expect(trigger).not.toHaveAttribute('data-refraction-pending');
+
+    fireEvent.click(trigger);
+
+    const panel = await screen.findByRole('listbox');
+    expect(panel).toHaveClass('lg-select__panel', 'lg-surface');
+    expect(panel).toHaveAttribute('data-status');
+    expect(panel).toHaveAttribute('data-refraction-pending');
+    expect(trigger).not.toHaveAttribute('data-refraction-pending');
+
+    await waitFor(
+      () => expect(panel).not.toHaveAttribute('data-refraction-pending'),
+      { timeout: 2000 },
+    );
   });
 });

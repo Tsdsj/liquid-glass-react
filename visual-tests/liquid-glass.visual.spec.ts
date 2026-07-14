@@ -59,7 +59,8 @@ async function captureFloatingFrames(
         const panel = document.querySelector(input.panelSelector);
         if (host instanceof HTMLElement && panel instanceof HTMLElement) {
           frames.push({
-            opacity: Number(getComputedStyle(host).opacity),
+            // The fade runs on the glass panel itself; ancestors keep opacity 1.
+            opacity: Number(getComputedStyle(panel).opacity),
             pending: panel.hasAttribute('data-refraction-pending'),
             refraction: panel.dataset.refraction ?? null,
           });
@@ -198,7 +199,8 @@ test('Default-open Popover waits for refraction before becoming visible', async 
       const panel = document.querySelector('.lg-popover__panel');
       if (host instanceof HTMLElement && panel instanceof HTMLElement) {
         frames.push({
-          opacity: Number(getComputedStyle(host).opacity),
+          // The fade runs on the glass panel itself; ancestors keep opacity 1.
+          opacity: Number(getComputedStyle(panel).opacity),
           pending: panel.hasAttribute('data-refraction-pending'),
           refraction: panel.dataset.refraction ?? null,
         });

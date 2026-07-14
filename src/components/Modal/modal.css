@@ -7,27 +7,41 @@
   overflow-y: auto;
   box-sizing: border-box;
   padding: var(--lg-space-4);
-  background: var(--lg-modal-overlay-bg);
-  opacity: 0;
-  -webkit-backdrop-filter: blur(var(--lg-modal-overlay-blur));
-  backdrop-filter: blur(var(--lg-modal-overlay-blur));
+
+  /* The scrim fades via background-color and blur radius instead of opacity:
+     an overlay with opacity < 1 forms a backdrop root that blanks the panel's
+     refraction until the fade ends. */
+  background-color: transparent;
+  -webkit-backdrop-filter: blur(0px);
+  backdrop-filter: blur(0px);
   place-items: center;
-  transition: opacity var(--lg-duration-slow) var(--lg-ease);
+  transition:
+    background-color var(--lg-duration-slow) var(--lg-ease),
+    backdrop-filter var(--lg-duration-slow) var(--lg-ease),
+    -webkit-backdrop-filter var(--lg-duration-slow) var(--lg-ease);
 }
 
 .lg-modal__overlay[data-status='open']:not(:has(.lg-modal__panel[data-refraction-pending])) {
-  opacity: 1;
+  background-color: var(--lg-modal-overlay-bg);
+  -webkit-backdrop-filter: blur(var(--lg-modal-overlay-blur));
+  backdrop-filter: blur(var(--lg-modal-overlay-blur));
 }
 
 .lg-modal__panel {
   --lg-modal-max-width: 560px;
   --lg-modal-shift: var(--lg-space-2);
 
+  /* Imperceptible but still composited, so Chromium warms the SVG
+     backdrop-filter (feImage decode) before the glass fades in. The fade runs
+     on the glass element's own opacity, which keeps its backdrop sampling
+     intact for the whole animation. */
+  --lg-modal-warmup-opacity: 0.01;
+
   width: min(100%, var(--lg-modal-max-width));
   max-height: calc(100vh - (var(--lg-space-4) * 2));
   box-sizing: border-box;
   color: var(--lg-text);
-  opacity: 0;
+  opacity: var(--lg-modal-warmup-opacity);
   font-family: var(--lg-font);
   font-size: var(--lg-font-size-md);
   transform: translateY(var(--lg-modal-shift)) scale(0.96);
@@ -47,11 +61,6 @@
 .lg-modal__panel[data-status='open']:not([data-refraction-pending]) {
   opacity: 1;
   transform: translateY(0) scale(1);
-}
-
-.lg-modal__overlay[data-animating],
-.lg-modal__panel[data-animating] {
-  will-change: opacity, transform;
 }
 
 .lg-modal__panel > .lg-surface__content {

@@ -1,8 +1,9 @@
 import { createRef, useState } from 'react';
 import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { LiquidGlassConfig } from '../../core/config/LiquidGlassConfig';
+import { __resetGlassSupportCache } from '../../core/hooks/useGlassSupport';
 import { Modal } from './Modal';
 
 describe('Modal', () => {
@@ -139,5 +140,71 @@ describe('Modal', () => {
     await user.click(screen.getByRole('button', { name: '关闭' }));
 
     await waitFor(() => expect(trigger).toHaveFocus());
+  });
+});
+
+describe('Modal refraction gating', () => {
+  beforeEach(() => {
+    __resetGlassSupportCache();
+    vi.stubGlobal('CSS', { supports: vi.fn(() => true) });
+    vi.stubGlobal('navigator', {
+      userAgent: 'Mozilla/5.0 Chrome/136.0.0.0 Safari/537.36',
+      userAgentData: { brands: [{ brand: 'Chromium' }] },
+    });
+  });
+
+  afterEach(() => {
+    vi.unstubAllGlobals();
+    __resetGlassSupportCache();
+  });
+
+  it('gates the glass panel while the overlay stays free of animation attributes', async () => {
+    render(
+      <Modal open onOpenChange={() => undefined} title="标题">
+        内容
+      </Modal>,
+    );
+
+    const overlay = document.querySelector('.lg-modal__overlay');
+    expect(overlay).toHaveAttribute('data-status');
+    expect(overlay).not.toHaveAttribute('data-animating');
+
+    const panel = document.querySelector('.lg-modal__panel');
+    expect(panel).toHaveClass('lg-surface');
+    expect(panel).toHaveAttribute('data-status');
+    expect(panel).toHaveAttribute('data-refraction-pending');
+
+    await waitFor(
+      () => expect(panel).not.toHaveAttribute('data-refraction-pending'),
+      { timeout: 2000 },
+    );
+  });
+
+  it('never gates the panel under forced fallback', () => {
+    render(
+      <LiquidGlassConfig forceFallback>
+        <Modal open onOpenChange={() => undefined} title="标题">
+          内容
+        </Modal>
+      </LiquidGlassConfig>,
+    );
+
+    expect(document.querySelector('.lg-modal__panel')).not.toHaveAttribute(
+      'data-refraction-pending',
+    );
+  });
+
+  it('never gates the panel under forced reduced transparency', () => {
+    render(
+      <LiquidGlassConfig forceReducedTransparency>
+        <Modal open onOpenChange={() => undefined} title="标题">
+          内容
+        </Modal>
+      </LiquidGlassConfig>,
+    );
+
+    const panel = document.querySelector('.lg-modal__panel');
+    expect(panel).not.toHaveAttribute('data-refraction-pending');
+    expect(panel).toHaveAttribute('data-transparency', 'reduced');
   });
 });

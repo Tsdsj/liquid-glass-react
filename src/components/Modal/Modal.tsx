@@ -11,9 +11,7 @@ import {
 } from '@floating-ui/react';
 import {
   forwardRef,
-  useEffect,
   useId,
-  useState,
   type CSSProperties,
   type HTMLAttributes,
   type ReactNode,
@@ -56,7 +54,6 @@ export const Modal = forwardRef<HTMLDivElement, ModalProps>(function Modal(
 ) {
   const { locale } = useLiquidGlassContext();
   const titleId = useId();
-  const [isAnimating, setIsAnimating] = useState(false);
   const { refs, context } = useFloating({
     open,
     onOpenChange: (nextOpen) => onOpenChange(nextOpen),
@@ -80,26 +77,12 @@ export const Modal = forwardRef<HTMLDivElement, ModalProps>(function Modal(
     'aria-modal': true,
   }) as HTMLAttributes<HTMLElement>;
 
-  useEffect(() => {
-    if (!isMounted) {
-      return undefined;
-    }
-
-    setIsAnimating(true);
-    const timeout = window.setTimeout(() => {
-      setIsAnimating(false);
-    }, MODAL_TRANSITION_DURATION);
-
-    return () => window.clearTimeout(timeout);
-  }, [isMounted, status]);
-
   return isMounted ? (
     <FloatingPortal>
       <FloatingOverlay
         lockScroll
         className="lg-modal__overlay"
         data-status={status}
-        data-animating={isAnimating ? '' : undefined}
       >
         <FloatingFocusManager context={context} modal>
           <GlassSurface
@@ -111,7 +94,6 @@ export const Modal = forwardRef<HTMLDivElement, ModalProps>(function Modal(
             style={MODAL_PANEL_STYLE}
             data-size={size}
             data-status={status}
-            data-animating={isAnimating ? '' : undefined}
           >
             <header className="lg-modal__header">
               {title ? (
