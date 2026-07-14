@@ -1,4 +1,4 @@
-import { Badge, Progress, Skeleton, Spin, Tag } from '@ttq/liquid-glass-react';
+import { Avatar, Badge, Button, Card, Progress, Skeleton, Spin, Tag } from '@ttq/liquid-glass-react';
 import type { ComponentDoc } from './types';
 
 const DISPLAY = { 'zh-CN': '展示', 'en-US': 'Display' };
@@ -267,6 +267,121 @@ import { Skeleton } from '@ttq/liquid-glass-react';
         { prop: 'width / height', type: 'number | string', description: { 'zh-CN': '尺寸,数字按 px', 'en-US': 'Size; numbers are px' } },
         { prop: 'lines', type: 'number', defaultValue: '1', description: { 'zh-CN': '仅 text,末行 60% 宽', 'en-US': 'Text only; last line 60% wide' } },
         { prop: 'animated', type: 'boolean', defaultValue: 'true', description: { 'zh-CN': 'shimmer 动画', 'en-US': 'Shimmer animation' } },
+      ],
+    },
+  ],
+};
+
+export const cardDoc: ComponentDoc = {
+  slug: 'card',
+  name: 'Card',
+  title: { 'zh-CN': '卡片', 'en-US': 'Card' },
+  category: DISPLAY,
+  description: {
+    'zh-CN': '本批唯一玻璃主角:整卡一块真折射玻璃,material/dim/radius/interactive 直通引擎。',
+    'en-US': 'The glass centrepiece: the whole card is one refracting surface, engine props passed through.',
+  },
+  renderPreview: () => (
+    <div style={{ width: 160 }}>
+      <Card padding="sm">玻璃卡片 Card</Card>
+    </div>
+  ),
+  demos: [
+    {
+      id: 'basic',
+      title: { 'zh-CN': '容器与嵌套控件', 'en-US': 'Container & nested controls' },
+      description: {
+        'zh-CN':
+          '卡内再放玻璃控件时,引擎会自动禁用其折射(玻璃套玻璃会中断背景采样)——这是既定行为,不是 bug。',
+        'en-US':
+          'Glass controls placed inside a Card automatically lose their own refraction (glass-in-glass breaks sampling) — this is intended engine behavior, not a bug.',
+      },
+      code: `
+import { Card, Button } from '@ttq/liquid-glass-react';
+
+<Card padding="lg">
+  <h3>玻璃卡片</h3>
+  <p>整卡一块真折射玻璃。</p>
+  <Button variant="accent">卡内按钮(自动禁折射)</Button>
+</Card>`,
+      render: () => (
+        <div style={{ width: 300 }}>
+          <Card padding="lg">
+            <h3 style={{ margin: '0 0 8px' }}>玻璃卡片 Glass Card</h3>
+            <p style={{ margin: '0 0 12px' }}>
+              卡内玻璃控件自动禁用折射(引擎既定行为,避免玻璃套玻璃采样)。
+            </p>
+            <div style={{ display: 'flex', gap: 8 }}>
+              <Button variant="accent">主要</Button>
+              <Button>次要</Button>
+            </div>
+          </Card>
+        </div>
+      ),
+    },
+  ],
+  api: [
+    {
+      title: 'Card',
+      rows: [
+        { prop: 'as', type: 'ElementType', defaultValue: "'div'", description: { 'zh-CN': '语义宿主元素', 'en-US': 'Semantic host element' } },
+        { prop: 'padding', type: "'none' | 'sm' | 'md' | 'lg'", defaultValue: "'md'", description: { 'zh-CN': '内边距档位', 'en-US': 'Padding preset' } },
+        { prop: 'material', type: "'regular' | 'clear'", defaultValue: "'regular'", description: { 'zh-CN': '玻璃材质', 'en-US': 'Glass material' } },
+        { prop: 'dim', type: 'boolean', defaultValue: 'false', description: { 'zh-CN': '压暗背景', 'en-US': 'Dim the backdrop' } },
+        { prop: 'radius', type: 'number | string', description: { 'zh-CN': '圆角(数字启用折射)', 'en-US': 'Corner radius (number enables refraction)' } },
+        { prop: 'interactive', type: 'boolean', defaultValue: 'false', description: { 'zh-CN': '指针高光/按压反馈', 'en-US': 'Pointer highlight / press feedback' } },
+      ],
+    },
+  ],
+};
+
+export const avatarDoc: ComponentDoc = {
+  slug: 'avatar',
+  name: 'Avatar',
+  title: { 'zh-CN': '头像', 'en-US': 'Avatar' },
+  category: DISPLAY,
+  description: {
+    'zh-CN': '圆形/方形头像,图片加载失败自动回退到文字缩写;纯文字走 role=img + aria-label。',
+    'en-US': 'Circle/square avatar that falls back to initials on image error; text uses role=img.',
+  },
+  renderPreview: () => (
+    <div style={{ display: 'flex', gap: 8 }}>
+      <Avatar alt="Ada" fallback="AL" />
+      <Avatar alt="Bob" fallback="BM" shape="square" />
+    </div>
+  ),
+  demos: [
+    {
+      id: 'basic',
+      title: { 'zh-CN': '尺寸与回退', 'en-US': 'Sizes & fallback' },
+      description: {
+        'zh-CN': 'src 缺省或加载失败时显示 fallback(文字缩写),alt 作为无障碍名。',
+        'en-US': 'Missing or broken src shows the fallback; alt becomes the accessible name.',
+      },
+      code: `
+import { Avatar } from '@ttq/liquid-glass-react';
+
+<Avatar src="/ada.png" alt="Ada Lovelace" fallback="AL" />
+<Avatar alt="Grace Hopper" fallback="GH" shape="square" />`,
+      render: () => (
+        <div style={{ display: 'flex', gap: 16, alignItems: 'center' }}>
+          <Avatar alt="Ada" fallback="AL" size="sm" />
+          <Avatar alt="Bob" fallback="BM" size="md" />
+          <Avatar alt="Cara" fallback="CN" size="lg" />
+          <Avatar alt="Dan" fallback="DM" size="lg" shape="square" />
+        </div>
+      ),
+    },
+  ],
+  api: [
+    {
+      title: 'Avatar',
+      rows: [
+        { prop: 'src', type: 'string', description: { 'zh-CN': '图片地址', 'en-US': 'Image source' } },
+        { prop: 'alt', type: 'string', description: { 'zh-CN': '替代文本 / 无障碍名', 'en-US': 'Alt text / accessible name' } },
+        { prop: 'fallback', type: 'ReactNode', description: { 'zh-CN': '失败/缺省回退内容', 'en-US': 'Fallback content' } },
+        { prop: 'size', type: "'sm' | 'md' | 'lg'", defaultValue: "'md'", description: { 'zh-CN': '尺寸档位', 'en-US': 'Size preset' } },
+        { prop: 'shape', type: "'circle' | 'square'", defaultValue: "'circle'", description: { 'zh-CN': '形状', 'en-US': 'Shape' } },
       ],
     },
   ],

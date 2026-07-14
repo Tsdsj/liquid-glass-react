@@ -60,8 +60,8 @@ export const SITE_COPY = {
   quickStartTitle: { 'zh-CN': '三行代码开始', 'en-US': 'Start in three lines' },
   componentsTitle: { 'zh-CN': '组件总览', 'en-US': 'Components' },
   componentsSubtitle: {
-    'zh-CN': '20 个玻璃组件,覆盖通用控件、数据录入、选择导航、浮层反馈与轻量展示。',
-    'en-US': '20 glass components across general controls, data entry, selection/navigation, overlay feedback and lightweight display.',
+    'zh-CN': '25 个玻璃组件,覆盖通用控件、数据录入、选择导航、容器展示与浮层反馈。',
+    'en-US': '25 glass components across general controls, data entry, selection/navigation, containers/display and overlay feedback.',
   },
   searchPlaceholder: { 'zh-CN': '搜索组件', 'en-US': 'Search components' },
   searchEmpty: { 'zh-CN': '没有匹配的组件', 'en-US': 'No matching components' },

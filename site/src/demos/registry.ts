@@ -8,13 +8,29 @@ import {
   textareaDoc,
 } from './entry.demos';
 import { modalDoc, popoverDoc, toastDoc, tooltipDoc } from './feedback.demos';
-import { radioGroupDoc, segmentedDoc, tabsDoc } from './navigation.demos';
-import { badgeDoc, progressDoc, skeletonDoc, spinDoc, tagDoc } from './display.demos';
+import {
+  breadcrumbDoc,
+  paginationDoc,
+  radioGroupDoc,
+  segmentedDoc,
+  sideNavDoc,
+  tabsDoc,
+} from './navigation.demos';
+import {
+  avatarDoc,
+  badgeDoc,
+  cardDoc,
+  progressDoc,
+  skeletonDoc,
+  spinDoc,
+  tagDoc,
+} from './display.demos';
 import type { ComponentDoc } from './types';
 
 export const COMPONENT_DOCS: ComponentDoc[] = [
   glassSurfaceDoc,
   buttonDoc,
+  cardDoc,
   checkboxDoc,
   inputDoc,
   textareaDoc,
@@ -24,12 +40,16 @@ export const COMPONENT_DOCS: ComponentDoc[] = [
   sliderDoc,
   switchDoc,
   tabsDoc,
+  breadcrumbDoc,
+  paginationDoc,
+  sideNavDoc,
   tooltipDoc,
   popoverDoc,
   modalDoc,
   toastDoc,
   tagDoc,
   badgeDoc,
+  avatarDoc,
   progressDoc,
   spinDoc,
   skeletonDoc,

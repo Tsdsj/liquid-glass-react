@@ -1,5 +1,5 @@
 ---
-status: todo
+status: done
 depends: [M8, M9]
 ---
 
@@ -145,3 +145,34 @@ export interface SideNavProps {
 
 - Card 结构化 header/footer/actions;Avatar 组(重叠堆叠);Breadcrumb
   下拉折叠;Pagination 快速跳转/每页条数切换;SideNav 折叠与嵌套。
+
+## 完成记录
+
+- `Card`(玻璃主角):整卡一个 `GlassSurface`(refraction=auto、bezel=16),
+  material/dim/radius/interactive/as 直通引擎,padding 映射 `--lg-space-*`(作用于
+  `.lg-surface__content`);测试断言透传的 data 属性 + 嵌套玻璃 `data-nested`。
+- `Avatar`:无玻璃;`img[alt]`,onError 回退 fallback,纯文字 `role=img`+`aria-label`;
+  src 变化时清除 error 状态;圆/方形、三档尺寸。
+- `Breadcrumb`:`<nav>` i18n aria-label(面包屑/Breadcrumb),末项 `aria-current=page`
+  纯文本不可点,分隔符 `aria-hidden`;有 href 渲染 `<a>`、仅 onClick 渲染 `<button>`。
+- `Pagination`:纯函数 `computePageItems(current,totalPages,siblingCount)` 返回
+  `(number|'ellipsis-l'|'ellipsis-r')[]`(首/中/尾/小于窗口/大 sibling/单页全覆盖);
+  容器无玻璃,ghost 页码 + 当前页 tint 强化;每按钮 i18n aria-label,首尾禁用前后翻,
+  受控/非受控。**不做滑动指示器**(省略号致 FLIP 目标不稳,决策随卡)。
+- `SideNav`:垂直导航,选中项玻璃滑块 = `GlassSurface`,由 M8 `useSlidingIndicator`
+  驱动(hook 本就输出 `translate(x,y)`,纵向零改动复用,仅补一条纵向纯函数断言);
+  href→`<a>` / 无→`<button>`,group 为不可交互标题,选中 `aria-current=page`,走原生
+  Tab 序;指示器切换不触发 filter 重建(测试断言快照长度不变)。
+- 五件套齐全;`styles/index.css` 按字母序追加 5 条 @import;`src/index.ts` 导出组件与
+  Props/子类型(Avatar/Breadcrumb+Item/Card/Pagination/SideNav+Item)。
+  `computePageItems` 仅内部使用,不进公共导出。
+- site:Card/Avatar 进 `display.demos.tsx`,Breadcrumb/Pagination/SideNav 进
+  `navigation.demos.tsx`,五条 ComponentDoc 进 registry,总览计数 20 → 25;
+  **Card demo 含「卡内玻璃控件自动禁折射是引擎既定行为,不是 bug」说明**;
+  `App.test.tsx` 新增五详情页可渲染断言。
+- 验证:`pnpm typecheck` ✓、`pnpm build` ✓、`pnpm test`——单线程全量 288/288 全绿
+  (`vitest run --no-file-parallelism`)。默认并行下 M4 既有 Modal 焦点测试
+  (keeps Tab focus inside the dialog)因 jsdom 焦点时序 + worker 争用 flake(二阶段新增
+  大量焦点测试后几乎必现),隔离重跑 11/11 通过,非本卡回归,未改 M4 测试。
+- **留本地目检**:Card 玻璃观感(含卡内嵌套禁折射)、SideNav 玻璃滑块纵向动效
+  (`--lg-ease-bounce`)、Pagination 尺寸/箭头(服务器无浏览器)。
