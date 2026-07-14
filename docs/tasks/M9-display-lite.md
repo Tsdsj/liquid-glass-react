@@ -1,5 +1,5 @@
 ---
-status: todo
+status: done
 depends: [M8]
 ---
 
@@ -129,3 +129,32 @@ export interface SkeletonProps {
 
 - Tag 自定义任意色值(仅预设语义色);Badge 独立数字动画;Progress 环形;
   Spin 自定义指示器;Skeleton 组合预设(头像+段落模板)。
+
+## 完成记录
+
+- 五组件均纯 CSS tint,无 `GlassSurface`/backdrop-filter(符合本卡玻璃决策)。
+- **Button spinner 重构**:先在 `Button.test.tsx` 加保护断言(loading spinner 带
+  `.lg-spin__ring`)→ RED;把环形样式从 `button.css` 提取到 `spin.css` 的共享
+  `.lg-spin__ring`(Button 只留 `--lg-spin-ring-size` 尺寸覆盖),元素改为
+  `lg-button__spinner lg-spin__ring` → GREEN;Button 既有断言(`.lg-button__spinner`
+  存在)保留未删。
+- `Spin`:`role=status` + `aria-live=polite` + sr-only i18n(加载中/Loading),
+  独立/包裹两模式(包裹加半透明遮罩,遮罩不抢焦点);forwardRef 到根 div。
+- `Tag`:extends HTMLAttributes,五预设语义色(data-color)+ icon + 可关闭真按钮
+  (i18n aria-label 移除/Remove);close × 用伪元素两线绘制。
+- `Badge`:数字/红点,max 截断 `${max}+`,showZero 分支,包裹/独立;数字配 sr-only
+  「{n} 条通知 / {n} notifications」,纯点 aria-hidden。
+- `Progress`:`role=progressbar` + aria-value*(indeterminate 省略 valuenow),value
+  内部 clamp;确定态 accent 填充,不确定态 transform 流动动画。
+- `Skeleton`:text(多行,末行 60%)/circle/rect,width/height 数字→px,aria-hidden;
+  shimmer 背景渐变动画。
+- reduced-motion 降级:Spin/Progress/Skeleton 各在测试中读取自身 CSS 断言
+  `@media (prefers-reduced-motion: reduce)` 内 `animation: none`。
+- 五件套齐全;`styles/index.css` 按字母序追加 5 条 @import;`src/index.ts` 导出组件
+  与 Props 类型(Badge/Progress/Skeleton/Spin/Tag)。
+- site:`site/src/demos/display.demos.tsx` 五条 ComponentDoc 进 registry(演示 + 中英
+  API 表),总览计数 15 → 20;`App.test.tsx` 新增五详情页可渲染断言。
+- 验证:`pnpm typecheck && pnpm build && pnpm test` 全通过(33 文件 / 255 用例,存量
+  断言不变)。
+- **留本地目检**:Spin 遮罩观感与环形动效、Progress 不确定态流动、Skeleton shimmer、
+  Tag/Badge 语义色在亮暗主题与壁纸下的对比(服务器无浏览器)。

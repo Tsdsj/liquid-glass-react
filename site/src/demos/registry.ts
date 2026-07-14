@@ -9,6 +9,7 @@ import {
 } from './entry.demos';
 import { modalDoc, popoverDoc, toastDoc, tooltipDoc } from './feedback.demos';
 import { radioGroupDoc, segmentedDoc, tabsDoc } from './navigation.demos';
+import { badgeDoc, progressDoc, skeletonDoc, spinDoc, tagDoc } from './display.demos';
 import type { ComponentDoc } from './types';
 
 export const COMPONENT_DOCS: ComponentDoc[] = [
@@ -27,6 +28,11 @@ export const COMPONENT_DOCS: ComponentDoc[] = [
   popoverDoc,
   modalDoc,
   toastDoc,
+  tagDoc,
+  badgeDoc,
+  progressDoc,
+  spinDoc,
+  skeletonDoc,
 ];
 
 export function findComponentDoc(slug: string): ComponentDoc | undefined {

@@ -1,0 +1,273 @@
+import { Badge, Progress, Skeleton, Spin, Tag } from '@ttq/liquid-glass-react';
+import type { ComponentDoc } from './types';
+
+const DISPLAY = { 'zh-CN': '展示', 'en-US': 'Display' };
+
+const AVATAR_BOX = {
+  display: 'inline-flex',
+  width: 40,
+  height: 40,
+  alignItems: 'center',
+  justifyContent: 'center',
+  borderRadius: 10,
+  background: 'rgba(0,0,0,0.08)',
+} as const;
+
+export const tagDoc: ComponentDoc = {
+  slug: 'tag',
+  name: 'Tag',
+  title: { 'zh-CN': '标签', 'en-US': 'Tag' },
+  category: DISPLAY,
+  description: {
+    'zh-CN': '预设语义色的纯 tint 小标签,可选图标与可关闭按钮(i18n aria-label)。',
+    'en-US': 'Small tint chips in preset semantic colors, with optional icon and a close button.',
+  },
+  renderPreview: () => (
+    <div style={{ display: 'flex', gap: 8 }}>
+      <Tag color="accent">Accent</Tag>
+      <Tag color="success">Success</Tag>
+    </div>
+  ),
+  demos: [
+    {
+      id: 'basic',
+      title: { 'zh-CN': '语义色与关闭', 'en-US': 'Colors & closable' },
+      description: {
+        'zh-CN': '五种预设色;closable 渲染真按钮,onClose 后由使用方自行卸载。',
+        'en-US': 'Five preset colors; closable renders a real button, unmount on onClose yourself.',
+      },
+      code: `
+import { Tag } from '@ttq/liquid-glass-react';
+
+<Tag color="success">已完成</Tag>
+<Tag color="danger" closable onClose={() => {}}>可关闭</Tag>`,
+      render: () => (
+        <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+          <Tag>默认 Default</Tag>
+          <Tag color="accent">主色 Accent</Tag>
+          <Tag color="success">成功 Success</Tag>
+          <Tag color="warning">警告 Warning</Tag>
+          <Tag color="danger" closable onClose={() => undefined}>
+            可关闭 Closable
+          </Tag>
+        </div>
+      ),
+    },
+  ],
+  api: [
+    {
+      title: 'Tag',
+      rows: [
+        { prop: 'color', type: "'default' | 'accent' | 'success' | 'warning' | 'danger'", defaultValue: "'default'", description: { 'zh-CN': '预设语义色', 'en-US': 'Preset semantic color' } },
+        { prop: 'closable', type: 'boolean', defaultValue: 'false', description: { 'zh-CN': '显示关闭按钮', 'en-US': 'Show a close button' } },
+        { prop: 'onClose', type: '() => void', description: { 'zh-CN': '关闭回调', 'en-US': 'Close callback' } },
+        { prop: 'icon', type: 'ReactNode', description: { 'zh-CN': '前置图标', 'en-US': 'Leading icon' } },
+        { prop: 'size', type: "'sm' | 'md'", defaultValue: "'md'", description: { 'zh-CN': '尺寸档位', 'en-US': 'Size preset' } },
+      ],
+    },
+  ],
+};
+
+export const badgeDoc: ComponentDoc = {
+  slug: 'badge',
+  name: 'Badge',
+  title: { 'zh-CN': '徽标', 'en-US': 'Badge' },
+  category: DISPLAY,
+  description: {
+    'zh-CN': '角标数字或红点,可包裹目标;数字配 sr-only 通知文案,纯点 aria-hidden。',
+    'en-US': 'Corner count or dot; numbers carry a screen-reader sentence, bare dots are hidden.',
+  },
+  renderPreview: () => (
+    <Badge count={5}>
+      <span style={AVATAR_BOX}>📮</span>
+    </Badge>
+  ),
+  demos: [
+    {
+      id: 'basic',
+      title: { 'zh-CN': '数字与红点', 'en-US': 'Count & dot' },
+      description: {
+        'zh-CN': '超过 max 显示 `${max}+`;count 为 0 默认隐藏,showZero 保留。',
+        'en-US': 'Over max shows `${max}+`; zero hides unless showZero is set.',
+      },
+      code: `
+import { Badge } from '@ttq/liquid-glass-react';
+
+<Badge count={8}><Avatar /></Badge>
+<Badge count={100} /> {/* 99+ */}
+<Badge dot><Bell /></Badge>`,
+      render: () => (
+        <div style={{ display: 'flex', gap: 28, alignItems: 'center' }}>
+          <Badge count={8}>
+            <span style={AVATAR_BOX}>📮</span>
+          </Badge>
+          <Badge count={100} />
+          <Badge dot>
+            <span style={AVATAR_BOX}>🔔</span>
+          </Badge>
+        </div>
+      ),
+    },
+  ],
+  api: [
+    {
+      title: 'Badge',
+      rows: [
+        { prop: 'count', type: 'number', description: { 'zh-CN': '徽标数字', 'en-US': 'Badge count' } },
+        { prop: 'max', type: 'number', defaultValue: '99', description: { 'zh-CN': '上限,超出显示 `${max}+`', 'en-US': 'Cap; over it shows `${max}+`' } },
+        { prop: 'dot', type: 'boolean', defaultValue: 'false', description: { 'zh-CN': '纯红点模式', 'en-US': 'Bare dot mode' } },
+        { prop: 'showZero', type: 'boolean', defaultValue: 'false', description: { 'zh-CN': 'count 为 0 时是否显示', 'en-US': 'Show when count is zero' } },
+        { prop: 'children', type: 'ReactNode', description: { 'zh-CN': '包裹目标,缺省独立显示', 'en-US': 'Wrapped target; standalone if absent' } },
+      ],
+    },
+  ],
+};
+
+export const progressDoc: ComponentDoc = {
+  slug: 'progress',
+  name: 'Progress',
+  title: { 'zh-CN': '进度条', 'en-US': 'Progress' },
+  category: DISPLAY,
+  description: {
+    'zh-CN': '纯 tint 凹槽 + accent 填充;value 内部 clamp,支持不确定态流动动画。',
+    'en-US': 'Tint groove with accent fill; value is clamped, with an indeterminate flow mode.',
+  },
+  renderPreview: () => (
+    <div style={{ width: 160 }}>
+      <Progress value={62} aria-label="preview" />
+    </div>
+  ),
+  demos: [
+    {
+      id: 'basic',
+      title: { 'zh-CN': '确定与不确定', 'en-US': 'Determinate & indeterminate' },
+      description: {
+        'zh-CN': 'showValue 显示百分比;indeterminate 时省略 aria-valuenow,reduced-motion 降级。',
+        'en-US': 'showValue prints the percent; indeterminate omits aria-valuenow and degrades gracefully.',
+      },
+      code: `
+import { Progress } from '@ttq/liquid-glass-react';
+
+<Progress value={62} showValue aria-label="上传" />
+<Progress indeterminate aria-label="加载" />`,
+      render: () => (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 16, width: 320 }}>
+          <Progress value={62} showValue aria-label="上传" />
+          <Progress indeterminate aria-label="加载" />
+        </div>
+      ),
+    },
+  ],
+  api: [
+    {
+      title: 'Progress',
+      rows: [
+        { prop: 'value', type: 'number', defaultValue: '0', description: { 'zh-CN': '0–100,内部 clamp', 'en-US': '0–100, clamped' } },
+        { prop: 'indeterminate', type: 'boolean', defaultValue: 'false', description: { 'zh-CN': '不确定态流动动画', 'en-US': 'Indeterminate flow mode' } },
+        { prop: 'showValue', type: 'boolean', defaultValue: 'false', description: { 'zh-CN': '尾部显示百分比', 'en-US': 'Trailing percent text' } },
+        { prop: 'size', type: "'sm' | 'md' | 'lg'", defaultValue: "'md'", description: { 'zh-CN': '轨道粗细', 'en-US': 'Track thickness' } },
+      ],
+    },
+  ],
+};
+
+export const spinDoc: ComponentDoc = {
+  slug: 'spin',
+  name: 'Spin',
+  title: { 'zh-CN': '加载中', 'en-US': 'Spin' },
+  category: DISPLAY,
+  description: {
+    'zh-CN': '环形加载指示器,role=status;包裹模式加半透明遮罩,与 Button loading 共享环样式。',
+    'en-US': 'A ring loader (role=status); wrap mode adds a translucent overlay, ring shared with Button.',
+  },
+  renderPreview: () => <Spin />,
+  demos: [
+    {
+      id: 'basic',
+      title: { 'zh-CN': '独立与包裹', 'en-US': 'Standalone & wrap' },
+      description: {
+        'zh-CN': '无 children 时独立显示;有 children 时遮罩覆盖内容并拦截交互。',
+        'en-US': 'Standalone without children; wrapping children overlays and blocks interaction.',
+      },
+      code: `
+import { Spin } from '@ttq/liquid-glass-react';
+
+<Spin tip="加载中" />
+
+<Spin>
+  <Card />
+</Spin>`,
+      render: () => (
+        <div style={{ display: 'flex', gap: 40, alignItems: 'center' }}>
+          <Spin tip="加载中 Loading" />
+          <Spin>
+            <div style={{ width: 200, padding: 20, borderRadius: 12, background: 'rgba(0,0,0,0.06)' }}>
+              包裹内容 Wrapped content
+            </div>
+          </Spin>
+        </div>
+      ),
+    },
+  ],
+  api: [
+    {
+      title: 'Spin',
+      rows: [
+        { prop: 'spinning', type: 'boolean', defaultValue: 'true', description: { 'zh-CN': '是否加载中', 'en-US': 'Whether it is loading' } },
+        { prop: 'tip', type: 'ReactNode', description: { 'zh-CN': '指示文案', 'en-US': 'Caption text' } },
+        { prop: 'size', type: "'sm' | 'md' | 'lg'", defaultValue: "'md'", description: { 'zh-CN': '尺寸档位', 'en-US': 'Size preset' } },
+        { prop: 'children', type: 'ReactNode', description: { 'zh-CN': '包裹模式 + 遮罩', 'en-US': 'Wrap mode with overlay' } },
+      ],
+    },
+  ],
+};
+
+export const skeletonDoc: ComponentDoc = {
+  slug: 'skeleton',
+  name: 'Skeleton',
+  title: { 'zh-CN': '骨架屏', 'en-US': 'Skeleton' },
+  category: DISPLAY,
+  description: {
+    'zh-CN': '纯 tint 占位 + shimmer;text/circle/rect 三形,aria-hidden,reduced-motion 静止。',
+    'en-US': 'Tint placeholders with a shimmer; text/circle/rect, aria-hidden, still under reduced motion.',
+  },
+  renderPreview: () => (
+    <div style={{ width: 160 }}>
+      <Skeleton lines={2} />
+    </div>
+  ),
+  demos: [
+    {
+      id: 'basic',
+      title: { 'zh-CN': '组合占位', 'en-US': 'Composed placeholder' },
+      description: {
+        'zh-CN': 'text 多行末行 60% 宽;circle/rect 用 width/height 控制尺寸。',
+        'en-US': 'Multi-line text ends at 60%; circle/rect take width/height.',
+      },
+      code: `
+import { Skeleton } from '@ttq/liquid-glass-react';
+
+<Skeleton variant="circle" width={56} height={56} />
+<Skeleton lines={3} />`,
+      render: () => (
+        <div style={{ display: 'flex', gap: 20, alignItems: 'flex-start', width: 360 }}>
+          <Skeleton variant="circle" width={56} height={56} />
+          <div style={{ flex: 1 }}>
+            <Skeleton lines={3} />
+          </div>
+        </div>
+      ),
+    },
+  ],
+  api: [
+    {
+      title: 'Skeleton',
+      rows: [
+        { prop: 'variant', type: "'text' | 'circle' | 'rect'", defaultValue: "'text'", description: { 'zh-CN': '占位形状', 'en-US': 'Placeholder shape' } },
+        { prop: 'width / height', type: 'number | string', description: { 'zh-CN': '尺寸,数字按 px', 'en-US': 'Size; numbers are px' } },
+        { prop: 'lines', type: 'number', defaultValue: '1', description: { 'zh-CN': '仅 text,末行 60% 宽', 'en-US': 'Text only; last line 60% wide' } },
+        { prop: 'animated', type: 'boolean', defaultValue: 'true', description: { 'zh-CN': 'shimmer 动画', 'en-US': 'Shimmer animation' } },
+      ],
+    },
+  ],
+};
