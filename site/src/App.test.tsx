@@ -23,6 +23,7 @@ describe('docs site', () => {
     render(<App />);
     expect(screen.getByText('液态玻璃质感的 React 组件库')).toBeInTheDocument();
     expect(screen.getByTestId('hero-showcase')).toBeInTheDocument();
+    expect(document.querySelector('.lg-progressive-blur')).toBeInTheDocument();
     expect(screen.getByRole('link', { name: '组件' })).toHaveAttribute(
       'href',
       '#/components',
