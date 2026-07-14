@@ -1,0 +1,87 @@
+.lg-switch {
+  --lg-switch-height: var(--lg-control-h-md);
+  --lg-switch-width: 52px;
+  --lg-switch-thumb-inset: var(--lg-space-1);
+  --lg-switch-track-color: var(--lg-tint);
+  --lg-switch-track-checked-color: var(--lg-accent);
+  --lg-switch-thumb-color: var(--lg-tint-hover);
+  --lg-switch-disabled-opacity: 0.55;
+  --lg-switch-focus-width: 2px;
+  --lg-switch-focus-offset: 2px;
+
+  position: relative;
+  display: inline-flex;
+  width: var(--lg-switch-width);
+  height: var(--lg-switch-height);
+  flex: 0 0 auto;
+  cursor: pointer;
+  vertical-align: middle;
+}
+
+.lg-switch[data-size='sm'] {
+  --lg-switch-height: var(--lg-control-h-sm);
+  --lg-switch-width: 44px;
+}
+
+.lg-switch[data-size='lg'] {
+  --lg-switch-height: var(--lg-control-h-lg);
+  --lg-switch-width: 64px;
+}
+
+.lg-switch__input {
+  position: absolute;
+  z-index: 2;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  opacity: 0;
+  cursor: inherit;
+}
+
+.lg-switch__track {
+  position: relative;
+  display: block;
+  width: 100%;
+  height: 100%;
+  border-radius: var(--lg-radius-full);
+  background: var(--lg-switch-track-color);
+  transition: background var(--lg-duration) var(--lg-ease);
+}
+
+.lg-switch__thumb {
+  --lg-tint: var(--lg-switch-thumb-color);
+
+  position: absolute;
+  inset-block-start: var(--lg-switch-thumb-inset);
+  inset-inline-start: var(--lg-switch-thumb-inset);
+  width: calc(var(--lg-switch-height) - var(--lg-switch-thumb-inset) * 2);
+  height: calc(var(--lg-switch-height) - var(--lg-switch-thumb-inset) * 2);
+  pointer-events: none;
+  transition: transform var(--lg-duration) var(--lg-ease-bounce);
+}
+
+.lg-switch[data-checked] .lg-switch__track {
+  background: var(--lg-switch-track-checked-color);
+}
+
+.lg-switch[data-checked] .lg-switch__thumb {
+  transform: translateX(calc(var(--lg-switch-width) - var(--lg-switch-height)));
+}
+
+.lg-switch__input:focus-visible + .lg-switch__track {
+  outline: var(--lg-switch-focus-width) solid var(--lg-accent);
+  outline-offset: var(--lg-switch-focus-offset);
+}
+
+.lg-switch[data-disabled] {
+  opacity: var(--lg-switch-disabled-opacity);
+  cursor: not-allowed;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .lg-switch__track,
+  .lg-switch__thumb {
+    transition: none;
+  }
+}
