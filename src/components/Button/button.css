@@ -43,12 +43,12 @@
 }
 
 .lg-button[data-variant='accent'] {
-  --lg-button-bg: var(--lg-accent);
+  --lg-button-bg: var(--lg-accent-glass);
   --lg-button-color: var(--lg-accent-contrast);
 }
 
 .lg-button[data-variant='danger'] {
-  --lg-button-bg: var(--lg-danger);
+  --lg-button-bg: var(--lg-danger-glass);
   --lg-button-color: var(--lg-accent-contrast);
 }
 

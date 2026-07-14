@@ -1,6 +1,8 @@
 import {
   forwardRef,
   useRef,
+  useState,
+  type FocusEvent,
   type ChangeEvent,
   type CSSProperties,
   type KeyboardEvent,
@@ -67,6 +69,7 @@ export const Slider = forwardRef<HTMLInputElement, SliderProps>(function Slider(
   },
   ref,
 ) {
+  const [isInteracting, setIsInteracting] = useState(false);
   const [currentValue, setCurrentValue] = useControllableState({
     value,
     defaultValue: defaultValue ?? min,
@@ -90,9 +93,30 @@ export const Slider = forwardRef<HTMLInputElement, SliderProps>(function Slider(
     setCurrentValue(nextValue);
   };
 
-  const handlePointerUp = (_event: PointerEvent<HTMLInputElement>) => {
+  const handlePointerDown = (event: PointerEvent<HTMLInputElement>) => {
+    if (!disabled) {
+      event.currentTarget.setPointerCapture?.(event.pointerId);
+      setIsInteracting(true);
+    }
+  };
+
+  const handlePointerUp = (event: PointerEvent<HTMLInputElement>) => {
+    if (event.currentTarget.hasPointerCapture?.(event.pointerId)) {
+      event.currentTarget.releasePointerCapture?.(event.pointerId);
+    }
+    setIsInteracting(false);
     if (!disabled) {
       onChangeEnd?.(interactionValueRef.current);
+    }
+  };
+
+  const handlePointerCancel = () => {
+    setIsInteracting(false);
+  };
+
+  const handleKeyDown = (event: KeyboardEvent<HTMLInputElement>) => {
+    if (!disabled && CHANGE_KEYS.has(event.key)) {
+      setIsInteracting(true);
     }
   };
 
@@ -100,6 +124,13 @@ export const Slider = forwardRef<HTMLInputElement, SliderProps>(function Slider(
     if (!disabled && CHANGE_KEYS.has(event.key)) {
       onChangeEnd?.(interactionValueRef.current);
     }
+    if (CHANGE_KEYS.has(event.key)) {
+      setIsInteracting(false);
+    }
+  };
+
+  const handleBlur = (_event: FocusEvent<HTMLInputElement>) => {
+    setIsInteracting(false);
   };
 
   return (
@@ -119,8 +150,12 @@ export const Slider = forwardRef<HTMLInputElement, SliderProps>(function Slider(
         disabled={disabled}
         aria-label={ariaLabel}
         onChange={handleChange}
+        onPointerDown={handlePointerDown}
         onPointerUp={handlePointerUp}
+        onPointerCancel={handlePointerCancel}
+        onKeyDown={handleKeyDown}
         onKeyUp={handleKeyUp}
+        onBlur={handleBlur}
         className="lg-slider__input"
       />
       <span className="lg-slider__track" aria-hidden="true">
@@ -131,6 +166,7 @@ export const Slider = forwardRef<HTMLInputElement, SliderProps>(function Slider(
         className="lg-slider__thumb"
         style={THUMB_STYLE}
         aria-hidden="true"
+        data-interacting={isInteracting ? '' : undefined}
       />
     </div>
   );

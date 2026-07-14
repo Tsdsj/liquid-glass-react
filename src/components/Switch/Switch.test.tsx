@@ -1,5 +1,5 @@
 import { createRef } from 'react';
-import { render, screen } from '@testing-library/react';
+import { fireEvent, render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, expect, it, vi } from 'vitest';
 import { Switch } from './Switch';
@@ -100,5 +100,49 @@ describe('Switch', () => {
     expect(root).toHaveAttribute('data-size', 'lg');
     expect(root).toHaveAttribute('data-checked');
     expect(thumb).toHaveAttribute('data-refraction', 'off');
+  });
+
+  it.each(['mouse', 'touch'])('tracks %s pointer interaction and clears on cancel', (pointerType) => {
+    const onPointerDown = vi.fn();
+    const onPointerUp = vi.fn();
+    const onPointerCancel = vi.fn();
+    render(
+      <Switch
+        aria-label="Notifications"
+        onPointerDown={onPointerDown}
+        onPointerUp={onPointerUp}
+        onPointerCancel={onPointerCancel}
+      />,
+    );
+    const input = screen.getByRole('switch', { name: 'Notifications' });
+    const thumb = input.closest('label')?.querySelector('.lg-switch__thumb');
+
+    fireEvent.pointerDown(input, { pointerType });
+    expect(thumb).toHaveAttribute('data-interacting');
+    fireEvent.pointerUp(input, { pointerType });
+    expect(thumb).not.toHaveAttribute('data-interacting');
+    fireEvent.pointerDown(input, { pointerType });
+    fireEvent.pointerCancel(input, { pointerType });
+    expect(thumb).not.toHaveAttribute('data-interacting');
+    expect(onPointerDown).toHaveBeenCalledTimes(2);
+    expect(onPointerUp).toHaveBeenCalledTimes(1);
+    expect(onPointerCancel).toHaveBeenCalledTimes(1);
+  });
+
+  it('tracks keyboard interaction and clears on key release', () => {
+    const onKeyDown = vi.fn();
+    const onKeyUp = vi.fn();
+    render(
+      <Switch aria-label="Notifications" onKeyDown={onKeyDown} onKeyUp={onKeyUp} />,
+    );
+    const input = screen.getByRole('switch', { name: 'Notifications' });
+    const thumb = input.closest('label')?.querySelector('.lg-switch__thumb');
+
+    fireEvent.keyDown(input, { key: ' ' });
+    expect(thumb).toHaveAttribute('data-interacting');
+    fireEvent.keyUp(input, { key: ' ' });
+    expect(thumb).not.toHaveAttribute('data-interacting');
+    expect(onKeyDown).toHaveBeenCalledTimes(1);
+    expect(onKeyUp).toHaveBeenCalledTimes(1);
   });
 });

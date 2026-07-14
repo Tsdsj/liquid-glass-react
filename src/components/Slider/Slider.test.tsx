@@ -52,11 +52,15 @@ describe('Slider', () => {
       <Slider defaultValue={25} onChangeEnd={onChangeEnd} aria-label="Volume" />,
     );
     const input = screen.getByRole('slider', { name: 'Volume' });
+    const thumb = input.closest('.lg-slider')?.querySelector('.lg-slider__thumb');
 
+    fireEvent.pointerDown(input);
+    expect(thumb).toHaveAttribute('data-interacting');
     fireEvent.change(input, { target: { value: '70' } });
     fireEvent.pointerUp(input);
 
     expect(onChangeEnd).toHaveBeenCalledWith(70);
+    expect(thumb).not.toHaveAttribute('data-interacting');
   });
 
   it('uses native keyboard interaction and ends changes on relevant key release', async () => {
@@ -113,5 +117,27 @@ describe('Slider', () => {
     const thumb = input.closest('.lg-slider')?.querySelector('.lg-slider__thumb');
 
     expect(thumb).toHaveAttribute('data-refraction', 'off');
+  });
+
+  it.each(['mouse', 'touch'])('tracks %s pointer interaction and clears on cancel', (pointerType) => {
+    render(<Slider defaultValue={50} aria-label="Volume" />);
+    const input = screen.getByRole('slider', { name: 'Volume' });
+    const thumb = input.closest('.lg-slider')?.querySelector('.lg-slider__thumb');
+
+    fireEvent.pointerDown(input, { pointerType });
+    expect(thumb).toHaveAttribute('data-interacting');
+    fireEvent.pointerCancel(input, { pointerType });
+    expect(thumb).not.toHaveAttribute('data-interacting');
+  });
+
+  it('tracks keyboard interaction and clears on key release', () => {
+    render(<Slider defaultValue={50} aria-label="Volume" />);
+    const input = screen.getByRole('slider', { name: 'Volume' });
+    const thumb = input.closest('.lg-slider')?.querySelector('.lg-slider__thumb');
+
+    fireEvent.keyDown(input, { key: 'ArrowRight' });
+    expect(thumb).toHaveAttribute('data-interacting');
+    fireEvent.keyUp(input, { key: 'ArrowRight' });
+    expect(thumb).not.toHaveAttribute('data-interacting');
   });
 });

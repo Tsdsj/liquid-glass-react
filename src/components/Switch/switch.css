@@ -4,7 +4,9 @@
   --lg-switch-thumb-inset: var(--lg-space-1);
   --lg-switch-track-color: var(--lg-tint);
   --lg-switch-track-checked-color: var(--lg-accent);
-  --lg-switch-thumb-color: var(--lg-tint-hover);
+  --lg-switch-thumb-color: var(--lg-tint);
+  --lg-switch-thumb-interacting-color: var(--lg-tint-hover);
+  --lg-switch-interaction-scale: calc(2 - var(--lg-interaction-scale));
   --lg-switch-disabled-opacity: 0.55;
   --lg-switch-focus-width: 2px;
   --lg-switch-focus-offset: 2px;
@@ -58,6 +60,7 @@
   width: calc(var(--lg-switch-height) - var(--lg-switch-thumb-inset) * 2);
   height: calc(var(--lg-switch-height) - var(--lg-switch-thumb-inset) * 2);
   pointer-events: none;
+  transform: scale(1);
   transition: transform var(--lg-duration) var(--lg-ease-bounce);
 }
 
@@ -66,7 +69,20 @@
 }
 
 .lg-switch[data-checked] .lg-switch__thumb {
-  transform: translateX(calc(var(--lg-switch-width) - var(--lg-switch-height)));
+  transform: translateX(calc(var(--lg-switch-width) - var(--lg-switch-height))) scale(1);
+}
+
+.lg-switch__thumb[data-interacting] {
+  --lg-tint: var(--lg-switch-thumb-interacting-color);
+  --lg-surface-pointer-highlight: var(--lg-pointer-highlight);
+  --lg-surface-pointer-shade: var(--lg-pointer-shade);
+
+  transform: scale(var(--lg-switch-interaction-scale));
+}
+
+.lg-switch[data-checked] .lg-switch__thumb[data-interacting] {
+  transform: translateX(calc(var(--lg-switch-width) - var(--lg-switch-height)))
+    scale(var(--lg-switch-interaction-scale));
 }
 
 .lg-switch__input:focus-visible + .lg-switch__track {
@@ -83,5 +99,14 @@
   .lg-switch__track,
   .lg-switch__thumb {
     transition: none;
+  }
+
+  .lg-switch__thumb[data-interacting] {
+    transform: none;
+  }
+
+  .lg-switch[data-checked] .lg-switch__thumb,
+  .lg-switch[data-checked] .lg-switch__thumb[data-interacting] {
+    transform: translateX(calc(var(--lg-switch-width) - var(--lg-switch-height)));
   }
 }
