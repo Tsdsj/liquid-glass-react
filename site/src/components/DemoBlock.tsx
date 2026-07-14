@@ -1,7 +1,7 @@
 import { useState, type ReactNode } from 'react';
-import { Button, GlassSurface, toast } from '@ttq/liquid-glass-react';
+import { Button, toast } from '@ttq/liquid-glass-react';
 import { SITE_COPY, useT, type Bilingual } from '../site-i18n';
-import { GRADIENT_WALLPAPER } from '../wallpaper';
+import { PHOTO_WALLPAPER } from '../wallpaper';
 
 export interface DemoBlockProps {
   title: Bilingual;
@@ -33,14 +33,14 @@ export function DemoBlock({ title, description, code, children }: DemoBlockProps
   };
 
   return (
-    <GlassSurface className="site-demo" data-testid="demo-block">
-      <div className="site-demo__stage" style={{ backgroundImage: GRADIENT_WALLPAPER }}>
+    <section className="site-demo" data-testid="demo-block">
+      <div className="site-demo__stage" style={{ backgroundImage: PHOTO_WALLPAPER }}>
         {children}
       </div>
       <div className="site-demo__meta">
         <div>
-          <h3>{t(title)}</h3>
-          <p>{t(description)}</p>
+          <h3 className="site-demo__title">{t(title)}</h3>
+          <p className="site-demo__description">{t(description)}</p>
         </div>
         <div className="site-demo__actions">
           <Button size="sm" variant="ghost" onClick={handleCopy}>
@@ -52,6 +52,6 @@ export function DemoBlock({ title, description, code, children }: DemoBlockProps
         </div>
       </div>
       {showCode ? <pre className="site-code">{code.trim()}</pre> : null}
-    </GlassSurface>
+    </section>
   );
 }

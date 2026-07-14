@@ -35,7 +35,10 @@ export const SITE_COPY = {
   },
   heroGetStarted: { 'zh-CN': '开始使用', 'en-US': 'Get started' },
   heroBrowse: { 'zh-CN': '浏览组件', 'en-US': 'Browse components' },
-  heroBadge: { 'zh-CN': '零运行时依赖 · TypeScript · 中英双语', 'en-US': 'Zero runtime deps · TypeScript · Bilingual' },
+  heroBadge: {
+    'zh-CN': 'React 18 / 19 · TypeScript · 主题可配置',
+    'en-US': 'React 18 / 19 · TypeScript · Themeable',
+  },
   featureTitle: { 'zh-CN': '为什么选择它', 'en-US': 'Why Liquid Glass React' },
   featureRefraction: { 'zh-CN': '真实边缘折射', 'en-US': 'Real edge refraction' },
   featureRefractionDesc: {
@@ -58,6 +61,16 @@ export const SITE_COPY = {
     'en-US': 'Every visual knob is a --lg-* CSS variable: one attribute flips dark mode, override globally or per subtree.',
   },
   quickStartTitle: { 'zh-CN': '三行代码开始', 'en-US': 'Start in three lines' },
+  quickStartSubtitle: {
+    'zh-CN': '引入一次样式文件，即可按需使用组件。',
+    'en-US': 'Import the stylesheet once, then use only the components you need.',
+  },
+  homeComponentsTitle: { 'zh-CN': '从原语到完整交互', 'en-US': 'From primitive to complete interactions' },
+  homeComponentsSubtitle: {
+    'zh-CN': '每个组件都使用同一套玻璃引擎、主题 Token 与可访问性约定。',
+    'en-US': 'Every component shares the same glass engine, theme tokens and accessibility contract.',
+  },
+  viewAllComponents: { 'zh-CN': '查看全部组件', 'en-US': 'View all components' },
   componentsTitle: { 'zh-CN': '组件总览', 'en-US': 'Components' },
   componentsSubtitle: {
     'zh-CN': '27 个玻璃组件,覆盖通用控件、数据录入、选择导航、容器展示与浮层反馈。',
@@ -65,6 +78,10 @@ export const SITE_COPY = {
   },
   searchPlaceholder: { 'zh-CN': '搜索组件', 'en-US': 'Search components' },
   searchEmpty: { 'zh-CN': '没有匹配的组件', 'en-US': 'No matching components' },
+  overviewLabel: { 'zh-CN': '组件总览', 'en-US': 'Overview' },
+  showComponentNav: { 'zh-CN': '展开组件导航', 'en-US': 'Show component navigation' },
+  hideComponentNav: { 'zh-CN': '收起组件导航', 'en-US': 'Hide component navigation' },
+  onThisPage: { 'zh-CN': '本页内容', 'en-US': 'On this page' },
   backToOverview: { 'zh-CN': '返回组件总览', 'en-US': 'Back to overview' },
   demosTitle: { 'zh-CN': '代码演示', 'en-US': 'Examples' },
   apiTitle: { 'zh-CN': 'API', 'en-US': 'API' },

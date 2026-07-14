@@ -1,6 +1,5 @@
 import { useEffect, useState } from 'react';
 import {
-  GlassSurface,
   LiquidGlassConfig,
   Select,
   Switch,
@@ -42,9 +41,8 @@ function SiteHeader({ route, locale, onLocaleChange, theme, onThemeChange }: Sit
 
   return (
     <header className="site-header">
-      <GlassSurface className="site-header__bar" radius={22}>
+      <div className="site-container site-header__inner">
         <a className="site-header__brand" href="#/">
-          <span className="site-header__logo" aria-hidden="true" />
           {t(SITE_COPY.brand)}
         </a>
         <nav className="site-header__nav" aria-label="site">
@@ -59,26 +57,29 @@ function SiteHeader({ route, locale, onLocaleChange, theme, onThemeChange }: Sit
             </a>
           ))}
         </nav>
-        <span className="site-header__spacer" />
         <div className="site-header__controls">
-          <label className="site-header__theme">
-            {theme === 'dark' ? t(SITE_COPY.themeDark) : t(SITE_COPY.themeLight)}
+          <div className="site-header__theme">
+            <span className="site-header__theme-label">
+              {theme === 'dark' ? t(SITE_COPY.themeDark) : t(SITE_COPY.themeLight)}
+            </span>
             <Switch
               checked={theme === 'dark'}
               onCheckedChange={(checked) => onThemeChange(checked ? 'dark' : 'light')}
               aria-label="theme"
               size="sm"
             />
-          </label>
-          <Select
-            size="sm"
-            aria-label="language"
-            options={LOCALE_OPTIONS}
-            value={locale}
-            onChange={(value) => onLocaleChange(value as LiquidGlassLocale)}
-          />
+          </div>
+          <div className="site-header__locale">
+            <Select
+              size="sm"
+              aria-label="language"
+              options={LOCALE_OPTIONS}
+              value={locale}
+              onChange={(value) => onLocaleChange(value as LiquidGlassLocale)}
+            />
+          </div>
         </div>
-      </GlassSurface>
+      </div>
     </header>
   );
 }
@@ -115,6 +116,9 @@ export function App() {
     <LiquidGlassConfig locale={locale}>
       <SiteLocaleContext.Provider value={locale}>
         <div className="site">
+          <a className="site-skip-link" href="#site-main">
+            {locale === 'zh-CN' ? '跳到主要内容' : 'Skip to content'}
+          </a>
           <SiteHeader
             route={route}
             locale={locale}
@@ -122,7 +126,7 @@ export function App() {
             theme={theme}
             onThemeChange={setTheme}
           />
-          <main className="site__main">
+          <main id="site-main" className="site__main">
             <PageForRoute route={route} />
           </main>
           <SiteFooter />
