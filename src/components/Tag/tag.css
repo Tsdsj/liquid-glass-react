@@ -1,0 +1,111 @@
+.lg-tag {
+  --lg-tag-bg: var(--lg-tint);
+  --lg-tag-color: var(--lg-text);
+  --lg-tag-height: 24px;
+  --lg-tag-font-size: var(--lg-font-size-sm);
+  --lg-tag-padding: var(--lg-space-2);
+  --lg-tag-gap: var(--lg-space-1);
+  --lg-tag-radius: var(--lg-radius-sm);
+
+  display: inline-flex;
+  align-items: center;
+  gap: var(--lg-tag-gap);
+  height: var(--lg-tag-height);
+  padding: 0 var(--lg-tag-padding);
+  border-radius: var(--lg-tag-radius);
+  background: var(--lg-tag-bg);
+  color: var(--lg-tag-color);
+  font-family: var(--lg-font);
+  font-size: var(--lg-tag-font-size);
+  line-height: 1;
+  white-space: nowrap;
+}
+
+.lg-tag[data-size='sm'] {
+  --lg-tag-height: 20px;
+  --lg-tag-padding: var(--lg-space-1);
+}
+
+.lg-tag[data-color='accent'] {
+  --lg-tag-bg: color-mix(in srgb, var(--lg-accent) 18%, transparent);
+  --lg-tag-color: var(--lg-accent);
+}
+
+.lg-tag[data-color='success'] {
+  --lg-tag-bg: color-mix(in srgb, var(--lg-success) 18%, transparent);
+  --lg-tag-color: var(--lg-success);
+}
+
+.lg-tag[data-color='warning'] {
+  --lg-tag-bg: color-mix(in srgb, var(--lg-warning) 20%, transparent);
+  --lg-tag-color: var(--lg-warning);
+}
+
+.lg-tag[data-color='danger'] {
+  --lg-tag-bg: color-mix(in srgb, var(--lg-danger) 18%, transparent);
+  --lg-tag-color: var(--lg-danger);
+}
+
+.lg-tag__icon {
+  display: inline-grid;
+  place-items: center;
+}
+
+.lg-tag__label {
+  min-width: 0;
+}
+
+.lg-tag__close {
+  display: inline-grid;
+  width: 1.1em;
+  height: 1.1em;
+  padding: 0;
+  border: none;
+  border-radius: var(--lg-radius-full);
+  background: transparent;
+  color: inherit;
+  cursor: pointer;
+  place-items: center;
+  opacity: 0.7;
+  transition: opacity var(--lg-duration) var(--lg-ease);
+}
+
+.lg-tag__close:hover {
+  opacity: 1;
+}
+
+.lg-tag__close:focus-visible {
+  outline: 2px solid var(--lg-accent);
+  outline-offset: 1px;
+}
+
+.lg-tag__close-icon {
+  position: relative;
+  width: 0.8em;
+  height: 0.8em;
+}
+
+.lg-tag__close-icon::before,
+.lg-tag__close-icon::after {
+  position: absolute;
+  top: 50%;
+  left: 0;
+  width: 100%;
+  height: 1.5px;
+  background: currentColor;
+  content: '';
+}
+
+.lg-tag__close-icon::before {
+  transform: rotate(45deg);
+}
+
+.lg-tag__close-icon::after {
+  transform: rotate(-45deg);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .lg-tag__close {
+    transition: none;
+  }
+}

@@ -71,7 +71,7 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(function Button
     >
       {loading || icon ? (
         <span className="lg-button__icon" aria-hidden="true">
-          {loading ? <span className="lg-button__spinner" /> : icon}
+          {loading ? <span className="lg-button__spinner lg-spin__ring" /> : icon}
         </span>
       ) : null}
       <span className="lg-button__label">{children}</span>

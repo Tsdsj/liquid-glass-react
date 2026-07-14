@@ -1,0 +1,63 @@
+.lg-badge {
+  --lg-badge-bg: var(--lg-danger);
+  --lg-badge-color: var(--lg-accent-contrast);
+  --lg-badge-size: 18px;
+  --lg-badge-dot-size: 8px;
+  --lg-badge-font-size: 12px;
+
+  position: relative;
+  display: inline-flex;
+  font-family: var(--lg-font);
+  vertical-align: middle;
+}
+
+.lg-badge--standalone {
+  display: inline-flex;
+  align-items: center;
+}
+
+.lg-badge__children {
+  display: inline-flex;
+}
+
+.lg-badge__count {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: var(--lg-badge-size);
+  height: var(--lg-badge-size);
+  padding: 0 6px;
+  border-radius: var(--lg-radius-full);
+  background: var(--lg-badge-bg);
+  color: var(--lg-badge-color);
+  font-size: var(--lg-badge-font-size);
+  line-height: 1;
+}
+
+.lg-badge__dot {
+  display: inline-block;
+  width: var(--lg-badge-dot-size);
+  height: var(--lg-badge-dot-size);
+  border-radius: var(--lg-radius-full);
+  background: var(--lg-badge-bg);
+}
+
+.lg-badge:not(.lg-badge--standalone) .lg-badge__count,
+.lg-badge:not(.lg-badge--standalone) .lg-badge__dot {
+  position: absolute;
+  top: 0;
+  right: 0;
+  transform: translate(50%, -50%);
+}
+
+.lg-badge__sr {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}

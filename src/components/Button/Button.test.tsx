@@ -69,6 +69,15 @@ describe('Button', () => {
     expect(onClick).not.toHaveBeenCalled();
   });
 
+  it('renders its loading spinner with the shared ring class', () => {
+    render(<Button loading>Saving</Button>);
+
+    const spinner = screen.getByRole('button', { name: 'Saving' }).querySelector('.lg-button__spinner');
+    expect(spinner).toBeInTheDocument();
+    // The ring visual is shared with Spin via .lg-spin__ring; Button only tunes size.
+    expect(spinner).toHaveClass('lg-spin__ring');
+  });
+
   it('uses native disabled behavior', async () => {
     const user = userEvent.setup();
     const onClick = vi.fn();

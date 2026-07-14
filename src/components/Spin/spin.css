@@ -1,0 +1,85 @@
+.lg-spin {
+  --lg-spin-size: 24px;
+  --lg-spin-ring-width: 2px;
+  --lg-spin-gap: var(--lg-space-2);
+  --lg-spin-tip-color: var(--lg-text-secondary);
+  --lg-spin-overlay-bg: color-mix(in srgb, var(--lg-opaque-surface) 55%, transparent);
+
+  display: inline-flex;
+  color: var(--lg-accent);
+  font-family: var(--lg-font);
+}
+
+.lg-spin[data-size='sm'] {
+  --lg-spin-size: 18px;
+}
+
+.lg-spin[data-size='lg'] {
+  --lg-spin-size: 34px;
+  --lg-spin-ring-width: 3px;
+}
+
+.lg-spin--wrap {
+  position: relative;
+  display: block;
+}
+
+/* Shared circular indicator, also consumed by Button's loading spinner. */
+.lg-spin__ring {
+  --lg-spin-ring-size: var(--lg-spin-size);
+
+  display: inline-block;
+  width: var(--lg-spin-ring-size);
+  height: var(--lg-spin-ring-size);
+  border: var(--lg-spin-ring-width) solid currentColor;
+  border-right-color: transparent;
+  border-radius: var(--lg-radius-full);
+  animation: lg-spin-rotate var(--lg-duration-slow) linear infinite;
+}
+
+@keyframes lg-spin-rotate {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.lg-spin__indicator {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--lg-spin-gap);
+}
+
+.lg-spin__tip {
+  color: var(--lg-spin-tip-color);
+  font-size: var(--lg-font-size-sm);
+}
+
+.lg-spin__sr {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+.lg-spin__overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--lg-spin-overlay-bg);
+  border-radius: inherit;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .lg-spin__ring {
+    animation: none;
+  }
+}

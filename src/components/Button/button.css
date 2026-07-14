@@ -84,22 +84,7 @@
 }
 
 .lg-button__spinner {
-  width: 0.85em;
-  height: 0.85em;
-  border: 2px solid currentColor;
-  border-right-color: transparent;
-  border-radius: var(--lg-radius-full);
-  animation: lg-button-spin var(--lg-duration-slow) linear infinite;
-}
-
-@keyframes lg-button-spin {
-  to {
-    transform: rotate(360deg);
-  }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .lg-button__spinner {
-    animation: none;
-  }
+  /* Ring visual comes from the shared .lg-spin__ring; Button only tunes size. */
+  --lg-spin-ring-size: 0.85em;
+  --lg-spin-ring-width: 2px;
 }

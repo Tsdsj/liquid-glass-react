@@ -7,6 +7,8 @@ export type {
   LiquidGlassConfigProps,
   LiquidGlassLocale,
 } from './core/config/LiquidGlassConfig';
+export { Badge } from './components/Badge';
+export type { BadgeProps } from './components/Badge';
 export { Button } from './components/Button';
 export type { ButtonProps } from './components/Button';
 export { Checkbox } from './components/Checkbox';
@@ -17,18 +19,26 @@ export { Modal } from './components/Modal';
 export type { ModalProps } from './components/Modal';
 export { Popover } from './components/Popover';
 export type { PopoverProps } from './components/Popover';
+export { Progress } from './components/Progress';
+export type { ProgressProps } from './components/Progress';
 export { Radio, RadioGroup } from './components/RadioGroup';
 export type { RadioGroupProps, RadioProps } from './components/RadioGroup';
 export { Segmented } from './components/Segmented';
 export type { SegmentedOption, SegmentedProps } from './components/Segmented';
 export { Select } from './components/Select';
 export type { SelectOption, SelectProps } from './components/Select';
+export { Skeleton } from './components/Skeleton';
+export type { SkeletonProps } from './components/Skeleton';
 export { Slider } from './components/Slider';
 export type { SliderProps } from './components/Slider';
+export { Spin } from './components/Spin';
+export type { SpinProps } from './components/Spin';
 export { Switch } from './components/Switch';
 export type { SwitchProps } from './components/Switch';
 export { Tabs } from './components/Tabs';
 export type { TabItem, TabsProps } from './components/Tabs';
+export { Tag } from './components/Tag';
+export type { TagProps } from './components/Tag';
 export { Textarea } from './components/Textarea';
 export type { TextareaProps } from './components/Textarea';
 export { Tooltip } from './components/Tooltip';
