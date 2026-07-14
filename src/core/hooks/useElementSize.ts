@@ -7,6 +7,18 @@ export interface ElementSize {
 
 const ZERO_SIZE: ElementSize = { width: 0, height: 0 };
 
+function readBorderBoxSize(element: Element): ElementSize {
+  if (element instanceof HTMLElement) {
+    const { offsetWidth, offsetHeight } = element;
+    if (offsetWidth !== 0 || offsetHeight !== 0) {
+      return { width: offsetWidth, height: offsetHeight };
+    }
+  }
+
+  const rect = element.getBoundingClientRect();
+  return { width: rect.width, height: rect.height };
+}
+
 export function useElementSize(ref: RefObject<Element | null>): ElementSize {
   const [size, setSize] = useState<ElementSize>(ZERO_SIZE);
 
@@ -18,15 +30,16 @@ export function useElementSize(ref: RefObject<Element | null>): ElementSize {
 
     let animationFrame: number | null = null;
 
-    const scheduleUpdate = (rect: Pick<DOMRectReadOnly, 'width' | 'height'>) => {
+    const scheduleUpdate = () => {
       if (animationFrame !== null) {
         cancelAnimationFrame(animationFrame);
       }
 
       animationFrame = requestAnimationFrame(() => {
+        const borderBox = readBorderBoxSize(element);
         const nextSize = {
-          width: Math.round(rect.width),
-          height: Math.round(rect.height),
+          width: Math.round(borderBox.width),
+          height: Math.round(borderBox.height),
         };
 
         setSize((currentSize) =>
@@ -37,14 +50,12 @@ export function useElementSize(ref: RefObject<Element | null>): ElementSize {
       });
     };
 
-    const observer = new ResizeObserver(([entry]) => {
-      if (entry) {
-        scheduleUpdate(entry.target.getBoundingClientRect());
-      }
+    const observer = new ResizeObserver(() => {
+      scheduleUpdate();
     });
 
     observer.observe(element);
-    scheduleUpdate(element.getBoundingClientRect());
+    scheduleUpdate();
 
     return () => {
       observer.disconnect();

@@ -260,12 +260,21 @@ export const GlassSurface = forwardRef<HTMLElement, GlassSurfaceProps>(function 
       return undefined;
     }
 
+    if (stableSize.width === 0 || stableSize.height === 0) {
+      setStableSize(size);
+      return undefined;
+    }
+
+    if (sizesMatch(stableSize, size)) {
+      return undefined;
+    }
+
     const timeout = window.setTimeout(() => {
       setStableSize((current) => (sizesMatch(current, size) ? current : size));
     }, RESIZE_SETTLE_DELAY);
 
     return () => window.clearTimeout(timeout);
-  }, [size.height, size.width]);
+  }, [size.height, size.width, stableSize.height, stableSize.width]);
 
   const numericRadius =
     typeof radius === 'number' ? radius : radius === undefined ? defaultRadius : null;

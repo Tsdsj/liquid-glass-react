@@ -177,7 +177,7 @@ describe('GlassSurface', () => {
     expect(warning).toHaveBeenCalledTimes(1);
   });
 
-  it('switches to a border-box-sized filter after resize settles', async () => {
+  it('creates the initial filter immediately and debounces later resizes', async () => {
     vi.useFakeTimers();
     vi.stubGlobal('CSS', { supports: vi.fn(() => true) });
     vi.stubGlobal('navigator', {
@@ -209,15 +209,16 @@ describe('GlassSurface', () => {
         Resizable
       </GlassSurface>,
     );
-    const flushNextTimer = async () => {
+    const advanceTime = async (milliseconds: number) => {
       await act(async () => {
-        await vi.runOnlyPendingTimersAsync();
+        await vi.advanceTimersByTimeAsync(milliseconds);
       });
     };
 
-    await flushNextTimer();
-    await flushNextTimer();
-    await flushNextTimer();
+    await advanceTime(16);
+    await advanceTime(16);
+    await advanceTime(16);
+    await advanceTime(16);
 
     expect(filterRegistry.getSnapshot()).toEqual([
       expect.objectContaining({ w: 320, h: 200, scale: 40 }),
@@ -234,9 +235,19 @@ describe('GlassSurface', () => {
     act(() => {
       resizeCallback?.([entry], {} as ResizeObserver);
     });
-    await flushNextTimer();
-    await flushNextTimer();
-    await flushNextTimer();
+    await advanceTime(16);
+
+    expect(filterRegistry.getSnapshot()).not.toEqual(
+      expect.arrayContaining([expect.objectContaining({ w: 420, h: 260, scale: 40 })]),
+    );
+
+    await advanceTime(149);
+    expect(filterRegistry.getSnapshot()).not.toEqual(
+      expect.arrayContaining([expect.objectContaining({ w: 420, h: 260, scale: 40 })]),
+    );
+
+    await advanceTime(1);
+    await advanceTime(16);
 
     expect(filterRegistry.getSnapshot()).toEqual(
       expect.arrayContaining([expect.objectContaining({ w: 420, h: 260, scale: 40 })]),
