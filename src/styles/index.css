@@ -2,4 +2,5 @@
 @import './themes.css';
 @import '../core/GlassSurface/glass-surface.css';
 @import '../components/Button/button.css';
+@import '../components/Checkbox/checkbox.css';
 @import '../components/Switch/switch.css';
