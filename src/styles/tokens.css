@@ -17,6 +17,8 @@
   --lg-drop-shadow: rgb(0 0 0 / 0.15);
   --lg-dim-layer: rgb(0 0 0 / 0.35);
   --lg-ambient: transparent;
+  --lg-scroll-edge-size: calc(var(--lg-space-4) * 2);
+  --lg-scroll-edge-blur: 6px;
 
   /* Geometry */
   --lg-radius-sm: 8px;

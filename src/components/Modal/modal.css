@@ -99,6 +99,11 @@
   border-radius: max(var(--lg-radius-sm), calc(var(--lg-r, var(--lg-radius-md)) - var(--lg-space-2)));
 }
 
+.lg-modal__body-scroll {
+  min-height: 0;
+  flex: 1 1 auto;
+}
+
 .lg-modal__body {
   min-height: 0;
   flex: 1 1 auto;

@@ -1,6 +1,7 @@
 @import './tokens.css';
 @import './themes.css';
 @import '../core/GlassSurface/glass-surface.css';
+@import '../core/scroll-edge/scroll-edge.css';
 @import '../components/Button/button.css';
 @import '../components/Checkbox/checkbox.css';
 @import '../components/Input/input.css';

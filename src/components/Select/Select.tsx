@@ -27,6 +27,7 @@ import {
   type ReactNode,
 } from 'react';
 import { GlassSurface } from '../../core/GlassSurface';
+import { ScrollEdge } from '../../core/scroll-edge';
 import { useLiquidGlassContext } from '../../core/config/LiquidGlassConfig';
 import { useControllableState } from '../../core/hooks/useControllableState';
 
@@ -237,32 +238,34 @@ export const Select = forwardRef<HTMLButtonElement, SelectProps>(function Select
               data-status={status}
               data-placement={resolvedPlacement}
             >
-              {options.map((option, index) => {
-                const itemProps = getItemProps({
-                  onClick: () => selectOption(index),
-                  onKeyDown: (event) => handleOptionKeyDown(event, index),
-                }) as HTMLAttributes<HTMLDivElement>;
+              <ScrollEdge className="lg-select__scroll" viewportClassName="lg-select__viewport">
+                {options.map((option, index) => {
+                  const itemProps = getItemProps({
+                    onClick: () => selectOption(index),
+                    onKeyDown: (event) => handleOptionKeyDown(event, index),
+                  }) as HTMLAttributes<HTMLDivElement>;
 
-                return (
-                  <div
-                    {...itemProps}
-                    key={option.value}
-                    ref={(element) => {
-                      listRef.current[index] = element;
-                    }}
-                    role="option"
-                    tabIndex={activeIndex === index ? 0 : -1}
-                    aria-selected={selectedIndex === index}
-                    aria-disabled={option.disabled || undefined}
-                    className="lg-select__option"
-                    data-active={activeIndex === index ? '' : undefined}
-                    data-selected={selectedIndex === index ? '' : undefined}
-                    data-disabled={option.disabled ? '' : undefined}
-                  >
-                    {option.label}
-                  </div>
-                );
-              })}
+                  return (
+                    <div
+                      {...itemProps}
+                      key={option.value}
+                      ref={(element) => {
+                        listRef.current[index] = element;
+                      }}
+                      role="option"
+                      tabIndex={activeIndex === index ? 0 : -1}
+                      aria-selected={selectedIndex === index}
+                      aria-disabled={option.disabled || undefined}
+                      className="lg-select__option"
+                      data-active={activeIndex === index ? '' : undefined}
+                      data-selected={selectedIndex === index ? '' : undefined}
+                      data-disabled={option.disabled ? '' : undefined}
+                    >
+                      {option.label}
+                    </div>
+                  );
+                })}
+              </ScrollEdge>
             </GlassSurface>
           </FloatingFocusManager>
         </FloatingPortal>

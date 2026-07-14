@@ -269,3 +269,39 @@ test('Floating panels wait for refraction before becoming visible', async ({ pag
     );
   }
 });
+
+test('Scroll edge overlays track the modal scroll position', async ({ page }) => {
+  await openStory(page, 'visual-scrolledge--scroll-edge');
+  await page.evaluate(() => {
+    const trigger = [...document.querySelectorAll('button')].find(
+      (button) => button.textContent?.trim() === '打开长内容对话框',
+    );
+    (trigger as HTMLElement | undefined)?.click();
+  });
+
+  const body = page.locator('.lg-modal__body');
+  await body.waitFor({ state: 'visible' });
+  // Let the first-frame refraction gate settle so the panel layout is stable.
+  await page.waitForTimeout(500);
+
+  const topOverlay = page.locator('.lg-scroll-edge__overlay[data-side="top"]');
+  const bottomOverlay = page.locator('.lg-scroll-edge__overlay[data-side="bottom"]');
+
+  // At the top: only the bottom edge is obscured.
+  await expect(bottomOverlay).toHaveCount(1);
+  await expect(topOverlay).toHaveCount(0);
+
+  // Scrolled to the bottom: only the top edge remains.
+  await body.evaluate((element) => {
+    element.scrollTop = element.scrollHeight;
+  });
+  await expect(topOverlay).toHaveCount(1);
+  await expect(bottomOverlay).toHaveCount(0);
+
+  // Scrolled to the middle: both edges are obscured.
+  await body.evaluate((element) => {
+    element.scrollTop = Math.round((element.scrollHeight - element.clientHeight) / 2);
+  });
+  await expect(topOverlay).toHaveCount(1);
+  await expect(bottomOverlay).toHaveCount(1);
+});

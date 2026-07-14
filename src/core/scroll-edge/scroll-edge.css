@@ -1,0 +1,101 @@
+.lg-scroll-edge {
+  position: relative;
+  display: flex;
+  min-height: 0;
+  flex-direction: column;
+}
+
+.lg-scroll-edge__viewport {
+  min-height: 0;
+  flex: 1 1 auto;
+  overflow-y: auto;
+}
+
+.lg-scroll-edge__overlay {
+  position: absolute;
+  right: 0;
+  left: 0;
+  z-index: 1;
+  height: var(--lg-scroll-edge-size);
+  pointer-events: none;
+  -webkit-backdrop-filter: blur(var(--lg-scroll-edge-blur));
+  backdrop-filter: blur(var(--lg-scroll-edge-blur));
+  /* Fades the blur/tint from the edge inward via the mask; the tint gradient
+     compensates the brightness the blur pulls in. */
+  animation: lg-scroll-edge-in var(--lg-duration) var(--lg-ease) both;
+}
+
+.lg-scroll-edge__overlay[data-side='top'] {
+  top: 0;
+  background: linear-gradient(to bottom, var(--lg-surface-tint), transparent);
+  -webkit-mask-image: linear-gradient(to bottom, #000, transparent);
+  mask-image: linear-gradient(to bottom, #000, transparent);
+}
+
+.lg-scroll-edge__overlay[data-side='bottom'] {
+  bottom: 0;
+  background: linear-gradient(to top, var(--lg-surface-tint), transparent);
+  -webkit-mask-image: linear-gradient(to top, #000, transparent);
+  mask-image: linear-gradient(to top, #000, transparent);
+}
+
+@keyframes lg-scroll-edge-in {
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
+}
+
+/* Reduced transparency: swap the blur for an opaque gradient scrim. Covers both
+   the forced-config surface flag and the OS-level media query. */
+.lg-surface[data-transparency='reduced'] .lg-scroll-edge__overlay {
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+}
+
+.lg-surface[data-transparency='reduced'] .lg-scroll-edge__overlay[data-side='top'] {
+  background: linear-gradient(to bottom, var(--lg-opaque-surface), transparent);
+}
+
+.lg-surface[data-transparency='reduced'] .lg-scroll-edge__overlay[data-side='bottom'] {
+  background: linear-gradient(to top, var(--lg-opaque-surface), transparent);
+}
+
+@media (prefers-reduced-transparency: reduce) {
+  .lg-scroll-edge__overlay {
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+  }
+
+  .lg-scroll-edge__overlay[data-side='top'] {
+    background: linear-gradient(to bottom, var(--lg-opaque-surface), transparent);
+  }
+
+  .lg-scroll-edge__overlay[data-side='bottom'] {
+    background: linear-gradient(to top, var(--lg-opaque-surface), transparent);
+  }
+}
+
+@media (forced-colors: active) {
+  .lg-scroll-edge__overlay {
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+  }
+
+  .lg-scroll-edge__overlay[data-side='top'] {
+    background: linear-gradient(to bottom, Canvas, transparent);
+  }
+
+  .lg-scroll-edge__overlay[data-side='bottom'] {
+    background: linear-gradient(to top, Canvas, transparent);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .lg-scroll-edge__overlay {
+    animation: none;
+  }
+}

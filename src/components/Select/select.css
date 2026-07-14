@@ -98,8 +98,12 @@
   --lg-select-warmup-opacity: 0.01;
 
   z-index: var(--lg-z-overlay);
+  display: flex;
+  flex-direction: column;
   box-sizing: border-box;
-  overflow-y: auto;
+  /* The panel clips; the inner scroll-edge viewport does the scrolling so its
+     overlays stay pinned inside the glass content. */
+  overflow: hidden;
   padding: var(--lg-space-1);
   color: var(--lg-text);
   opacity: var(--lg-select-warmup-opacity);
@@ -140,6 +144,17 @@
 .lg-select__panel[data-status='open']:not([data-refraction-pending]) {
   opacity: 1;
   transform: translateY(0) scale(1);
+}
+
+.lg-select__panel > .lg-surface__content {
+  display: flex;
+  min-height: 0;
+  flex: 1 1 auto;
+  flex-direction: column;
+}
+
+.lg-select__scroll {
+  flex: 1 1 auto;
 }
 
 .lg-select__option {

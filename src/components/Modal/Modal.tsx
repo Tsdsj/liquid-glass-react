@@ -19,6 +19,7 @@ import {
 } from 'react';
 import { Button } from '../Button';
 import { GlassSurface } from '../../core/GlassSurface';
+import { ScrollEdge } from '../../core/scroll-edge';
 import { useLiquidGlassContext } from '../../core/config/LiquidGlassConfig';
 
 export interface ModalProps {
@@ -112,7 +113,9 @@ export const Modal = forwardRef<HTMLDivElement, ModalProps>(function Modal(
                 <span aria-hidden="true">{'\u00d7'}</span>
               </Button>
             </header>
-            <div className="lg-modal__body">{children}</div>
+            <ScrollEdge className="lg-modal__body-scroll" viewportClassName="lg-modal__body">
+              {children}
+            </ScrollEdge>
             {footer ? <footer className="lg-modal__footer">{footer}</footer> : null}
           </GlassSurface>
         </FloatingFocusManager>
