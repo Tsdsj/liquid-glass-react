@@ -123,8 +123,11 @@ export interface GlassSurfaceProps extends React.HTMLAttributes<HTMLElement> {
 改动文件：
 
 - `src/styles/tokens.css`：新增 `--lg-dim-layer: rgb(0 0 0 / 0.35)`、`--lg-ambient: transparent`。
-- `src/styles/themes.css`：暗色两处（`[data-theme='dark']` 与 `@media prefers-color-scheme`）
-  覆盖 `--lg-dim-layer: rgb(0 0 0 / 0.5)`。
+- `src/styles/themes.css`：暗色覆盖 `--lg-dim-layer: rgb(0 0 0 / 0.5)`。
+  **勘误（M6d/F2 修订）**：本条原称"暗色两处均已覆盖"，实际当时仅改了
+  `[data-theme='dark']` 块，遗漏了 `@media (prefers-color-scheme: dark)` 的
+  `:root:not([data-theme])` 块（`replace_all` 只命中了 2 空格缩进的那一处）。
+  该遗漏已在 M6d/F2 补齐，并新增两块暗色 token 集合一致性的源码断言测试。
 - `src/core/GlassSurface/GlassSurface.tsx`：新增公共 prop `dim?: boolean`（默认 false），
   宿主输出 `data-dim`。
 - `src/core/GlassSurface/glass-surface.css`：

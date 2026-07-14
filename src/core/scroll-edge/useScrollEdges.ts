@@ -52,14 +52,21 @@ export function useScrollEdges(ref: RefObject<HTMLElement | null>): ScrollEdges 
     };
 
     element.addEventListener('scroll', scheduleMeasure, { passive: true });
-    const observer =
+    const resizeObserver =
       typeof ResizeObserver === 'undefined' ? null : new ResizeObserver(scheduleMeasure);
-    observer?.observe(element);
+    resizeObserver?.observe(element);
+    // ResizeObserver only fires on the viewport's own box; a MutationObserver
+    // catches content added/removed inside it (Select options, async body
+    // content) that changes scrollHeight without resizing the viewport.
+    const mutationObserver =
+      typeof MutationObserver === 'undefined' ? null : new MutationObserver(scheduleMeasure);
+    mutationObserver?.observe(element, { childList: true, subtree: true });
     scheduleMeasure();
 
     return () => {
       element.removeEventListener('scroll', scheduleMeasure);
-      observer?.disconnect();
+      resizeObserver?.disconnect();
+      mutationObserver?.disconnect();
       if (animationFrame !== null) {
         cancelAnimationFrame(animationFrame);
       }

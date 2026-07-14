@@ -1,5 +1,5 @@
-import { fireEvent, render, screen, waitFor } from '@testing-library/react';
-import { describe, expect, it } from 'vitest';
+import { act, fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 import { ScrollEdge } from './ScrollEdge';
 
 function setScrollMetrics(
@@ -30,6 +30,10 @@ function getViewport(): HTMLElement {
 }
 
 describe('ScrollEdge', () => {
+  afterEach(() => {
+    vi.restoreAllMocks();
+  });
+
   it('renders the children inside a viewport and no overlays when content fits', async () => {
     render(
       <ScrollEdge data-testid="scroll">
@@ -68,6 +72,47 @@ describe('ScrollEdge', () => {
     ).not.toBeInTheDocument();
     expect(screen.getByTestId('scroll')).toHaveAttribute('data-edge-bottom');
     expect(screen.getByTestId('scroll')).not.toHaveAttribute('data-edge-top');
+  });
+
+  it('recomputes edges when content mutates without a viewport resize', async () => {
+    // Drive rAF manually so the only path that can update edges after mount is a
+    // content-mutation observer — a stale scroll-scheduled frame cannot mask it.
+    let pendingFrame: FrameRequestCallback | null = null;
+    vi.spyOn(globalThis, 'requestAnimationFrame').mockImplementation((callback) => {
+      pendingFrame = callback;
+      return 1;
+    });
+    vi.spyOn(globalThis, 'cancelAnimationFrame').mockImplementation(() => undefined);
+
+    const { rerender } = render(
+      <ScrollEdge data-testid="scroll">
+        <p>one</p>
+      </ScrollEdge>,
+    );
+    const viewport = getViewport();
+    setScrollMetrics(viewport, { scrollTop: 0, scrollHeight: 200, clientHeight: 200 });
+    act(() => pendingFrame?.(performance.now()));
+    pendingFrame = null;
+    expect(screen.getByTestId('scroll')).not.toHaveAttribute('data-edge-bottom');
+
+    // The viewport box stays 200px tall, but its content grows past it. Only a
+    // content-mutation observer (not ResizeObserver on the viewport) catches it.
+    setScrollMetrics(viewport, { scrollTop: 0, scrollHeight: 600, clientHeight: 200 });
+    await act(async () => {
+      rerender(
+        <ScrollEdge data-testid="scroll">
+          <p>one</p>
+          <p>two</p>
+          <p>three</p>
+        </ScrollEdge>,
+      );
+      // Flush the MutationObserver microtask so it schedules the next frame.
+      await new Promise((resolve) => setTimeout(resolve, 0));
+    });
+
+    expect(pendingFrame).not.toBeNull();
+    act(() => pendingFrame?.(performance.now()));
+    expect(screen.getByTestId('scroll')).toHaveAttribute('data-edge-bottom');
   });
 
   it('mounts both aria-hidden, non-focusable overlays in the middle', async () => {

@@ -14,7 +14,7 @@
    in a background gradient stack rather than a plain background-color. */
 @property --lg-surface-tint-active {
   syntax: '<color>';
-  inherits: false;
+  inherits: true;
   initial-value: transparent;
 }
 

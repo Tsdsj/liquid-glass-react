@@ -142,6 +142,7 @@ describe('useScrollEdges', () => {
     }
 
     vi.stubGlobal('ResizeObserver', ResizeObserverMock);
+    const mutationDisconnect = vi.spyOn(MutationObserver.prototype, 'disconnect');
     const cancelFrame = vi.spyOn(globalThis, 'cancelAnimationFrame');
     const element = document.createElement('div');
     setScrollMetrics(element, { scrollTop: 0, scrollHeight: 400, clientHeight: 200 });
@@ -152,6 +153,7 @@ describe('useScrollEdges', () => {
     unmount();
 
     expect(disconnect).toHaveBeenCalled();
+    expect(mutationDisconnect).toHaveBeenCalled();
     expect(removeEventListener).toHaveBeenCalledWith('scroll', expect.any(Function));
     expect(cancelFrame).toHaveBeenCalled();
   });
