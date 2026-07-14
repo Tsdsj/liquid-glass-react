@@ -1,0 +1,106 @@
+.lg-modal__overlay {
+  --lg-modal-overlay-bg: var(--lg-drop-shadow);
+  --lg-modal-overlay-blur: var(--lg-space-2);
+
+  z-index: var(--lg-z-overlay);
+  display: grid;
+  overflow-y: auto;
+  box-sizing: border-box;
+  padding: var(--lg-space-4);
+  background: var(--lg-modal-overlay-bg);
+  opacity: 0;
+  -webkit-backdrop-filter: blur(var(--lg-modal-overlay-blur));
+  backdrop-filter: blur(var(--lg-modal-overlay-blur));
+  place-items: center;
+  transition: opacity var(--lg-duration-slow) var(--lg-ease);
+}
+
+.lg-modal__overlay[data-status='open'] {
+  opacity: 1;
+}
+
+.lg-modal__panel {
+  --lg-modal-max-width: 560px;
+  --lg-modal-shift: var(--lg-space-2);
+
+  width: min(100%, var(--lg-modal-max-width));
+  max-height: calc(100vh - (var(--lg-space-4) * 2));
+  box-sizing: border-box;
+  color: var(--lg-text);
+  opacity: 0;
+  font-family: var(--lg-font);
+  font-size: var(--lg-font-size-md);
+  transform: translateY(var(--lg-modal-shift)) scale(0.96);
+  transition:
+    opacity var(--lg-duration-slow) var(--lg-ease),
+    transform var(--lg-duration-slow) var(--lg-ease);
+}
+
+.lg-modal__panel[data-size='sm'] {
+  --lg-modal-max-width: 400px;
+}
+
+.lg-modal__panel[data-size='lg'] {
+  --lg-modal-max-width: 720px;
+}
+
+.lg-modal__panel[data-status='open'] {
+  opacity: 1;
+  transform: translateY(0) scale(1);
+}
+
+.lg-modal__overlay[data-animating],
+.lg-modal__panel[data-animating] {
+  will-change: opacity, transform;
+}
+
+.lg-modal__panel > .lg-surface__content {
+  display: flex;
+  max-height: inherit;
+  flex-direction: column;
+}
+
+.lg-modal__header,
+.lg-modal__footer {
+  display: flex;
+  flex: 0 0 auto;
+  align-items: center;
+  gap: var(--lg-space-3);
+  padding: var(--lg-space-4);
+}
+
+.lg-modal__header {
+  padding-bottom: var(--lg-space-2);
+}
+
+.lg-modal__title {
+  min-width: 0;
+  margin: 0;
+  font-size: var(--lg-font-size-lg);
+  font-weight: 600;
+}
+
+.lg-modal__close {
+  flex: 0 0 auto;
+  margin-inline-start: auto;
+  padding: 0;
+}
+
+.lg-modal__body {
+  min-height: 0;
+  flex: 1 1 auto;
+  overflow-y: auto;
+  padding: var(--lg-space-2) var(--lg-space-4) var(--lg-space-4);
+}
+
+.lg-modal__footer {
+  justify-content: flex-end;
+  padding-top: 0;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .lg-modal__panel {
+    transform: none;
+    transition-property: opacity;
+  }
+}
