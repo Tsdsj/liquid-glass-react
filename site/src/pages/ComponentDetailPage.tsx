@@ -1,8 +1,8 @@
-import { Fragment } from 'react';
-import { Button, GlassSurface } from '@ttq/liquid-glass-react';
+import { Button } from '@ttq/liquid-glass-react';
+import { ComponentSidebar } from '../components/ComponentSidebar';
 import { DemoBlock } from '../components/DemoBlock';
 import { PropsTable } from '../components/PropsTable';
-import { COMPONENT_DOCS, findComponentDoc } from '../demos/registry';
+import { findComponentDoc } from '../demos/registry';
 import { SITE_COPY, useT } from '../site-i18n';
 
 export interface ComponentDetailPageProps {
@@ -16,7 +16,7 @@ export function ComponentDetailPage({ slug }: ComponentDetailPageProps) {
   if (!doc) {
     return (
       <div className="site-container site-page">
-        <GlassSurface className="site-empty">
+        <div className="site-empty">
           <p>{t(SITE_COPY.notFoundTitle)}</p>
           <Button
             onClick={() => {
@@ -25,49 +25,76 @@ export function ComponentDetailPage({ slug }: ComponentDetailPageProps) {
           >
             {t(SITE_COPY.backToOverview)}
           </Button>
-        </GlassSurface>
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="site-container site-page site-detail">
-      <GlassSurface as="nav" className="site-detail__menu" aria-label={t(SITE_COPY.componentsTitle)}>
-        {COMPONENT_DOCS.map((item) => (
-          <a
-            key={item.slug}
-            className="site-detail__menu-link"
-            href={`#/components/${item.slug}`}
-            data-active={item.slug === doc.slug ? '' : undefined}
-          >
-            {item.name} {t(item.title)}
-          </a>
-        ))}
-      </GlassSurface>
+    <div className="site-container site-page site-docs-layout">
+      <ComponentSidebar activeSlug={doc.slug} />
 
-      <article>
-        <header className="site-detail__header">
-          <h1>
+      <article className="site-docs-content site-detail">
+        <header className="site-page-header site-detail__header">
+          <div className="site-breadcrumb">
+            <a className="site-breadcrumb__link" href="#/components">
+              {t(SITE_COPY.componentsTitle)}
+            </a>
+            <span className="site-breadcrumb__separator" aria-hidden="true">
+              /
+            </span>
+            <span className="site-breadcrumb__current">{doc.name}</span>
+          </div>
+          <h1 className="site-detail__title">
             {doc.name} {t(doc.title)}
           </h1>
-          <p>{t(doc.description)}</p>
+          <p className="site-page-header__description">{t(doc.description)}</p>
         </header>
 
-        <h2>{t(SITE_COPY.demosTitle)}</h2>
-        {doc.demos.map((demo) => (
-          <DemoBlock key={demo.id} title={demo.title} description={demo.description} code={demo.code}>
-            {demo.render()}
-          </DemoBlock>
-        ))}
+        <section className="site-detail__section" aria-labelledby="examples-title">
+          <h2 id="examples-title" className="site-detail__section-title">
+            {t(SITE_COPY.demosTitle)}
+          </h2>
+          {doc.demos.map((demo) => (
+            <DemoBlock key={demo.id} title={demo.title} description={demo.description} code={demo.code}>
+              {demo.render()}
+            </DemoBlock>
+          ))}
+        </section>
 
-        <h2>{t(SITE_COPY.apiTitle)}</h2>
-        {doc.api.map((section) => (
-          <Fragment key={section.title}>
-            <PropsTable title={section.title} rows={section.rows} />
-            <div style={{ height: 16 }} />
-          </Fragment>
-        ))}
+        <section className="site-detail__section" aria-labelledby="api-title">
+          <h2 id="api-title" className="site-detail__section-title">
+            {t(SITE_COPY.apiTitle)}
+          </h2>
+          <div className="site-api-stack">
+            {doc.api.map((section) => (
+              <PropsTable key={section.title} title={section.title} rows={section.rows} />
+            ))}
+          </div>
+        </section>
       </article>
+
+      <nav className="site-page-toc" aria-label={t(SITE_COPY.onThisPage)}>
+        <span className="site-page-toc__title">{t(SITE_COPY.onThisPage)}</span>
+        <button
+          className="site-page-toc__link"
+          type="button"
+          onClick={() => {
+            document.getElementById('examples-title')?.scrollIntoView({ block: 'start' });
+          }}
+        >
+          {t(SITE_COPY.demosTitle)}
+        </button>
+        <button
+          className="site-page-toc__link"
+          type="button"
+          onClick={() => {
+            document.getElementById('api-title')?.scrollIntoView({ block: 'start' });
+          }}
+        >
+          {t(SITE_COPY.apiTitle)}
+        </button>
+      </nav>
     </div>
   );
 }

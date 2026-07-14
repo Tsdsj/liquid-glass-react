@@ -1,4 +1,3 @@
-import { GlassSurface } from '@ttq/liquid-glass-react';
 import { SITE_COPY, useT, type Bilingual } from '../site-i18n';
 
 interface GuideSection {
@@ -89,17 +88,43 @@ export function GuidePage() {
   const t = useT();
 
   return (
-    <div className="site-container site-page">
-      <h1 className="site-section__title">{t(SITE_COPY.guideTitle)}</h1>
-      <div className="site-guide">
+    <div className="site-container site-page site-guide-layout">
+      <nav className="site-guide-nav" aria-label={t(SITE_COPY.onThisPage)}>
+        <span className="site-guide-nav__title">{t(SITE_COPY.onThisPage)}</span>
         {SECTIONS.map((section) => (
-          <GlassSurface key={section.id} className="site-guide__section" data-testid={`guide-${section.id}`}>
-            <h2>{t(section.title)}</h2>
-            <p>{t(section.body)}</p>
-            {section.code ? <pre className="site-code">{section.code}</pre> : null}
-          </GlassSurface>
+          <button
+            key={section.id}
+            className="site-guide-nav__link"
+            type="button"
+            onClick={() => {
+              document.getElementById(`guide-${section.id}`)?.scrollIntoView({ block: 'start' });
+            }}
+          >
+            {t(section.title)}
+          </button>
         ))}
-      </div>
+      </nav>
+
+      <article className="site-guide">
+        <header className="site-page-header">
+          <span className="site-page-kicker">{t(SITE_COPY.brand)}</span>
+          <h1 className="site-detail__title">{t(SITE_COPY.guideTitle)}</h1>
+        </header>
+        {SECTIONS.map((section) => (
+          <section
+            key={section.id}
+            id={`guide-${section.id}`}
+            className="site-guide__section"
+            data-testid={`guide-${section.id}`}
+          >
+            <h2 className="site-guide__section-title">{t(section.title)}</h2>
+            <p className="site-guide__section-description">{t(section.body)}</p>
+            {section.code ? (
+              <pre className="site-code site-code--guide">{section.code}</pre>
+            ) : null}
+          </section>
+        ))}
+      </article>
     </div>
   );
 }

@@ -1,8 +1,9 @@
 import { readFileSync } from 'node:fs';
+import { fileURLToPath } from 'node:url';
 import { describe, expect, it } from 'vitest';
 
 function readCss(relativePath: string): string {
-  return readFileSync(new URL(relativePath, import.meta.url).pathname, 'utf8');
+  return readFileSync(fileURLToPath(new URL(relativePath, import.meta.url)), 'utf8');
 }
 
 /**

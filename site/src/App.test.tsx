@@ -23,7 +23,10 @@ describe('docs site', () => {
     render(<App />);
     expect(screen.getByText('液态玻璃质感的 React 组件库')).toBeInTheDocument();
     expect(screen.getByTestId('hero-showcase')).toBeInTheDocument();
-    expect(screen.getByRole('link', { name: /组件/ })).toHaveAttribute('href', '#/components');
+    expect(screen.getByRole('link', { name: '组件' })).toHaveAttribute(
+      'href',
+      '#/components',
+    );
   });
 
   it('switches the whole site to English via the language select', async () => {
