@@ -115,6 +115,41 @@ describe('GlassSurface', () => {
     expect(screen.getByTestId('clear')).toHaveAttribute('data-material', 'clear');
   });
 
+  it('marks the dim layer only when dim is enabled, orthogonally to material', () => {
+    const { rerender } = render(
+      <GlassSurface material="clear" data-testid="surface">
+        Panel
+      </GlassSurface>,
+    );
+    const surface = screen.getByTestId('surface');
+    expect(surface).not.toHaveAttribute('data-dim');
+    const nodeCount = surface.querySelectorAll('*').length;
+
+    rerender(
+      <GlassSurface material="clear" dim data-testid="surface">
+        Panel
+      </GlassSurface>,
+    );
+    expect(surface).toHaveAttribute('data-dim');
+    expect(surface).toHaveAttribute('data-material', 'clear');
+    // The dim layer is painted on ::before; it must not add DOM nodes.
+    expect(surface.querySelectorAll('*').length).toBe(nodeCount);
+  });
+
+  it('keeps the dim marker under reduced transparency so CSS can suppress the layer', () => {
+    render(
+      <LiquidGlassConfig forceReducedTransparency>
+        <GlassSurface dim data-testid="surface">
+          Opaque
+        </GlassSurface>
+      </LiquidGlassConfig>,
+    );
+
+    const surface = screen.getByTestId('surface');
+    expect(surface).toHaveAttribute('data-dim');
+    expect(surface).toHaveAttribute('data-transparency', 'reduced');
+  });
+
   it('stays in fallback mode when forced by configuration', () => {
     render(
       <LiquidGlassConfig forceFallback>

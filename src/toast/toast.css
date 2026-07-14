@@ -82,6 +82,9 @@
   height: 1.2em;
   flex: 0 0 auto;
   place-items: center;
+  /* Concentric with the toast: rounds off the toast's live --lg-r inset by the
+     toast padding, never below --lg-radius-sm. */
+  border-radius: max(var(--lg-radius-sm), calc(var(--lg-r, var(--lg-radius-md)) - var(--lg-space-2)));
   color: var(--lg-text-secondary);
   font-weight: 700;
 }

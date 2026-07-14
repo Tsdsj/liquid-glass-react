@@ -15,6 +15,8 @@
   --lg-pointer-highlight: rgb(255 255 255 / 0.55);
   --lg-pointer-shade: rgb(0 0 0 / 0.12);
   --lg-drop-shadow: rgb(0 0 0 / 0.15);
+  --lg-dim-layer: rgb(0 0 0 / 0.35);
+  --lg-ambient: transparent;
 
   /* Geometry */
   --lg-radius-sm: 8px;

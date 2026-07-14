@@ -31,6 +31,7 @@ export interface GlassSurfaceProps extends HTMLAttributes<HTMLElement> {
   tint?: string;
   interactive?: boolean;
   material?: 'regular' | 'clear';
+  dim?: boolean;
 }
 
 interface GlassSurfaceStyle extends CSSProperties {
@@ -90,6 +91,7 @@ export const GlassSurface = forwardRef<HTMLElement, GlassSurfaceProps>(function 
     tint,
     interactive = false,
     material = 'regular',
+    dim = false,
     className,
     style,
     children,
@@ -527,6 +529,7 @@ export const GlassSurface = forwardRef<HTMLElement, GlassSurfaceProps>(function 
         data-refraction-pending={isRefractionPending ? '' : undefined}
         data-interactive={interactive ? '' : undefined}
         data-material={material}
+        data-dim={dim ? '' : undefined}
         data-nested={context.insideGlass ? '' : undefined}
         data-transparency={glassSupport.reducedTransparency ? 'reduced' : undefined}
       >

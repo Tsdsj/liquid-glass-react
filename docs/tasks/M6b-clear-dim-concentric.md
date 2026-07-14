@@ -1,5 +1,5 @@
 ---
-status: todo
+status: done
 depends: [M6a]
 ---
 
@@ -102,3 +102,48 @@ export interface GlassSurfaceProps extends React.HTMLAttributes<HTMLElement> {
 - 自动检测背景亮度决定是否 dim（Web 无法读取 backdrop 像素，由调用方判断）。
 - 实时环境反射 / 取色（`--lg-ambient` 是声明式近似，README 措辞不得夸大）。
 - 除本卡列出的三处以外的组件圆角改造。
+
+## 规范疑问记录（按 AGENTS.md §7 保守实现）
+
+- **暗化层与 hover 色调过渡的冲突**：原 `::before` 用 `background:<color>` 承载 tint
+  并对 `background` 做过渡；改成多层背景后颜色层不可平滑过渡，会让所有 interactive
+  控件（Button 等）的 hover 色调变为瞬时切换，属回归。为同时满足「暗化层叠加」与
+  「保留 hover 过渡」，新增注册属性 `@property --lg-surface-tint-active`（`<color>`），
+  由它驱动最上层 tint 渐变并做过渡；沿用本仓已有的「注册自定义属性参与渐变过渡」手法
+  （见 `--lg-pointer-x/y`）。`::before` 不再自带 `background` 过渡。hover/press 改为在
+  宿主上切换 `--lg-surface-tint-active`。此为实现细节，未改公共 API 与视觉参数。
+- **同心圆角对「Modal 关闭按钮 / Toast 图标容器」当前为惰性**：按本卡公式应用后，
+  Modal 关闭按钮是嵌套 GlassSurface（pill Button，自身 `--lg-r` 遮蔽面板值，恒为
+  胶囊），Toast 图标容器当前无背景/边框，二者的 `border-radius` 目前无可见效果，仅作为
+  「同心约定」占位（若日后加背景即自动同心）。真正产生视觉效果的是 Select 选项。
+  已按本卡「仅改这三处、不扩大范围」保守实现，未改动 Button/图标结构。
+
+## 完成记录（2026-07-14）
+
+改动文件：
+
+- `src/styles/tokens.css`：新增 `--lg-dim-layer: rgb(0 0 0 / 0.35)`、`--lg-ambient: transparent`。
+- `src/styles/themes.css`：暗色两处（`[data-theme='dark']` 与 `@media prefers-color-scheme`）
+  覆盖 `--lg-dim-layer: rgb(0 0 0 / 0.5)`。
+- `src/core/GlassSurface/GlassSurface.tsx`：新增公共 prop `dim?: boolean`（默认 false），
+  宿主输出 `data-dim`。
+- `src/core/GlassSurface/glass-surface.css`：
+  - `::before` 改为三层背景（顶 tint / 中 dim / 底 ambient），dim、ambient 默认透明，
+    未 dim 表面渲染结果不变。
+  - 新增 `@property --lg-surface-tint-active` 与 hover/press 色调过渡改造（见上疑问记录）。
+  - `[data-dim]` 仅在宿主上把 `--lg-surface-dim` 设为 `--lg-dim-layer`；降级/减少透明度/
+    高对比/forced-colors 下 `::before` 整体被不透明背景覆盖，暗化层与环境色自然不生效。
+- `src/components/Select/select.css`、`src/components/Modal/modal.css`、`src/toast/toast.css`：
+  三处内联元素应用同心公式 `max(--lg-radius-sm, calc(var(--lg-r,--lg-radius-md) - 内边距))`
+  （Select 选项内边距 `--lg-space-1`；Modal 关闭按钮、Toast 图标 `--lg-space-2`）。
+- `src/ClearDim.stories.tsx`、`src/Ambient.stories.tsx`：新增 `Visual/ClearDim`、
+  `Visual/Ambient` story，中英文案（中文默认），演示 clear/clear+dim/regular 对照与
+  `--lg-ambient` 容器覆盖用法（不改组件调用代码）。
+- 测试：`GlassSurface.test.tsx` 新增 dim 断言（默认无 `data-dim`、开启后有且不新增 DOM 节点、
+  与 material 正交、减少透明度下 `data-dim` 仍在）；新增 `src/styles/concentric-radius.test.ts`
+  断言三处 CSS 的同心表达式（含 `var(--lg-r)` 与 `max(--lg-radius-sm, …)`）；新增
+  `src/test/node-runtime.d.ts` 为该测试的 `node:fs` 读取提供最小类型垫片
+  （tsconfig `types` 白名单排除了 Node 类型，未新增依赖）。
+
+验证结果：`pnpm typecheck && pnpm build && pnpm test` 全部通过（143 tests，无 act 警告）。
+`dim` 默认关闭时 DOM 无 `data-dim`、不新增节点；`--lg-ambient` 默认 transparent 渲染无差异。

@@ -10,6 +10,7 @@
   --lg-pointer-highlight: rgb(255 255 255 / 0.28);
   --lg-pointer-shade: rgb(0 0 0 / 0.35);
   --lg-drop-shadow: rgb(0 0 0 / 0.5);
+  --lg-dim-layer: rgb(0 0 0 / 0.5);
   --lg-danger: #ff453a;
   --lg-success: #30d158;
   --lg-warning: #ff9f0a;

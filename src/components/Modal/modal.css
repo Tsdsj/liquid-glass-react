@@ -93,6 +93,10 @@
   flex: 0 0 auto;
   margin-inline-start: auto;
   padding: 0;
+  /* Concentric convention: rounds off the nearest glass --lg-r, never below
+     --lg-radius-sm. The close control is a pill Button whose own --lg-r keeps it
+     round, so this stays a no-op today but holds the concentric contract. */
+  border-radius: max(var(--lg-radius-sm), calc(var(--lg-r, var(--lg-radius-md)) - var(--lg-space-2)));
 }
 
 .lg-modal__body {

@@ -10,9 +10,19 @@
   initial-value: 0%;
 }
 
+/* Registered so the tint layer animates (hover/press) even though it now lives
+   in a background gradient stack rather than a plain background-color. */
+@property --lg-surface-tint-active {
+  syntax: '<color>';
+  inherits: false;
+  initial-value: transparent;
+}
+
 .lg-surface {
   --lg-surface-tint: var(--lg-tint);
   --lg-surface-tint-hover: var(--lg-tint-hover);
+  --lg-surface-tint-active: var(--lg-surface-tint);
+  --lg-surface-dim: transparent;
   --lg-surface-pointer-highlight: transparent;
   --lg-surface-pointer-shade: transparent;
   --lg-surface-shadow-x: 0;
@@ -29,8 +39,13 @@
   backdrop-filter: blur(var(--lg-fallback-blur)) saturate(var(--lg-saturation));
   transition:
     transform var(--lg-duration) var(--lg-ease),
+    --lg-surface-tint-active var(--lg-duration) var(--lg-ease),
     --lg-pointer-x var(--lg-duration) var(--lg-ease),
     --lg-pointer-y var(--lg-duration) var(--lg-ease);
+}
+
+.lg-surface[data-dim] {
+  --lg-surface-dim: var(--lg-dim-layer);
 }
 
 .lg-surface[data-material='clear'] {
@@ -59,9 +74,15 @@
   z-index: -1;
   inset: 0;
   border-radius: inherit;
-  background: var(--lg-surface-tint);
+  /* Stacked top → bottom: glass tint, optional dim layer (for clear glass over
+     bright media), then the caller-declared ambient wash. Dim and ambient are
+     transparent by default, so an undimmed surface renders identically. The
+     tint animates through --lg-surface-tint-active (registered above). */
+  background:
+    linear-gradient(var(--lg-surface-tint-active) 0 0),
+    linear-gradient(var(--lg-surface-dim) 0 0),
+    linear-gradient(var(--lg-ambient) 0 0);
   content: '';
-  transition: background var(--lg-duration) var(--lg-ease);
 }
 
 .lg-surface::after {
@@ -118,8 +139,8 @@
   outline-offset: 2px;
 }
 
-.lg-surface[data-interactive]:hover::before {
-  background: var(--lg-surface-tint-hover);
+.lg-surface[data-interactive]:hover {
+  --lg-surface-tint-active: var(--lg-surface-tint-hover);
 }
 
 .lg-surface[data-interactive][data-pressed] {
@@ -211,26 +232,19 @@
     --lg-surface-pointer-shade: transparent;
   }
 
-  .lg-surface[data-interactive]:hover::before {
-    background: var(--lg-surface-tint);
+  .lg-surface[data-interactive]:hover {
+    --lg-surface-tint-active: var(--lg-surface-tint);
   }
 
   .lg-surface[data-interactive][data-pressed] {
     --lg-surface-pointer-highlight: var(--lg-pointer-highlight);
     --lg-surface-pointer-shade: var(--lg-pointer-shade);
-  }
-
-  .lg-surface[data-interactive][data-pressed]::before {
-    background: var(--lg-surface-tint-hover);
+    --lg-surface-tint-active: var(--lg-surface-tint-hover);
   }
 }
 
 @media (prefers-reduced-motion: reduce) {
   .lg-surface {
-    transition: none;
-  }
-
-  .lg-surface::before {
     transition: none;
   }
 

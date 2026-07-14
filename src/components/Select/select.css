@@ -148,7 +148,9 @@
   align-items: center;
   box-sizing: border-box;
   padding: var(--lg-space-2) var(--lg-space-3);
-  border-radius: var(--lg-radius-sm);
+  /* Concentric with the panel: rounds off the panel's live --lg-r inset by the
+     panel padding, never below --lg-radius-sm. */
+  border-radius: max(var(--lg-radius-sm), calc(var(--lg-r, var(--lg-radius-md)) - var(--lg-space-1)));
   outline: none;
   cursor: pointer;
   transition:
