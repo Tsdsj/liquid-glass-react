@@ -130,8 +130,12 @@
 .lg-surface__content {
   position: relative;
   z-index: 1;
+  /* No border-radius here: contain:paint clips descendants along the element's
+     own corners, so inheriting the host radius rounded-clipped first/last
+     glyphs on pill surfaces. The visual rounding is carried by the host layers
+     (::before tint, ::after specular, backdrop-filter); a rectangular content
+     clip stays inside the host padding and never reaches the rounded edge. */
   contain: layout paint;
-  border-radius: inherit;
 }
 
 .lg-surface:focus-visible {

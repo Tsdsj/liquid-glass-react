@@ -37,6 +37,39 @@ describe('registered custom properties consumed by pseudo-elements', () => {
   });
 });
 
+describe('content box does not round-clip its glyphs (M6e/H1)', () => {
+  // contain: paint clips descendants along the element's own border-radius. The
+  // content box is inset within the host padding yet inherited the host's full
+  // radius, so on pill hosts the corner arc bit into first/last glyphs. The
+  // visual rounding lives on the host (::before/::after/backdrop-filter), so the
+  // content box must clip as a rectangle. Paint containment itself is kept.
+  const css = readCss('../core/GlassSurface/glass-surface.css');
+  const block = /\.lg-surface__content\s*\{([^}]*)\}/.exec(css);
+
+  it('defines the content block', () => {
+    expect(block).not.toBeNull();
+  });
+
+  it('keeps paint containment', () => {
+    expect(block?.[1]).toMatch(/contain:\s*layout\s+paint/);
+  });
+
+  it('does not inherit the host border-radius', () => {
+    expect(block?.[1]).not.toMatch(/border-radius:\s*inherit/);
+  });
+});
+
+describe('scroll-edge overlay height is clamped to the viewport (M6e/H2)', () => {
+  // A fixed 32px overlay blankets a whole row on short panels. Clamp it so it
+  // never covers more than a fraction of the visible area.
+  const css = readCss('../core/scroll-edge/scroll-edge.css');
+  const block = /(?:^|\n)\.lg-scroll-edge__overlay\s*\{([^}]*)\}/.exec(css);
+
+  it('clamps the overlay height with min()', () => {
+    expect(block?.[1]).toMatch(/height:\s*min\(\s*var\(--lg-scroll-edge-size\)/);
+  });
+});
+
 describe('dark theme token parity', () => {
   const themes = readCss('./themes.css');
   const dataThemeMatch = /\[data-theme='dark'\]\s*\{([\s\S]*?)\}/.exec(themes);

@@ -16,7 +16,9 @@
   right: 0;
   left: 0;
   z-index: 1;
-  height: var(--lg-scroll-edge-size);
+  /* Clamp to a fraction of the scroll region so a short panel's edge effect
+     never blankets a whole row of content. */
+  height: min(var(--lg-scroll-edge-size), 25%);
   pointer-events: none;
   -webkit-backdrop-filter: blur(var(--lg-scroll-edge-blur));
   backdrop-filter: blur(var(--lg-scroll-edge-blur));
@@ -27,16 +29,18 @@
 
 .lg-scroll-edge__overlay[data-side='top'] {
   top: 0;
-  background: linear-gradient(to bottom, var(--lg-surface-tint), transparent);
-  -webkit-mask-image: linear-gradient(to bottom, #000, transparent);
-  mask-image: linear-gradient(to bottom, #000, transparent);
+  background: linear-gradient(to bottom, var(--lg-surface-tint), transparent 60%);
+  /* Blur is fully decayed by 60% of the overlay height, so the inner half stays
+     clear and readable. */
+  -webkit-mask-image: linear-gradient(to bottom, #000, transparent 60%);
+  mask-image: linear-gradient(to bottom, #000, transparent 60%);
 }
 
 .lg-scroll-edge__overlay[data-side='bottom'] {
   bottom: 0;
-  background: linear-gradient(to top, var(--lg-surface-tint), transparent);
-  -webkit-mask-image: linear-gradient(to top, #000, transparent);
-  mask-image: linear-gradient(to top, #000, transparent);
+  background: linear-gradient(to top, var(--lg-surface-tint), transparent 60%);
+  -webkit-mask-image: linear-gradient(to top, #000, transparent 60%);
+  mask-image: linear-gradient(to top, #000, transparent 60%);
 }
 
 @keyframes lg-scroll-edge-in {
