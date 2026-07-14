@@ -5,13 +5,10 @@ import {
   type LiquidGlassLocale,
 } from '../src/core/config/LiquidGlassConfig';
 import '../src/styles/index.css';
+import detailWallpaper from './assets/liquid-glass-detail.webp';
 
 const WALLPAPERS = {
-  photo: [
-    'linear-gradient(164deg, transparent 0 40%, rgb(54 91 73 / 0.95) 40% 56%, transparent 56%)',
-    'linear-gradient(196deg, transparent 0 46%, rgb(32 62 50 / 0.9) 46% 63%, transparent 63%)',
-    'linear-gradient(180deg, #8cb7d3 0%, #dce6e6 47%, #55705b 48%, #20382b 100%)',
-  ].join(', '),
+  photo: `url("${detailWallpaper}")`,
   gradient: 'linear-gradient(135deg, #315d80 0%, #7398a5 38%, #db9d8f 72%, #f1c987 100%)',
   'plain-light': 'linear-gradient(#eef1f3, #d9dfe3)',
   'plain-dark': 'linear-gradient(#20252a, #0f1215)',
@@ -46,6 +43,7 @@ function PreviewFrame({ children, theme, wallpaper, locale }: PreviewFrameProps)
         backgroundImage: WALLPAPERS[wallpaper],
         backgroundAttachment: 'fixed',
         backgroundPosition: 'center',
+        backgroundRepeat: 'no-repeat',
         backgroundSize: 'cover',
       }}
     >

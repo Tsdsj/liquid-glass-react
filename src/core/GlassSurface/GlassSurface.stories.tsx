@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState, type ChangeEvent, type ReactNode } from 'react';
 import type { Meta, StoryObj } from '@storybook/react-vite';
 import { LiquidGlassConfig, useLiquidGlassContext } from '../config/LiquidGlassConfig';
+import detailWallpaper from '../../../.storybook/assets/liquid-glass-detail.webp';
 import { GlassSurface, type GlassSurfaceProps } from './GlassSurface';
 
 const PANEL_STYLE = {
@@ -42,6 +43,14 @@ const COPY = {
     fallback: '降级模式仍保留 CSS 模糊、饱和度、色调和高光效果。',
     resize: '拖动右下角即可调整尺寸。',
     nested: '嵌套表面会保留色调和高光，但不会重复使用背景滤镜。',
+    materials: {
+      regular: 'Regular 常规材质',
+      regularDescription: '适合大多数控件和浮层，保持清晰的染色与边缘折射。',
+      clear: 'Clear 清透材质',
+      clearDescription: '背景透入更明显，前景文字仍保持足够对比度。',
+      incorrect: 'Clear 错误用法',
+      incorrectDescription: '低对比文字会被高细节背景干扰，应改用 regular 或增强文字对比。',
+    },
   },
   'en-US': {
     playground: 'Edge refraction bends the wallpaper while the center stays readable.',
@@ -55,6 +64,14 @@ const COPY = {
     fallback: 'CSS blur, saturation, tint, and specular highlights remain available.',
     resize: 'Drag the lower-right corner to resize.',
     nested: 'Nested surfaces keep tint and highlights without another backdrop filter.',
+    materials: {
+      regular: 'Regular material',
+      regularDescription: 'The default material keeps tint and edge refraction clear.',
+      clear: 'Clear material',
+      clearDescription: 'More of the background shows through while text stays readable.',
+      incorrect: 'Incorrect clear usage',
+      incorrectDescription: 'Low-contrast text gets lost on detail; use regular or stronger text.',
+    },
   },
 } as const;
 
@@ -220,6 +237,80 @@ function NestedStory() {
   );
 }
 
+function MaterialsStory() {
+  const { locale } = useLiquidGlassContext();
+  const copy = COPY[locale].materials;
+  const surfaceStyle = {
+    display: 'grid',
+    minHeight: '150px',
+    alignContent: 'center',
+    gap: 'var(--lg-space-2)',
+    padding: 'var(--lg-space-4)',
+    color: 'var(--lg-text)',
+  } as const;
+
+  return (
+    <div
+      style={{
+        position: 'relative',
+        display: 'grid',
+        width: 'min(100%, 920px)',
+        minHeight: '520px',
+        overflow: 'hidden',
+        boxSizing: 'border-box',
+        padding: '48px',
+        backgroundImage: `url("${detailWallpaper}")`,
+        backgroundPosition: 'center',
+        backgroundSize: 'cover',
+      }}
+    >
+      <div
+        aria-hidden="true"
+        style={{
+          position: 'absolute',
+          inset: 'var(--lg-space-4)',
+          display: 'grid',
+          alignContent: 'space-between',
+          color: 'var(--lg-text)',
+          fontFamily: 'var(--lg-font)',
+          fontSize: 'var(--lg-font-size-sm)',
+          opacity: 0.7,
+        }}
+      >
+        <span>LIQUID GLASS / MATERIAL / CONTRAST / DETAIL / REFRACTION</span>
+        <span>REGULAR / CLEAR / ACCESSIBILITY / CONTENT / BACKDROP</span>
+      </div>
+      <div
+        style={{
+          position: 'relative',
+          display: 'grid',
+          gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))',
+          gap: 'var(--lg-space-4)',
+          alignSelf: 'center',
+        }}
+      >
+        <GlassSurface radius={18} bezel={16} interactive style={surfaceStyle}>
+          <strong>{copy.regular}</strong>
+          <span>{copy.regularDescription}</span>
+        </GlassSurface>
+        <GlassSurface material="clear" radius={18} bezel={16} interactive style={surfaceStyle}>
+          <strong>{copy.clear}</strong>
+          <span>{copy.clearDescription}</span>
+        </GlassSurface>
+        <GlassSurface
+          material="clear"
+          radius={18}
+          bezel={16}
+          style={{ ...surfaceStyle, color: 'var(--lg-text-disabled)' }}
+        >
+          <strong>{copy.incorrect}</strong>
+          <span>{copy.incorrectDescription}</span>
+        </GlassSurface>
+      </div>
+    </div>
+  );
+}
+
 const meta = {
   title: 'Core/GlassSurface',
   component: GlassSurface,
@@ -286,5 +377,10 @@ export const Resizable: Story = {
 
 export const Nested: Story = {
   render: () => <NestedStory />,
+  parameters: { controls: { disable: true } },
+};
+
+export const Materials: Story = {
+  render: () => <MaterialsStory />,
   parameters: { controls: { disable: true } },
 };
