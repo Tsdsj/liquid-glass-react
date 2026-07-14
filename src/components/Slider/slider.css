@@ -1,0 +1,89 @@
+.lg-slider {
+  --lg-slider-height: var(--lg-control-h-md);
+  --lg-slider-track-height: 6px;
+  --lg-slider-thumb-size: 24px;
+  --lg-slider-track-color: var(--lg-tint);
+  --lg-slider-fill-color: var(--lg-accent);
+  --lg-slider-thumb-color: var(--lg-tint-hover);
+  --lg-slider-disabled-opacity: 0.55;
+  --lg-slider-focus-width: 2px;
+  --lg-slider-focus-offset: 2px;
+
+  position: relative;
+  display: inline-flex;
+  width: min(100%, 240px);
+  height: var(--lg-slider-height);
+  align-items: center;
+  cursor: pointer;
+  vertical-align: middle;
+}
+
+.lg-slider[data-size='sm'] {
+  --lg-slider-height: var(--lg-control-h-sm);
+  --lg-slider-track-height: 4px;
+  --lg-slider-thumb-size: 20px;
+}
+
+.lg-slider[data-size='lg'] {
+  --lg-slider-height: var(--lg-control-h-lg);
+  --lg-slider-track-height: 8px;
+  --lg-slider-thumb-size: 28px;
+}
+
+.lg-slider__input {
+  position: absolute;
+  z-index: 3;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  opacity: 0;
+  cursor: inherit;
+}
+
+.lg-slider__track {
+  position: relative;
+  display: block;
+  width: 100%;
+  height: var(--lg-slider-track-height);
+  overflow: hidden;
+  border-radius: var(--lg-radius-full);
+  background: var(--lg-slider-track-color);
+  pointer-events: none;
+}
+
+.lg-slider__fill {
+  display: block;
+  width: var(--lg-slider-progress);
+  height: 100%;
+  border-radius: inherit;
+  background: var(--lg-slider-fill-color);
+}
+
+.lg-slider__thumb {
+  --lg-tint: var(--lg-slider-thumb-color);
+
+  position: absolute;
+  inset-block-start: 50%;
+  inset-inline-start: var(--lg-slider-progress);
+  width: var(--lg-slider-thumb-size);
+  height: var(--lg-slider-thumb-size);
+  transform: translate(-50%, -50%);
+  pointer-events: none;
+}
+
+.lg-slider__input:focus-visible ~ .lg-slider__thumb {
+  outline: var(--lg-slider-focus-width) solid var(--lg-accent);
+  outline-offset: var(--lg-slider-focus-offset);
+}
+
+.lg-slider[data-disabled] {
+  opacity: var(--lg-slider-disabled-opacity);
+  cursor: not-allowed;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .lg-slider__thumb {
+    transition: none;
+  }
+}
