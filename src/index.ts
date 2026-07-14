@@ -17,3 +17,5 @@ export { Slider } from './components/Slider';
 export type { SliderProps } from './components/Slider';
 export { Switch } from './components/Switch';
 export type { SwitchProps } from './components/Switch';
+export { Textarea } from './components/Textarea';
+export type { TextareaProps } from './components/Textarea';
