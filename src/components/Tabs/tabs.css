@@ -1,0 +1,103 @@
+.lg-tabs {
+  --lg-tabs-height: var(--lg-control-h-md);
+  --lg-tabs-font-size: var(--lg-font-size-md);
+  --lg-tabs-padding: 3px;
+  --lg-tabs-radius: var(--lg-radius-md);
+  --lg-tabs-gap: 2px;
+  --lg-tabs-track: var(--lg-tint);
+  --lg-tabs-tab-color: var(--lg-text-secondary);
+  --lg-tabs-selected-color: var(--lg-text);
+
+  display: flex;
+  flex-direction: column;
+  gap: var(--lg-space-3);
+  font-family: var(--lg-font);
+  font-size: var(--lg-tabs-font-size);
+}
+
+.lg-tabs[data-size='sm'] {
+  --lg-tabs-height: var(--lg-control-h-sm);
+  --lg-tabs-font-size: var(--lg-font-size-sm);
+  --lg-tabs-radius: var(--lg-radius-sm);
+}
+
+.lg-tabs[data-size='lg'] {
+  --lg-tabs-height: var(--lg-control-h-lg);
+  --lg-tabs-font-size: var(--lg-font-size-lg);
+  --lg-tabs-radius: var(--lg-radius-lg);
+}
+
+.lg-tabs__list {
+  position: relative;
+  display: inline-flex;
+  align-self: flex-start;
+  gap: var(--lg-tabs-gap);
+  padding: var(--lg-tabs-padding);
+  border-radius: var(--lg-tabs-radius);
+  background: var(--lg-tabs-track);
+}
+
+.lg-tabs__indicator {
+  position: absolute;
+  top: 0;
+  left: 0;
+  z-index: 0;
+  pointer-events: none;
+  border-radius: calc(var(--lg-tabs-radius) - var(--lg-tabs-padding));
+  transition:
+    transform var(--lg-duration) var(--lg-ease-bounce),
+    width var(--lg-duration) var(--lg-ease-bounce),
+    height var(--lg-duration) var(--lg-ease-bounce);
+}
+
+.lg-tabs__indicator[data-hidden] {
+  opacity: 0;
+}
+
+.lg-tabs__tab {
+  position: relative;
+  z-index: 1;
+  display: inline-flex;
+  min-height: calc(var(--lg-tabs-height) - var(--lg-tabs-padding) * 2);
+  align-items: center;
+  justify-content: center;
+  padding: 0 var(--lg-space-3);
+  border: none;
+  border-radius: calc(var(--lg-tabs-radius) - var(--lg-tabs-padding));
+  background: transparent;
+  color: var(--lg-tabs-tab-color);
+  cursor: pointer;
+  font: inherit;
+  white-space: nowrap;
+  transition: color var(--lg-duration) var(--lg-ease);
+}
+
+.lg-tabs__tab[data-selected] {
+  color: var(--lg-tabs-selected-color);
+}
+
+.lg-tabs__tab:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+
+.lg-tabs__tab:focus-visible {
+  outline: 2px solid var(--lg-accent);
+  outline-offset: 2px;
+}
+
+.lg-tabs__panel {
+  color: var(--lg-text);
+  line-height: 1.5;
+}
+
+.lg-tabs__panel:focus-visible {
+  outline: 2px solid var(--lg-accent);
+  outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .lg-tabs__indicator {
+    transition: none;
+  }
+}

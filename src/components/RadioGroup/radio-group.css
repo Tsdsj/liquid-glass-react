@@ -1,0 +1,102 @@
+.lg-radio-group {
+  display: inline-flex;
+  gap: var(--lg-space-3);
+  align-items: center;
+}
+
+.lg-radio-group[data-orientation='vertical'] {
+  flex-direction: column;
+  align-items: flex-start;
+}
+
+.lg-radio {
+  --lg-radio-circle-size: 20px;
+  --lg-radio-dot-size: 10px;
+  --lg-radio-font-size: var(--lg-font-size-md);
+  --lg-radio-height: var(--lg-control-h-md);
+  --lg-radio-circle-color: var(--lg-tint);
+  --lg-radio-dot-color: var(--lg-accent);
+  --lg-radio-disabled-opacity: 0.55;
+  --lg-radio-focus-width: 2px;
+  --lg-radio-focus-offset: 2px;
+
+  position: relative;
+  display: inline-flex;
+  min-height: var(--lg-radio-height);
+  align-items: center;
+  gap: var(--lg-space-2);
+  color: var(--lg-text);
+  cursor: pointer;
+  font-family: var(--lg-font);
+  font-size: var(--lg-radio-font-size);
+  line-height: 1.3;
+}
+
+.lg-radio[data-size='sm'] {
+  --lg-radio-circle-size: 16px;
+  --lg-radio-dot-size: 8px;
+  --lg-radio-font-size: var(--lg-font-size-sm);
+  --lg-radio-height: var(--lg-control-h-sm);
+}
+
+.lg-radio[data-size='lg'] {
+  --lg-radio-circle-size: 24px;
+  --lg-radio-dot-size: 12px;
+  --lg-radio-font-size: var(--lg-font-size-lg);
+  --lg-radio-height: var(--lg-control-h-lg);
+}
+
+.lg-radio__input {
+  position: absolute;
+  z-index: 2;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  opacity: 0;
+  cursor: inherit;
+}
+
+.lg-radio__circle {
+  display: inline-grid;
+  width: var(--lg-radio-circle-size);
+  height: var(--lg-radio-circle-size);
+  flex: 0 0 auto;
+  place-items: center;
+  border-radius: var(--lg-radius-full);
+  background: var(--lg-radio-circle-color);
+}
+
+.lg-radio__dot {
+  width: var(--lg-radio-dot-size);
+  height: var(--lg-radio-dot-size);
+  border-radius: var(--lg-radius-full);
+  background: var(--lg-radio-dot-color);
+  transform: scale(0);
+  transition: transform var(--lg-duration) var(--lg-ease-bounce);
+}
+
+.lg-radio[data-checked] .lg-radio__dot {
+  transform: scale(1);
+}
+
+.lg-radio__input:focus-visible + .lg-radio__circle {
+  outline: var(--lg-radio-focus-width) solid var(--lg-accent);
+  outline-offset: var(--lg-radio-focus-offset);
+}
+
+.lg-radio[data-disabled] {
+  color: var(--lg-text-disabled);
+  opacity: var(--lg-radio-disabled-opacity);
+  cursor: not-allowed;
+}
+
+.lg-radio__label {
+  min-width: 0;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .lg-radio__dot {
+    transition: none;
+  }
+}

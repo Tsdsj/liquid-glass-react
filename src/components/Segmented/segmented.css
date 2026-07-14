@@ -1,0 +1,103 @@
+.lg-segmented {
+  --lg-segmented-height: var(--lg-control-h-md);
+  --lg-segmented-font-size: var(--lg-font-size-md);
+  --lg-segmented-padding: 3px;
+  --lg-segmented-radius: var(--lg-radius-md);
+  --lg-segmented-gap: 2px;
+  --lg-segmented-track: var(--lg-tint);
+  --lg-segmented-option-color: var(--lg-text-secondary);
+  --lg-segmented-selected-color: var(--lg-text);
+  --lg-segmented-disabled-opacity: 0.5;
+
+  position: relative;
+  display: inline-flex;
+  gap: var(--lg-segmented-gap);
+  padding: var(--lg-segmented-padding);
+  border-radius: var(--lg-segmented-radius);
+  background: var(--lg-segmented-track);
+  font-family: var(--lg-font);
+  font-size: var(--lg-segmented-font-size);
+  vertical-align: middle;
+}
+
+.lg-segmented[data-size='sm'] {
+  --lg-segmented-height: var(--lg-control-h-sm);
+  --lg-segmented-font-size: var(--lg-font-size-sm);
+  --lg-segmented-radius: var(--lg-radius-sm);
+}
+
+.lg-segmented[data-size='lg'] {
+  --lg-segmented-height: var(--lg-control-h-lg);
+  --lg-segmented-font-size: var(--lg-font-size-lg);
+  --lg-segmented-radius: var(--lg-radius-lg);
+}
+
+.lg-segmented[data-block] {
+  display: flex;
+  width: 100%;
+}
+
+.lg-segmented[data-disabled] {
+  opacity: var(--lg-segmented-disabled-opacity);
+  cursor: not-allowed;
+}
+
+.lg-segmented__thumb {
+  position: absolute;
+  top: 0;
+  left: 0;
+  z-index: 0;
+  pointer-events: none;
+  border-radius: calc(var(--lg-segmented-radius) - var(--lg-segmented-padding));
+  transition:
+    transform var(--lg-duration) var(--lg-ease-bounce),
+    width var(--lg-duration) var(--lg-ease-bounce),
+    height var(--lg-duration) var(--lg-ease-bounce);
+}
+
+.lg-segmented__thumb[data-hidden] {
+  opacity: 0;
+}
+
+.lg-segmented__option {
+  position: relative;
+  z-index: 1;
+  display: inline-flex;
+  min-height: calc(var(--lg-segmented-height) - var(--lg-segmented-padding) * 2);
+  flex: 0 0 auto;
+  align-items: center;
+  justify-content: center;
+  padding: 0 var(--lg-space-3);
+  border: none;
+  border-radius: calc(var(--lg-segmented-radius) - var(--lg-segmented-padding));
+  background: transparent;
+  color: var(--lg-segmented-option-color);
+  cursor: pointer;
+  font: inherit;
+  white-space: nowrap;
+  transition: color var(--lg-duration) var(--lg-ease);
+}
+
+.lg-segmented[data-block] .lg-segmented__option {
+  flex: 1 1 0;
+}
+
+.lg-segmented__option[data-selected] {
+  color: var(--lg-segmented-selected-color);
+}
+
+.lg-segmented__option:disabled {
+  cursor: not-allowed;
+  opacity: var(--lg-segmented-disabled-opacity);
+}
+
+.lg-segmented__option:focus-visible {
+  outline: 2px solid var(--lg-accent);
+  outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .lg-segmented__thumb {
+    transition: none;
+  }
+}
