@@ -1,5 +1,9 @@
+import { useState } from 'react';
 import {
   Breadcrumb,
+  Button,
+  Drawer,
+  Menu,
   Pagination,
   Radio,
   RadioGroup,
@@ -7,8 +11,44 @@ import {
   SideNav,
   Tabs,
 } from '@ttq/liquid-glass-react';
-import type { SideNavItem } from '@ttq/liquid-glass-react';
+import type { MenuItem, SideNavItem } from '@ttq/liquid-glass-react';
 import type { ComponentDoc } from './types';
+
+const MENU_ITEMS: MenuItem[] = [
+  { key: 'edit', label: '编辑 Edit', icon: '✎' },
+  { key: 'duplicate', label: '复制 Duplicate', icon: '⧉' },
+  { type: 'divider' },
+  { key: 'archive', label: '归档 Archive', disabled: true },
+  { key: 'delete', label: '删除 Delete', danger: true },
+];
+
+function DrawerDemo() {
+  const [open, setOpen] = useState(false);
+  return (
+    <>
+      <Button variant="accent" onClick={() => setOpen(true)}>
+        打开抽屉 Open drawer
+      </Button>
+      <Drawer
+        open={open}
+        onOpenChange={setOpen}
+        title="过滤器 Filters"
+        footer={
+          <>
+            <Button variant="ghost" onClick={() => setOpen(false)}>
+              取消
+            </Button>
+            <Button variant="accent" onClick={() => setOpen(false)}>
+              应用
+            </Button>
+          </>
+        }
+      >
+        <p style={{ margin: 0 }}>面板贴右侧滑入,遮罩用模糊渐入,面板是真折射玻璃。</p>
+      </Drawer>
+    </>
+  );
+}
 
 const SELECTION = { 'zh-CN': '选择控件', 'en-US': 'Selection' };
 const NAVIGATION = { 'zh-CN': '导航', 'en-US': 'Navigation' };
@@ -395,6 +435,117 @@ import { SideNav } from '@ttq/liquid-glass-react';
         { prop: 'label', type: 'ReactNode', description: { 'zh-CN': '文案', 'en-US': 'Label' } },
         { prop: 'icon / href / disabled', type: 'ReactNode / string / boolean', description: { 'zh-CN': '图标 / 链接 / 禁用', 'en-US': 'Icon / link / disabled' } },
         { prop: "{ type: 'group', label }", type: 'object', description: { 'zh-CN': '不可交互分组标题', 'en-US': 'Non-interactive group heading' } },
+      ],
+    },
+  ],
+};
+
+export const drawerDoc: ComponentDoc = {
+  slug: 'drawer',
+  name: 'Drawer',
+  title: { 'zh-CN': '抽屉', 'en-US': 'Drawer' },
+  category: NAVIGATION,
+  description: {
+    'zh-CN': '贴边滑入的模态玻璃面板,与 Modal 同构:焦点圈闭、Esc、遮罩模糊渐入、首帧折射门控。',
+    'en-US': 'An edge-anchored modal glass panel, structurally identical to Modal, sliding in per placement.',
+  },
+  renderPreview: () => <Button size="sm">打开抽屉 Drawer</Button>,
+  demos: [
+    {
+      id: 'basic',
+      title: { 'zh-CN': '四向抽屉', 'en-US': 'Four placements' },
+      description: {
+        'zh-CN': 'placement 控制贴边方向(默认 right),size 控制宽/高;Esc、遮罩点击、关闭钮均可关闭。',
+        'en-US': 'placement sets the edge (default right); size sets width/height. Esc, overlay and close all dismiss.',
+      },
+      code: `
+import { useState } from 'react';
+import { Button, Drawer } from '@ttq/liquid-glass-react';
+
+const [open, setOpen] = useState(false);
+
+<Button onClick={() => setOpen(true)}>打开抽屉</Button>
+<Drawer open={open} onOpenChange={setOpen} placement="right" title="过滤器">
+  内容
+</Drawer>`,
+      render: () => <DrawerDemo />,
+    },
+  ],
+  api: [
+    {
+      title: 'Drawer',
+      rows: [
+        { prop: 'open', type: 'boolean', description: { 'zh-CN': '受控打开态(必填)', 'en-US': 'Controlled open state (required)' } },
+        { prop: 'onOpenChange', type: '(open: boolean) => void', description: { 'zh-CN': '打开态变化回调', 'en-US': 'Open-state callback' } },
+        { prop: 'placement', type: "'left' | 'right' | 'top' | 'bottom'", defaultValue: "'right'", description: { 'zh-CN': '贴边方向', 'en-US': 'Anchored edge' } },
+        { prop: 'size', type: 'number | string', description: { 'zh-CN': '面板宽(左右)/高(上下)', 'en-US': 'Panel width (L/R) or height (T/B)' } },
+        { prop: 'title / footer', type: 'ReactNode', description: { 'zh-CN': '标题 / 底部操作区', 'en-US': 'Title / footer area' } },
+        { prop: 'closeOnOverlayClick', type: 'boolean', defaultValue: 'true', description: { 'zh-CN': '点击遮罩是否关闭', 'en-US': 'Close on overlay press' } },
+      ],
+    },
+  ],
+};
+
+export const menuDoc: ComponentDoc = {
+  slug: 'menu',
+  name: 'Menu',
+  title: { 'zh-CN': '下拉菜单', 'en-US': 'Menu' },
+  category: NAVIGATION,
+  description: {
+    'zh-CN': '触发器 cloneElement 注入,玻璃浮层菜单;点击/Enter/方向键打开,typeahead、disabled 跳过、danger 项。',
+    'en-US': 'A glass dropdown injected onto the trigger; opens by click/Enter/arrows with typeahead and danger items.',
+  },
+  renderPreview: () => (
+    <Menu items={MENU_ITEMS}>
+      <Button size="sm">操作 Actions</Button>
+    </Menu>
+  ),
+  demos: [
+    {
+      id: 'basic',
+      title: { 'zh-CN': '基础用法', 'en-US': 'Basic' },
+      description: {
+        'zh-CN': '选择后关闭并把焦点还原触发器;divider 为 role=separator,danger 项红色文字。',
+        'en-US': 'Selecting closes and restores focus; divider is role=separator, danger items go red.',
+      },
+      code: `
+import { Button, Menu } from '@ttq/liquid-glass-react';
+
+<Menu
+  items={[
+    { key: 'edit', label: '编辑' },
+    { type: 'divider' },
+    { key: 'delete', label: '删除', danger: true },
+  ]}
+  onSelect={(key) => console.log(key)}
+>
+  <Button>操作</Button>
+</Menu>`,
+      render: () => (
+        <Menu items={MENU_ITEMS} onSelect={() => undefined}>
+          <Button>操作 Actions</Button>
+        </Menu>
+      ),
+    },
+  ],
+  api: [
+    {
+      title: 'Menu',
+      rows: [
+        { prop: 'items', type: 'MenuItem[]', description: { 'zh-CN': '菜单项或分隔符', 'en-US': 'Items or dividers' } },
+        { prop: 'onSelect', type: '(key: string) => void', description: { 'zh-CN': '选择回调', 'en-US': 'Selection callback' } },
+        { prop: 'children', type: 'ReactElement', description: { 'zh-CN': '触发器(cloneElement 注入)', 'en-US': 'Trigger (cloneElement)' } },
+        { prop: 'open / defaultOpen', type: 'boolean', description: { 'zh-CN': '受控 / 非受控打开态', 'en-US': 'Controlled / uncontrolled open' } },
+        { prop: 'onOpenChange', type: '(open: boolean) => void', description: { 'zh-CN': '打开态变化回调', 'en-US': 'Open-state callback' } },
+        { prop: 'placement', type: 'Placement', defaultValue: "'bottom-start'", description: { 'zh-CN': '弹出方向', 'en-US': 'Placement' } },
+      ],
+    },
+    {
+      title: 'MenuItem',
+      rows: [
+        { prop: 'key / label', type: 'string / ReactNode', description: { 'zh-CN': '标识 / 文案', 'en-US': 'Key / label' } },
+        { prop: 'icon / disabled / danger', type: 'ReactNode / boolean / boolean', description: { 'zh-CN': '图标 / 禁用 / 危险项', 'en-US': 'Icon / disabled / danger' } },
+        { prop: "{ type: 'divider' }", type: 'object', description: { 'zh-CN': '分隔线(role=separator)', 'en-US': 'Divider (role=separator)' } },
       ],
     },
   ],

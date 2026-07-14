@@ -10,6 +10,8 @@ import {
 import { modalDoc, popoverDoc, toastDoc, tooltipDoc } from './feedback.demos';
 import {
   breadcrumbDoc,
+  drawerDoc,
+  menuDoc,
   paginationDoc,
   radioGroupDoc,
   segmentedDoc,
@@ -43,6 +45,8 @@ export const COMPONENT_DOCS: ComponentDoc[] = [
   breadcrumbDoc,
   paginationDoc,
   sideNavDoc,
+  drawerDoc,
+  menuDoc,
   tooltipDoc,
   popoverDoc,
   modalDoc,

@@ -79,7 +79,7 @@ describe('docs site', () => {
   });
 
   it('renders the container and navigation component detail pages', () => {
-    for (const slug of ['card', 'avatar', 'breadcrumb', 'pagination', 'side-nav']) {
+    for (const slug of ['card', 'avatar', 'breadcrumb', 'pagination', 'side-nav', 'drawer', 'menu']) {
       window.location.hash = `#/components/${slug}`;
       const { unmount } = render(<App />);
 

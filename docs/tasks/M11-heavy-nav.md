@@ -1,5 +1,5 @@
 ---
-status: todo
+status: done
 depends: [M10]
 ---
 
@@ -105,3 +105,31 @@ export interface MenuProps {
 
 - Menu 嵌套子菜单、多选/勾选菜单、右键上下文菜单。
 - Drawer 多层堆叠管理、push 模式(推开页面内容)、无遮罩模式。
+
+## 完成记录
+
+- `Drawer`:**整文件复制 Modal 结构**(FloatingOverlay/FloatingFocusManager/useDismiss/
+  useRole/useTransitionStatus + 遮罩 background-color+backdrop-filter 渐入 + 首帧
+  `data-refraction-pending` 门控),差异 < 30 行:`placement`(左右上下,默认 right,
+  贴边 fixed 定位 + 方向 translate 滑入)、`size`(number→px / string,注入
+  `--lg-drawer-size`)。进场 transform 用 `--lg-ease-bounce`、opacity 在玻璃面板自身、
+  reduced-motion 仅淡入(遵 M6f)。**Modal 零改动**(未抽公共 hook)。测试:四向
+  placement data 属性、i18n 关闭钮、Esc、遮罩开关(closeOnOverlayClick)、锁滚、焦点还原、
+  pending 门控 DOM(参照 Modal gating 测试)。
+- `Menu`:Select 弹层模式(useClick/useDismiss/useRole menu/useListNavigation loop+
+  disabledIndices/useTypeahead + ScrollEdge + size middleware maxHeight)+ Popover 的
+  cloneElement 触发器;面板 = GlassSurface refraction=auto,含首帧门控与弹性进场。
+  非分隔项按交互序注册进 listRef;divider `role=separator`,danger 项 `data-danger` +
+  `--lg-danger` 文字。键盘:触发器 Enter/Space/ArrowDown 开+聚焦首项、ArrowUp 聚焦末项;
+  面板内上下循环(disabled 跳过)、Home/End、字符 typeahead、Enter/Space 选择、Esc 关闭;
+  选择/Esc/外点关闭后焦点还原触发器。测试 12 条全绿。
+- 五件套齐全;`styles/index.css` 追加 drawer/menu @import;`src/index.ts` 导出
+  Drawer/DrawerProps、Menu/MenuProps/MenuItem。
+- site:`navigation.demos.tsx` 增 Drawer/Menu 两条 ComponentDoc 进 registry,总览计数
+  25 → 27;`App.test.tsx` 详情页断言 slug 列表加 drawer/menu。
+- 验证:`pnpm typecheck` ✓、`pnpm build` ✓;`pnpm test`——单线程全量 **311/311 全绿**
+  (`vitest run --no-file-parallelism`);Modal + Drawer + Menu 三文件同跑 34/34。默认并行下
+  M4 既有 Modal 焦点测试(keeps Tab focus inside the dialog)仍为文档记载的 `user.tab()`
+  时序 flake(隔离/三文件同跑均稳定过),**按本卡「Modal 既有测试零改动」约束未改**,非本卡回归。
+- **留本地目检**:Drawer 四向贴边滑入动效(`--lg-ease-bounce` 过冲)、遮罩模糊渐入、
+  Menu 玻璃浮层弹性进场与项高亮观感(服务器无浏览器)。
