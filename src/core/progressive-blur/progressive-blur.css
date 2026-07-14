@@ -1,0 +1,77 @@
+.lg-progressive-blur {
+  --lg-progressive-blur-size: calc(var(--lg-space-4) * 6);
+
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: var(--lg-progressive-blur-size);
+  pointer-events: none;
+}
+
+.lg-progressive-blur[data-direction='to-bottom'] {
+  bottom: 0;
+}
+
+.lg-progressive-blur[data-direction='to-top'] {
+  top: 0;
+}
+
+.lg-progressive-blur__layer {
+  position: absolute;
+  inset: 0;
+  /* Blur + mask arrive as custom properties so the degradation media queries
+     below can neutralise them (inline backdrop-filter would win over CSS). */
+  -webkit-backdrop-filter: var(--lg-pb-blur);
+  backdrop-filter: var(--lg-pb-blur);
+  -webkit-mask-image: var(--lg-pb-mask);
+  mask-image: var(--lg-pb-mask);
+}
+
+.lg-progressive-blur__fallback {
+  position: absolute;
+  inset: 0;
+}
+
+.lg-progressive-blur[data-direction='to-bottom'] .lg-progressive-blur__fallback {
+  background: linear-gradient(to top, var(--lg-opaque-surface), transparent);
+}
+
+.lg-progressive-blur[data-direction='to-top'] .lg-progressive-blur__fallback {
+  background: linear-gradient(to bottom, var(--lg-opaque-surface), transparent);
+}
+
+/* Reduced transparency / forced colors: drop the per-layer blur and mask, and
+   paint one opaque gradient on the container instead of the stacked glass. */
+@media (prefers-reduced-transparency: reduce) {
+  .lg-progressive-blur__layer {
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+    -webkit-mask-image: none;
+    mask-image: none;
+  }
+
+  .lg-progressive-blur[data-direction='to-bottom'] {
+    background: linear-gradient(to top, var(--lg-opaque-surface), transparent);
+  }
+
+  .lg-progressive-blur[data-direction='to-top'] {
+    background: linear-gradient(to bottom, var(--lg-opaque-surface), transparent);
+  }
+}
+
+@media (forced-colors: active) {
+  .lg-progressive-blur__layer {
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+    -webkit-mask-image: none;
+    mask-image: none;
+  }
+
+  .lg-progressive-blur[data-direction='to-bottom'] {
+    background: linear-gradient(to top, Canvas, transparent);
+  }
+
+  .lg-progressive-blur[data-direction='to-top'] {
+    background: linear-gradient(to bottom, Canvas, transparent);
+  }
+}

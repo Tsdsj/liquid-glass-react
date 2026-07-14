@@ -1,4 +1,5 @@
 import { useRef, type HTMLAttributes, type ReactNode } from 'react';
+import { ProgressiveBlur } from '../progressive-blur';
 import { cx } from '../utils/cx';
 import { useScrollEdges } from './useScrollEdges';
 
@@ -7,6 +8,11 @@ export interface ScrollEdgeProps extends HTMLAttributes<HTMLDivElement> {
   viewportClassName?: string;
   /** Props spread onto the inner scroll container. */
   viewportProps?: HTMLAttributes<HTMLDivElement>;
+  /**
+   * Internal opt-in: render each edge overlay as a layered progressive blur
+   * instead of the single-blur scrim. Default false keeps the DOM unchanged.
+   */
+  progressive?: boolean;
   children?: ReactNode;
 }
 
@@ -23,6 +29,7 @@ export function ScrollEdge({
   className,
   viewportClassName,
   viewportProps,
+  progressive = false,
   children,
   ...rest
 }: ScrollEdgeProps) {
@@ -37,7 +44,14 @@ export function ScrollEdge({
       data-edge-bottom={edges.bottom ? '' : undefined}
     >
       {edges.top ? (
-        <div className="lg-scroll-edge__overlay" data-side="top" aria-hidden="true" />
+        <div
+          className="lg-scroll-edge__overlay"
+          data-side="top"
+          data-progressive={progressive ? '' : undefined}
+          aria-hidden="true"
+        >
+          {progressive ? <ProgressiveBlur direction="to-top" /> : null}
+        </div>
       ) : null}
       <div
         {...viewportProps}
@@ -47,7 +61,14 @@ export function ScrollEdge({
         {children}
       </div>
       {edges.bottom ? (
-        <div className="lg-scroll-edge__overlay" data-side="bottom" aria-hidden="true" />
+        <div
+          className="lg-scroll-edge__overlay"
+          data-side="bottom"
+          data-progressive={progressive ? '' : undefined}
+          aria-hidden="true"
+        >
+          {progressive ? <ProgressiveBlur direction="to-bottom" /> : null}
+        </div>
       ) : null}
     </div>
   );

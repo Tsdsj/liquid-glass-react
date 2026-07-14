@@ -1,6 +1,7 @@
 @import './tokens.css';
 @import './themes.css';
 @import '../core/GlassSurface/glass-surface.css';
+@import '../core/progressive-blur/progressive-blur.css';
 @import '../core/scroll-edge/scroll-edge.css';
 @import '../components/Avatar/avatar.css';
 @import '../components/Badge/badge.css';

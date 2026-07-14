@@ -43,6 +43,21 @@
   mask-image: linear-gradient(to top, #000, transparent 60%);
 }
 
+/* Progressive opt-in: the overlay becomes a bare positioned container and the
+   nested ProgressiveBlur (filling it) supplies the layered blur. */
+.lg-scroll-edge__overlay[data-progressive] {
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+  background: none;
+  -webkit-mask-image: none;
+  mask-image: none;
+}
+
+.lg-scroll-edge__overlay .lg-progressive-blur {
+  inset: 0;
+  height: auto;
+}
+
 @keyframes lg-scroll-edge-in {
   from {
     opacity: 0;

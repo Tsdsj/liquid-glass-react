@@ -136,4 +136,52 @@ describe('ScrollEdge', () => {
     expect(screen.getByTestId('scroll')).toHaveAttribute('data-edge-top');
     expect(screen.getByTestId('scroll')).toHaveAttribute('data-edge-bottom');
   });
+
+  it('leaves the overlay DOM unchanged when progressive is off (regression)', async () => {
+    render(
+      <ScrollEdge data-testid="scroll">
+        <p>Long</p>
+      </ScrollEdge>,
+    );
+
+    const viewport = getViewport();
+    setScrollMetrics(viewport, { scrollTop: 0, scrollHeight: 600, clientHeight: 200 });
+    fireEvent.scroll(viewport);
+
+    await waitFor(() =>
+      expect(
+        document.querySelector('.lg-scroll-edge__overlay[data-side="bottom"]'),
+      ).toBeInTheDocument(),
+    );
+    const overlay = document.querySelector('.lg-scroll-edge__overlay[data-side="bottom"]');
+    expect(overlay).not.toHaveAttribute('data-progressive');
+    expect(overlay?.querySelector('.lg-progressive-blur')).toBeNull();
+    expect(document.querySelectorAll('.lg-progressive-blur__layer')).toHaveLength(0);
+  });
+
+  it('renders progressive blur layers inside each overlay when opted in', async () => {
+    render(
+      <ScrollEdge progressive data-testid="scroll">
+        <p>Long</p>
+      </ScrollEdge>,
+    );
+
+    const viewport = getViewport();
+    setScrollMetrics(viewport, { scrollTop: 200, scrollHeight: 600, clientHeight: 200 });
+    fireEvent.scroll(viewport);
+
+    await waitFor(() =>
+      expect(document.querySelectorAll('.lg-scroll-edge__overlay')).toHaveLength(2),
+    );
+    for (const overlay of document.querySelectorAll('.lg-scroll-edge__overlay')) {
+      expect(overlay).toHaveAttribute('data-progressive');
+    }
+    expect(document.querySelectorAll('.lg-progressive-blur__layer').length).toBeGreaterThan(0);
+    expect(
+      document.querySelector('.lg-scroll-edge__overlay[data-side="top"] .lg-progressive-blur'),
+    ).toHaveAttribute('data-direction', 'to-top');
+    expect(
+      document.querySelector('.lg-scroll-edge__overlay[data-side="bottom"] .lg-progressive-blur'),
+    ).toHaveAttribute('data-direction', 'to-bottom');
+  });
 });
