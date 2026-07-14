@@ -1,43 +1,44 @@
 # Design QA
 
-- Source visual truth: `test-results/site-qa/ant-design-reference-desktop.png`
-- Implementation: `test-results/site-qa/component-detail-1440x1024.png`
-- Full comparison: `test-results/site-qa/comparison-desktop-side-by-side.png`
-- Mobile implementation: `test-results/site-qa/home-mobile-390x844.png`, `test-results/site-qa/component-detail-mobile-390x844.png`
-- Viewport: desktop `1440 x 1024`; mobile `390 x 844`
-- State: Chinese locale, light theme, component detail at the top of the page
+- Feedback source: `codex-clipboard-8d8d1cad-aee8-42e2-8852-98bd1673b877.png`, `codex-clipboard-cf254b7a-5c45-405f-847a-2ff5736e3d32.png`
+- Before/after comparison: `test-results/site-qa/feedback-components-before-after.png`
+- Desktop implementation: `test-results/site-qa/home-feedback-1440x1024.png`, `test-results/site-qa/components-overview-feedback-1440x1024.png`, `test-results/site-qa/component-detail-feedback-1440x1024.png`
+- Mobile implementation: `test-results/site-qa/components-overview-feedback-mobile-390x844.png`, `test-results/site-qa/component-detail-feedback-mobile-390x844.png`, `test-results/site-qa/component-detail-feedback-dark-mobile-390x844.png`
+- Viewports: desktop `1440 x 1024`, intermediate `1200 x 900`, mobile `390 x 844`
+- State: Chinese locale; light theme for primary captures; dark theme checked separately
 
-## Full-view comparison evidence
+## Feedback verification
 
-The combined image compares the source and implementation at the same desktop viewport. Both use a 64px document header, persistent left navigation, a constrained central article, and a sticky right table of contents. The implementation intentionally replaces pure white with a low-glare gray-green surface while preserving the reference hierarchy and density.
+The comparison image places the user's washed-out component overview beside the corrected implementation. The final page keeps the low-glare gray-green surface while restoring the original WebP's wood, teal, ink, and plant detail behind every glass component.
 
-No separate focused crop was needed: the original-resolution combined image keeps the header, both sidebars, typography, dividers, demo frames, and visible controls legible. Mobile captures separately verify the responsive navigation and first-screen composition.
+The Header theme control now sits on a site-local support surface. In the light theme, the unchecked track resolves to `rgb(147, 162, 154)` against a `rgb(227, 234, 229)` control shelf, so the switch remains visible without changing the component library's global tokens.
 
 ## Findings
 
 - No actionable P0, P1, or P2 findings remain.
-- Typography: system font stack, non-negative letter spacing, and a clear 36px/24px/15px document hierarchy match the reference intent. No clipping or unintended wrapping was observed.
-- Spacing and layout: desktop columns, sticky offsets, section rhythm, and 8px repeated-item radii are consistent. Desktop and mobile have no horizontal overflow.
-- Colors and tokens: the default background resolves to `rgb(243, 246, 243)`. Secondary text resolves to `rgb(85, 97, 91)` with a measured 5.94:1 contrast ratio.
-- Image quality: the existing project WebP is used as the real glass backdrop. No CSS illustration, placeholder asset, custom SVG, or fake icon was introduced.
-- Copy and content: existing component descriptions, examples, API data, bilingual copy, and routes are preserved. The inaccurate zero-runtime-dependency hero claim was removed.
-- States and interactions: theme and language controls, search filtering, demo code toggles, component links, and the mobile component-navigation disclosure remain functional.
-- Accessibility: semantic navigation, headings, labels, focus-visible styles, reduced-motion handling, keyboard controls, and mobile tap targets are present.
-- P3 follow-up: the same project illustration appears across multiple previews. A future brand-asset pass could add complementary backdrops, but this does not block the current redesign.
+- Contrast: the page background is a softer `#edf2ee`; cards remain `#f8faf7`; stronger borders separate page, card, and control layers without returning to bright white.
+- Glass visibility: preview and demo areas use the existing real WebP with `background-blend-mode: normal`. The former `soft-light` wash is removed, making refraction, blur, tint, and highlights readable.
+- Desktop width: at 1440px the documentation layout is 1376px wide and the main content is 916px. At 1200px the right table of contents collapses and the main content remains 884px.
+- Typography: component overview headings, sidebar links, card titles and descriptions, detail headings, demo copy, and API tables are one step larger while preserving the existing hierarchy.
+- Responsive layout: mobile Header controls fit within the 343px inner width; the document scroll width equals the client width in both themes, so no horizontal overflow is present.
+- States and interactions: theme switching, language selection, component navigation, search, demos, and code controls retain their existing behavior.
+- Browser health: no warning or error entries were reported during the final desktop and mobile checks.
 
 ## Patches made during QA
 
-- Reduced mobile header and hero tool-surface height so the next section remains visible.
-- Replaced the mobile horizontal component scroller with an accessible collapsed navigation control.
-- Added site-local secondary and tertiary text tokens for stronger low-glare contrast.
-- Removed nested GlassSurface containers around interactive demos so child components retain their own glass rendering.
+- Added a site-scoped Header control shelf and Switch token overrides.
+- Darkened the default low-glare page surface slightly and strengthened site borders.
+- Expanded documentation pages to a 1480px maximum and moved the three-to-two-column breakpoint to 1240px.
+- Increased component-documentation typography and widened the search field.
+- Removed the lightening blend from home previews, component cards, and demo stages.
 
 ## Implementation checklist
 
-- [x] Desktop header and three-column documentation layout
-- [x] Soft light theme and dark-theme compatibility
-- [x] Responsive home, overview, detail, and guide layouts
-- [x] Functional mobile component navigation
-- [x] Same-viewport source/implementation comparison
+- [x] Header theme switch visible in light and dark themes
+- [x] Wider component overview and detail pages
+- [x] Larger component documentation typography
+- [x] High-detail backdrops behind glass components
+- [x] Desktop, intermediate, and mobile responsive checks
+- [x] Same-screen before/after comparison
 
 final result: passed
