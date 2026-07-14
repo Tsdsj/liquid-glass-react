@@ -8,6 +8,7 @@ import {
   textareaDoc,
 } from './entry.demos';
 import { modalDoc, popoverDoc, toastDoc, tooltipDoc } from './feedback.demos';
+import { radioGroupDoc, segmentedDoc, tabsDoc } from './navigation.demos';
 import type { ComponentDoc } from './types';
 
 export const COMPONENT_DOCS: ComponentDoc[] = [
@@ -17,8 +18,11 @@ export const COMPONENT_DOCS: ComponentDoc[] = [
   inputDoc,
   textareaDoc,
   selectDoc,
+  radioGroupDoc,
+  segmentedDoc,
   sliderDoc,
   switchDoc,
+  tabsDoc,
   tooltipDoc,
   popoverDoc,
   modalDoc,

@@ -1,5 +1,5 @@
 ---
-status: todo
+status: done
 depends: [M7]
 ---
 
@@ -148,3 +148,25 @@ export interface TabsProps {
 
 - Tabs 的可关闭页签/新增按钮/超宽滚动;Segmented 图标模式;Radio 按钮组样式。
 - `useSlidingIndicator` 公开导出。
+
+## 完成记录
+
+- 共享内核 `src/core/hooks/useSlidingIndicator.{ts,test.tsx}`:纯函数 `computeIndicatorStyle`
+  + rAF 合并的测量 hook(内部,未导出)。
+- `src/components/RadioGroup/`(RadioGroup + Radio + Context):role=radiogroup、隐藏原生
+  radio 复用 Checkbox 视觉层、方向键循环选中、roving tabindex(选中项或首个可用项为 tab 停点)、
+  disabled 跳过、横纵向。
+- `src/components/Segmented/`:role=radiogroup + role=radio 项,滑动 thumb = GlassSurface
+  `interactive`(pointer-events:none,由 `useSlidingIndicator` 驱动),轨道纯 tint;block/size。
+- `src/components/Tabs/`:tablist/tab/tabpanel,左右方向键 + Home/End 自动激活,未选中面板不入
+  DOM,活动指示器为滑动玻璃 pill(同 Segmented,共享 hook)。
+- 三者各五件套 + `src/styles/index.css` 追加 @import;`src/index.ts` 导出组件与 Props 类型
+  (RadioGroup/Radio/RadioGroupProps/RadioProps、Segmented/SegmentedProps/SegmentedOption、
+  Tabs/TabsProps/TabItem)。
+- site:`site/src/demos/navigation.demos.tsx` 新增三条 ComponentDoc 进 registry(演示 + API 表,
+  中英双语),总览计数 12 → 15 同步;`site/src/App.test.tsx` 新增三详情页可渲染断言。
+- 指示器移动不触发滤镜重建:Segmented/Tabs 测试断言选中切换前后 `filterRegistry` 快照长度不变。
+- 验证:`pnpm typecheck && pnpm build && pnpm test` 全通过(28 文件 / 222 用例,存量断言不变)。
+- **留本地目检**:指示器 `--lg-ease-bounce` 滑动动效、玻璃 thumb/pill 折射观感、圆点/凹槽的亮暗
+  与壁纸对比(服务器无浏览器)。
+

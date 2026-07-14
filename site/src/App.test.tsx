@@ -78,6 +78,18 @@ describe('docs site', () => {
     );
   });
 
+  it('renders the new selection and navigation component detail pages', () => {
+    for (const slug of ['radio-group', 'segmented', 'tabs']) {
+      window.location.hash = `#/components/${slug}`;
+      const { unmount } = render(<App />);
+
+      expect(screen.getAllByTestId('demo-block').length).toBeGreaterThan(0);
+      expect(screen.getAllByText('属性').length).toBeGreaterThan(0);
+
+      unmount();
+    }
+  });
+
   it('shows the code after pressing the show-code button', async () => {
     window.location.hash = '#/components/button';
     const user = userEvent.setup();
