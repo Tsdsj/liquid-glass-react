@@ -7,7 +7,7 @@ import {
   Switch,
   Textarea,
   type SelectOption,
-} from '@ttq/liquid-glass-react';
+} from '@ttqtt/liquid-glass-react';
 import type { ComponentDoc } from './types';
 
 const CATEGORY = { 'zh-CN': '数据录入', 'en-US': 'Data entry' };
@@ -48,7 +48,7 @@ export const checkboxDoc: ComponentDoc = {
         'en-US': 'indeterminate marks the in-between state of grouped selection.',
       },
       code: `
-import { Checkbox } from '@ttq/liquid-glass-react';
+import { Checkbox } from '@ttqtt/liquid-glass-react';
 
 <Checkbox defaultChecked>已勾选</Checkbox>
 <Checkbox indeterminate>半选</Checkbox>
@@ -110,7 +110,7 @@ export const inputDoc: ComponentDoc = {
         'en-US': 'Use prefix/suffix for icons or units; invalid marks validation failures.',
       },
       code: `
-import { Input } from '@ttq/liquid-glass-react';
+import { Input } from '@ttqtt/liquid-glass-react';
 
 <Input placeholder="搜索组件" prefix="🔍" />
 <Input placeholder="金额" suffix="元" />
@@ -154,7 +154,7 @@ export const textareaDoc: ComponentDoc = {
       title: { 'zh-CN': '自动高度', 'en-US': 'Auto resize' },
       description: { 'zh-CN': '输入换行时高度自动增长。', 'en-US': 'Height grows as you add lines.' },
       code: `
-import { Textarea } from '@ttq/liquid-glass-react';
+import { Textarea } from '@ttqtt/liquid-glass-react';
 
 <Textarea autoResize placeholder="输入多行内容试试" />`,
       render: () => (
@@ -192,7 +192,7 @@ export const selectDoc: ComponentDoc = {
         'en-US': 'Open the panel to see refraction; disabled options are skipped by keyboard navigation.',
       },
       code: `
-import { Select } from '@ttq/liquid-glass-react';
+import { Select } from '@ttqtt/liquid-glass-react';
 
 <Select
   aria-label="水果"
@@ -237,7 +237,7 @@ export const sliderDoc: ComponentDoc = {
       description: { 'zh-CN': '拖动或用方向键改变数值。', 'en-US': 'Drag or use arrow keys to change the value.' },
       code: `
 import { useState } from 'react';
-import { Slider } from '@ttq/liquid-glass-react';
+import { Slider } from '@ttqtt/liquid-glass-react';
 
 const [value, setValue] = useState(40);
 <Slider value={value} onChange={setValue} aria-label="音量" />`,
@@ -274,7 +274,7 @@ export const switchDoc: ComponentDoc = {
       title: { 'zh-CN': '基础用法', 'en-US': 'Basic' },
       description: { 'zh-CN': '点按或用空格键切换。', 'en-US': 'Toggle by click or Space.' },
       code: `
-import { Switch } from '@ttq/liquid-glass-react';
+import { Switch } from '@ttqtt/liquid-glass-react';
 
 <Switch defaultChecked aria-label="开关" />
 <Switch size="lg" aria-label="大号开关" />

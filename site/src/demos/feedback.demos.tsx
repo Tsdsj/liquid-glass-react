@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Button, Modal, Popover, Tooltip, toast } from '@ttq/liquid-glass-react';
+import { Button, Modal, Popover, Tooltip, toast } from '@ttqtt/liquid-glass-react';
 import type { ComponentDoc } from './types';
 
 const CATEGORY = { 'zh-CN': '反馈', 'en-US': 'Feedback' };
@@ -55,7 +55,7 @@ export const tooltipDoc: ComponentDoc = {
         'en-US': 'Triggered by hover or keyboard focus; delay controls the open latency.',
       },
       code: `
-import { Tooltip } from '@ttq/liquid-glass-react';
+import { Tooltip } from '@ttqtt/liquid-glass-react';
 
 <Tooltip content="删除后不可恢复" placement="top">
   <Button>悬停查看提示</Button>
@@ -107,7 +107,7 @@ export const popoverDoc: ComponentDoc = {
         'en-US': 'Dismiss by outside press or Esc; focus moves into the panel.',
       },
       code: `
-import { Popover } from '@ttq/liquid-glass-react';
+import { Popover } from '@ttqtt/liquid-glass-react';
 
 <Popover
   content={
@@ -169,7 +169,7 @@ export const modalDoc: ComponentDoc = {
       },
       code: `
 import { useState } from 'react';
-import { Button, Modal } from '@ttq/liquid-glass-react';
+import { Button, Modal } from '@ttqtt/liquid-glass-react';
 
 const [open, setOpen] = useState(false);
 
@@ -213,7 +213,7 @@ export const toastDoc: ComponentDoc = {
         'en-US': 'This site mounts <Toaster/> at the root, so the buttons fire directly.',
       },
       code: `
-import { Toaster, toast } from '@ttq/liquid-glass-react';
+import { Toaster, toast } from '@ttqtt/liquid-glass-react';
 
 // 应用根节点挂一次
 <Toaster position="top-center" />

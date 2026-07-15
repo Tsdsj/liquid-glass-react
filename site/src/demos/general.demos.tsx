@@ -1,4 +1,4 @@
-import { Button, GlassSurface } from '@ttq/liquid-glass-react';
+import { Button, GlassSurface } from '@ttqtt/liquid-glass-react';
 import type { ComponentDoc } from './types';
 
 const CATEGORY = { 'zh-CN': '通用', 'en-US': 'General' };
@@ -26,7 +26,7 @@ export const glassSurfaceDoc: ComponentDoc = {
         'en-US': 'Default regular material with automatic refraction; radius drives both corners and the refraction map.',
       },
       code: `
-import { GlassSurface } from '@ttq/liquid-glass-react';
+import { GlassSurface } from '@ttqtt/liquid-glass-react';
 
 <GlassSurface radius={22} style={{ padding: 24 }}>
   内容浮在玻璃上
@@ -122,7 +122,7 @@ export const buttonDoc: ComponentDoc = {
         'en-US': 'glass by default; accent/danger carry semantics on translucent glass; ghost has no plate.',
       },
       code: `
-import { Button } from '@ttq/liquid-glass-react';
+import { Button } from '@ttqtt/liquid-glass-react';
 
 <Button>默认</Button>
 <Button variant="accent">主要操作</Button>

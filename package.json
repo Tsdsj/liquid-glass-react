@@ -1,7 +1,16 @@
 {
-  "name": "@ttq/liquid-glass-react",
-  "version": "0.0.0",
+  "name": "@ttqtt/liquid-glass-react",
+  "version": "0.1.0",
+  "description": "复刻 Apple Liquid Glass 质感的 React 组件库:边缘折射、动态高光、流体动效;Chromium 真折射,其余浏览器自动降级为毛玻璃。",
   "type": "module",
+  "homepage": "https://ttqtt.github.io/liquid-glass-react/",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ttqtt/liquid-glass-react.git"
+  },
+  "bugs": {
+    "url": "https://github.com/ttqtt/liquid-glass-react/issues"
+  },
   "exports": {
     ".": {
       "types": "./dist/index.d.ts",
@@ -22,14 +31,30 @@
     "site": "vite --config site/vite.config.ts",
     "site:build": "vite build --config site/vite.config.ts",
     "build": "vite build",
+    "smoke:pack": "node scripts/smoke-pack.mjs",
+    "prepublishOnly": "pnpm typecheck && pnpm build && pnpm test",
     "test": "vitest run",
     "test:watch": "vitest",
     "test:visual": "playwright test",
     "typecheck": "tsc --noEmit"
   },
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
+  "keywords": [
+    "react",
+    "components",
+    "component-library",
+    "ui",
+    "glass",
+    "liquid-glass",
+    "glassmorphism",
+    "backdrop-filter",
+    "apple",
+    "design-system"
+  ],
+  "author": "ttqtt",
+  "license": "MIT",
+  "publishConfig": {
+    "access": "public"
+  },
   "packageManager": "pnpm@10.34.5",
   "peerDependencies": {
     "react": "^18.0.0 || ^19.0.0",

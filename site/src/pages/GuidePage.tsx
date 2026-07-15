@@ -16,7 +16,7 @@ const SECTIONS: GuideSection[] = [
       'zh-CN': '支持 React 18 与 19,依赖极少——只用到 @floating-ui/react。',
       'en-US': 'Works with React 18 and 19, with next to no dependencies — just @floating-ui/react.',
     },
-    code: 'pnpm add @ttq/liquid-glass-react',
+    code: 'pnpm add @ttqtt/liquid-glass-react',
   },
   {
     id: 'quick-start',
@@ -25,8 +25,8 @@ const SECTIONS: GuideSection[] = [
       'zh-CN': '引入样式文件一次,挂载 <Toaster/>(如需全局提示),然后直接使用组件。',
       'en-US': 'Import the stylesheet once, mount <Toaster/> if you need notifications, then use the components.',
     },
-    code: `import '@ttq/liquid-glass-react/style.css';
-import { Button, Toaster, toast } from '@ttq/liquid-glass-react';
+    code: `import '@ttqtt/liquid-glass-react/style.css';
+import { Button, Toaster, toast } from '@ttqtt/liquid-glass-react';
 
 export function App() {
   return (
@@ -69,7 +69,7 @@ export function App() {
       'zh-CN': '组件内置文案默认中文,通过 LiquidGlassConfig 的 locale 切换为英文;也可用 forceFallback / forceReducedTransparency 全局强制降级。',
       'en-US': 'Built-in copy defaults to Chinese and switches to English via LiquidGlassConfig locale; forceFallback / forceReducedTransparency force degradation globally.',
     },
-    code: `import { LiquidGlassConfig } from '@ttq/liquid-glass-react';
+    code: `import { LiquidGlassConfig } from '@ttqtt/liquid-glass-react';
 
 <LiquidGlassConfig locale="en-US">
   <App />

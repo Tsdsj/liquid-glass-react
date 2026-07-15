@@ -1,4 +1,4 @@
-import { Button } from '@ttq/liquid-glass-react';
+import { Button } from '@ttqtt/liquid-glass-react';
 import { ComponentSidebar } from '../components/ComponentSidebar';
 import { DemoBlock } from '../components/DemoBlock';
 import { PropsTable } from '../components/PropsTable';

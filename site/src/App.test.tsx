@@ -126,7 +126,7 @@ describe('docs site', () => {
     const [firstShow] = screen.getAllByRole('button', { name: '显示代码' });
     await user.click(firstShow);
     expect(document.querySelector('.site-code')?.textContent).toContain(
-      "@ttq/liquid-glass-react",
+      "@ttqtt/liquid-glass-react",
     );
   });
 
@@ -140,7 +140,7 @@ describe('docs site', () => {
     window.location.hash = '#/guide';
     render(<App />);
     expect(screen.getByTestId('guide-install')).toHaveTextContent(
-      'pnpm add @ttq/liquid-glass-react',
+      'pnpm add @ttqtt/liquid-glass-react',
     );
     expect(screen.getByTestId('guide-browsers')).toBeInTheDocument();
     expect(screen.getByTestId('ambient-demo')).toBeInTheDocument();

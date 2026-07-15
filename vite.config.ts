@@ -8,7 +8,7 @@ export default defineConfig({
     // Lets site/ sources (and their vitest smoke tests) import the library by
     // its published name; the lib build itself never imports this alias.
     alias: {
-      '@ttq/liquid-glass-react': fileURLToPath(new URL('./src/index.ts', import.meta.url)),
+      '@ttqtt/liquid-glass-react': fileURLToPath(new URL('./src/index.ts', import.meta.url)),
     },
   },
   plugins: [

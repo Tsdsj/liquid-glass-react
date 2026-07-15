@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import type { LiquidGlassLocale } from '@ttq/liquid-glass-react';
+import type { LiquidGlassLocale } from '@ttqtt/liquid-glass-react';
 import { COMPONENT_DOCS } from '../demos/registry';
 import type { ComponentDoc } from '../demos/types';
 import { SITE_COPY, useSiteLocale, useT } from '../site-i18n';

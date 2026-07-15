@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react';
-import { Input } from '@ttq/liquid-glass-react';
+import { Input } from '@ttqtt/liquid-glass-react';
 import { ComponentSidebar, getComponentGroups } from '../components/ComponentSidebar';
 import { COMPONENT_DOCS } from '../demos/registry';
 import { SITE_COPY, useSiteLocale, useT } from '../site-i18n';

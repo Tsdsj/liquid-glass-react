@@ -58,5 +58,5 @@ pnpm typecheck              # tsc --noEmit
 ## 项目状态速览
 
 - 当前阶段：文档/规范已定稿，代码尚未开始。第一个任务是 `docs/tasks/M0-scaffold.md`。
-- 包名：`@ttq/liquid-glass-react`（发布 scope 后续可改，代码中不要硬编码包名）。
+- 包名：`@ttqtt/liquid-glass-react`（发布 scope 后续可改，代码中不要硬编码包名）。
 - 目标环境：现代浏览器。折射效果 Chromium-only，Safari/Firefox 自动降级（详见 `docs/glass-engine.md` §降级）。

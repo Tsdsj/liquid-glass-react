@@ -1,4 +1,4 @@
-import { Avatar, Badge, Button, Card, Progress, Skeleton, Spin, Tag } from '@ttq/liquid-glass-react';
+import { Avatar, Badge, Button, Card, Progress, Skeleton, Spin, Tag } from '@ttqtt/liquid-glass-react';
 import type { ComponentDoc } from './types';
 
 const DISPLAY = { 'zh-CN': '展示', 'en-US': 'Display' };
@@ -37,7 +37,7 @@ export const tagDoc: ComponentDoc = {
         'en-US': 'Five preset colors; closable renders a real button, unmount on onClose yourself.',
       },
       code: `
-import { Tag } from '@ttq/liquid-glass-react';
+import { Tag } from '@ttqtt/liquid-glass-react';
 
 <Tag color="success">已完成</Tag>
 <Tag color="danger" closable onClose={() => {}}>可关闭</Tag>`,
@@ -91,7 +91,7 @@ export const badgeDoc: ComponentDoc = {
         'en-US': 'Over max shows `${max}+`; zero hides unless showZero is set.',
       },
       code: `
-import { Badge } from '@ttq/liquid-glass-react';
+import { Badge } from '@ttqtt/liquid-glass-react';
 
 <Badge count={8}><Avatar /></Badge>
 <Badge count={100} /> {/* 99+ */}
@@ -146,7 +146,7 @@ export const progressDoc: ComponentDoc = {
         'en-US': 'showValue prints the percent; indeterminate omits aria-valuenow and degrades gracefully.',
       },
       code: `
-import { Progress } from '@ttq/liquid-glass-react';
+import { Progress } from '@ttqtt/liquid-glass-react';
 
 <Progress value={62} showValue aria-label="上传" />
 <Progress indeterminate aria-label="加载" />`,
@@ -190,7 +190,7 @@ export const spinDoc: ComponentDoc = {
         'en-US': 'Standalone without children; wrapping children overlays and blocks interaction.',
       },
       code: `
-import { Spin } from '@ttq/liquid-glass-react';
+import { Spin } from '@ttqtt/liquid-glass-react';
 
 <Spin tip="加载中" />
 
@@ -245,7 +245,7 @@ export const skeletonDoc: ComponentDoc = {
         'en-US': 'Multi-line text ends at 60%; circle/rect take width/height.',
       },
       code: `
-import { Skeleton } from '@ttq/liquid-glass-react';
+import { Skeleton } from '@ttqtt/liquid-glass-react';
 
 <Skeleton variant="circle" width={56} height={56} />
 <Skeleton lines={3} />`,
@@ -297,7 +297,7 @@ export const cardDoc: ComponentDoc = {
           'Glass controls placed inside a Card automatically lose their own refraction (glass-in-glass breaks sampling) — this is intended engine behavior, not a bug.',
       },
       code: `
-import { Card, Button } from '@ttq/liquid-glass-react';
+import { Card, Button } from '@ttqtt/liquid-glass-react';
 
 <Card padding="lg">
   <h3>玻璃卡片</h3>
@@ -359,7 +359,7 @@ export const avatarDoc: ComponentDoc = {
         'en-US': 'Missing or broken src shows the fallback; alt becomes the accessible name.',
       },
       code: `
-import { Avatar } from '@ttq/liquid-glass-react';
+import { Avatar } from '@ttqtt/liquid-glass-react';
 
 <Avatar src="/ada.png" alt="Ada Lovelace" fallback="AL" />
 <Avatar alt="Grace Hopper" fallback="GH" shape="square" />`,

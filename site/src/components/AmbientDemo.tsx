@@ -1,5 +1,5 @@
 import { useState, type CSSProperties } from 'react';
-import { Button, GlassSurface } from '@ttq/liquid-glass-react';
+import { Button, GlassSurface } from '@ttqtt/liquid-glass-react';
 // Internal helper hook (not part of the public API); consumed from source per
 // the M14 experiment, same posture as ProgressiveBlur.
 import { useAmbientFromImage } from '../../../src/core/hooks/useAmbientFromImage';

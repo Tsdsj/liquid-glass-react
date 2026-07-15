@@ -5,7 +5,7 @@ import {
   Switch,
   Toaster,
   type LiquidGlassLocale,
-} from '@ttq/liquid-glass-react';
+} from '@ttqtt/liquid-glass-react';
 import { ComponentDetailPage } from './pages/ComponentDetailPage';
 import { ComponentsPage } from './pages/ComponentsPage';
 import { GuidePage } from './pages/GuidePage';

@@ -1,5 +1,5 @@
 import { createContext, useContext } from 'react';
-import type { LiquidGlassLocale } from '@ttq/liquid-glass-react';
+import type { LiquidGlassLocale } from '@ttqtt/liquid-glass-react';
 
 export interface Bilingual {
   'zh-CN': string;

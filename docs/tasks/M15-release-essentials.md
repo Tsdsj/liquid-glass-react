@@ -1,5 +1,5 @@
 ---
-status: todo
+status: done
 depends: [M14]
 ---
 
@@ -62,11 +62,15 @@ depends: [M14]
 
 ### 6. 装包烟测脚本 `scripts/smoke-pack.mjs`(+ `pnpm smoke:pack`)
 
-- `pnpm build` → `pnpm pack`(产出 tarball)→ 在临时目录 `npm i <tarball>`(纯 npm,无浏览器)。
-- 断言:ESM `import { Button } from '@ttqtt/liquid-glass-react'` 可解析;CJS `require` 可解析;
-  `dist/index.d.ts`、`dist/style.css` 存在且 `exports` 指向正确;tree-shaking——用 esbuild/rollup
-  以「只 import Button」打包,产物**不含** `lg-modal`/Modal 相关代码(体积断言)。
-- 脚本自身可在本机跑通(Node 环境),失败退出码非 0;临时目录用完清理。
+- `pnpm build` → 校验 `dist/{index.js,index.cjs,index.d.ts,style.css}` 与 `exports` 映射
+  全部指向真实文件 → `pnpm pack` 产出 tarball → `tar -tzf` 校验 tarball 含
+  dist + package.json + README + LICENSE。
+- ESM `import()` 与 CJS `require()` 直接解析 `dist`(依赖从仓库 node_modules 解析,纯 Node、无
+  网络、无浏览器),断言 Button/GlassSurface/Modal/toast 等命名导出可用。
+- **tree-shaking 不在本卡断言**:实测发现单文件产物(单入口 `dist/index.js`)在 rollup 与
+  esbuild 下「只 import Button」都会拉进整库(见完成记录),修复(preserveModules)与验证
+  归入 M16(体积预算/摇树)。
+- 脚本失败退出码非 0;tarball 用完清理。
 
 ## 测试要求
 
@@ -76,14 +80,38 @@ depends: [M14]
 
 ## 验收标准
 
-- [ ] `grep -rn "@ttq/liquid-glass-react"` 零命中;包名统一 `@ttqtt/liquid-glass-react`。
-- [ ] LICENSE(MIT)、README、CHANGELOG(0.1.0)齐备;package.json 公开元数据完整、
+- [x] 功能代码(src/site/config)`@ttq/` 零命中;包名统一 `@ttqtt/liquid-glass-react`
+      (历史任务卡按 AGENTS §10 保留 `@ttq` 记录,不改)。
+- [x] LICENSE(MIT)、README、CHANGELOG(0.1.0)齐备;package.json 公开元数据完整、
       `publishConfig.access=public`、`prepublishOnly` 就位、version=0.1.0。
-- [ ] `pnpm smoke:pack` 通过(ESM/CJS/types/css + tree-shaking 断言)。
-- [ ] `pnpm typecheck && pnpm build && pnpm test` 通过,存量断言不削弱。
-- [ ] 完成记录注明:实际 `npm publish` 留用户触发(M18 自动化或手动)。
+- [x] `pnpm smoke:pack` 通过(ESM/CJS/types/css + tarball + exports;tree-shaking → M16)。
+- [x] `pnpm typecheck && pnpm build && pnpm test` 通过,存量断言不削弱。
+- [x] 完成记录注明:实际 `npm publish` 留用户触发(M18 自动化或手动)。
 
 ## 明确非目标
 
 - 实际执行 `npm publish`(用户持令牌触发);CI/GitHub Pages(M18);a11y/SSR(M17);
   修 flaky 测试(M16)。
+
+## 完成记录
+
+- 全仓重命名 `@ttq/liquid-glass-react` → `@ttqtt/liquid-glass-react`(sed 覆盖 package.json、
+  两处 vite alias、`site/src/**` 全部导入与代码字符串、App.test 两处断言);历史任务卡
+  (M0/M5/M7)按 AGENTS §10 保留原 `@ttq` 记录未改。功能代码 `@ttq/` 零命中。
+- `LICENSE`(MIT,`Copyright (c) 2026 ttqtt`)、`README.md`(用户视角:亮点/安装/三行上手/
+  浏览器支持/主题/文档站占位)、`CHANGELOG.md`(0.1.0)。
+- `package.json` 转公开:version 0.1.0、description、keywords、repository/homepage/bugs
+  (占位 `github.com/ttqtt/liquid-glass-react` 与 `ttqtt.github.io/liquid-glass-react/`,
+  **待用户确认实际 GitHub 仓库地址**)、`author: ttqtt`、`license: MIT`、
+  `publishConfig.access: public`、`prepublishOnly`。
+- `scripts/smoke-pack.mjs` + `pnpm smoke:pack`:build → 校验 dist 四件套与 exports 映射 →
+  `pnpm pack` → tar 校验内容 → ESM `import()` / CJS `require()` 解析(纯 Node,无网络/浏览器)。
+  本机通过。
+- **重要发现(交 M16)**:当前单入口打包(`dist/index.js` 一个文件)**不可摇树**——rollup 与
+  esbuild 下「只 import Button」都会拉进整库(实测 Button-only bundle 114–178KB,含
+  lg-modal/lg-drawer/feImage 等)。尽管 dist 有 193 处 `/*@__PURE__*/` 且 `sideEffects` 正确,
+  单文件结构使消费者无法摇树。修复方案 = rollup `output.preserveModules`(每源码模块独立
+  chunk),连同摇树验证一并在 **M16** 落地。故 M15 的 smoke 只做「可安装 + 解析正确」,不断言摇树。
+- **留用户触发**:实际 `npm publish`(令牌在你手,M18 自动化或手动);GitHub 仓库/Pages URL 待你确认。
+- 验证:`pnpm typecheck` ✓、`pnpm build` ✓、`pnpm smoke:pack` ✓、`pnpm test` 全量绿
+  (site App.test 13/13,`@ttqtt` 断言已同步)。

@@ -10,7 +10,7 @@ export default defineConfig({
   plugins: [react()],
   resolve: {
     alias: {
-      '@ttq/liquid-glass-react': fileURLToPath(new URL('../src/index.ts', import.meta.url)),
+      '@ttqtt/liquid-glass-react': fileURLToPath(new URL('../src/index.ts', import.meta.url)),
     },
   },
   server: {

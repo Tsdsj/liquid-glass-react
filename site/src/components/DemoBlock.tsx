@@ -1,5 +1,5 @@
 import { useState, type ReactNode } from 'react';
-import { Button, toast } from '@ttq/liquid-glass-react';
+import { Button, toast } from '@ttqtt/liquid-glass-react';
 import { SITE_COPY, useT, type Bilingual } from '../site-i18n';
 import { PHOTO_WALLPAPER } from '../wallpaper';
 

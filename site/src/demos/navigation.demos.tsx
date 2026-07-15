@@ -10,8 +10,8 @@ import {
   Segmented,
   SideNav,
   Tabs,
-} from '@ttq/liquid-glass-react';
-import type { MenuItem, SideNavItem } from '@ttq/liquid-glass-react';
+} from '@ttqtt/liquid-glass-react';
+import type { MenuItem, SideNavItem } from '@ttqtt/liquid-glass-react';
 import type { ComponentDoc } from './types';
 
 const MENU_ITEMS: MenuItem[] = [
@@ -117,7 +117,7 @@ export const radioGroupDoc: ComponentDoc = {
         'en-US': 'Horizontal or vertical; Tab lands once, arrows cycle and skip disabled radios.',
       },
       code: `
-import { Radio, RadioGroup } from '@ttq/liquid-glass-react';
+import { Radio, RadioGroup } from '@ttqtt/liquid-glass-react';
 
 <RadioGroup aria-label="取件方式" defaultValue="pickup">
   <Radio value="pickup">到店自取</Radio>
@@ -179,7 +179,7 @@ export const segmentedDoc: ComponentDoc = {
         'en-US': 'Arrows move and select; block fills the container. The slide never rebuilds the filter.',
       },
       code: `
-import { Segmented } from '@ttq/liquid-glass-react';
+import { Segmented } from '@ttqtt/liquid-glass-react';
 
 <Segmented
   aria-label="时间范围"
@@ -240,7 +240,7 @@ export const tabsDoc: ComponentDoc = {
         'en-US': 'Focus activates the tab; only the active panel exists in the DOM.',
       },
       code: `
-import { Tabs } from '@ttq/liquid-glass-react';
+import { Tabs } from '@ttqtt/liquid-glass-react';
 
 <Tabs
   aria-label="产品文档"
@@ -295,7 +295,7 @@ export const breadcrumbDoc: ComponentDoc = {
         'en-US': 'href renders a link, onClick (no href) a button; the separator is customizable.',
       },
       code: `
-import { Breadcrumb } from '@ttq/liquid-glass-react';
+import { Breadcrumb } from '@ttqtt/liquid-glass-react';
 
 <Breadcrumb
   items={[
@@ -350,7 +350,7 @@ export const paginationDoc: ComponentDoc = {
         'en-US': 'Every button has an i18n aria-label; siblingCount controls neighbours shown.',
       },
       code: `
-import { Pagination } from '@ttq/liquid-glass-react';
+import { Pagination } from '@ttqtt/liquid-glass-react';
 
 <Pagination total={195} pageSize={10} defaultCurrent={1} />`,
       render: () => (
@@ -400,7 +400,7 @@ export const sideNavDoc: ComponentDoc = {
         'en-US': 'href renders a link, else a button; group is a non-interactive heading.',
       },
       code: `
-import { SideNav } from '@ttq/liquid-glass-react';
+import { SideNav } from '@ttqtt/liquid-glass-react';
 
 <SideNav
   aria-label="主导航"
@@ -460,7 +460,7 @@ export const drawerDoc: ComponentDoc = {
       },
       code: `
 import { useState } from 'react';
-import { Button, Drawer } from '@ttq/liquid-glass-react';
+import { Button, Drawer } from '@ttqtt/liquid-glass-react';
 
 const [open, setOpen] = useState(false);
 
@@ -509,7 +509,7 @@ export const menuDoc: ComponentDoc = {
         'en-US': 'Selecting closes and restores focus; divider is role=separator, danger items go red.',
       },
       code: `
-import { Button, Menu } from '@ttq/liquid-glass-react';
+import { Button, Menu } from '@ttqtt/liquid-glass-react';
 
 <Menu
   items={[
