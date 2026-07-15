@@ -13,8 +13,8 @@ const SECTIONS: GuideSection[] = [
     id: 'install',
     title: { 'zh-CN': '安装', 'en-US': 'Install' },
     body: {
-      'zh-CN': '唯一的运行时依赖是 @floating-ui/react,react / react-dom 为 peer 依赖(18 或 19)。',
-      'en-US': 'The only runtime dependency is @floating-ui/react; react / react-dom are peers (18 or 19).',
+      'zh-CN': '支持 React 18 与 19,依赖极少——只用到 @floating-ui/react。',
+      'en-US': 'Works with React 18 and 19, with next to no dependencies — just @floating-ui/react.',
     },
     code: 'pnpm add @ttq/liquid-glass-react',
   },

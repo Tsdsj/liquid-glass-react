@@ -432,6 +432,13 @@ body {
   transform: translateY(-2px);
 }
 
+/* Tactile press: the lifted card settles back down when activated. */
+.site-home-component:active {
+  box-shadow: 0 4px 12px var(--lg-site-shadow);
+  transform: translateY(0);
+  transition-duration: 80ms;
+}
+
 .site-home-component__preview {
   aspect-ratio: 16 / 9;
   display: flex;
@@ -697,6 +704,13 @@ body {
   border-color: var(--lg-site-border-strong);
   box-shadow: 0 12px 28px var(--lg-site-shadow);
   transform: translateY(-2px);
+}
+
+/* Tactile press: the lifted card settles back down when activated. */
+.site-card:active {
+  box-shadow: 0 4px 12px var(--lg-site-shadow);
+  transform: translateY(0);
+  transition-duration: 80ms;
 }
 
 .site-card__preview {
@@ -1280,7 +1294,9 @@ body {
   }
 
   .site-home-component:hover,
-  .site-card:hover {
+  .site-home-component:active,
+  .site-card:hover,
+  .site-card:active {
     transform: none;
   }
 }
