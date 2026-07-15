@@ -15,6 +15,10 @@
   cursor: text;
   font-family: var(--lg-font);
   font-size: var(--lg-input-font-size);
+  /* Ease the focus / invalid ring in instead of snapping (matches the liquid
+     feel of the phase-2 controls). Non-interactive glass, so no transform to
+     preserve. */
+  transition: box-shadow var(--lg-duration) var(--lg-ease);
 }
 
 .lg-input > .lg-surface__content {
@@ -78,4 +82,10 @@
   flex: 0 0 auto;
   align-items: center;
   color: var(--lg-text-secondary);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .lg-input {
+    transition: none;
+  }
 }

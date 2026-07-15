@@ -65,6 +65,12 @@
   place-items: center;
   border-radius: var(--lg-radius-full);
   background: var(--lg-radio-circle-color);
+  transition: background var(--lg-duration) var(--lg-ease);
+}
+
+/* Subtle hover affordance on the unselected circle, matching Checkbox. */
+.lg-radio:not([data-checked]):not([data-disabled]):hover .lg-radio__circle {
+  background: var(--lg-tint-hover);
 }
 
 .lg-radio__dot {
@@ -96,7 +102,8 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .lg-radio__dot {
+  .lg-radio__dot,
+  .lg-radio__circle {
     transition: none;
   }
 }

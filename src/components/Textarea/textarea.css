@@ -14,6 +14,8 @@
   cursor: text;
   font-family: var(--lg-font);
   font-size: var(--lg-textarea-font-size);
+  /* Ease the focus / invalid ring in instead of snapping. */
+  transition: box-shadow var(--lg-duration) var(--lg-ease);
 }
 
 .lg-textarea > .lg-surface__content {
@@ -63,4 +65,10 @@
 .lg-textarea[data-auto-resize] .lg-textarea__el {
   overflow: hidden;
   resize: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .lg-textarea {
+    transition: none;
+  }
 }

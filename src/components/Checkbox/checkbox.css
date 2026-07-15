@@ -86,6 +86,13 @@
   background: var(--lg-checkbox-box-active-color);
 }
 
+/* Subtle hover affordance on the unchecked box (the background already
+   transitions, so this eases in). */
+.lg-checkbox:not([data-checked]):not([data-indeterminate]):not([data-disabled]):hover
+  .lg-checkbox__box {
+  background: var(--lg-tint-hover);
+}
+
 .lg-checkbox[data-checked]:not([data-indeterminate]) .lg-checkbox__check {
   stroke-dashoffset: 0;
 }
