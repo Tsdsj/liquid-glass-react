@@ -5,6 +5,13 @@
     "lib": ["ES2022", "DOM", "DOM.Iterable"],
     "module": "ESNext",
     "moduleResolution": "bundler",
+    // The site sources import the library by its published name; both vite
+    // configs alias it to ./src. Mirror that here so `tsc` type-checks the site
+    // against source and no longer depends on a prior `pnpm build` producing
+    // dist/index.d.ts (CI runs typecheck before build).
+    "paths": {
+      "@ttqtt/liquid-glass-react": ["./src/index.ts"]
+    },
     "jsx": "react-jsx",
     "strict": true,
     "noEmit": true,
