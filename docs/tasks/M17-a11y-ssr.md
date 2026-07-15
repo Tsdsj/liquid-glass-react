@@ -1,5 +1,5 @@
 ---
-status: todo
+status: done
 depends: [M16]
 ---
 
@@ -59,3 +59,26 @@ depends: [M16]
 
 - 完备的人工无障碍审计;真实 Next.js 示例 app 工程(仅指南 + SSR 冒烟);视觉/对比度回归;
   CI(M18)。
+
+## 完成记录
+
+- **a11y 冒烟** `src/a11y/a11y.smoke.test.tsx`:新增 devDep `axe-core@4.12.1`;`it.each`
+  逐个渲染 17 个代表性组件默认态(Button/Checkbox/RadioGroup/Switch/Slider/Input/Select/
+  Tabs/Segmented/Pagination/Breadcrumb/SideNav/Card/Tag/Badge/Progress/Avatar),跑
+  `axe.run`,按 `impact` 只在 `critical`/`serious` 失败。**关闭的规则**:仅 `color-contrast`
+  ——它依赖真实合成后的像素颜色,jsdom 无渲染/合成能力无法判定(已在文件注释说明);其余
+  role/name/aria/label 类规则照常判定。`region`/landmark 属 `moderate`,不在门禁范围内,
+  按设计不 gate。实测:17/17 无 critical/serious 违规,未改任何组件结构或 API。
+- **SSR 冒烟** `src/ssr/ssr.smoke.test.tsx`:文件头 `// @vitest-environment node`,在
+  **无 `window`/`document`** 的 Node 环境跑(首个用例即断言两者 `undefined`,为整套赋予意义)。
+  `it.each` 对 28 个导出用 `renderToString` 断言不抛(含 GlassSurface/所有组件/闭合的 Modal/
+  Drawer/Menu/Popover/Tooltip/Toaster/LiquidGlassConfig);另断言 ① 服务端
+  `detectGlassSupport()===false` 且 Button 产出含 `data-refraction="off"`(降级、首帧与客户端
+  一致、无 hydration mismatch);② 闭合 Modal/Drawer 不渲染面板内容(无 portal)。为让共享
+  `src/test/setup.ts` 在 Node 环境可加载,把其中 `window.matchMedia`/`window.scrollTo` 两处
+  DOM mock 用 `typeof window !== 'undefined'` 包裹(纯加性 guard,jsdom 套件不受影响)。
+- **Next.js 指南**:文档站 Guide 页新增 `nextjs` 一节(中英,经 `SECTIONS` 自动进侧栏与正文):
+  ① 根 `app/layout` 引一次 `style.css`;② 交互/命令式 API 文件加 `'use client'`;③ 首帧毛玻璃
+  降级、挂载后升级折射、无 hydration 不匹配。其正确性由上面的 SSR 冒烟机器兜底。
+- 验证:`pnpm typecheck` ✓、`pnpm build` ✓、`pnpm test`(默认并行)**393/393 绿**、
+  `pnpm site:build` ✓。存量断言未削弱。

@@ -13,19 +13,24 @@ Object.defineProperty(globalThis, 'ResizeObserver', {
   value: ResizeObserverMock,
 });
 
-Object.defineProperty(window, 'matchMedia', {
-  configurable: true,
-  value: (query: string): MediaQueryList => ({
-    matches: false,
-    media: query,
-    onchange: null,
-    addListener: () => undefined,
-    removeListener: () => undefined,
-    addEventListener: () => undefined,
-    removeEventListener: () => undefined,
-    dispatchEvent: () => false,
-  }),
-});
+// The SSR smoke suite runs in a Node environment where `window`/`document` are
+// undefined by design; guard the DOM mocks so this shared setup stays loadable
+// there. jsdom suites are unaffected.
+if (typeof window !== 'undefined') {
+  Object.defineProperty(window, 'matchMedia', {
+    configurable: true,
+    value: (query: string): MediaQueryList => ({
+      matches: false,
+      media: query,
+      onchange: null,
+      addListener: () => undefined,
+      removeListener: () => undefined,
+      addEventListener: () => undefined,
+      removeEventListener: () => undefined,
+      dispatchEvent: () => false,
+    }),
+  });
+}
 
 class OffscreenCanvasMock {
   constructor(
@@ -59,10 +64,12 @@ Object.defineProperty(globalThis, 'OffscreenCanvas', {
   value: OffscreenCanvasMock,
 });
 
-Object.defineProperty(window, 'scrollTo', {
-  configurable: true,
-  value: () => undefined,
-});
+if (typeof window !== 'undefined') {
+  Object.defineProperty(window, 'scrollTo', {
+    configurable: true,
+    value: () => undefined,
+  });
+}
 
 if (typeof globalThis.requestAnimationFrame === 'undefined') {
   Object.defineProperty(globalThis, 'requestAnimationFrame', {

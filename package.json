@@ -3,13 +3,13 @@
   "version": "0.1.0",
   "description": "复刻 Apple Liquid Glass 质感的 React 组件库:边缘折射、动态高光、流体动效;Chromium 真折射,其余浏览器自动降级为毛玻璃。",
   "type": "module",
-  "homepage": "https://ttqtt.github.io/liquid-glass-react/",
+  "homepage": "https://tsdsj.github.io/liquid-glass-react/",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/ttqtt/liquid-glass-react.git"
+    "url": "git+https://github.com/Tsdsj/liquid-glass-react.git"
   },
   "bugs": {
-    "url": "https://github.com/ttqtt/liquid-glass-react/issues"
+    "url": "https://github.com/Tsdsj/liquid-glass-react/issues"
   },
   "exports": {
     ".": {
@@ -73,6 +73,7 @@
     "@types/react": "^19.2.17",
     "@types/react-dom": "^19.2.3",
     "@vitejs/plugin-react": "^5.2.0",
+    "axe-core": "^4.12.1",
     "jsdom": "^26.1.0",
     "react": "^19.2.7",
     "react-dom": "^19.2.7",

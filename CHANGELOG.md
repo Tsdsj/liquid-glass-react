@@ -23,4 +23,4 @@
 - **国际化**:内置文案中/英,经 `LiquidGlassConfig` 的 `locale` 切换。
 - 文档站(组件总览 + 交互演示 + API,中英双语)。
 
-[0.1.0]: https://github.com/ttqtt/liquid-glass-react/releases/tag/v0.1.0
+[0.1.0]: https://github.com/Tsdsj/liquid-glass-react/releases/tag/v0.1.0

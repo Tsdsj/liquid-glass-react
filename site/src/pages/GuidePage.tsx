@@ -40,6 +40,39 @@ export function App() {
 }`,
   },
   {
+    id: 'nextjs',
+    title: { 'zh-CN': 'Next.js(App Router)', 'en-US': 'Next.js (App Router)' },
+    body: {
+      'zh-CN': '① 在根 app/layout 里引入一次 style.css;② 用到 toast、Modal、Drawer 等交互或命令式 API 的文件顶部加 "use client";③ 首帧自动走毛玻璃降级,挂载后才升级为边缘折射,服务端与客户端首帧一致,不会出现 hydration 不匹配。',
+      'en-US': '(1) Import style.css once in the root app/layout. (2) Add "use client" to files that use interactive or imperative APIs (toast, Modal, Drawer, …). (3) The first frame renders the frosted fallback and upgrades to edge refraction only after mount, so the server and first client frame match — no hydration mismatch.',
+    },
+    code: `// app/layout.tsx — Server Component
+import '@ttqtt/liquid-glass-react/style.css';
+
+export default function RootLayout({ children }) {
+  return (
+    <html lang="zh" data-theme="dark">
+      <body>{children}</body>
+    </html>
+  );
+}
+
+// app/ui/Notify.tsx — needs the client runtime
+'use client';
+import { Button, Toaster, toast } from '@ttqtt/liquid-glass-react';
+
+export function Notify() {
+  return (
+    <>
+      <Toaster />
+      <Button variant="accent" onClick={() => toast.success('已保存')}>
+        保存
+      </Button>
+    </>
+  );
+}`,
+  },
+  {
     id: 'theming',
     title: { 'zh-CN': '主题与 Token', 'en-US': 'Theming and tokens' },
     body: {

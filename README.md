@@ -62,7 +62,7 @@ export function App() {
 
 ## 文档
 
-组件总览、交互演示与 API 见文档站(部署后回填):`https://ttqtt.github.io/liquid-glass-react/`
+组件总览、交互演示与 API 见文档站(部署后回填):`https://tsdsj.github.io/liquid-glass-react/`
 
 ## License
 
