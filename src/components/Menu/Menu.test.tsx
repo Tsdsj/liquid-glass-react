@@ -54,7 +54,9 @@ describe('Menu', () => {
     screen.getByRole('button', { name: 'Actions' }).focus();
     await user.keyboard('{ArrowDown}');
 
-    expect(screen.getByRole('menuitem', { name: 'Edit' })).toHaveFocus();
+    await waitFor(() =>
+      expect(screen.getByRole('menuitem', { name: 'Edit' })).toHaveFocus(),
+    );
   });
 
   it('opens with ArrowUp and focuses the last item', async () => {
@@ -64,17 +66,26 @@ describe('Menu', () => {
     screen.getByRole('button', { name: 'Actions' }).focus();
     await user.keyboard('{ArrowUp}');
 
-    expect(screen.getByRole('menuitem', { name: 'Delete' })).toHaveFocus();
+    await waitFor(() =>
+      expect(screen.getByRole('menuitem', { name: 'Delete' })).toHaveFocus(),
+    );
   });
 
   it('skips disabled items during arrow navigation', async () => {
     const user = userEvent.setup();
     render(<Basic />);
 
+    // Open and wait for the list to register (item refs mount async), then
+    // navigate: Edit -> Duplicate -> (skip disabled Archive) Delete.
     screen.getByRole('button', { name: 'Actions' }).focus();
-    // open -> Edit, down -> Duplicate, down -> (skip Archive) Delete
-    await user.keyboard('{ArrowDown}{ArrowDown}{ArrowDown}');
-    expect(screen.getByRole('menuitem', { name: 'Delete' })).toHaveFocus();
+    await user.keyboard('{ArrowDown}');
+    await waitFor(() =>
+      expect(screen.getByRole('menuitem', { name: 'Edit' })).toHaveFocus(),
+    );
+    await user.keyboard('{ArrowDown}{ArrowDown}');
+    await waitFor(() =>
+      expect(screen.getByRole('menuitem', { name: 'Delete' })).toHaveFocus(),
+    );
   });
 
   it('selects the focused item with Enter', async () => {
@@ -82,8 +93,18 @@ describe('Menu', () => {
     const onSelect = vi.fn();
     render(<Basic onSelect={onSelect} />);
 
+    // Gate each step on focus settling so the follow-up keys can't outrun the
+    // async list-navigation setup (flaky under parallel CI otherwise).
     screen.getByRole('button', { name: 'Actions' }).focus();
-    await user.keyboard('{ArrowDown}{ArrowDown}{Enter}');
+    await user.keyboard('{ArrowDown}');
+    await waitFor(() =>
+      expect(screen.getByRole('menuitem', { name: 'Edit' })).toHaveFocus(),
+    );
+    await user.keyboard('{ArrowDown}');
+    await waitFor(() =>
+      expect(screen.getByRole('menuitem', { name: 'Duplicate' })).toHaveFocus(),
+    );
+    await user.keyboard('{Enter}');
     expect(onSelect).toHaveBeenCalledWith('duplicate');
   });
 
@@ -91,11 +112,17 @@ describe('Menu', () => {
     const user = userEvent.setup();
     render(<Basic />);
 
-    // Open via keyboard so focus is inside the list, then typeahead.
+    // Open via keyboard so focus is inside the list, wait for it to settle,
+    // then typeahead.
     screen.getByRole('button', { name: 'Actions' }).focus();
     await user.keyboard('{ArrowDown}');
+    await waitFor(() =>
+      expect(screen.getByRole('menuitem', { name: 'Edit' })).toHaveFocus(),
+    );
     await user.keyboard('de');
-    expect(screen.getByRole('menuitem', { name: 'Delete' })).toHaveFocus();
+    await waitFor(() =>
+      expect(screen.getByRole('menuitem', { name: 'Delete' })).toHaveFocus(),
+    );
   });
 
   it('does not fire onSelect for a disabled item', async () => {
