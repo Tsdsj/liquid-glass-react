@@ -46,7 +46,7 @@ type TriggerProps = HTMLAttributes<HTMLElement> & {
 
 const POPOVER_TRANSITION_DURATION = 350;
 
-export const Popover = forwardRef<HTMLDivElement, PopoverProps>(function Popover(
+export const Popover = /* @__PURE__ */ forwardRef<HTMLDivElement, PopoverProps>(function Popover(
   {
     content,
     children,

@@ -100,8 +100,14 @@ describe('Modal', () => {
 
     for (let index = 0; index < 5; index += 1) {
       await user.tab();
-      expect(outside).not.toHaveFocus();
-      expect(document.activeElement).not.toBe(document.body);
+      // FloatingFocusManager re-traps focus asynchronously after each tab, so
+      // wait for it to settle: focus must land back inside the dialog and never
+      // escape to the outside button (that is the focus-trap contract). Asserting
+      // synchronously here raced with the re-focus and flaked under parallel load.
+      await waitFor(() => {
+        expect(outside).not.toHaveFocus();
+        expect(dialog.contains(document.activeElement)).toBe(true);
+      });
     }
 
     expect(dialog).toBeInTheDocument();

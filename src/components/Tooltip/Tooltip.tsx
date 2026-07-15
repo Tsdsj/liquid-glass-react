@@ -40,7 +40,7 @@ type TriggerProps = HTMLAttributes<HTMLElement> & { ref?: Ref<HTMLElement> };
 
 const TOOLTIP_TRANSITION_DURATION = 350;
 
-export const Tooltip = forwardRef<HTMLDivElement, TooltipProps>(function Tooltip(
+export const Tooltip = /* @__PURE__ */ forwardRef<HTMLDivElement, TooltipProps>(function Tooltip(
   { content, children, placement = 'top', delay = 300 },
   forwardedRef,
 ) {

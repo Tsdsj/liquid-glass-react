@@ -32,6 +32,7 @@
     "site:build": "vite build --config site/vite.config.ts",
     "build": "vite build",
     "smoke:pack": "node scripts/smoke-pack.mjs",
+    "check:bundle": "node scripts/check-bundle.mjs",
     "prepublishOnly": "pnpm typecheck && pnpm build && pnpm test",
     "test": "vitest run",
     "test:watch": "vitest",

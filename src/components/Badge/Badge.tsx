@@ -13,7 +13,7 @@ function notificationSentence(count: number, locale: 'zh-CN' | 'en-US'): string 
   return locale === 'en-US' ? `${count} notifications` : `${count} 条通知`;
 }
 
-export const Badge = forwardRef<HTMLSpanElement, BadgeProps>(function Badge(
+export const Badge = /* @__PURE__ */ forwardRef<HTMLSpanElement, BadgeProps>(function Badge(
   { count, max = 99, dot = false, showZero = false, children },
   ref,
 ) {

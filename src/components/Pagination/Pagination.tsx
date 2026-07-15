@@ -29,7 +29,7 @@ const LABELS = {
   },
 } as const;
 
-export const Pagination = forwardRef<HTMLElement, PaginationProps>(function Pagination(
+export const Pagination = /* @__PURE__ */ forwardRef<HTMLElement, PaginationProps>(function Pagination(
   {
     current,
     defaultCurrent = 1,

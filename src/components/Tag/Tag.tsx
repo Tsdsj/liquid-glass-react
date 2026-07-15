@@ -19,7 +19,7 @@ const REMOVE_LABEL = {
   'en-US': 'Remove',
 } as const;
 
-export const Tag = forwardRef<HTMLSpanElement, TagProps>(function Tag(
+export const Tag = /* @__PURE__ */ forwardRef<HTMLSpanElement, TagProps>(function Tag(
   { color = 'default', closable = false, onClose, icon, size = 'md', className, children, ...rest },
   ref,
 ) {

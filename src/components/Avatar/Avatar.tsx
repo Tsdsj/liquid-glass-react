@@ -8,7 +8,7 @@ export interface AvatarProps {
   shape?: 'circle' | 'square';
 }
 
-export const Avatar = forwardRef<HTMLSpanElement, AvatarProps>(function Avatar(
+export const Avatar = /* @__PURE__ */ forwardRef<HTMLSpanElement, AvatarProps>(function Avatar(
   { src, alt, fallback, size = 'md', shape = 'circle' },
   ref,
 ) {

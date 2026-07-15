@@ -17,7 +17,7 @@ const LOADING_TEXT = {
   'en-US': 'Loading',
 } as const;
 
-export const Spin = forwardRef<HTMLDivElement, SpinProps>(function Spin(
+export const Spin = /* @__PURE__ */ forwardRef<HTMLDivElement, SpinProps>(function Spin(
   { spinning = true, size = 'md', tip, children },
   ref: ForwardedRef<HTMLDivElement>,
 ) {

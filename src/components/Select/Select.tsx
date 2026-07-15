@@ -84,7 +84,7 @@ function getFirstEnabledIndex(options: SelectOption[]): number | null {
   return index >= 0 ? index : null;
 }
 
-export const Select = forwardRef<HTMLButtonElement, SelectProps>(function Select(
+export const Select = /* @__PURE__ */ forwardRef<HTMLButtonElement, SelectProps>(function Select(
   {
     options,
     value,

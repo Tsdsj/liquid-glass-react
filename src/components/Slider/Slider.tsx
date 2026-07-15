@@ -54,7 +54,7 @@ function calculateProgress(value: number, min: number, max: number): number {
   return Math.min(100, Math.max(0, ((value - min) / range) * 100));
 }
 
-export const Slider = forwardRef<HTMLInputElement, SliderProps>(function Slider(
+export const Slider = /* @__PURE__ */ forwardRef<HTMLInputElement, SliderProps>(function Slider(
   {
     value,
     defaultValue,

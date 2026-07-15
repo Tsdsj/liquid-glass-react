@@ -29,7 +29,7 @@ function assignRef(ref: ForwardedRef<HTMLInputElement>, value: HTMLInputElement 
   }
 }
 
-export const Checkbox = forwardRef<HTMLInputElement, CheckboxProps>(function Checkbox(
+export const Checkbox = /* @__PURE__ */ forwardRef<HTMLInputElement, CheckboxProps>(function Checkbox(
   {
     checked,
     defaultChecked = false,

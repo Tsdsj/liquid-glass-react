@@ -7,7 +7,7 @@ export interface RadioProps {
   children?: ReactNode;
 }
 
-export const Radio = forwardRef<HTMLInputElement, RadioProps>(function Radio(
+export const Radio = /* @__PURE__ */ forwardRef<HTMLInputElement, RadioProps>(function Radio(
   { value, disabled: itemDisabled = false, children },
   forwardedRef,
 ) {

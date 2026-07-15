@@ -22,7 +22,7 @@ export interface CardProps extends HTMLAttributes<HTMLElement> {
 // widened past the GlassSurface default.
 const CARD_BEZEL = 16;
 
-export const Card = forwardRef<HTMLDivElement, CardProps>(function Card(
+export const Card = /* @__PURE__ */ forwardRef<HTMLDivElement, CardProps>(function Card(
   {
     as = 'div',
     padding = 'md',

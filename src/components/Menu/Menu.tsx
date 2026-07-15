@@ -67,7 +67,7 @@ function getItemText(label: ReactNode): string | null {
   return null;
 }
 
-export const Menu = forwardRef<HTMLDivElement, MenuProps>(function Menu(
+export const Menu = /* @__PURE__ */ forwardRef<HTMLDivElement, MenuProps>(function Menu(
   { items, onSelect, children, open, defaultOpen = false, onOpenChange, placement = 'bottom-start' },
   forwardedRef,
 ) {

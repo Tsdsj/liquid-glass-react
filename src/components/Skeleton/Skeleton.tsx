@@ -15,7 +15,7 @@ function toDimension(value: number | string | undefined): string | undefined {
   return typeof value === 'number' ? `${value}px` : value;
 }
 
-export const Skeleton = forwardRef<HTMLDivElement, SkeletonProps>(function Skeleton(
+export const Skeleton = /* @__PURE__ */ forwardRef<HTMLDivElement, SkeletonProps>(function Skeleton(
   { variant = 'text', width, height, lines = 1, animated = true },
   ref,
 ) {

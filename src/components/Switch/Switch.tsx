@@ -31,7 +31,7 @@ const THUMB_STYLE: SwitchThumbStyle = {
 
 const SWITCH_KEYS = new Set([' ', 'Spacebar']);
 
-export const Switch = forwardRef<HTMLInputElement, SwitchProps>(function Switch(
+export const Switch = /* @__PURE__ */ forwardRef<HTMLInputElement, SwitchProps>(function Switch(
   {
     checked,
     defaultChecked = false,

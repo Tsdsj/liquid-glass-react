@@ -40,7 +40,7 @@ function firstEnabledValue(options: SegmentedOption[]): string {
   return options.find((option) => !option.disabled)?.value ?? '';
 }
 
-export const Segmented = forwardRef<HTMLDivElement, SegmentedProps>(function Segmented(
+export const Segmented = /* @__PURE__ */ forwardRef<HTMLDivElement, SegmentedProps>(function Segmented(
   {
     options,
     value,

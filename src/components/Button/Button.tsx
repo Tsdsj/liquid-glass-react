@@ -20,7 +20,7 @@ interface ButtonStyle extends CSSProperties {
   '--lg-r'?: string;
 }
 
-export const Button = forwardRef<HTMLButtonElement, ButtonProps>(function Button(
+export const Button = /* @__PURE__ */ forwardRef<HTMLButtonElement, ButtonProps>(function Button(
   {
     variant = 'glass',
     size = 'md',

@@ -43,7 +43,7 @@ interface DrawerPanelStyle extends CSSProperties {
 // constraint (< 30 lines of divergence) so Modal stays untouched.
 const DRAWER_TRANSITION_DURATION = 350;
 
-export const Drawer = forwardRef<HTMLDivElement, DrawerProps>(function Drawer(
+export const Drawer = /* @__PURE__ */ forwardRef<HTMLDivElement, DrawerProps>(function Drawer(
   {
     open,
     onOpenChange,

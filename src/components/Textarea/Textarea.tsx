@@ -29,7 +29,7 @@ function resizeTextarea(element: HTMLTextAreaElement): void {
   element.style.height = `${element.scrollHeight}px`;
 }
 
-export const Textarea = forwardRef<HTMLTextAreaElement, TextareaProps>(function Textarea(
+export const Textarea = /* @__PURE__ */ forwardRef<HTMLTextAreaElement, TextareaProps>(function Textarea(
   {
     invalid = false,
     autoResize = false,

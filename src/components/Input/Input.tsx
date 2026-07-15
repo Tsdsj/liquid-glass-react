@@ -26,7 +26,7 @@ function assignRef(ref: ForwardedRef<HTMLInputElement>, value: HTMLInputElement 
   }
 }
 
-export const Input = forwardRef<HTMLInputElement, InputProps>(function Input(
+export const Input = /* @__PURE__ */ forwardRef<HTMLInputElement, InputProps>(function Input(
   {
     size = 'md',
     prefix,

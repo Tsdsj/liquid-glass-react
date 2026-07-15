@@ -40,7 +40,7 @@ function firstEnabledKey(items: TabItem[]): string {
   return items.find((item) => !item.disabled)?.key ?? '';
 }
 
-export const Tabs = forwardRef<HTMLDivElement, TabsProps>(function Tabs(
+export const Tabs = /* @__PURE__ */ forwardRef<HTMLDivElement, TabsProps>(function Tabs(
   { items, value, defaultValue, onChange, size = 'md', 'aria-label': ariaLabel },
   forwardedRef,
 ) {

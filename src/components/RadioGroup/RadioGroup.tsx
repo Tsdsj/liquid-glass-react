@@ -32,7 +32,7 @@ function assignRef(ref: ForwardedRef<HTMLDivElement>, value: HTMLDivElement | nu
   }
 }
 
-export const RadioGroup = forwardRef<HTMLDivElement, RadioGroupProps>(function RadioGroup(
+export const RadioGroup = /* @__PURE__ */ forwardRef<HTMLDivElement, RadioGroupProps>(function RadioGroup(
   {
     value,
     defaultValue,

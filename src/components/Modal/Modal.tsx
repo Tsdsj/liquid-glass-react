@@ -41,7 +41,7 @@ const MODAL_PANEL_STYLE: ModalPanelStyle = {
   '--lg-r': 'var(--lg-radius-lg)',
 };
 
-export const Modal = forwardRef<HTMLDivElement, ModalProps>(function Modal(
+export const Modal = /* @__PURE__ */ forwardRef<HTMLDivElement, ModalProps>(function Modal(
   {
     open,
     onOpenChange,

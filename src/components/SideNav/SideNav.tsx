@@ -44,7 +44,7 @@ function assignRef(ref: ForwardedRef<HTMLElement>, value: HTMLElement | null): v
   }
 }
 
-export const SideNav = forwardRef<HTMLElement, SideNavProps>(function SideNav(
+export const SideNav = /* @__PURE__ */ forwardRef<HTMLElement, SideNavProps>(function SideNav(
   { items, value, defaultValue, onChange, 'aria-label': ariaLabel },
   forwardedRef,
 ) {

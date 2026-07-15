@@ -83,7 +83,7 @@ function formatPercentage(value: number): string {
   return `${Math.round(clampPercentage(value) * 100) / 100}%`;
 }
 
-export const GlassSurface = forwardRef<HTMLElement, GlassSurfaceProps>(function GlassSurface(
+export const GlassSurface = /* @__PURE__ */ forwardRef<HTMLElement, GlassSurfaceProps>(function GlassSurface(
   {
     as,
     radius,

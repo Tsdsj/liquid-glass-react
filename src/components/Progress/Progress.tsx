@@ -16,7 +16,7 @@ function clamp(value: number): number {
   return Math.min(100, Math.max(0, value));
 }
 
-export const Progress = forwardRef<HTMLDivElement, ProgressProps>(function Progress(
+export const Progress = /* @__PURE__ */ forwardRef<HTMLDivElement, ProgressProps>(function Progress(
   { value = 0, indeterminate = false, size = 'md', showValue = false, 'aria-label': ariaLabel },
   ref,
 ) {
