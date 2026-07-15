@@ -367,3 +367,47 @@ Popover/Tooltip/Modal/Toast。
   - **`docs/testing.md`**：测试范围与环境补丁。
   - **`docs/tasks/M0..M5.md`**：可逐个执行的任务卡（frontmatter 状态标记 + 步骤 + 验收标准 + 完成记录），Codex 每次取编号最小的未完成任务卡开工。
 - 里程碑严格串行 M0→M5；里程碑内组件可并行。每个任务完成必须通过 `pnpm typecheck && pnpm build && pnpm test` 并更新任务卡状态后提交 git。
+
+## 10. 二阶段与三阶段路线（M8 起）
+
+> 一阶段（M0–M4 + M6a–M6f 打磨 + M7 文档站）已完成，产出玻璃引擎 + 12 个核心组件 +
+> 重设计文档站。M5（原发布卡）由用户单独触发。
+
+### 二阶段 — 组件扩容 + 引擎实验（M8–M14，已完成）
+
+- 组件扩容（M8–M11）：Radio/Segmented/Tabs、Tag/Badge/Progress/Spin/Skeleton、
+  Card/Avatar/Breadcrumb/Pagination/SideNav、Drawer/Menu。累计 **27 个组件**。
+- 引擎进阶实验（M12–M14）：渐进模糊 ProgressiveBlur、液态融合 morph（分级验证）、
+  环境色自动取样。三者全 opt-in / 内部化 / 不新增公共导出 / 不改现有默认行为。
+
+### 三阶段 — 发布与硬化（M15–M18，本阶段）
+
+主题：把功能完整但**未发布**的库做成公众可 `pnpm add` 的**公开 npm 包**（scope
+`@ttqtt`）+ **GitHub Pages 文档站**，并补齐生产可信度。共识决策：
+
+| 决策 | 结论 |
+|---|---|
+| 发布目标 | 公开 npm 包 + 公开文档站（GitHub Pages，免费） |
+| 包名 | `@ttqtt/liquid-glass-react`（npm 账号 `ttqtt` 的个人 scope；由 `@ttq` 全仓重命名而来） |
+| License | MIT |
+| CI / 部署 | 可移植 CI（Gitea/Forgejo Actions 与 GitHub Actions 通用一份 YAML）；站点部署 GitHub Pages |
+| 硬化支柱 | CI+发布自动化、无障碍(axe)+SSR 校验、质量债(修 Modal flaky)+体积预算 |
+| 明确排除 | 视觉回归（截图基线，需浏览器/CI，本阶段不做） |
+| 发布触发 | 实际 `npm publish` 与 Pages 部署凭据由用户持有，打 tag / 手动触发 |
+
+里程碑（串行 M15→M16→M17→M18）：
+
+- **M15 公开发布准备**：LICENSE(MIT)、正式 README、CHANGELOG(0.1.0)、`@ttq`→`@ttqtt`
+  全仓重命名、package.json 转公开（repo/homepage/keywords/`publishConfig.access:public`/
+  `prepublishOnly`/版本 0.1.0）、`pnpm pack` + 临时项目装包烟测（ESM/CJS/types/css +
+  tree-shaking）。
+- **M16 质量债与体积预算**：修掉 Modal 焦点测试并行 flake（本阶段目标即硬化，可动该测试）；
+  bundle 体积上限 + tree-shaking 校验（Node 脚本/测试）。
+- **M17 无障碍与 SSR 校验**：axe-core（devDep）在 jsdom 逐组件冒烟；`renderToString` SSR
+  冒烟（不崩、服务端走降级、模块顶层无 window）；Next.js App Router 使用指南。
+- **M18 CI 与发布/部署自动化**：可移植 CI（typecheck/build/test）；GitHub Pages 部署站点
+  （Vite `base` 子路径 + 现有 hash 路由）；`v*` tag → `npm publish --access public`；
+  `RELEASING.md` 发版流程。
+
+每卡沿用既有约定：`pnpm typecheck && pnpm build && pnpm test` 通过、更新任务卡状态、
+一卡一或多提交、存量断言不削弱。
