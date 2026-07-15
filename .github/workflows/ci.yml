@@ -1,0 +1,36 @@
+# Portable CI gate. Uses only checkout + setup-node (no GitHub-only marketplace
+# actions), so the same file runs on GitHub Actions and on Gitea/Forgejo Actions
+# (both read .github/workflows/). Runs on every push and pull request.
+name: CI
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+
+      # corepack ships the pinned pnpm from package.json#packageManager.
+      - name: Enable pnpm
+        run: corepack enable
+
+      - name: Install
+        run: pnpm install --frozen-lockfile
+
+      - name: Typecheck
+        run: pnpm typecheck
+
+      - name: Build
+        run: pnpm build
+
+      # M16 fixed the Modal focus flake, so default parallelism is safe here.
+      # If a runner ever proves flaky, append `-- --no-file-parallelism`.
+      - name: Test
+        run: pnpm test

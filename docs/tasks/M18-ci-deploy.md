@@ -1,5 +1,5 @@
 ---
-status: todo
+status: done
 depends: [M15, M16, M17]
 ---
 
@@ -62,3 +62,29 @@ depends: [M15, M16, M17]
 ## 明确非目标
 
 - 实际执行 publish / 部署(凭据在用户手);视觉回归;发布后监控/统计;多包/monorepo 化。
+
+## 完成记录
+
+- **可移植 CI** `.github/workflows/ci.yml`:push / pull_request → checkout → setup-node(Node 24)
+  → `corepack enable` → `pnpm install --frozen-lockfile` → typecheck → build → test。仅用
+  `actions/checkout` + `actions/setup-node` 两个通用 action,GitHub Actions 与 Gitea/Forgejo
+  Actions 通用(均读 `.github/workflows/`)。测试用默认并行(M16 已修 flaky),注释里留了
+  `--no-file-parallelism` 兜底说明。
+- **站点子路径** `site/vite.config.ts` 改为函数式:`base = command === 'build' ? '/liquid-glass-react/'
+  : '/'`——生产构建带子路径、dev 保持 `/`。实测 `pnpm site:build` 后 `site/dist/index.html` 资产
+  路径为 `/liquid-glass-react/assets/...`。站点是 hash 路由,子路径下客户端导航天然可用。
+- **Pages 部署** `.github/workflows/deploy-pages.yml`(GitHub 专用):push main → `pnpm site:build`
+  → `configure-pages` / `upload-pages-artifact`(`path: site/dist`)→ `deploy-pages`。含 Pages 三项
+  权限与 `concurrency: pages`。站点别名指向 `../src`,无需先构建库。
+- **发布自动化** `.github/workflows/release.yml`:推 `v*` tag → setup-node(`registry-url`)→
+  install → build → `npm publish --access public`,鉴权 `NODE_AUTH_TOKEN`;`prepublishOnly`(M15)
+  发布前自动跑 typecheck/build/test 作最终门禁。
+- **`RELEASING.md`**:三工作流一览 + 发版步骤(改 CHANGELOG → `pnpm version` → push main & tags)
+  + 手动发布 + 一次性人工配置(镜像仓库、启用 Pages、配 `NODE_AUTH_TOKEN`)。
+- **homepage 回填**:`package.json` / `README` / `CHANGELOG` 的 URL 已在 M17 改为真实账号
+  `github.com/Tsdsj/...`、Pages 域 `tsdsj.github.io/liquid-glass-react/`。
+- 验证:`pnpm typecheck` ✓、`pnpm build` ✓、`pnpm test` **393/393 绿**、`pnpm site:build` ✓、
+  三个 workflow YAML 结构合法。
+- **留用户操作**(本环境无 runner/浏览器/凭据,无法自验):① 建 GitHub 镜像并 `git push github main`;
+  ② Settings → Pages → Source 选 "GitHub Actions" 启用 Pages;③ 配 `NODE_AUTH_TOKEN` secret;
+  ④ 首次打 `v0.1.0` tag 推送以触发 `release.yml`。用户已反馈①②③已完成。

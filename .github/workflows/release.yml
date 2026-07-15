@@ -1,0 +1,39 @@
+# npm publish on tag. Push a `v*` tag (e.g. v0.1.0) to publish to npm.
+# `prepublishOnly` (typecheck + build + test) runs automatically as the final
+# gate before the package leaves the machine.
+#
+# One-time setup by the repo owner: add the `NODE_AUTH_TOKEN` secret
+# (npm "Automation" token) under Settings → Secrets and variables → Actions.
+name: Release
+
+on:
+  push:
+    tags: ['v*']
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          # Writes an .npmrc that reads NODE_AUTH_TOKEN for auth.
+          registry-url: https://registry.npmjs.org
+
+      - name: Enable pnpm
+        run: corepack enable
+
+      - name: Install
+        run: pnpm install --frozen-lockfile
+
+      - name: Build
+        run: pnpm build
+
+      # publishConfig.access=public is already set in package.json; the flag is
+      # belt-and-suspenders. prepublishOnly re-runs typecheck/build/test here.
+      - name: Publish to npm
+        run: npm publish --access public
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NODE_AUTH_TOKEN }}
