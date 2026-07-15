@@ -3,9 +3,12 @@
 > 把 Apple 的液态玻璃搬上网页——边缘会折射身后的世界,高光随指尖流动,按下时轻轻回弹。
 
 [![npm](https://img.shields.io/npm/v/@ttqtt/liquid-glass-react.svg)](https://www.npmjs.com/package/@ttqtt/liquid-glass-react)
+[![CI](https://github.com/Tsdsj/liquid-glass-react/actions/workflows/ci.yml/badge.svg)](https://github.com/Tsdsj/liquid-glass-react/actions/workflows/ci.yml)
 [![license](https://img.shields.io/npm/l/@ttqtt/liquid-glass-react.svg)](./LICENSE)
 
 一套复刻 Apple Liquid Glass 质感的 React 组件库:27 个组件共享同一种会折射的玻璃材质、同一套主题与无障碍标准。**English speakers:** a React component library that recreates Apple's Liquid Glass — real edge refraction on Chromium, a graceful frosted fallback everywhere else.
+
+**🔗 在线预览 / Live demo:** https://tsdsj.github.io/liquid-glass-react/
 
 ## 亮点
 
@@ -60,9 +63,13 @@ export function App() {
 }
 ```
 
+## 服务端渲染 / Next.js
+
+组件在服务端安全降级(首帧毛玻璃、挂载后升级折射,无 hydration 不匹配)。在 Next.js App Router 中:根 `app/layout` 引入一次 `style.css`,用到 `toast` / 浮层等交互 API 的文件顶部加 `'use client'`。详见文档站「Next.js(App Router)」一节。
+
 ## 文档
 
-组件总览、交互演示与 API 见文档站(部署后回填):`https://tsdsj.github.io/liquid-glass-react/`
+组件总览、交互演示与 API 见文档站:**https://tsdsj.github.io/liquid-glass-react/**
 
 ## License
 
