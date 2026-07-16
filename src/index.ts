@@ -43,6 +43,8 @@ export { Checkbox } from './components/Checkbox';
 export type { CheckboxProps } from './components/Checkbox';
 export { Drawer } from './components/Drawer';
 export type { DrawerProps } from './components/Drawer';
+export { Dropdown } from './components/Dropdown';
+export type { DropdownProps } from './components/Dropdown';
 export { Form, FormItem, useForm } from './components/Form';
 export type {
   FormProps,
@@ -52,6 +54,8 @@ export type {
 } from './components/Form';
 export { Input } from './components/Input';
 export type { InputProps } from './components/Input';
+export { InputNumber } from './components/InputNumber';
+export type { InputNumberProps } from './components/InputNumber';
 export { Menu } from './components/Menu';
 export type { MenuItem, MenuProps } from './components/Menu';
 export { Modal } from './components/Modal';
@@ -64,6 +68,8 @@ export { Progress } from './components/Progress';
 export type { ProgressProps } from './components/Progress';
 export { Radio, RadioGroup } from './components/RadioGroup';
 export type { RadioGroupProps, RadioProps } from './components/RadioGroup';
+export { Rate } from './components/Rate';
+export type { RateProps } from './components/Rate';
 export { Segmented } from './components/Segmented';
 export type { SegmentedOption, SegmentedProps } from './components/Segmented';
 export { Select } from './components/Select';
@@ -84,6 +90,10 @@ export { Tabs } from './components/Tabs';
 export type { TabItem, TabsProps } from './components/Tabs';
 export { Tag } from './components/Tag';
 export type { TagProps } from './components/Tag';
+export { Timeline } from './components/Timeline';
+export type { TimelineProps, TimelineItem } from './components/Timeline';
+export { Upload } from './components/Upload';
+export type { UploadProps, UploadFile } from './components/Upload';
 export { Textarea } from './components/Textarea';
 export type { TextareaProps } from './components/Textarea';
 export { Tooltip } from './components/Tooltip';

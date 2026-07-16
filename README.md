@@ -6,7 +6,7 @@
 [![CI](https://github.com/Tsdsj/liquid-glass-react/actions/workflows/ci.yml/badge.svg)](https://github.com/Tsdsj/liquid-glass-react/actions/workflows/ci.yml)
 [![license](https://img.shields.io/npm/l/@ttqtt/liquid-glass-react.svg)](./LICENSE)
 
-一套复刻 Apple Liquid Glass 质感的 React 组件库:35 个组件共享同一种会折射的玻璃材质、同一套主题与无障碍标准。**English speakers:** a React component library that recreates Apple's Liquid Glass — real edge refraction on Chromium, a graceful frosted fallback everywhere else.
+一套复刻 Apple Liquid Glass 质感的 React 组件库:40 个组件共享同一种会折射的玻璃材质、同一套主题与无障碍标准。**English speakers:** a React component library that recreates Apple's Liquid Glass — real edge refraction on Chromium, a graceful frosted fallback everywhere else.
 
 **🔗 在线预览 / Live demo:** https://tsdsj.github.io/liquid-glass-react/
 

@@ -6,11 +6,15 @@ import {
   Form,
   FormItem,
   Input,
+  InputNumber,
+  Rate,
   Select,
   Slider,
   Switch,
   Textarea,
+  Upload,
   type SelectOption,
+  type UploadFile,
 } from '@ttqtt/liquid-glass-react';
 import type { ComponentDoc } from './types';
 
@@ -515,6 +519,147 @@ const [value, setValue] = useState<Date | null>(new Date(2024, 0, 15));
         { prop: 'weekStartsOn', type: '0 | 1', defaultValue: '1', description: { 'zh-CN': '周起始(0 周日 / 1 周一)', 'en-US': 'Week start (0 Sun / 1 Mon)' } },
         { prop: 'size', type: "'sm' | 'md' | 'lg'", defaultValue: "'md'", description: { 'zh-CN': '尺寸', 'en-US': 'Size' } },
         { prop: 'locale', type: "'zh-CN' | 'en-US'", description: { 'zh-CN': '缺省取 LiquidGlassConfig', 'en-US': 'Defaults to LiquidGlassConfig' } },
+      ],
+    },
+  ],
+};
+
+
+function UploadDemo() {
+  const [files, setFiles] = useState<UploadFile[]>([
+    { key: 'seed', name: '设计稿.pdf', size: 128000, status: 'done' },
+  ]);
+  return <Upload fileList={files} onChange={(list) => setFiles(list)} multiple />;
+}
+
+export const inputNumberDoc: ComponentDoc = {
+  slug: 'input-number',
+  name: 'InputNumber',
+  title: { 'zh-CN': '数字输入', 'en-US': 'InputNumber' },
+  category: CATEGORY,
+  description: {
+    'zh-CN': '玻璃数字输入:步进按钮 + 方向键步进,失焦解析/钳制/精度归一,role="spinbutton" 全套 aria 值状态。',
+    'en-US': 'Glass number field: stepper buttons + arrow keys, blur-time parse/clamp/precision, full spinbutton aria value state.',
+  },
+  renderPreview: () => <InputNumber aria-label="预览" defaultValue={3} min={0} max={10} />,
+  demos: [
+    {
+      id: 'basic',
+      title: { 'zh-CN': '步进与精度', 'en-US': 'Stepping & precision' },
+      description: {
+        'zh-CN': 'min/max 钳制、step 步进(方向键同效)、precision 控制小数位;非法输入失焦回退上一个合法值。',
+        'en-US': 'min/max clamp, step increments (arrow keys too), precision fixes decimals; invalid text reverts on blur.',
+      },
+      code: `
+<InputNumber aria-label="数量" defaultValue={3} min={0} max={10} />
+<InputNumber aria-label="金额" defaultValue={9.99} step={0.5} precision={2} />`,
+      render: () => (
+        <div style={{ display: 'grid', gap: 12, width: 220 }}>
+          <InputNumber aria-label="数量" defaultValue={3} min={0} max={10} />
+          <InputNumber aria-label="金额" defaultValue={9.99} step={0.5} precision={2} />
+        </div>
+      ),
+    },
+  ],
+  api: [
+    {
+      title: 'InputNumber',
+      rows: [
+        { prop: 'value / defaultValue', type: 'number | null', description: { 'zh-CN': '受控 / 非受控值,空为 null', 'en-US': 'Controlled / uncontrolled; empty is null' } },
+        { prop: 'onChange', type: '(value: number | null) => void', description: { 'zh-CN': '提交时回调(失焦/步进/Enter)', 'en-US': 'Fires on commit (blur/step/Enter)' } },
+        { prop: 'min / max', type: 'number', description: { 'zh-CN': '钳制范围', 'en-US': 'Clamp bounds' } },
+        { prop: 'step', type: 'number', defaultValue: '1', description: { 'zh-CN': '步进量', 'en-US': 'Step size' } },
+        { prop: 'precision', type: 'number', description: { 'zh-CN': '小数位(修正浮点漂移)', 'en-US': 'Decimal places (fixes float drift)' } },
+        { prop: 'size', type: "'sm' | 'md' | 'lg'", defaultValue: "'md'", description: { 'zh-CN': '尺寸', 'en-US': 'Size' } },
+      ],
+    },
+  ],
+};
+
+export const rateDoc: ComponentDoc = {
+  slug: 'rate',
+  name: 'Rate',
+  title: { 'zh-CN': '评分', 'en-US': 'Rate' },
+  category: CATEGORY,
+  description: {
+    'zh-CN': '星级评分:radiogroup 语义 + 方向键增减,点击当前值清零;readOnly 转为文本化 img,读屏播报「n / 总数」。',
+    'en-US': 'Star rating with radiogroup semantics and arrow keys; clicking the current value clears it; readOnly renders a text-alternative image.',
+  },
+  renderPreview: () => <Rate aria-label="预览" defaultValue={4} />,
+  demos: [
+    {
+      id: 'basic',
+      title: { 'zh-CN': '交互与只读', 'en-US': 'Interactive & read-only' },
+      description: {
+        'zh-CN': 'hover 预览、点击选定;readOnly 用于展示均分等场景。',
+        'en-US': 'Hover previews, click picks; readOnly suits showing an average.',
+      },
+      code: `
+<Rate aria-label="评分" defaultValue={3} onChange={setValue} />
+<Rate aria-label="平均分" value={4} readOnly />`,
+      render: () => (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+          <Rate aria-label="评分" defaultValue={3} />
+          <Rate aria-label="平均分" value={4} readOnly />
+        </div>
+      ),
+    },
+  ],
+  api: [
+    {
+      title: 'Rate',
+      rows: [
+        { prop: 'value / defaultValue', type: 'number', defaultValue: '0', description: { 'zh-CN': '受控 / 非受控星数', 'en-US': 'Controlled / uncontrolled stars' } },
+        { prop: 'onChange', type: '(value: number) => void', description: { 'zh-CN': '变化回调(清零回调 0)', 'en-US': 'Change callback (0 when cleared)' } },
+        { prop: 'count', type: 'number', defaultValue: '5', description: { 'zh-CN': '星星数量', 'en-US': 'Star count' } },
+        { prop: 'readOnly', type: 'boolean', defaultValue: 'false', description: { 'zh-CN': '只读展示(img 语义)', 'en-US': 'Display-only (img semantics)' } },
+        { prop: 'disabled', type: 'boolean', defaultValue: 'false', description: { 'zh-CN': '禁用', 'en-US': 'Disabled' } },
+      ],
+    },
+  ],
+};
+
+export const uploadDoc: ComponentDoc = {
+  slug: 'upload',
+  name: 'Upload',
+  title: { 'zh-CN': '上传', 'en-US': 'Upload' },
+  category: CATEGORY,
+  description: {
+    'zh-CN': '受控文件列表:选择/移除交互 + 状态/进度展示;原生 File 经 onChange 的 meta 透出,真实上传由你的代码完成——组件不碰网络。',
+    'en-US': 'A controlled file list: pick/remove interactions with status/progress display; the native File rides out through onChange meta — your code does the actual upload.',
+  },
+  renderPreview: () => <UploadDemo />,
+  demos: [
+    {
+      id: 'basic',
+      title: { 'zh-CN': '选择与列表', 'en-US': 'Pick & list' },
+      description: {
+        'zh-CN': 'onChange(list, meta) 里拿到 meta.file(原生 File)自行上传,上传中把该项 status 设为 uploading 并更新 percent。maxCount 拦截超量选择。',
+        'en-US': 'Grab meta.file in onChange(list, meta) and upload it yourself; flip the item to status uploading with a live percent. maxCount caps picks.',
+      },
+      code: `
+const [files, setFiles] = useState<UploadFile[]>([]);
+
+<Upload
+  multiple
+  fileList={files}
+  onChange={(list, meta) => {
+    setFiles(list);
+    if (meta.type === 'add' && meta.file) uploadToServer(meta.file);
+  }}
+/>`,
+      render: () => <UploadDemo />,
+    },
+  ],
+  api: [
+    {
+      title: 'Upload',
+      rows: [
+        { prop: 'fileList / defaultFileList', type: 'UploadFile[]', description: { 'zh-CN': '受控 / 非受控文件列表', 'en-US': 'Controlled / uncontrolled file list' } },
+        { prop: 'onChange', type: '(list, meta: { file, type }) => void', description: { 'zh-CN': '增删回调,meta.file 为原生 File', 'en-US': 'Add/remove callback; meta.file is the native File' } },
+        { prop: 'accept / multiple', type: 'string / boolean', description: { 'zh-CN': '透传给文件选择器', 'en-US': 'Forwarded to the file picker' } },
+        { prop: 'maxCount', type: 'number', description: { 'zh-CN': '超量选择被忽略', 'en-US': 'Extra picks are ignored' } },
+        { prop: 'UploadFile.status', type: "'ready' | 'uploading' | 'done' | 'error'", description: { 'zh-CN': '由使用者驱动;uploading 配 percent 显示进度', 'en-US': 'Consumer-driven; uploading shows percent progress' } },
       ],
     },
   ],

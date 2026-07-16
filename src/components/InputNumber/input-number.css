@@ -1,0 +1,53 @@
+.lg-input-number {
+  display: inline-flex;
+}
+
+.lg-input-number__steppers {
+  display: inline-flex;
+  flex-direction: column;
+  gap: 1px;
+}
+
+.lg-input-number__step {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: var(--lg-space-4);
+  height: calc(var(--lg-control-h-sm) / 2 - 2px);
+  padding: 0;
+  border: none;
+  border-radius: var(--lg-radius-sm);
+  background: none;
+  color: var(--lg-text-secondary);
+  cursor: pointer;
+  transition: background var(--lg-duration-press) var(--lg-ease);
+}
+
+.lg-input-number__step:hover {
+  background: var(--lg-tint-hover);
+}
+
+.lg-input-number__step:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+
+.lg-input-number__arrow {
+  width: 0;
+  height: 0;
+  border-inline: var(--lg-space-1) solid transparent;
+}
+
+.lg-input-number__arrow[data-direction='up'] {
+  border-bottom: var(--lg-space-1) solid currentColor;
+}
+
+.lg-input-number__arrow[data-direction='down'] {
+  border-top: var(--lg-space-1) solid currentColor;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .lg-input-number__step {
+    transition: none;
+  }
+}

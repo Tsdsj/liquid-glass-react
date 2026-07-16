@@ -1,6 +1,7 @@
 import {
   Accordion,
   Avatar,
+  Timeline,
   Badge,
   Button,
   Card,
@@ -638,6 +639,67 @@ import { Accordion } from '@ttqtt/liquid-glass-react';
         { prop: 'multiple', type: 'boolean', defaultValue: 'false', description: { 'zh-CN': '允许多个同时展开', 'en-US': 'Allow multiple open' } },
         { prop: 'value / defaultValue', type: 'string[]', description: { 'zh-CN': '受控 / 非受控展开键', 'en-US': 'Controlled / uncontrolled open keys' } },
         { prop: 'onChange', type: '(keys: string[]) => void', description: { 'zh-CN': '展开变化', 'en-US': 'Open-change callback' } },
+      ],
+    },
+  ],
+};
+
+
+export const timelineDoc: ComponentDoc = {
+  slug: 'timeline',
+  name: 'Timeline',
+  title: { 'zh-CN': '时间线', 'en-US': 'Timeline' },
+  category: DISPLAY,
+  description: {
+    'zh-CN': '垂直时间线:节点走语义色 token,可自定义节点图标,连接线为装饰层。',
+    'en-US': 'A vertical timeline: token-coloured nodes, customizable dots, decorative connectors.',
+  },
+  renderPreview: () => (
+    <Timeline
+      items={[
+        { key: 'a', content: '创建项目', time: '09:00' },
+        { key: 'b', content: '部署成功', time: '10:30', color: 'success' },
+      ]}
+    />
+  ),
+  demos: [
+    {
+      id: 'basic',
+      title: { 'zh-CN': '语义色节点', 'en-US': 'Semantic nodes' },
+      description: {
+        'zh-CN': 'color 取 accent/success/warning/danger;dot 可放自定义图标。',
+        'en-US': 'color takes accent/success/warning/danger; dot accepts a custom glyph.',
+      },
+      code: `
+<Timeline
+  items={[
+    { key: 'a', content: '创建项目', time: '2026-07-01 09:00' },
+    { key: 'b', content: '部署成功', time: '2026-07-02 10:30', color: 'success' },
+    { key: 'c', content: '构建失败', time: '2026-07-03 14:00', color: 'danger' },
+  ]}
+/>`,
+      render: () => (
+        <div style={{ minWidth: 280 }}>
+          <Timeline
+            items={[
+              { key: 'a', content: '创建项目', time: '2026-07-01 09:00' },
+              { key: 'b', content: '部署成功', time: '2026-07-02 10:30', color: 'success' },
+              { key: 'c', content: '构建失败,已回滚', time: '2026-07-03 14:00', color: 'danger' },
+            ]}
+          />
+        </div>
+      ),
+    },
+  ],
+  api: [
+    {
+      title: 'Timeline / TimelineItem',
+      rows: [
+        { prop: 'items', type: 'TimelineItem[]', description: { 'zh-CN': '时间线条目', 'en-US': 'Timeline entries' } },
+        { prop: 'item.content', type: 'ReactNode', description: { 'zh-CN': '条目内容', 'en-US': 'Entry content' } },
+        { prop: 'item.time', type: 'ReactNode', description: { 'zh-CN': '时间标注', 'en-US': 'Timestamp' } },
+        { prop: 'item.color', type: "'accent' | 'success' | 'warning' | 'danger'", description: { 'zh-CN': '节点语义色', 'en-US': 'Node semantic colour' } },
+        { prop: 'item.dot', type: 'ReactNode', description: { 'zh-CN': '自定义节点图标', 'en-US': 'Custom node glyph' } },
       ],
     },
   ],

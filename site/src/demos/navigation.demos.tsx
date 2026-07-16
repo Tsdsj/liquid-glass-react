@@ -3,6 +3,7 @@ import {
   Breadcrumb,
   Button,
   Drawer,
+  Dropdown,
   GlassSurface,
   Menu,
   Pagination,
@@ -644,6 +645,68 @@ import { Steps } from '@ttqtt/liquid-glass-react';
         { prop: 'current', type: 'number', defaultValue: '0', description: { 'zh-CN': '当前步索引(0 基)', 'en-US': 'Active step index (0-based)' } },
         { prop: 'direction', type: "'horizontal' | 'vertical'", defaultValue: "'horizontal'", description: { 'zh-CN': '方向', 'en-US': 'Direction' } },
         { prop: 'size', type: "'sm' | 'md' | 'lg'", defaultValue: "'md'", description: { 'zh-CN': '尺寸', 'en-US': 'Size' } },
+      ],
+    },
+  ],
+};
+
+
+export const dropdownDoc: ComponentDoc = {
+  slug: 'dropdown',
+  name: 'Dropdown',
+  title: { 'zh-CN': '下拉菜单', 'en-US': 'Dropdown' },
+  category: NAVIGATION,
+  description: {
+    'zh-CN': '内置按钮触发的下拉菜单:Button + Menu 的薄组合,键盘导航/焦点管理/a11y 全部来自 Menu。',
+    'en-US': 'A dropdown with a built-in button trigger — a thin Button + Menu composition; keyboard, focus and a11y all come from Menu.',
+  },
+  renderPreview: () => (
+    <Dropdown label="更多操作" items={[{ key: 'edit', label: '编辑' }, { key: 'delete', label: '删除', danger: true }]} />
+  ),
+  demos: [
+    {
+      id: 'basic',
+      title: { 'zh-CN': '基础用法', 'en-US': 'Basic' },
+      description: {
+        'zh-CN': 'items 与 Menu 同构(分隔线/危险项/禁用项都支持);variant/size 透传给内置 Button。',
+        'en-US': 'items share Menu\'s shape (dividers, danger, disabled); variant/size forward to the built-in Button.',
+      },
+      code: `
+<Dropdown
+  label="更多操作"
+  variant="ghost"
+  items={[
+    { key: 'edit', label: '编辑' },
+    { key: 'duplicate', label: '复制' },
+    { type: 'divider' },
+    { key: 'delete', label: '删除', danger: true },
+  ]}
+  onSelect={(key) => console.log(key)}
+/>`,
+      render: () => (
+        <Dropdown
+          label="更多操作"
+          variant="ghost"
+          items={[
+            { key: 'edit', label: '编辑' },
+            { key: 'duplicate', label: '复制' },
+            { type: 'divider' },
+            { key: 'delete', label: '删除', danger: true },
+          ]}
+        />
+      ),
+    },
+  ],
+  api: [
+    {
+      title: 'Dropdown',
+      rows: [
+        { prop: 'items', type: 'MenuItem[]', description: { 'zh-CN': '菜单项(与 Menu 同构)', 'en-US': 'Menu entries (same shape as Menu)' } },
+        { prop: 'onSelect', type: '(key: string) => void', description: { 'zh-CN': '选择回调', 'en-US': 'Selection callback' } },
+        { prop: 'label', type: 'ReactNode', description: { 'zh-CN': '按钮文案', 'en-US': 'Trigger label' } },
+        { prop: 'variant', type: "ButtonProps['variant']", defaultValue: "'glass'", description: { 'zh-CN': '按钮变体', 'en-US': 'Button variant' } },
+        { prop: 'size', type: "'sm' | 'md' | 'lg'", defaultValue: "'md'", description: { 'zh-CN': '尺寸', 'en-US': 'Size' } },
+        { prop: 'disabled', type: 'boolean', defaultValue: 'false', description: { 'zh-CN': '禁用', 'en-US': 'Disabled' } },
       ],
     },
   ],

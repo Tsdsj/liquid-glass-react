@@ -1,0 +1,19 @@
+.lg-dropdown__caret {
+  width: 0;
+  height: 0;
+  margin-left: var(--lg-space-1);
+  border-inline: var(--lg-space-1) solid transparent;
+  border-top: calc(var(--lg-space-1) + 1px) solid currentColor;
+  opacity: 0.6;
+  transition: transform var(--lg-duration) var(--lg-ease);
+}
+
+.lg-dropdown__trigger[data-expanded] .lg-dropdown__caret {
+  transform: rotate(180deg);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .lg-dropdown__caret {
+    transition: none;
+  }
+}

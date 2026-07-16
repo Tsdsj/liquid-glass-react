@@ -4,6 +4,9 @@ import {
   datePickerDoc,
   formDoc,
   inputDoc,
+  inputNumberDoc,
+  rateDoc,
+  uploadDoc,
   selectDoc,
   sliderDoc,
   switchDoc,
@@ -20,6 +23,7 @@ import {
 import {
   breadcrumbDoc,
   drawerDoc,
+  dropdownDoc,
   menuDoc,
   paginationDoc,
   radioGroupDoc,
@@ -39,6 +43,7 @@ import {
   spinDoc,
   tableDoc,
   tagDoc,
+  timelineDoc,
 } from './display.demos';
 import type { ComponentDoc } from './types';
 
@@ -56,6 +61,9 @@ export const COMPONENT_DOCS: ComponentDoc[] = [
   selectDoc,
   sliderDoc,
   switchDoc,
+  inputNumberDoc,
+  rateDoc,
+  uploadDoc,
   datePickerDoc,
   formDoc,
   // Selection
@@ -67,6 +75,7 @@ export const COMPONENT_DOCS: ComponentDoc[] = [
   paginationDoc,
   sideNavDoc,
   drawerDoc,
+  dropdownDoc,
   menuDoc,
   stepsDoc,
   // Display
@@ -80,6 +89,7 @@ export const COMPONENT_DOCS: ComponentDoc[] = [
   tableDoc,
   emptyDoc,
   accordionDoc,
+  timelineDoc,
   // Feedback
   tooltipDoc,
   popoverDoc,

@@ -1,0 +1,83 @@
+.lg-timeline {
+  --lg-timeline-color: var(--lg-text-secondary);
+  display: flex;
+  flex-direction: column;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.lg-timeline__item {
+  display: flex;
+  gap: var(--lg-space-3);
+}
+
+.lg-timeline__item[data-color='accent'] {
+  --lg-timeline-color: var(--lg-accent);
+}
+
+.lg-timeline__item[data-color='success'] {
+  --lg-timeline-color: var(--lg-success);
+}
+
+.lg-timeline__item[data-color='warning'] {
+  --lg-timeline-color: var(--lg-warning);
+}
+
+.lg-timeline__item[data-color='danger'] {
+  --lg-timeline-color: var(--lg-danger);
+}
+
+.lg-timeline__rail {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--lg-space-1);
+}
+
+.lg-timeline__dot {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: var(--lg-space-3);
+  min-height: var(--lg-space-3);
+  border-radius: var(--lg-radius-full);
+  background: color-mix(in srgb, var(--lg-timeline-color) 22%, transparent);
+  box-shadow: inset 0 0 0 2px var(--lg-timeline-color);
+  color: var(--lg-timeline-color);
+  font-size: var(--lg-font-size-sm);
+  line-height: 1;
+}
+
+/* A custom glyph replaces the ring with a plain coloured node. */
+.lg-timeline__dot:not(:empty) {
+  padding: var(--lg-space-1);
+  box-shadow: none;
+}
+
+.lg-timeline__line {
+  flex: 1 1 auto;
+  width: calc(var(--lg-space-1) / 2);
+  min-height: var(--lg-space-4);
+  border-radius: var(--lg-radius-full);
+  background: color-mix(in srgb, var(--lg-text) 14%, transparent);
+}
+
+.lg-timeline__body {
+  min-width: 0;
+  padding-bottom: calc(var(--lg-space-4) * 1.25);
+}
+
+.lg-timeline__item:last-child .lg-timeline__body {
+  padding-bottom: 0;
+}
+
+.lg-timeline__time {
+  color: var(--lg-text-secondary);
+  font-size: var(--lg-font-size-sm);
+}
+
+.lg-timeline__content {
+  color: var(--lg-text);
+  line-height: 1.5;
+}

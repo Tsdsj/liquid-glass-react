@@ -11,9 +11,11 @@
   (default / midnight / warm),`LiquidGlassConfig` 增 `theme` 作用域套用。
 - **进阶引擎转正**:`ProgressiveBlur` 渐进模糊、`useAmbientFromImage` 环境取样
   由内部实验提升为公共 API。
-- **8 个新组件**:Form(自写校验的受控表单)、Table(排序/选中/分页)、DatePicker
-  (自写日期算法 + 键盘日历)、Alert、Accordion、Command(⌘K 命令面板)、Empty、Steps
-  —— 组件总数 27 → 35。
+- **13 个新组件**:Form(自写校验的受控表单)、Table(排序/选中/分页/展开行)、DatePicker
+  (自写日期算法 + 键盘日历)、Alert、Accordion、Command(⌘K 命令面板)、Empty、Steps、
+  Dropdown、InputNumber、Rate、Timeline、Upload(受控文件列表)—— 组件总数 27 → 40。
+- **既有组件增强**:Select 多选 + 搜索、Table 展开行、`Modal.confirm()` 命令式确认、
+  Tabs 可关闭页签(全部向后兼容)。
 - **交互动效**:交互面板 hover 升起(`--lg-hover-lift`)与更跟手的按压时长
   (`--lg-duration-press`),reduced-motion 全降级。
 - **文档站**:props playground(交互调参)、`/` 键站内搜索(Command 驱动)、
