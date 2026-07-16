@@ -2,7 +2,7 @@ import { useMemo, useState } from 'react';
 import { Input } from '@ttqtt/liquid-glass-react';
 import { ComponentSidebar, getComponentGroups } from '../components/ComponentSidebar';
 import { COMPONENT_DOCS } from '../demos/registry';
-import { SITE_COPY, useSiteLocale, useT } from '../site-i18n';
+import { getComponentsSubtitle, SITE_COPY, useSiteLocale, useT } from '../site-i18n';
 import { PHOTO_WALLPAPER } from '../wallpaper';
 
 function toGroupId(groupName: string): string {
@@ -45,9 +45,17 @@ export function ComponentsPage() {
         <header className="site-page-header">
           <span className="site-page-kicker">{t(SITE_COPY.brand)}</span>
           <h1 className="site-section__title">{t(SITE_COPY.componentsTitle)}</h1>
-          <p className="site-page-header__description">{t(SITE_COPY.componentsSubtitle)}</p>
+          <p className="site-page-header__description">
+            {t(getComponentsSubtitle(COMPONENT_DOCS.length))}
+          </p>
           <Input
             className="site-components-search"
+            size="lg"
+            prefix={
+              <span className="site-components-search__icon" aria-hidden="true">
+                ⌕
+              </span>
+            }
             placeholder={t(SITE_COPY.searchPlaceholder)}
             aria-label={t(SITE_COPY.searchPlaceholder)}
             value={keyword}

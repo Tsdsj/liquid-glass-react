@@ -56,11 +56,18 @@ describe('docs site', () => {
     const user = userEvent.setup();
     render(<App />);
 
+    expect(
+      screen.getByText(`${COMPONENT_DOCS.length} 个玻璃组件`, { exact: false }),
+    ).toBeInTheDocument();
+
     for (const doc of COMPONENT_DOCS) {
       expect(screen.getByTestId(`component-card-${doc.slug}`)).toBeInTheDocument();
     }
 
-    await user.type(screen.getByRole('textbox', { name: '搜索组件' }), 'button');
+    const searchInput = screen.getByRole('textbox', { name: '搜索组件' });
+    expect(searchInput.closest('.lg-input')).toHaveClass('site-components-search');
+
+    await user.type(searchInput, 'button');
     expect(screen.getByTestId('component-card-button')).toBeInTheDocument();
     expect(screen.queryByTestId('component-card-select')).not.toBeInTheDocument();
 

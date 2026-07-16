@@ -7,7 +7,7 @@ import {
   Switch,
 } from '@ttqtt/liquid-glass-react';
 import { COMPONENT_DOCS } from '../demos/registry';
-import { SITE_COPY, useT, type Bilingual } from '../site-i18n';
+import { getComponentsSubtitle, SITE_COPY, useT, type Bilingual } from '../site-i18n';
 import { PHOTO_WALLPAPER } from '../wallpaper';
 
 const QUICK_START_CODE = `pnpm add @ttqtt/liquid-glass-react
@@ -120,7 +120,9 @@ export function HomePage() {
           <header className="site-section__header">
             <div>
               <h2 className="site-section__title">{t(SITE_COPY.featureTitle)}</h2>
-              <p className="site-section__subtitle">{t(SITE_COPY.componentsSubtitle)}</p>
+              <p className="site-section__subtitle">
+                {t(getComponentsSubtitle(COMPONENT_DOCS.length))}
+              </p>
             </div>
           </header>
           <div className="site-feature-grid">

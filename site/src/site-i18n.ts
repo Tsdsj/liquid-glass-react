@@ -18,6 +18,13 @@ export function useT(): (copy: Bilingual) => string {
   return (copy) => copy[locale];
 }
 
+export function getComponentsSubtitle(count: number): Bilingual {
+  return {
+    'zh-CN': `${count} 个玻璃组件,覆盖通用控件、数据录入、选择导航、容器展示与浮层反馈。`,
+    'en-US': `${count} glass components across general controls, data entry, selection/navigation, containers/display and overlay feedback.`,
+  };
+}
+
 export const SITE_COPY = {
   brand: { 'zh-CN': 'Liquid Glass React', 'en-US': 'Liquid Glass React' },
   navHome: { 'zh-CN': '首页', 'en-US': 'Home' },
@@ -72,10 +79,6 @@ export const SITE_COPY = {
   },
   viewAllComponents: { 'zh-CN': '查看全部组件', 'en-US': 'View all components' },
   componentsTitle: { 'zh-CN': '组件总览', 'en-US': 'Components' },
-  componentsSubtitle: {
-    'zh-CN': '27 个玻璃组件,覆盖通用控件、数据录入、选择导航、容器展示与浮层反馈。',
-    'en-US': '27 glass components across general controls, data entry, selection/navigation, containers/display and overlay feedback.',
-  },
   searchPlaceholder: { 'zh-CN': '搜索组件', 'en-US': 'Search components' },
   searchEmpty: { 'zh-CN': '没有匹配的组件', 'en-US': 'No matching components' },
   overviewLabel: { 'zh-CN': '组件总览', 'en-US': 'Overview' },

@@ -1,16 +1,46 @@
 .lg-table-surface {
+  --lg-table-glass-tint: color-mix(
+    in srgb,
+    var(--lg-tint-hover) 84%,
+    var(--lg-highlight) 16%
+  );
+  --lg-table-header-background: color-mix(in srgb, var(--lg-tint-hover) 55%, transparent);
+  --lg-table-row-hover-background: color-mix(
+    in srgb,
+    var(--lg-tint-hover) 62%,
+    transparent
+  );
+  --lg-table-row-selected-background: color-mix(
+    in srgb,
+    var(--lg-accent) 28%,
+    transparent
+  );
+  --lg-table-border-color: color-mix(in srgb, var(--lg-text) 14%, transparent);
+  --lg-table-checkbox-background: color-mix(in srgb, var(--lg-tint-hover) 72%, transparent);
+  --lg-table-checkbox-border: color-mix(in srgb, var(--lg-text) 18%, transparent);
+  --lg-surface-tint: var(--lg-table-glass-tint);
   --lg-r: var(--lg-radius-lg);
+  box-sizing: border-box;
+  width: 100%;
+  min-width: 0;
   display: flex;
   flex-direction: column;
   padding: 0;
 }
 
+.lg-table-surface > .lg-surface__content {
+  overflow: hidden;
+  border-radius: inherit;
+}
+
 .lg-table-scroll {
+  min-width: 0;
   overflow-x: auto;
 }
 
 .lg-table {
   width: 100%;
+  min-width: 100%;
   border-collapse: collapse;
   color: var(--lg-text);
   font-size: var(--lg-font-size-md);
@@ -18,6 +48,10 @@
 
 .lg-table[data-size='sm'] {
   font-size: var(--lg-font-size-sm);
+}
+
+.lg-table[data-size='lg'] {
+  font-size: var(--lg-font-size-lg);
 }
 
 .lg-table th,
@@ -32,21 +66,26 @@
   padding: var(--lg-space-2) var(--lg-space-3);
 }
 
+.lg-table[data-size='lg'] th,
+.lg-table[data-size='lg'] td {
+  padding: var(--lg-space-4);
+}
+
 .lg-table thead th {
-  /* Header tint only — the glass itself is the surrounding GlassSurface, so no
-     backdrop-filter lives here (per the engine rule). */
+  /* The surrounding GlassSurface supplies refraction and blur. The header only
+     adds another translucent tint layer so the wallpaper still reads as glass. */
   position: sticky;
   top: 0;
   z-index: 1;
   color: var(--lg-text-secondary);
   font-weight: 600;
-  background: var(--lg-tint);
-  border-bottom: 1px solid var(--lg-shade);
+  background: var(--lg-table-header-background);
+  border-bottom: 1px solid var(--lg-table-border-color);
 }
 
 .lg-table tbody tr {
   transition: background var(--lg-duration-press) var(--lg-ease);
-  border-bottom: 1px solid var(--lg-shade);
+  border-bottom: 1px solid var(--lg-table-border-color);
 }
 
 .lg-table tbody tr:last-child {
@@ -54,16 +93,24 @@
 }
 
 .lg-table tbody tr:hover {
-  background: var(--lg-tint);
+  background: var(--lg-table-row-hover-background);
 }
 
 .lg-table tbody tr[data-selected] {
-  background: var(--lg-accent-glass);
+  background: var(--lg-table-row-selected-background);
 }
 
 .lg-table__selection {
   width: 1%;
   white-space: nowrap;
+}
+
+.lg-table .lg-checkbox {
+  --lg-checkbox-box-color: var(--lg-table-checkbox-background);
+}
+
+.lg-table .lg-checkbox__box {
+  box-shadow: inset 0 0 0 1px var(--lg-table-checkbox-border);
 }
 
 .lg-table__sort {
@@ -86,20 +133,37 @@
 }
 
 .lg-table__sort-arrow {
+  position: relative;
+  width: var(--lg-space-2);
+  height: var(--lg-space-3);
+  flex: 0 0 auto;
+}
+
+.lg-table__sort-arrow::before,
+.lg-table__sort-arrow::after {
+  position: absolute;
+  left: 0;
   width: 0;
   height: 0;
-  border-inline: 4px solid transparent;
-  border-bottom: 5px solid currentColor;
-  opacity: 0.25;
-  transition: transform var(--lg-duration) var(--lg-ease), opacity var(--lg-duration) var(--lg-ease);
+  border-inline: var(--lg-space-1) solid transparent;
+  content: '';
+  opacity: 0.28;
+  transition: opacity var(--lg-duration) var(--lg-ease);
 }
 
-.lg-table__sort[data-order] .lg-table__sort-arrow {
-  opacity: 0.9;
+.lg-table__sort-arrow::before {
+  top: 0;
+  border-bottom: calc(var(--lg-space-1) + 1px) solid currentColor;
 }
 
-.lg-table__sort[data-order='desc'] .lg-table__sort-arrow {
-  transform: rotate(180deg);
+.lg-table__sort-arrow::after {
+  bottom: 0;
+  border-top: calc(var(--lg-space-1) + 1px) solid currentColor;
+}
+
+.lg-table__sort[data-order='asc'] .lg-table__sort-arrow::before,
+.lg-table__sort[data-order='desc'] .lg-table__sort-arrow::after {
+  opacity: 0.95;
 }
 
 .lg-table__empty {
@@ -110,13 +174,17 @@
 
 .lg-table__pagination {
   display: flex;
+  min-width: 0;
   justify-content: flex-end;
+  border-top: 1px solid var(--lg-table-border-color);
   padding: var(--lg-space-3) var(--lg-space-4);
+  background: var(--lg-table-header-background);
 }
 
 @media (prefers-reduced-motion: reduce) {
   .lg-table tbody tr,
-  .lg-table__sort-arrow {
+  .lg-table__sort-arrow::before,
+  .lg-table__sort-arrow::after {
     transition: none;
   }
 }

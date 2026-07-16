@@ -3,6 +3,7 @@ import {
   Breadcrumb,
   Button,
   Drawer,
+  GlassSurface,
   Menu,
   Pagination,
   Radio,
@@ -592,10 +593,12 @@ import { Steps } from '@ttqtt/liquid-glass-react';
   ]}
 />`,
       render: () => (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 28, width: 460 }}>
-          <Steps items={STEP_ITEMS} current={1} />
-          <Steps items={STEP_ITEMS} current={1} direction="vertical" />
-        </div>
+        <GlassSurface className="site-steps-demo-surface">
+          <div className="site-steps-demo-surface__content">
+            <Steps items={STEP_ITEMS} current={1} />
+            <Steps items={STEP_ITEMS} current={1} direction="vertical" />
+          </div>
+        </GlassSurface>
       ),
     },
   ],

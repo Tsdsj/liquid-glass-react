@@ -20,8 +20,11 @@ describe('Steps', () => {
     expect(listitems[2]).not.toHaveAttribute('aria-current');
   });
 
-  it('reflects direction', () => {
-    const { container } = render(<Steps items={ITEMS} current={0} direction="vertical" />);
+  it('reflects direction and size', () => {
+    const { container } = render(
+      <Steps items={ITEMS} current={0} direction="vertical" size="lg" />,
+    );
     expect(container.querySelector('.lg-steps')).toHaveAttribute('data-direction', 'vertical');
+    expect(container.querySelector('.lg-steps')).toHaveAttribute('data-size', 'lg');
   });
 });
