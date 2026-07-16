@@ -176,6 +176,7 @@ describe('docs site', () => {
     expect(screen.getByTestId('guide-browsers')).toBeInTheDocument();
     expect(screen.getByTestId('guide-advanced')).toHaveTextContent('ProgressiveBlur');
     expect(screen.getByTestId('ambient-demo')).toBeInTheDocument();
+    expect(screen.getByTestId('guide-tips')).toHaveTextContent('valuePropName');
     const themingDemo = screen.getByTestId('theming-demo');
     expect(themingDemo).toBeInTheDocument();
     // Full token reference is rendered from the drift-checked table.

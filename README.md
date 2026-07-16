@@ -13,9 +13,12 @@
 ## 亮点
 
 - **会折射的玻璃** — 玻璃边缘真实折射身后的内容,光影随指针流动,不是一张模糊贴图。
+- **成套的组件面** — 从按钮开关到 Form 表单、Table 表格、DatePicker 日历、⌘K 命令面板,
+  录入/导航/展示/反馈一套配齐,还有 ProgressiveBlur 渐进模糊与环境取样两件进阶引擎。
 - **处处都好看** — 不支持折射的浏览器自动换成细腻毛玻璃;暗色、高对比、减少动效都照顾到。
 - **人人可用** — 每个组件都能用键盘操作,焦点清晰,读屏友好;按下的玻璃回馈鼠标键盘一致。
-- **随心换装** — 强调色、圆角、模糊、环境色随手可调,亮暗主题一键切换。
+- **随心换装** — `createTheme` 一行生成类型安全的主题,或直接套 `presetThemes` 预设;
+  强调色、圆角、模糊、环境色随手可调,亮暗主题一键切换。
 
 ## 安装
 
@@ -62,6 +65,21 @@ export function App() {
   --lg-radius-md: 18px;
 }
 ```
+
+也可以在 JS 侧用 `createTheme` 生成类型安全的覆盖对象(spread 到任意容器即作用域生效),
+或经 `LiquidGlassConfig` 的 `theme` 全局套用预设:
+
+```tsx
+import { createTheme, LiquidGlassConfig, presetThemes } from '@ttqtt/liquid-glass-react';
+
+<div style={createTheme({ accent: '#7c3aed', radiusMd: '18px' })}>…</div>
+
+<LiquidGlassConfig theme={presetThemes.midnight}>
+  <App />
+</LiquidGlassConfig>
+```
+
+全量 token 参考表见文档站「指南 → 定制主题」。
 
 ## 服务端渲染 / Next.js
 

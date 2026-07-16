@@ -138,6 +138,26 @@ function Hero({ src }) {
       'en-US': 'Glass suits overlays and controls; use refraction="off" for long list items. Filters are shared per shape automatically, and nested glass disables inner refraction for you.',
     },
   },
+  {
+    id: 'tips',
+    title: { 'zh-CN': '常见用法要点', 'en-US': 'Usage tips' },
+    body: {
+      'zh-CN': '来自真实装包审计的几个要点:① toast 需要先挂一次 <Toaster/>,否则不会显示(开发模式会警告);② Form 里的布尔控件(Checkbox/Switch)要声明 valuePropName/trigger;③ Modal/Drawer 是纯受控组件,open 与 onOpenChange 必传;④ Slider/Switch/Segmented 等无可见文本的控件请自备 aria-label;⑤ 在 TSX 里内联写 --lg-* 变量需要一次类型断言,主题场景直接用 createTheme 更顺。',
+      'en-US': 'Field notes from the real-install audit: (1) toast needs a <Toaster/> mounted once, or nothing shows (dev mode warns); (2) boolean controls inside Form (Checkbox/Switch) need valuePropName/trigger; (3) Modal/Drawer are fully controlled — open and onOpenChange are required; (4) give text-less controls (Slider/Switch/Segmented, …) an aria-label; (5) inline --lg-* variables in TSX need a type assertion — reach for createTheme instead when theming.',
+    },
+    code: `// ① toast 前先挂宿主
+<Toaster />
+toast.success('已保存');
+
+// ② Form 布尔控件声明受控 prop 名与事件名
+<FormItem name="agree" valuePropName="checked" trigger="onCheckedChange" required>
+  <Checkbox>同意条款</Checkbox>
+</FormItem>
+
+// ⑤ 内联 --lg-* 变量 vs createTheme
+<div style={{ ['--lg-accent' as string]: '#7c3aed' }}>…</div>   // 需断言
+<div style={createTheme({ accent: '#7c3aed' })}>…</div>          // 类型安全`,
+  },
 ];
 
 export function GuidePage() {

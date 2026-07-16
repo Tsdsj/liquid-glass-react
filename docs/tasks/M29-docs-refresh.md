@@ -1,5 +1,5 @@
 ---
-status: todo
+status: done
 depends: [M28]
 ---
 
@@ -54,4 +54,20 @@ depends: [M28]
 
 ## 完成记录
 
-（实现后追加）
+- **计数核准**:唯一事实源=站点目录 `COMPONENT_DOCS`(35 条,站点文案本就 `length` 派生)。
+  README 的「35 个组件」经核已准(另一 agent 先行修正);CHANGELOG [0.1.0] 的「27 个组件」是
+  历史版本记录,**不改**。新增**防漂移测试** `site/src/docs-consistency.test.ts`:README 计数
+  正则提取 === `COMPONENT_DOCS.length`、CHANGELOG Unreleased 含 `→ 35`——后续组件卡加组件时
+  该测试会强制同步文档。
+- **README 刷新**:亮点新增「成套的组件面」(Form/Table/DatePicker/命令面板 + 两件进阶引擎)、
+  「随心换装」补 createTheme/presetThemes;主题章节增 JS 侧 `createTheme` + `LiquidGlassConfig
+  theme` 代码示例与 token 参考表指路。安装/三行上手/浏览器支持/SSR 章节核对无误未动。
+- **指南页**:新增「常见用法要点 / Usage tips」章节(自动进页内导航),沉淀 M28 审计五要点——
+  ①toast 需先挂 `<Toaster/>`(DEV 会警告)②Form 布尔控件 `valuePropName/trigger`
+  ③Modal/Drawer 纯受控 ④无文本控件自备 aria-label ⑤内联 `--lg-*` 需断言、主题用 createTheme;
+  附对照代码块,中英双语。
+- **CHANGELOG**:新增「未发布 / Unreleased」——主题 API、进阶引擎转正、8 个新组件(27→35)、
+  交互动效、文档站(playground/搜索/浅色可读性/演示沙箱)、toast 警告修复、smoke:consumer,
+  为 v0.2.0 发版备好;不打 tag(用户触发)。
+- **测试**:docs-consistency 2 条 + App.test 指南 tips 断言 1 条。
+- 验证:`pnpm typecheck` ✓、`pnpm build` ✓、`pnpm test` **547/547 绿**(+2)、`pnpm site:build` ✓。
