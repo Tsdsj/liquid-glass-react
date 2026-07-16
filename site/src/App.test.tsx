@@ -1,4 +1,4 @@
-import { act, fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { act, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { COMPONENT_DOCS } from './demos/registry';
@@ -181,6 +181,19 @@ describe('docs site', () => {
     // Full token reference is rendered from the drift-checked table.
     expect(themingDemo).toHaveTextContent('--lg-accent');
     expect(themingDemo).toHaveTextContent('--lg-radius-md');
+  });
+
+  it('sandboxes demo navigation — clicking a breadcrumb demo link keeps the route', async () => {
+    const user = userEvent.setup();
+    window.location.hash = '#/components/breadcrumb';
+    render(<App />);
+
+    const demoStage = screen.getAllByTestId('demo-block')[0];
+    const homeLink = within(demoStage).getAllByRole('link', { name: /首页/ })[0];
+    await user.click(homeLink);
+
+    expect(window.location.hash).toBe('#/components/breadcrumb');
+    expect(await screen.findByText(/演示沙箱/)).toBeInTheDocument();
   });
 
   it('opens the search palette with "/" and jumps to a component', async () => {

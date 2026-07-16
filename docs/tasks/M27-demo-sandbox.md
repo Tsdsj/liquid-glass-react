@@ -1,5 +1,5 @@
 ---
-status: todo
+status: done
 depends: [M26]
 ---
 
@@ -55,4 +55,19 @@ depends: [M26]
 
 ## 完成记录
 
-（实现后追加）
+- **沙箱拦截**(`site/src/components/DemoBlock.tsx`):舞台容器加 `onClickCapture`——
+  `event.target.closest('a[href]')` 命中且 href 以 `#/` 开头时 `preventDefault()`;拦截时
+  `toast.info` 提示(新 i18n 键 `demoNavBlocked`,模块级 1.5s 节流防连点轰炸)。组件自身的
+  选中/hover/焦点/键盘行为不受影响;非站点路由 anchor 不拦。**组件库源码零改动**,只动 `site/`。
+- **守卫扫描测试**(`site/src/demos/demo-sandbox.test.tsx`,RED→GREEN):遍历 `COMPONENT_DOCS`
+  全部 demo 渲染进 DemoBlock,对每个静态渲染的 `a[href^="#/"]` 断言 `fireEvent.click` 返回
+  false(= preventDefault 已调用)且 hash 不变——**对未来新 demo 自动生效**。另一条「非空洞」
+  断言:全站 demo 路由锚点总数 ≥4(Breadcrumb/SideNav 各若干),防扫描退化成空转。
+  RED 时恰好 breadcrumb/sidenav 两组失败,GREEN 后 36/36。
+- **App 集成断言**:`#/components/breadcrumb` 详情页点击演示内「首页」链接 → hash 不变 +
+  沙箱提示出现。
+- **演示约定**(后续 demo 遵守):演示数据 href 允许保留真实形态(展示语义,由沙箱拦截);
+  演示不得直接调用 `window.location` 等站点级 API(toast 反馈豁免)。
+- 验证:`pnpm typecheck` ✓、`pnpm build` ✓、`pnpm test` **543/543 绿**(+37:扫描 36 + App 1;
+  基线含另一 agent 并行加的测试)、`pnpm site:build` ✓。
+- **留本地目检**:拦截提示 toast 的观感与节流手感。

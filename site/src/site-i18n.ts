@@ -92,6 +92,10 @@ export const SITE_COPY = {
   showCode: { 'zh-CN': '显示代码', 'en-US': 'Show code' },
   hideCode: { 'zh-CN': '收起代码', 'en-US': 'Hide code' },
   copyCode: { 'zh-CN': '复制代码', 'en-US': 'Copy code' },
+  demoNavBlocked: {
+    'zh-CN': '演示沙箱:导航已拦截,不影响站点页面',
+    'en-US': 'Demo sandbox: navigation intercepted, the site stays put',
+  },
   copied: { 'zh-CN': '代码已复制', 'en-US': 'Code copied' },
   copyFailed: { 'zh-CN': '复制失败,请手动复制', 'en-US': 'Copy failed, please copy manually' },
   propColumn: { 'zh-CN': '属性', 'en-US': 'Prop' },

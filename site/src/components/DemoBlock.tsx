@@ -1,4 +1,4 @@
-import { useState, type ReactNode } from 'react';
+import { useState, type MouseEvent, type ReactNode } from 'react';
 import { Button, toast } from '@ttqtt/liquid-glass-react';
 import { SITE_COPY, useT, type Bilingual } from '../site-i18n';
 
@@ -18,6 +18,10 @@ async function copyToClipboard(text: string): Promise<boolean> {
   }
 }
 
+// One hint at a time across all stages — rapid clicks shouldn't stack toasts.
+let lastBlockedHintAt = 0;
+const BLOCKED_HINT_INTERVAL = 1500;
+
 export function DemoBlock({ title, description, code, children }: DemoBlockProps) {
   const t = useT();
   const [showCode, setShowCode] = useState(false);
@@ -31,9 +35,28 @@ export function DemoBlock({ title, description, code, children }: DemoBlockProps
     }
   };
 
+  // Demo sandbox (M27): demos render real components whose anchors carry
+  // genuine `#/…` hrefs (Breadcrumb, SideNav, …). Swallow the navigation in the
+  // capture phase so the site router never moves; every other interaction
+  // (selection state, hover, focus, keyboard) stays real.
+  const handleStageClickCapture = (event: MouseEvent<HTMLDivElement>) => {
+    const target = event.target instanceof Element ? event.target : null;
+    const anchor = target?.closest('a[href]');
+    if (anchor?.getAttribute('href')?.startsWith('#/')) {
+      event.preventDefault();
+      const now = Date.now();
+      if (now - lastBlockedHintAt > BLOCKED_HINT_INTERVAL) {
+        lastBlockedHintAt = now;
+        toast.info(t(SITE_COPY.demoNavBlocked));
+      }
+    }
+  };
+
   return (
     <section className="site-demo" data-testid="demo-block">
-      <div className="site-demo__stage">{children}</div>
+      <div className="site-demo__stage" onClickCapture={handleStageClickCapture}>
+        {children}
+      </div>
       <div className="site-demo__meta">
         <div>
           <h3 className="site-demo__title">{t(title)}</h3>
