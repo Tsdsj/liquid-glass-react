@@ -441,3 +441,33 @@ Popover/Tooltip/Modal/Toast。
 
 每卡沿用既有约定：`pnpm typecheck && pnpm build && pnpm test` 通过、更新任务卡状态、
 一卡一或多提交、存量断言不削弱。
+
+### 五阶段 — 打磨·验证·扩容（M27–M32，规划中）
+
+主题：站在四阶段的完整组件面上，先修**文档站演示体验痛点**（演示内交互真实跳转站点），
+再以**真实消费者视角装包审计**组件的实际可用性并修复，刷新使用文档，最后按需求继续扩容。
+共识决策：
+
+| 决策 | 结论 |
+|---|---|
+| 演示隔离 | 演示区内的组件交互（面包屑/侧导航等真实 `href`）不得改变站点路由；建立「演示无真实导航/副作用」约定 + 守卫测试 |
+| 审计深度 | **真实装包验证**：独立临时项目 `pnpm add` 打包产物，逐组件写最小使用代码验证默认值/类型/CSS/SSR，问题回库修复，沉淀可重跑脚本 |
+| 文档刷新时机 | 审计（改 API/发现坑）之后、组件扩容之前；新组件按惯例各自卡内自带 site 文档 |
+| 组件线 | 三块全做：丰富既有（Select 多选搜索、Table 展开行、Modal confirm、Tabs 可关闭）+ 新组件批（Dropdown/InputNumber/Rate/Timeline/Upload）+ 日期线补全（RangePicker/TimePicker） |
+| 明确排除 | 视觉回归截图基线；真实上传请求封装；虚拟滚动等大数据性能项 |
+
+里程碑（串行 M27→M32）：
+
+- **M27 演示沙箱隔离**：DemoBlock 舞台拦截演示内真实导航（anchor preventDefault + 提示），
+  全量 demo 守卫测试（点击演示内链接 hash 不变）。
+- **M28 消费者装包审计**：`pnpm pack` 产物装进独立最小项目（Vite+React），逐组件最小用例
+  验证导入即用性（默认值/类型提示/CSS/SSR），发现问题回库修复；沉淀 `smoke:consumer` 脚本。
+- **M29 站点使用文档刷新**：README/指南/CHANGELOG 同步当前全量组件与 M19–M26 新特性，
+  组件计数核准，M28 审计发现的用法要点写进指南。
+- **M30 既有组件丰富**：Select 多选+搜索、Table 展开行、`Modal.confirm()` 命令式、Tabs 可关闭页签
+  （均为早期卡的非目标，现转正）。
+- **M31 新组件批**：Dropdown、InputNumber、Rate、Timeline、Upload（受控文件列表，不封装请求）。
+- **M32 RangePicker / TimePicker**：复用 M24 日期纯函数与 Calendar，范围选择 + 时间选择，日期线收尾。
+
+每卡沿用既有约定：`pnpm typecheck && pnpm build && pnpm test` 通过、更新任务卡状态、
+一卡一或多提交、存量断言不削弱、无新增运行时依赖。
