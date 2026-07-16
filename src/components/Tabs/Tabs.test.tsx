@@ -159,4 +159,51 @@ describe('Tabs', () => {
     await user.click(screen.getByRole('tab', { name: 'FAQ' }));
     expect(screen.getByText('FAQ panel')).toBeInTheDocument();
   });
+
+  describe('closable tabs (M30)', () => {
+    const CLOSABLE_ITEMS = [
+      { key: 'a', label: 'Alpha', content: 'A', closable: true },
+      { key: 'b', label: 'Beta', content: 'B', closable: true },
+      { key: 'c', label: 'Gamma', content: 'C' },
+    ];
+
+    it('renders a close button only for closable items and fires onClose without activating', async () => {
+      const user = userEvent.setup();
+      const onClose = vi.fn();
+      const onChange = vi.fn();
+      render(
+        <Tabs aria-label="docs" items={CLOSABLE_ITEMS} onClose={onClose} onChange={onChange} />,
+      );
+
+      const closeButtons = screen.getAllByRole('button', { name: '关闭页签' });
+      expect(closeButtons).toHaveLength(2);
+
+      // Close Beta (inactive) — must not select it.
+      await user.click(closeButtons[1]);
+      expect(onClose).toHaveBeenCalledWith('b');
+      expect(onChange).not.toHaveBeenCalled();
+      expect(screen.getByRole('tab', { name: 'Alpha' })).toHaveAttribute('aria-selected', 'true');
+    });
+
+    it('fires onClose from the keyboard via Delete on a focused closable tab', async () => {
+      const user = userEvent.setup();
+      const onClose = vi.fn();
+      render(<Tabs aria-label="docs" items={CLOSABLE_ITEMS} onClose={onClose} />);
+
+      screen.getByRole('tab', { name: 'Alpha' }).focus();
+      await user.keyboard('{Delete}');
+      expect(onClose).toHaveBeenCalledWith('a');
+
+      // Non-closable tab ignores Delete.
+      onClose.mockClear();
+      screen.getByRole('tab', { name: 'Gamma' }).focus();
+      await user.keyboard('{Delete}');
+      expect(onClose).not.toHaveBeenCalled();
+    });
+
+    it('renders no close affordance without closable items (backward compat)', () => {
+      render(<Tabs aria-label="docs" items={ITEMS} />);
+      expect(screen.queryByRole('button', { name: '关闭页签' })).not.toBeInTheDocument();
+    });
+  });
 });

@@ -8,6 +8,7 @@ import {
   type KeyboardEvent,
   type ReactNode,
 } from 'react';
+import { useLiquidGlassContext } from '../../core/config/LiquidGlassConfig';
 import { GlassSurface } from '../../core/GlassSurface';
 import { useControllableState } from '../../core/hooks/useControllableState';
 import { useSlidingIndicator } from '../../core/hooks/useSlidingIndicator';
@@ -17,6 +18,8 @@ export interface TabItem {
   label: ReactNode;
   disabled?: boolean;
   content?: ReactNode;
+  /** Show a close affordance (M30). Removal itself stays with the consumer via onClose. */
+  closable?: boolean;
 }
 
 export interface TabsProps {
@@ -24,9 +27,13 @@ export interface TabsProps {
   value?: string;
   defaultValue?: string;
   onChange?: (key: string) => void;
+  /** Notified when a closable tab's close button (or Delete key) fires; update `items` yourself. */
+  onClose?: (key: string) => void;
   size?: 'sm' | 'md' | 'lg';
   'aria-label'?: string;
 }
+
+const CLOSE_LABEL = { 'zh-CN': '关闭页签', 'en-US': 'Close tab' } as const;
 
 function assignRef(ref: ForwardedRef<HTMLDivElement>, value: HTMLDivElement | null): void {
   if (typeof ref === 'function') {
@@ -41,10 +48,11 @@ function firstEnabledKey(items: TabItem[]): string {
 }
 
 export const Tabs = /* @__PURE__ */ forwardRef<HTMLDivElement, TabsProps>(function Tabs(
-  { items, value, defaultValue, onChange, size = 'md', 'aria-label': ariaLabel },
+  { items, value, defaultValue, onChange, onClose, size = 'md', 'aria-label': ariaLabel },
   forwardedRef,
 ) {
   const baseId = useId();
+  const { locale } = useLiquidGlassContext();
   const [currentValue, setCurrentValue] = useControllableState({
     value,
     defaultValue: defaultValue ?? firstEnabledKey(items),
@@ -52,8 +60,10 @@ export const Tabs = /* @__PURE__ */ forwardRef<HTMLDivElement, TabsProps>(functi
   });
 
   const listRef = useRef<HTMLDivElement | null>(null);
-  const activeRef = useRef<HTMLButtonElement | null>(null);
-  const tabsRef = useRef<Map<string, HTMLButtonElement>>(new Map());
+  // The indicator measures the item wrapper (tab + optional close button), so a
+  // closable pill covers both.
+  const activeRef = useRef<HTMLElement | null>(null);
+  const tabsRef = useRef<Map<string, HTMLElement>>(new Map());
 
   // Declared before the sliding-indicator hook so it points activeRef at the
   // selected tab before the indicator measures.
@@ -93,6 +103,17 @@ export const Tabs = /* @__PURE__ */ forwardRef<HTMLDivElement, TabsProps>(functi
     }
     const currentIndex = tabs.findIndex((tab) => tab === event.target);
     const startIndex = currentIndex >= 0 ? currentIndex : 0;
+
+    // WAI-ARIA "tabs with removal": Delete closes the focused closable tab.
+    if (event.key === 'Delete') {
+      const target = event.target as HTMLButtonElement;
+      const item = items.find((candidate) => candidate.key === target.value);
+      if (item?.closable) {
+        event.preventDefault();
+        onClose?.(item.key);
+      }
+      return;
+    }
 
     let nextIndex: number | null = null;
     if (event.key === 'ArrowRight' || event.key === 'ArrowDown') {
@@ -136,8 +157,13 @@ export const Tabs = /* @__PURE__ */ forwardRef<HTMLDivElement, TabsProps>(functi
         {items.map((item) => {
           const selected = item.key === currentValue;
           return (
-            <button
+            // The wrapper groups the tab with its optional close button — a
+            // nested <button> inside the tab would be invalid/nested-interactive.
+            <div
               key={item.key}
+              role="presentation"
+              className="lg-tabs__item"
+              data-selected={selected ? '' : undefined}
               ref={(element) => {
                 if (element) {
                   tabsRef.current.set(item.key, element);
@@ -145,20 +171,37 @@ export const Tabs = /* @__PURE__ */ forwardRef<HTMLDivElement, TabsProps>(functi
                   tabsRef.current.delete(item.key);
                 }
               }}
-              type="button"
-              role="tab"
-              id={tabId(item.key)}
-              value={item.key}
-              aria-selected={selected}
-              aria-controls={selected ? panelId(item.key) : undefined}
-              disabled={item.disabled}
-              tabIndex={selected ? 0 : -1}
-              className="lg-tabs__tab"
-              data-selected={selected ? '' : undefined}
-              onClick={() => select(item.key)}
             >
-              {item.label}
-            </button>
+              <button
+                type="button"
+                role="tab"
+                id={tabId(item.key)}
+                value={item.key}
+                aria-selected={selected}
+                aria-controls={selected ? panelId(item.key) : undefined}
+                disabled={item.disabled}
+                tabIndex={selected ? 0 : -1}
+                className="lg-tabs__tab"
+                data-selected={selected ? '' : undefined}
+                onClick={() => select(item.key)}
+              >
+                {item.label}
+              </button>
+              {item.closable ? (
+                <button
+                  type="button"
+                  // Keyboard path is Delete on the tab itself (roving tabindex
+                  // stays one stop); the button serves pointer/touch.
+                  tabIndex={-1}
+                  className="lg-tabs__close"
+                  aria-label={CLOSE_LABEL[locale]}
+                  disabled={item.disabled}
+                  onClick={() => onClose?.(item.key)}
+                >
+                  <span aria-hidden="true">{'×'}</span>
+                </button>
+              ) : null}
+            </div>
           );
         })}
       </div>
