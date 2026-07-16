@@ -520,6 +520,32 @@ describe('GlassSurface', () => {
     await advanceTime(16);
   });
 
+  it('does not acquire filters when hovering (M20 hover-lift is a CSS-only transform)', async () => {
+    vi.useFakeTimers();
+    vi.stubGlobal('PointerEvent', MouseEvent);
+    stubChromiumEnvironment();
+    stubMeasuredSize(320, 200);
+    render(
+      <GlassSurface radius={14} interactive style={REFRACTION_STYLE} data-testid="surface">
+        Hover
+      </GlassSurface>,
+    );
+    const surface = screen.getByTestId('surface');
+
+    await settleRefraction();
+    expect(filterRegistry.getSnapshot()).toHaveLength(1);
+
+    // Hover lift is `translateY(var(--lg-hover-lift))` — a transform that changes
+    // no measured size, so the enter/move/leave cycle acquires no new filter.
+    fireEvent.pointerEnter(surface, { clientX: 10, clientY: 10 });
+    fireEvent.pointerMove(surface, { clientX: 40, clientY: 40 });
+    await advanceTime(16);
+    fireEvent.pointerLeave(surface);
+    await advanceTime(16);
+
+    expect(filterRegistry.getSnapshot()).toHaveLength(1);
+  });
+
   it('does not rebuild the map or pile up filters during rapid press cycles', async () => {
     vi.useFakeTimers();
     vi.stubGlobal('PointerEvent', MouseEvent);

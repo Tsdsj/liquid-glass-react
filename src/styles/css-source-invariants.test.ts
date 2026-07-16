@@ -165,6 +165,49 @@ describe('overlay entrances use the bounce ease on transform only (M6f/3)', () =
   });
 });
 
+describe('interactive surfaces lift on hover and settle instantly under reduced motion (M20)', () => {
+  const css = readCss('../core/GlassSurface/glass-surface.css');
+  const reducedStart = css.search(/@media \(prefers-reduced-motion: reduce\)/);
+  const base = css.slice(0, reducedStart);
+  const reduced = css.slice(reducedStart);
+
+  function bodiesOf(source: string, selector: string): string[] {
+    const bodies: string[] = [];
+    let start = source.indexOf(selector);
+    while (start !== -1) {
+      const body = /\{([^}]*)\}/.exec(source.slice(start));
+      if (body) {
+        bodies.push(body[1]);
+      }
+      start = source.indexOf(selector, start + selector.length);
+    }
+    return bodies;
+  }
+
+  it('lifts interactive surfaces via translateY(var(--lg-hover-lift)) on hover', () => {
+    const bodies = bodiesOf(base, '.lg-surface[data-interactive]:hover');
+    expect(bodies.length).toBeGreaterThan(0);
+    expect(
+      bodies.some((body) => /transform:[^;]*translateY\(\s*var\(--lg-hover-lift\)/.test(body)),
+    ).toBe(true);
+  });
+
+  it('drives the transform transition from the press-speed token on interactive surfaces', () => {
+    const bodies = bodiesOf(base, '.lg-surface[data-interactive]');
+    expect(
+      bodies.some((body) =>
+        /--lg-surface-transform-duration:\s*var\(--lg-duration-press\)/.test(body),
+      ),
+    ).toBe(true);
+  });
+
+  it('cancels the hover lift under reduced motion', () => {
+    const bodies = bodiesOf(reduced, '.lg-surface[data-interactive]:hover');
+    expect(bodies.length).toBeGreaterThan(0);
+    expect(bodies.some((body) => /transform:\s*none/.test(body))).toBe(true);
+  });
+});
+
 describe('dark theme token parity', () => {
   const themes = readCss('./themes.css');
   const dataThemeMatch = /\[data-theme='dark'\]\s*\{([\s\S]*?)\}/.exec(themes);

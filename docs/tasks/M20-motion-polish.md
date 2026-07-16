@@ -1,5 +1,5 @@
 ---
-status: todo
+status: done
 depends: [M19]
 ---
 
@@ -73,4 +73,35 @@ depends: [M19]
 
 ## 完成记录
 
-（实现后追加）
+**范围校正(实现前审阅代码后的诚实修订)**:本卡起草时未细读现有实现,提出的若干项**早已在前
+阶段落地**,盲目照做会是重复造轮子,故未做:
+
+- **高光随指针**:`GlassSurface` 已内建——`--lg-pointer-x/y`(`@property` 注册 + rAF 合并的
+  JS 写入)驱动 `::after` 双 radial-gradient,`data-interactive` 才挂载,reduced-motion 下
+  `transition:none`。**无需**新增 `useSpecularPointer` hook(会与既有逻辑重复),故未加。
+- **按压回弹缩放**:已有 `[data-interactive][data-pressed] { transform: scale(var(--lg-interaction-scale)) }`
+  + reduced-motion `transform:none` + 折射 press-boost(M6a)。故**复用 `--lg-interaction-scale`**,
+  未新增重复的 `--lg-press-scale` token。
+- **动效已全 token 化**:`grep` 全量组件 CSS,**无写死的时长/曲线**(均走 `--lg-duration*` /
+  `--lg-ease*`)。「消除写死时长/曲线」验收项**在开工前即已满足**,无需收敛。
+- 未采用 `--lg-specular-follow` token(指针高光的渐变 stop 用固定 38%/48% 已够,不值得再抽象)。
+
+**本卡真正的增量(两处 token 驱动的动效增强,均刻意用平滑 `--lg-ease` 而非 bounce,避免过时手感)**:
+
+- **hover 升起**:新增 `--lg-hover-lift: -1px`;`.lg-surface[data-interactive]:hover` 加
+  `transform: translateY(var(--lg-hover-lift))` + 阴影加深(`--lg-surface-shadow-y/blur` 提升),
+  reduced-motion 块内 `transform:none` 降级。press 规则(scale)在源码顺序后、同特异性下胜出,
+  故按下时缩放覆盖升起(自然:按下回落)。
+- **按压/悬浮更跟手**:新增 `--lg-duration-press: 140ms`;引入 `--lg-surface-transform-duration`
+  变量(基础=`--lg-duration`,`[data-interactive]` 覆盖为 `--lg-duration-press`),transform 与
+  box-shadow 过渡引用它——交互面板的形变更快,非交互面板不变。
+- **不触发滤镜重建**:hover 的 translateY 不改测量尺寸;新增行为测试断言 hover enter/move/leave
+  前后 `filterRegistry` 快照长度不变(=1)。
+- **文档**:`site/src/theming-tokens.ts` 增 `--lg-duration-press` / `--lg-hover-lift` 两条(M19 的
+  drift 测试强制其与 `tokens.css` 精确一致,已同步);`createTheme` 的 `LiquidGlassThemeTokens`
+  增 `durationPress`/`hoverLift` 键。
+- **测试**:`css-source-invariants.test.ts` 新增 M20 三条(hover translateY、interactive 用
+  press 时长、reduced-motion 取消升起,CSS 源断言);`GlassSurface.test.tsx` 增 hover 不建滤镜 1 条。
+- 验证:`pnpm typecheck` ✓、`pnpm build` ✓、`pnpm test` **410/410 绿**(较 M19 的 406 +4)、
+  `pnpm site:build` ✓。
+- **留本地目检**(服务器无浏览器):hover 升起幅度与阴影、140ms 按压跟手感、指针高光跟随。

@@ -30,6 +30,9 @@
   --lg-surface-shadow-blur: calc(var(--lg-space-4) + var(--lg-space-2));
   --lg-pointer-x: 50%;
   --lg-pointer-y: 0%;
+  /* Non-interactive surfaces animate transform at the standard speed; the
+     interactive rule below shortens it so press/hover feel responsive. */
+  --lg-surface-transform-duration: var(--lg-duration);
 
   position: relative;
   isolation: isolate;
@@ -38,7 +41,8 @@
   -webkit-backdrop-filter: blur(var(--lg-fallback-blur)) saturate(var(--lg-saturation));
   backdrop-filter: blur(var(--lg-fallback-blur)) saturate(var(--lg-saturation));
   transition:
-    transform var(--lg-duration) var(--lg-ease),
+    transform var(--lg-surface-transform-duration) var(--lg-ease),
+    box-shadow var(--lg-surface-transform-duration) var(--lg-ease),
     --lg-surface-tint-active var(--lg-duration) var(--lg-ease),
     --lg-pointer-x var(--lg-duration) var(--lg-ease),
     --lg-pointer-y var(--lg-duration) var(--lg-ease);
@@ -56,6 +60,7 @@
 .lg-surface[data-interactive] {
   --lg-surface-pointer-highlight: var(--lg-pointer-highlight);
   --lg-surface-pointer-shade: var(--lg-pointer-shade);
+  --lg-surface-transform-duration: var(--lg-duration-press);
 }
 
 .lg-surface[data-refraction='on'] {
@@ -144,7 +149,13 @@
 }
 
 .lg-surface[data-interactive]:hover {
+  /* Subtle rise toward the pointer: a small translateY plus a deeper drop
+     shadow so the lift reads. Press (below) overrides the transform to a scale,
+     so a pressed surface pushes back down. */
   --lg-surface-tint-active: var(--lg-surface-tint-hover);
+  --lg-surface-shadow-y: calc(var(--lg-space-2) + var(--lg-space-1));
+  --lg-surface-shadow-blur: calc(var(--lg-space-4) * 2);
+  transform: translateY(var(--lg-hover-lift));
 }
 
 .lg-surface[data-interactive][data-pressed] {
@@ -250,6 +261,10 @@
 @media (prefers-reduced-motion: reduce) {
   .lg-surface {
     transition: none;
+  }
+
+  .lg-surface[data-interactive]:hover {
+    transform: none;
   }
 
   .lg-surface[data-interactive][data-pressed] {

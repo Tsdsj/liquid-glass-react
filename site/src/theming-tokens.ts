@@ -73,6 +73,8 @@ export const TOKEN_REFERENCE: TokenRef[] = [
   { name: '--lg-ease-bounce', default: 'cubic-bezier(0.34, 1.56, 0.64, 1)', category: TYPE_MOTION, description: { 'zh-CN': '回弹缓动(指示器等)', 'en-US': 'Bounce easing (indicators, …)' } },
   { name: '--lg-duration', default: '200ms', category: TYPE_MOTION, description: { 'zh-CN': '标准过渡时长', 'en-US': 'Standard transition duration' } },
   { name: '--lg-duration-slow', default: '350ms', category: TYPE_MOTION, description: { 'zh-CN': '慢过渡时长', 'en-US': 'Slow transition duration' } },
+  { name: '--lg-duration-press', default: '140ms', category: TYPE_MOTION, description: { 'zh-CN': '交互按压/悬浮的更快时长', 'en-US': 'Faster duration for press / hover feedback' } },
   { name: '--lg-interaction-scale', default: '0.98', category: TYPE_MOTION, description: { 'zh-CN': '交互按压缩放', 'en-US': 'Interaction press scale' } },
+  { name: '--lg-hover-lift', default: '-1px', category: TYPE_MOTION, description: { 'zh-CN': '交互 hover 升起的位移', 'en-US': 'Interactive hover lift offset' } },
   { name: '--lg-z-overlay', default: '1000', category: TYPE_MOTION, description: { 'zh-CN': '浮层层级', 'en-US': 'Overlay z-index' } },
 ];

@@ -47,6 +47,8 @@ export interface LiquidGlassThemeTokens {
   easeBounce?: string;
   duration?: string;
   durationSlow?: string;
+  durationPress?: string;
+  hoverLift?: string;
 }
 
 /**
