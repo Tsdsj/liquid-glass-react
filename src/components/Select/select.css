@@ -73,6 +73,55 @@
   white-space: nowrap;
 }
 
+/* Multiple mode (M30): picked values as display-only tags in the trigger. */
+.lg-select__tags {
+  display: flex;
+  min-width: 0;
+  flex-wrap: wrap;
+  gap: var(--lg-space-1);
+}
+
+/* Search input (M30), same clear-material posture as Command's field. */
+.lg-select__search {
+  padding: var(--lg-space-2) var(--lg-space-2) var(--lg-space-1);
+}
+
+.lg-select__search-input {
+  box-sizing: border-box;
+  width: 100%;
+  padding: var(--lg-space-2) var(--lg-space-3);
+  border: 1px solid var(--lg-shade);
+  border-radius: var(--lg-radius-sm);
+  background: var(--lg-tint);
+  color: var(--lg-text);
+  font: inherit;
+}
+
+.lg-select__search-input:focus-visible {
+  outline: 2px solid var(--lg-accent);
+  outline-offset: 1px;
+}
+
+.lg-select__check {
+  margin-left: auto;
+  padding-left: var(--lg-space-2);
+  color: var(--lg-accent);
+  font-weight: 700;
+}
+
+.lg-select__option-label {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.lg-select__empty {
+  padding: var(--lg-space-3) var(--lg-space-4);
+  color: var(--lg-text-secondary);
+  text-align: center;
+}
+
 .lg-select__arrow {
   width: 8px;
   height: 8px;

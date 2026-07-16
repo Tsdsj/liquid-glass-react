@@ -208,14 +208,39 @@ import { Select } from '@ttqtt/liquid-glass-react';
 />`,
       render: () => <Select options={FRUIT_OPTIONS} aria-label="水果" />,
     },
+    {
+      id: 'multiple-search',
+      title: { 'zh-CN': '多选与搜索', 'en-US': 'Multiple & search' },
+      description: {
+        'zh-CN': 'multiple 下选中不关面板、触发器显示为标签、Backspace 删最后一项;searchable 在面板顶部加模糊过滤输入。两者可同时开。',
+        'en-US': 'multiple keeps the panel open, shows picks as tags and removes the last one with Backspace; searchable adds a fuzzy filter input. They compose.',
+      },
+      code: `
+<Select multiple searchable aria-label="水果"
+  defaultValue={['apple']}
+  onChange={(values) => console.log(values)}   // string[]
+  options={options}
+/>`,
+      render: () => (
+        <Select
+          multiple
+          searchable
+          aria-label="水果多选"
+          defaultValue={['apple']}
+          options={FRUIT_OPTIONS}
+        />
+      ),
+    },
   ],
   api: [
     {
       title: 'Select',
       rows: [
         { prop: 'options', type: 'SelectOption[]', description: { 'zh-CN': '选项列表({ value, label, disabled? })', 'en-US': 'Options ({ value, label, disabled? })' } },
-        { prop: 'value / defaultValue', type: 'string', description: { 'zh-CN': '受控 / 非受控选中值', 'en-US': 'Controlled / uncontrolled value' } },
-        { prop: 'onChange', type: '(value: string) => void', description: { 'zh-CN': '选中变化回调', 'en-US': 'Change callback' } },
+        { prop: 'value / defaultValue', type: 'string | string[]', description: { 'zh-CN': '受控 / 非受控值(multiple 时为数组)', 'en-US': 'Controlled / uncontrolled value (array with multiple)' } },
+        { prop: 'onChange', type: '(value) => void', description: { 'zh-CN': '选中变化(multiple 回调 string[])', 'en-US': 'Change callback (string[] with multiple)' } },
+        { prop: 'multiple', type: 'boolean', defaultValue: 'false', description: { 'zh-CN': '多选:选中不关面板,Backspace 删最后一项', 'en-US': 'Multiple: keeps the panel open; Backspace drops the last pick' } },
+        { prop: 'searchable', type: 'boolean', defaultValue: 'false', description: { 'zh-CN': '面板顶部模糊过滤输入', 'en-US': 'Fuzzy filter input at the top of the panel' } },
         { prop: 'placeholder', type: 'string', defaultValue: '请选择 / Select', description: { 'zh-CN': '占位文案,随语言环境切换', 'en-US': 'Placeholder, localized by config' } },
         { prop: 'size', type: "'sm' | 'md' | 'lg'", defaultValue: "'md'", description: { 'zh-CN': '尺寸', 'en-US': 'Size' } },
         { prop: 'disabled', type: 'boolean', defaultValue: 'false', description: { 'zh-CN': '禁用', 'en-US': 'Disabled' } },

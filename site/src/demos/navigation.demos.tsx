@@ -223,6 +223,21 @@ import { Segmented } from '@ttqtt/liquid-glass-react';
   ],
 };
 
+function ClosableTabsDemo() {
+  const [items, setItems] = useState([
+    { key: 'a', label: '首页.tsx', content: '首页内容', closable: true },
+    { key: 'b', label: '关于.tsx', content: '关于内容', closable: true },
+    { key: 'c', label: '设置', content: '设置内容' },
+  ]);
+  return (
+    <Tabs
+      aria-label="打开的文件"
+      items={items}
+      onClose={(key) => setItems((current) => current.filter((item) => item.key !== key))}
+    />
+  );
+}
+
 export const tabsDoc: ComponentDoc = {
   slug: 'tabs',
   name: 'Tabs',
@@ -255,6 +270,23 @@ import { Tabs } from '@ttqtt/liquid-glass-react';
 />`,
       render: () => <Tabs aria-label="产品文档" items={TAB_ITEMS} defaultValue="overview" />,
     },
+    {
+      id: 'closable',
+      title: { 'zh-CN': '可关闭页签', 'en-US': 'Closable tabs' },
+      description: {
+        'zh-CN': 'closable 项显示关闭按钮(键盘在页签上按 Delete);onClose 只通知,由使用者更新 items——关闭当前激活页签时记得自行指定新激活项。',
+        'en-US': 'closable items render a close affordance (Delete on the focused tab for keyboard); onClose only notifies — update items yourself and pick the next active tab when closing the current one.',
+      },
+      code: `
+const [items, setItems] = useState(initialItems); // TabItem[] 带 closable: true
+
+<Tabs
+  aria-label="文件"
+  items={items}
+  onClose={(key) => setItems(items.filter((item) => item.key !== key))}
+/>`,
+      render: () => <ClosableTabsDemo />,
+    },
   ],
   api: [
     {
@@ -263,6 +295,7 @@ import { Tabs } from '@ttqtt/liquid-glass-react';
         { prop: 'items', type: 'TabItem[]', description: { 'zh-CN': '标签与面板数组', 'en-US': 'Tabs and their panels' } },
         { prop: 'value / defaultValue', type: 'string', description: { 'zh-CN': '受控 / 非受控激活 key,缺省取第一个可用项', 'en-US': 'Controlled / uncontrolled key; defaults to the first enabled tab' } },
         { prop: 'onChange', type: '(key: string) => void', description: { 'zh-CN': '激活变化回调', 'en-US': 'Activation callback' } },
+        { prop: 'onClose', type: '(key: string) => void', description: { 'zh-CN': '关闭通知(closable 项),由使用者更新 items', 'en-US': 'Close notification for closable items; update items yourself' } },
         { prop: 'size', type: "'sm' | 'md' | 'lg'", defaultValue: "'md'", description: { 'zh-CN': '尺寸档位', 'en-US': 'Size preset' } },
       ],
     },
@@ -273,6 +306,7 @@ import { Tabs } from '@ttqtt/liquid-glass-react';
         { prop: 'label', type: 'ReactNode', description: { 'zh-CN': '标签文案', 'en-US': 'Tab label' } },
         { prop: 'content', type: 'ReactNode', description: { 'zh-CN': '面板内容', 'en-US': 'Panel content' } },
         { prop: 'disabled', type: 'boolean', description: { 'zh-CN': '禁用单个标签', 'en-US': 'Disable a single tab' } },
+        { prop: 'closable', type: 'boolean', description: { 'zh-CN': '显示关闭按钮(Delete 键同效)', 'en-US': 'Show a close affordance (Delete key too)' } },
       ],
     },
   ],

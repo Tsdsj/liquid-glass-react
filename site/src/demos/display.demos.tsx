@@ -474,6 +474,38 @@ const columns: TableColumn<Member>[] = [
         />
       ),
     },
+    {
+      id: 'expandable',
+      title: { 'zh-CN': '展开行', 'en-US': 'Expandable rows' },
+      description: {
+        'zh-CN': 'expandable.render 提供展开内容;rowExpandable 可逐行拦截;展开态按 rowKey 保存,翻页/排序间保持。',
+        'en-US': 'expandable.render supplies the detail row; rowExpandable gates rows; expansion is stored by rowKey and survives paging/sorting.',
+      },
+      code: `
+<Table
+  rowKey="id"
+  columns={columns}
+  data={members}
+  expandable={{
+    render: (row) => <p>成员详情:{row.name}(评分 {row.score})</p>,
+    rowExpandable: (row) => row.score >= 80,
+  }}
+/>`,
+      render: () => (
+        <Table
+          aria-label="成员(展开)"
+          columns={MEMBER_COLUMNS}
+          data={MEMBERS.slice(0, 3)}
+          rowKey="id"
+          expandable={{
+            render: (row) => (
+              <p style={{ margin: 0 }}>成员详情:{row.name},角色 {row.role},评分 {row.score}。</p>
+            ),
+            rowExpandable: (row) => row.score >= 80,
+          }}
+        />
+      ),
+    },
   ],
   api: [
     {
@@ -490,6 +522,7 @@ const columns: TableColumn<Member>[] = [
         { prop: 'pagination', type: '{ pageSize, page?, onChange? } | false', defaultValue: 'false', description: { 'zh-CN': '分页(联动 Pagination)', 'en-US': 'Pagination (links Pagination)' } },
         { prop: 'size', type: "'sm' | 'md' | 'lg'", defaultValue: "'md'", description: { 'zh-CN': '尺寸', 'en-US': 'Size' } },
         { prop: 'emptyText', type: 'ReactNode', description: { 'zh-CN': '空数据占位', 'en-US': 'Empty placeholder' } },
+        { prop: 'expandable', type: '{ render, rowExpandable?, expandedKeys?, defaultExpandedKeys?, onExpandedChange? }', description: { 'zh-CN': '展开行(受控/非受控,按 rowKey 保存)', 'en-US': 'Expandable rows (controlled/uncontrolled, keyed by rowKey)' } },
       ],
     },
     {

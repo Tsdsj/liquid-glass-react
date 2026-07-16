@@ -65,6 +65,28 @@ function ModalDemo() {
   );
 }
 
+function ConfirmDemo() {
+  const [answer, setAnswer] = useState<string | null>(null);
+  return (
+    <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+      <Button
+        variant="danger"
+        onClick={async () => {
+          const ok = await Modal.confirm({
+            title: '删除记录',
+            content: '删除后不可恢复,确定继续吗?',
+            danger: true,
+          });
+          setAnswer(ok ? '已确认 Confirmed' : '已取消 Cancelled');
+        }}
+      >
+        删除记录
+      </Button>
+      {answer ? <span style={{ color: 'var(--lg-text-secondary)' }}>{answer}</span> : null}
+    </div>
+  );
+}
+
 export const tooltipDoc: ComponentDoc = {
   slug: 'tooltip',
   name: 'Tooltip',
@@ -212,6 +234,22 @@ const [open, setOpen] = useState(false);
 </Modal>`,
       render: () => <ModalDemo />,
     },
+    {
+      id: 'confirm',
+      title: { 'zh-CN': '命令式确认 Modal.confirm', 'en-US': 'Imperative Modal.confirm' },
+      description: {
+        'zh-CN': '一行代码弹确认框,返回 Promise<boolean>:确定 true,取消 / Escape / 点遮罩 false。命令式读不到 Context,locale 需显式传入。',
+        'en-US': 'One call opens a confirm dialog returning Promise<boolean>: true on OK, false on cancel / Escape / overlay. Imperative calls cannot read context — pass locale explicitly.',
+      },
+      code: `
+const ok = await Modal.confirm({
+  title: '删除记录',
+  content: '删除后不可恢复,确定继续吗?',
+  danger: true,
+});
+if (ok) remove();`,
+      render: () => <ConfirmDemo />,
+    },
   ],
   api: [
     {
@@ -222,6 +260,7 @@ const [open, setOpen] = useState(false);
         { prop: 'title / footer', type: 'ReactNode', description: { 'zh-CN': '标题 / 底部操作区', 'en-US': 'Title / footer area' } },
         { prop: 'size', type: "'sm' | 'md' | 'lg'", defaultValue: "'md'", description: { 'zh-CN': '面板宽度档位', 'en-US': 'Panel width preset' } },
         { prop: 'closeOnOverlayClick', type: 'boolean', defaultValue: 'true', description: { 'zh-CN': '点击遮罩是否关闭', 'en-US': 'Close on overlay press' } },
+        { prop: 'Modal.confirm(options)', type: '(o: ConfirmOptions) => Promise<boolean>', description: { 'zh-CN': '命令式确认:title/content/okText/cancelText/danger/locale', 'en-US': 'Imperative confirm: title/content/okText/cancelText/danger/locale' } },
       ],
     },
   ],

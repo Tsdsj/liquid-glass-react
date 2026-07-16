@@ -1,5 +1,5 @@
 ---
-status: todo
+status: done
 depends: [M29]
 ---
 
@@ -100,4 +100,39 @@ export interface TabsProps { /* ……既有…… */ onClose?: (key: string) =>
 
 ## 完成记录
 
-（实现后追加）
+四项增强全部落地(每项独立提交,RED→GREEN),不传新 props 时行为与现状一致(存量断言零改动全绿)。
+
+- **Tabs 可关闭**:`TabItem.closable` + `TabsProps.onClose`。**结构决策**:tab 本身是 `<button>`,
+  嵌套真按钮非法(axe nested-interactive serious)——改为每项包 `role="presentation"` 包裹器,
+  关闭按钮做**兄弟节点**(`tabIndex=-1`,服务指针);**键盘走 Delete 键**(WAI-ARIA 可删除页签惯例,
+  roving tabindex 保持单停点)。滑动指示器改测量包裹器(pill 覆盖 tab+关闭钮),Segmented 共享
+  hook 零回归。i18n 关闭 aria-label。3 测试。
+- **Modal.confirm**:`Modal.confirm(options): Promise<boolean>`(`Object.assign` 静态挂载,
+  index.ts 组合)。动态 `createRoot` 临时容器渲染受控 Modal(焦点圈定/Escape/遮罩全复用),
+  确定 true、取消/Escape/遮罩 false,退出过渡(400ms)后 unmount+移除容器;并发调用各自独立容器;
+  SSR 守卫 `resolve(false)`;`locale` 显式传(命令式读不到 Context,卡内已定)。`ConfirmOptions`
+  导出;`react-dom/client` 加入构建 external。4 测试(含容器不泄漏)。
+- **Table 展开行**:`expandable.{render,rowExpandable,expandedKeys,defaultExpandedKeys,
+  onExpandedChange}`,受控/非受控(useControllableState);展开列在选择列后,内容整行
+  `colSpan`;展开态按 rowKey 存储,**先排序后切片**故翻页/排序间保持;`aria-expanded` +
+  展开/收起 i18n aria-label;rowExpandable 拦截行不渲染开关。基于另一 agent 重构后的
+  table.css 追加样式(含 reduced-motion)。4 测试。
+- **Select 多选+搜索**:
+  - **类型策略(卡内允许的择优)**:选**判别联合** `SelectProps = SelectSingleProps |
+    SelectMultipleProps`——`multiple: true` 时 value/onChange 自动收窄为 `string[]`,消费者
+    类型体验最好;内部归一化为 `string[]` 状态单路径处理。
+  - 多选:点选切换**不关面板**、选项尾部 ✓、触发器内已选项显示为 **Tag(纯展示)**、
+    Backspace 删最后一项、listbox `aria-multiselectable`。**卡内偏差**:tag 不带独立关闭钮
+    (触发器是 `<button>`,内嵌按钮非法)——移除路径=Backspace / 面板反选,记录于此。
+  - 搜索:沿用**自家 Command 的 combobox-in-dialog 模式**——searchable 时 floating 角色转
+    dialog、内层挂 listbox,输入框 `role=combobox` + `aria-activedescendant`,手动方向键/
+    Enter 导航(此时 useListNavigation/useTypeahead 关闭;非搜索态二者原样启用=零回归)。
+    过滤复用 `fuzzyMatch`,全下游索引统一走 `visibleOptions`;空结果 i18n 空态。4 测试。
+  - 测试期学得:floating-ui `useRole('listbox')` 给触发器 `role="combobox"`(既有行为),
+    新测试按 combobox 查询。
+- **site 文档**:四组件各增演示与 API 行(Select 多选搜索、Table 展开行、Modal.confirm、
+  Tabs 可关闭),中英双语。
+- 验证:`pnpm typecheck` ✓、`pnpm build` ✓、`pnpm test` **562/562 绿**(较 M29 的 547 +15)、
+  `pnpm smoke:consumer` ✓(联合类型经包内 d.ts 对消费者严格模式友好)、`pnpm site:build` ✓。
+  无新增运行时依赖。
+- **留本地目检**:多选 Tag 换行观感、搜索输入的玻璃材质、展开行动画感、可关闭页签 pill 覆盖。
