@@ -26,7 +26,7 @@ export default defineConfig({
     },
     cssCodeSplit: false,
     rollupOptions: {
-      external: ['react', 'react-dom', 'react/jsx-runtime'],
+      external: ['react', 'react-dom', 'react-dom/client', 'react/jsx-runtime'],
       output: {
         assetFileNames: (assetInfo) =>
           assetInfo.names.some((name) => name.endsWith('.css'))

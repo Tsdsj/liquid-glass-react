@@ -55,7 +55,7 @@ export type { InputProps } from './components/Input';
 export { Menu } from './components/Menu';
 export type { MenuItem, MenuProps } from './components/Menu';
 export { Modal } from './components/Modal';
-export type { ModalProps } from './components/Modal';
+export type { ModalProps, ConfirmOptions } from './components/Modal';
 export { Pagination } from './components/Pagination';
 export type { PaginationProps } from './components/Pagination';
 export { Popover } from './components/Popover';
