@@ -368,7 +368,7 @@ Popover/Tooltip/Modal/Toast。
   - **`docs/tasks/M0..M5.md`**：可逐个执行的任务卡（frontmatter 状态标记 + 步骤 + 验收标准 + 完成记录），Codex 每次取编号最小的未完成任务卡开工。
 - 里程碑严格串行 M0→M5；里程碑内组件可并行。每个任务完成必须通过 `pnpm typecheck && pnpm build && pnpm test` 并更新任务卡状态后提交 git。
 
-## 10. 二阶段与三阶段路线（M8 起）
+## 10. 二/三/四阶段路线（M8 起）
 
 > 一阶段（M0–M4 + M6a–M6f 打磨 + M7 文档站）已完成，产出玻璃引擎 + 12 个核心组件 +
 > 重设计文档站。M5（原发布卡）由用户单独触发。
@@ -408,6 +408,36 @@ Popover/Tooltip/Modal/Toast。
 - **M18 CI 与发布/部署自动化**：可移植 CI（typecheck/build/test）；GitHub Pages 部署站点
   （Vite `base` 子路径 + 现有 hash 路由）；`v*` tag → `npm publish --access public`；
   `RELEASING.md` 发版流程。
+
+每卡沿用既有约定：`pnpm typecheck && pnpm build && pnpm test` 通过、更新任务卡状态、
+一卡一或多提交、存量断言不削弱。
+
+### 四阶段 — 扩容·产品化·生态（M19–M26，规划中）
+
+主题：三阶段已把库做成 release-ready 的公开包。四阶段在稳定地基上做三件事——**补齐重型
+组件、把二阶段的引擎实验特性产品化转正、提升接入体验（DX）**。三条线共识决策：
+
+| 决策 | 结论 |
+|---|---|
+| 无新运行时依赖 | 延续 AGENTS 硬约束。DatePicker 日期算法、Form 校验逻辑一律**自写**在 `src/core/utils/`，不引 dayjs/zod/yup |
+| 排序策略 | 先铺地基（主题/动效 token）→ 引擎产品化 → 重型组件 → 文档站增强收尾；新组件天然吃到新 token 与动效 |
+| 公共 API | 新增导出（`createTheme`、`ProgressiveBlur` 等转正、新组件）一律先在任务卡定稿（AGENTS §6），不加不减 |
+| 明确排除 | 视觉回归截图基线（同前阶段，需浏览器/CI）；富文本/图表/上传等超范围重组件；服务端数据请求封装 |
+
+里程碑（串行 M19→M26；里程碑内可并行）：
+
+- **M19 主题定制 API**：`createTheme` 工具（类型安全的 `--lg-*` 覆盖）+ 2–3 套预设主题
+  + 全量 token 参考文档，降低定制门槛。地基卡，后续组件/文档均引用。
+- **M20 交互动效打磨**：按压回弹 / 高光随指针 / hover 升起统一为**动效 token**，增强
+  `GlassSurface` `interactive`。地基卡，新组件挂载即吃到统一动效。
+- **M21 实验特性产品化**：M12–M14 的 ProgressiveBlur / 液态 morph / 环境取样从内部
+  opt-in **转正为公共导出** + 文档，不改既有默认行为。
+- **M22 Form 表单**：表单容器 + 自写校验 + 字段布局 + 错误提示，把现有输入组件编排成受控表单。
+- **M23 Table 表格**：列定义 / 排序 / 选中 / 分页联动 + 玻璃表头行悬浮（本阶段最大一卡）。
+- **M24 DatePicker 日期**：日历面板 + 键盘导航 + a11y，基于已有 Popover，日期算法自写。
+- **M25 轻型组件补齐**：Alert/Banner、Accordion/Collapse、Command、Empty、Steps 五个小组件合一卡。
+- **M26 文档站增强**：props playground（交互调参）+ 站内搜索 + 代码复制 + 更多真实示例
+  （每组件 API 表已存在，本卡补缺口）。收尾卡，一次性覆盖全部新组件/主题/引擎特性。
 
 每卡沿用既有约定：`pnpm typecheck && pnpm build && pnpm test` 通过、更新任务卡状态、
 一卡一或多提交、存量断言不削弱。
