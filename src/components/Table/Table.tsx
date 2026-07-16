@@ -1,4 +1,4 @@
-import { useMemo, type ReactNode } from 'react';
+import { Fragment, useMemo, type ReactNode } from 'react';
 import { useLiquidGlassContext } from '../../core/config/LiquidGlassConfig';
 import { GlassSurface } from '../../core/GlassSurface';
 import { useControllableState } from '../../core/hooks/useControllableState';
@@ -43,14 +43,34 @@ export interface TableProps<T> {
   defaultSelectedKeys?: string[];
   onSelectionChange?: (keys: string[]) => void;
   pagination?: { pageSize: number; page?: number; onChange?: (page: number) => void } | false;
+  /** Expandable rows (M30): renders a leading toggle column after the selection column. */
+  expandable?: {
+    render: (row: T) => ReactNode;
+    rowExpandable?: (row: T) => boolean;
+    expandedKeys?: string[];
+    defaultExpandedKeys?: string[];
+    onExpandedChange?: (keys: string[]) => void;
+  };
   size?: 'sm' | 'md' | 'lg';
   emptyText?: ReactNode;
   'aria-label'?: string;
 }
 
 const LABELS = {
-  'zh-CN': { selectAll: '全选', selectRow: '选择该行', empty: '暂无数据' },
-  'en-US': { selectAll: 'Select all', selectRow: 'Select row', empty: 'No data' },
+  'zh-CN': {
+    selectAll: '全选',
+    selectRow: '选择该行',
+    empty: '暂无数据',
+    expandRow: '展开该行',
+    collapseRow: '收起该行',
+  },
+  'en-US': {
+    selectAll: 'Select all',
+    selectRow: 'Select row',
+    empty: 'No data',
+    expandRow: 'Expand row',
+    collapseRow: 'Collapse row',
+  },
 } as const;
 
 export function Table<T>({
@@ -65,6 +85,7 @@ export function Table<T>({
   defaultSelectedKeys,
   onSelectionChange,
   pagination = false,
+  expandable,
   size = 'md',
   emptyText,
   'aria-label': ariaLabel,
@@ -81,6 +102,11 @@ export function Table<T>({
     value: selectedProp,
     defaultValue: defaultSelectedKeys ?? [],
     onChange: onSelectionChange,
+  });
+  const [expandedKeys, setExpandedKeys] = useControllableState<string[]>({
+    value: expandable?.expandedKeys,
+    defaultValue: expandable?.defaultExpandedKeys ?? [],
+    onChange: expandable?.onExpandedChange,
   });
 
   const paginationEnabled = pagination !== false;
@@ -115,7 +141,7 @@ export function Table<T>({
   const pagedData = paginationEnabled ? paginate(sortedData, page, pageSize) : sortedData;
   const pageKeys = pagedData.map(getKey);
   const headerSelection = selectionState(selectedKeys, pageKeys);
-  const columnSpan = columns.length + (selectable ? 1 : 0);
+  const columnSpan = columns.length + (selectable ? 1 : 0) + (expandable ? 1 : 0);
 
   const handleSort = (column: TableColumn<T>) => {
     if (!column.sortable) {
@@ -158,6 +184,7 @@ export function Table<T>({
                   />
                 </th>
               ) : null}
+              {expandable ? <th scope="col" className="lg-table__expand-col" /> : null}
               {columns.map((column) => (
                 <th
                   key={column.key}
@@ -193,27 +220,51 @@ export function Table<T>({
               pagedData.map((row, index) => {
                 const key = getKey(row);
                 const selected = selectedKeys.includes(key);
+                const canExpand = expandable ? (expandable.rowExpandable?.(row) ?? true) : false;
+                const expanded = canExpand && expandedKeys.includes(key);
                 return (
-                  <tr key={key} data-selected={selected ? '' : undefined}>
-                    {selectable ? (
-                      <td className="lg-table__selection">
-                        <Checkbox
-                          aria-label={labels.selectRow}
-                          checked={selected}
-                          onCheckedChange={() => setSelectedKeys(toggleKey(selectedKeys, key))}
-                        />
-                      </td>
+                  <Fragment key={key}>
+                    <tr data-selected={selected ? '' : undefined}>
+                      {selectable ? (
+                        <td className="lg-table__selection">
+                          <Checkbox
+                            aria-label={labels.selectRow}
+                            checked={selected}
+                            onCheckedChange={() => setSelectedKeys(toggleKey(selectedKeys, key))}
+                          />
+                        </td>
+                      ) : null}
+                      {expandable ? (
+                        <td className="lg-table__expand-col">
+                          {canExpand ? (
+                            <button
+                              type="button"
+                              className="lg-table__expand"
+                              aria-expanded={expanded}
+                              aria-label={expanded ? labels.collapseRow : labels.expandRow}
+                              onClick={() => setExpandedKeys(toggleKey(expandedKeys, key))}
+                            >
+                              <span className="lg-table__expand-arrow" aria-hidden="true" />
+                            </button>
+                          ) : null}
+                        </td>
+                      ) : null}
+                      {columns.map((column) => (
+                        <td key={column.key} style={{ textAlign: column.align }}>
+                          {column.render
+                            ? column.render(row, index)
+                            : column.dataIndex != null
+                              ? String(row[column.dataIndex] ?? '')
+                              : null}
+                        </td>
+                      ))}
+                    </tr>
+                    {expanded && expandable ? (
+                      <tr className="lg-table__expanded-row">
+                        <td colSpan={columnSpan}>{expandable.render(row)}</td>
+                      </tr>
                     ) : null}
-                    {columns.map((column) => (
-                      <td key={column.key} style={{ textAlign: column.align }}>
-                        {column.render
-                          ? column.render(row, index)
-                          : column.dataIndex != null
-                            ? String(row[column.dataIndex] ?? '')
-                            : null}
-                      </td>
-                    ))}
-                  </tr>
+                  </Fragment>
                 );
               })
             )}

@@ -123,4 +123,83 @@ describe('Table', () => {
     render(<Table columns={COLUMNS} data={[]} rowKey="id" emptyText="暂无数据" />);
     expect(screen.getByText('暂无数据')).toBeInTheDocument();
   });
+
+  describe('expandable rows (M30)', () => {
+    const expandable = {
+      render: (row: Row) => <div>详情:{row.name}</div>,
+    };
+
+    it('toggles a row open and closed with aria-expanded', async () => {
+      const user = userEvent.setup();
+      render(<Table columns={COLUMNS} data={DATA} rowKey="id" expandable={expandable} selectable />);
+
+      const toggles = screen.getAllByRole('button', { name: '展开该行' });
+      expect(toggles).toHaveLength(DATA.length);
+      expect(screen.queryByText('详情:Bob')).not.toBeInTheDocument();
+
+      await user.click(toggles[0]);
+      expect(screen.getByText('详情:Bob')).toBeInTheDocument();
+      expect(screen.getByRole('button', { name: '收起该行' })).toHaveAttribute(
+        'aria-expanded',
+        'true',
+      );
+
+      await user.click(screen.getByRole('button', { name: '收起该行' }));
+      expect(screen.queryByText('详情:Bob')).not.toBeInTheDocument();
+    });
+
+    it('skips rows rejected by rowExpandable', () => {
+      render(
+        <Table
+          columns={COLUMNS}
+          data={DATA}
+          rowKey="id"
+          expandable={{ ...expandable, rowExpandable: (row) => row.name !== 'Bob' }}
+        />,
+      );
+      expect(screen.getAllByRole('button', { name: '展开该行' })).toHaveLength(DATA.length - 1);
+    });
+
+    it('supports controlled expandedKeys with change notification', async () => {
+      const user = userEvent.setup();
+      const onExpandedChange = vi.fn();
+      render(
+        <Table
+          columns={COLUMNS}
+          data={DATA}
+          rowKey="id"
+          expandable={{ ...expandable, expandedKeys: ['2'], onExpandedChange }}
+        />,
+      );
+
+      // Controlled: Alice (id 2) is open.
+      expect(screen.getByText('详情:Alice')).toBeInTheDocument();
+      await user.click(screen.getAllByRole('button', { name: '展开该行' })[0]);
+      expect(onExpandedChange).toHaveBeenCalledWith(['2', '1']);
+      // Value did not change (controlled) — Bob stays closed.
+      expect(screen.queryByText('详情:Bob')).not.toBeInTheDocument();
+    });
+
+    it('keeps expansion by key across page changes', async () => {
+      const user = userEvent.setup();
+      render(
+        <Table
+          columns={COLUMNS}
+          data={DATA}
+          rowKey="id"
+          expandable={expandable}
+          pagination={{ pageSize: 2 }}
+        />,
+      );
+
+      await user.click(screen.getAllByRole('button', { name: '展开该行' })[0]); // Bob
+      expect(screen.getByText('详情:Bob')).toBeInTheDocument();
+
+      await user.click(screen.getByRole('button', { name: '第 2 页' }));
+      expect(screen.queryByText('详情:Bob')).not.toBeInTheDocument();
+
+      await user.click(screen.getByRole('button', { name: '第 1 页' }));
+      expect(screen.getByText('详情:Bob')).toBeInTheDocument();
+    });
+  });
 });
