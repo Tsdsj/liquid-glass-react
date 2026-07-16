@@ -1,5 +1,5 @@
 ---
-status: todo
+status: done
 depends: [M18]
 ---
 
@@ -85,4 +85,27 @@ export const presetThemes: {
 
 ## 完成记录
 
-（实现后追加）
+- **`createTheme`**（`src/core/theme/createTheme.ts`）：纯函数,机械式 camelCase→`--lg-kebab`
+  转换,返回可 spread 到任意元素 `style` 的 `LiquidGlassTheme`(=`React.CSSProperties`)。
+  类型安全接口 `LiquidGlassThemeTokens` 覆盖 32 个常改视觉 token(颜色/玻璃材质/圆角/动效/字号);
+  派生(`--lg-accent-glass` 等)与布局(`--lg-control-h-*`/`--lg-space-*`)token 不进 helper,
+  可仍以 CSS 变量直接覆盖(注释与文档已说明)。跳过 `undefined` 值、保留数字值。5 单测 TDD。
+- **`presetThemes`**（`src/core/theme/presetThemes.ts`）：3 套预设 `default`(空覆盖)/`midnight`
+  (冷调靛蓝)/`warm`(暖琥珀 + 大圆角),均由 `createTheme` 组装。4 单测。
+- **`LiquidGlassConfig` `theme` prop**：可选,传入时用 `display:contents` 包裹节点作用域化 token
+  (布局不受影响),不传则**不加包裹**、行为与既往一致(向后兼容,存量 5 断言不变)。2 新断言。
+- **导出**：`src/index.ts` 增 `createTheme`、`presetThemes`、类型 `LiquidGlassTheme`/`LiquidGlassThemeTokens`。
+- **文档**:`site/src/theming-tokens.ts` 全量 50 个 token 参考表(名/默认值/中英说明,按类分组);
+  `site/src/theming-tokens.test.ts` **drift 测试**——读取 `src/styles/tokens.css` 解析声明的
+  `--lg-*` 名,断言参考表与之**不漏不多**(2 断言,已捕获我最初漏计并校正)。
+  `site/src/components/ThemingDemo.tsx`:预设切换器(dogfood `Segmented`)+ 实时玻璃预览
+  + `createTheme`/`presetThemes`/`LiquidGlassConfig theme` 用法代码 + 全量 token 参考表;
+  接入 GuidePage(「主题与 Token」文案补 createTheme 指引 + 新增「定制主题」导航锚点 + 渲染 demo);
+  `site.css` 加 `.theming-demo__*` 样式。App.test 增 theming-demo + token 名断言。
+- **踩坑**:`tokens.css?raw` 在本项目 vitest CSS 处理下返回空串;`new URL(rel, import.meta.url)`
+  的 `import.meta.url` 非 `file:` scheme;`node:path`/`process` 无类型(仓库无 `@types/node`,
+  仅手写 `src/test/node-runtime.d.ts` 声明 `node:fs`/`node:url`)。最终改用 `Spin.test` 同款
+  `readFileSync('src/styles/tokens.css','utf8')`(cwd 相对路径)读取,类型与运行均通过。
+- 验证:`pnpm typecheck` ✓、`pnpm build` ✓、`pnpm test` **406/406 绿**(较基线 393 +13:createTheme 5 +
+  presetThemes 4 + drift 2 + config theme 2)、`pnpm site:build` ✓。
+- **留本地目检**(服务器无浏览器):三套预设的实际观感、预设切换时玻璃强调色/染色的过渡。

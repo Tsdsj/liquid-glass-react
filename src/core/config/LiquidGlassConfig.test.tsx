@@ -1,6 +1,7 @@
 import { render, screen } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
 import { LiquidGlassConfig, useLiquidGlassContext } from './LiquidGlassConfig';
+import { createTheme } from '../theme/createTheme';
 
 function LocaleProbe({ testId }: { testId: string }) {
   const { locale } = useLiquidGlassContext();
@@ -65,5 +66,31 @@ describe('LiquidGlassConfig locale', () => {
       'data-transparency',
       'reduced',
     );
+  });
+});
+
+describe('LiquidGlassConfig theme', () => {
+  it('scopes theme tokens onto a display:contents wrapper', () => {
+    render(
+      <LiquidGlassConfig theme={createTheme({ accent: '#7c3aed' })}>
+        <div data-testid="child" />
+      </LiquidGlassConfig>,
+    );
+
+    const wrapper = screen.getByTestId('child').parentElement!;
+    expect(wrapper.style.getPropertyValue('--lg-accent')).toBe('#7c3aed');
+    expect(wrapper.style.display).toBe('contents');
+  });
+
+  it('adds no wrapper element when no theme is given', () => {
+    render(
+      <LiquidGlassConfig>
+        <div data-testid="child" />
+      </LiquidGlassConfig>,
+    );
+
+    const parent = screen.getByTestId('child').parentElement!;
+    expect(parent.style.display).not.toBe('contents');
+    expect(parent.style.getPropertyValue('--lg-accent')).toBe('');
   });
 });

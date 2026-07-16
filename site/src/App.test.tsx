@@ -144,6 +144,11 @@ describe('docs site', () => {
     );
     expect(screen.getByTestId('guide-browsers')).toBeInTheDocument();
     expect(screen.getByTestId('ambient-demo')).toBeInTheDocument();
+    const themingDemo = screen.getByTestId('theming-demo');
+    expect(themingDemo).toBeInTheDocument();
+    // Full token reference is rendered from the drift-checked table.
+    expect(themingDemo).toHaveTextContent('--lg-accent');
+    expect(themingDemo).toHaveTextContent('--lg-radius-md');
   });
 
   it('navigates between pages on hash changes', async () => {

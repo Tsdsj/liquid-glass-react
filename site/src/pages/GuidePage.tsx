@@ -1,4 +1,5 @@
 import { AmbientDemo } from '../components/AmbientDemo';
+import { ThemingDemo } from '../components/ThemingDemo';
 import { SITE_COPY, useT, type Bilingual } from '../site-i18n';
 
 interface GuideSection {
@@ -76,8 +77,8 @@ export function Notify() {
     id: 'theming',
     title: { 'zh-CN': '主题与 Token', 'en-US': 'Theming and tokens' },
     body: {
-      'zh-CN': '所有视觉参数都是 --lg-* CSS 变量:根元素设置 data-theme="dark" 切换暗色;在任意容器上覆盖变量即可局部定制(强调色、圆角、模糊度、环境色调 --lg-ambient 等)。',
-      'en-US': 'Every visual knob is a --lg-* CSS variable: set data-theme="dark" on the root for dark mode, and override variables on any container for local customization (accent, radius, blur, the --lg-ambient wash, and more).',
+      'zh-CN': '所有视觉参数都是 --lg-* CSS 变量:根元素设置 data-theme="dark" 切换暗色;在任意容器上覆盖变量即可局部定制(强调色、圆角、模糊度、环境色调 --lg-ambient 等)。也可以用 createTheme 生成类型安全的覆盖对象、或直接套用 presetThemes 预设——详见下方「定制主题」的交互演示与全量 token 参考表。',
+      'en-US': 'Every visual knob is a --lg-* CSS variable: set data-theme="dark" on the root for dark mode, and override variables on any container for local customization (accent, radius, blur, the --lg-ambient wash, and more). You can also build a type-safe override object with createTheme or drop in a presetThemes preset — see the interactive “Custom themes” demo and full token reference below.',
     },
     code: `<html data-theme="dark">
 
@@ -137,6 +138,15 @@ export function GuidePage() {
             {t(section.title)}
           </button>
         ))}
+        <button
+          className="site-guide-nav__link"
+          type="button"
+          onClick={() => {
+            document.getElementById('guide-createTheme')?.scrollIntoView({ block: 'start' });
+          }}
+        >
+          {t({ 'zh-CN': '定制主题', 'en-US': 'Custom themes' })}
+        </button>
       </nav>
 
       <article className="site-guide">
@@ -158,6 +168,7 @@ export function GuidePage() {
             ) : null}
           </section>
         ))}
+        <ThemingDemo />
         <AmbientDemo />
       </article>
     </div>

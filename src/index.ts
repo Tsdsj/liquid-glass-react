@@ -7,6 +7,12 @@ export type {
   LiquidGlassConfigProps,
   LiquidGlassLocale,
 } from './core/config/LiquidGlassConfig';
+export { createTheme } from './core/theme/createTheme';
+export type {
+  LiquidGlassTheme,
+  LiquidGlassThemeTokens,
+} from './core/theme/createTheme';
+export { presetThemes } from './core/theme/presetThemes';
 export { Avatar } from './components/Avatar';
 export type { AvatarProps } from './components/Avatar';
 export { Badge } from './components/Badge';
