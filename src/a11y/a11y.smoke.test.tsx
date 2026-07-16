@@ -2,6 +2,8 @@ import { render } from '@testing-library/react';
 import axe, { type ImpactValue, type Result } from 'axe-core';
 import { describe, expect, it } from 'vitest';
 import {
+  Accordion,
+  Alert,
   Avatar,
   Badge,
   Breadcrumb,
@@ -9,9 +11,11 @@ import {
   Card,
   Checkbox,
   DatePicker,
+  Empty,
   Form,
   FormItem,
   Input,
+  Steps,
   Pagination,
   Progress,
   Radio,
@@ -122,6 +126,22 @@ const CASES: Array<[name: string, element: React.ReactElement]> = [
   ],
   ['Card', <Card>卡片内容</Card>],
   ['Tag', <Tag>标签</Tag>],
+  [
+    'Accordion',
+    <Accordion
+      items={[
+        { key: 'a', title: '面板一', content: '内容一' },
+        { key: 'b', title: '面板二', content: '内容二' },
+      ]}
+      defaultValue={['a']}
+    />,
+  ],
+  ['Alert', <Alert kind="warning" title="注意" closable onClose={() => {}}>请确认</Alert>],
+  ['Empty', <Empty title="空空如也" description="暂无数据" />],
+  [
+    'Steps',
+    <Steps items={[{ key: 'a', title: '一' }, { key: 'b', title: '二' }]} current={1} />,
+  ],
   [
     'Table',
     <Table

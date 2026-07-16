@@ -1,5 +1,5 @@
 ---
-status: todo
+status: done
 depends: [M24]
 ---
 
@@ -96,4 +96,27 @@ export interface StepsProps { items: StepItem[]; current?: number; direction?: '
 
 ## 完成记录
 
-（实现后追加）
+- **纯函数** `src/core/utils/fuzzy-match.ts`:`fuzzyMatch`(大小写不敏感的顺序子序列,空查询全匹配)
+  + `commandMatches`(label 或任一 keyword 命中)。6 单测(RED→GREEN)。
+- **Empty**:纯展示,image 缺省默认图标,title/description/children 插槽。2 测。
+- **Alert**:GlassSurface,四语义色,warning/danger 用 `role="alert"` 否则 `status`,closable 关闭按钮
+  (i18n aria-label),`icon={false}` 隐藏。**设计修正**:impeccable 命中"左侧强调粗边=AI 味",改为
+  **kind 色淡染背景(color-mix)+ 强调色图标**,去掉 side-tab 边。3 测。
+- **Steps**:`<ol>/<li>` 语义,finish/process/wait 三态走 token,当前步 `aria-current="step"`,
+  连接线 aria-hidden,横/纵向。2 测。
+- **Accordion**:`useControllableState` 受控/非受控,单开/multiple 多开,disabled 跳过;头部 button
+  `aria-expanded`/`aria-controls`,面板 `role="region"` `aria-labelledby`;展开走 **grid-rows 0fr→1fr**
+  动画,reduced-motion 瞬变。4 测。
+- **Command**:**关键决策——未用 Modal**。Modal 把初始焦点给了先渲染的关闭按钮,命令面板要求焦点落在
+  输入框;Modal 未暴露 initialFocus。故 Command **自建浮层**(FloatingPortal + FloatingOverlay +
+  `FloatingFocusManager initialFocus={inputRef}` + useDismiss/useRole,仍只依赖 `@floating-ui/react`),
+  焦点可靠落到 combobox 输入。自写模糊过滤 + 上下键(`aria-activedescendant`)+ Enter 执行 + Escape 关闭,
+  按 group 分组渲染,`role="listbox"`/`option`。3 测(过滤/空态、方向键+Enter、点击执行)。
+- **导出/注册**:`src/index.ts` 增 5 组件 + 各 Props/子类型;`styles/index.css` @import 5 份 css;
+  五件套齐全(含各 stories)。SSR 冒烟纳入 5 个(Command 用 closed);a11y 冒烟纳入静态 4 个
+  (Command 为浮层,closed 无内容,其 listbox a11y 由 Command.test 覆盖)。
+- **文档**:5 条 ComponentDoc——Alert/Command→feedback.demos(反馈)、Empty/Accordion→display.demos(展示)、
+  Steps→navigation.demos(导航);接入 registry;总览计数派生 +5。
+- 验证:`pnpm typecheck` ✓、`pnpm build` ✓(dist 含 5 组件)、`pnpm test` **503/503 绿**
+  (较 M24 的 474 +29)、`pnpm site:build` ✓。**无新增运行时依赖**(Command 仅用既有 floating-ui)。
+- **留本地目检**:Alert 淡染背景与图标色、Accordion 展开动画、Command 浮层玻璃与分组、Steps 连接线态。

@@ -1,0 +1,76 @@
+.lg-alert {
+  --lg-r: var(--lg-radius-md);
+  --lg-alert-accent: var(--lg-accent);
+  /* A faint wash of the kind colour over the glass, and an accent-coloured
+     icon — semantic without the templated side-tab border. */
+  --lg-surface-tint: color-mix(in srgb, var(--lg-alert-accent) 12%, var(--lg-tint));
+  display: flex;
+  gap: var(--lg-space-3);
+  align-items: flex-start;
+  padding: var(--lg-space-3) var(--lg-space-4);
+  color: var(--lg-text);
+}
+
+.lg-alert[data-kind='success'] {
+  --lg-alert-accent: var(--lg-success);
+}
+
+.lg-alert[data-kind='warning'] {
+  --lg-alert-accent: var(--lg-warning);
+}
+
+.lg-alert[data-kind='danger'] {
+  --lg-alert-accent: var(--lg-danger);
+}
+
+.lg-alert__icon {
+  flex: 0 0 auto;
+  line-height: 1.4;
+  color: var(--lg-alert-accent);
+}
+
+.lg-alert__body {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.lg-alert__title {
+  font-weight: 600;
+}
+
+.lg-alert__content {
+  color: var(--lg-text-secondary);
+  font-size: var(--lg-font-size-sm);
+}
+
+.lg-alert__title + .lg-alert__content {
+  margin-top: var(--lg-space-1);
+}
+
+.lg-alert__close {
+  flex: 0 0 auto;
+  width: var(--lg-control-h-sm);
+  height: var(--lg-control-h-sm);
+  border: none;
+  border-radius: var(--lg-radius-sm);
+  background: none;
+  color: var(--lg-text-secondary);
+  font-size: var(--lg-font-size-lg);
+  cursor: pointer;
+  transition: background var(--lg-duration-press) var(--lg-ease);
+}
+
+.lg-alert__close:hover {
+  background: var(--lg-tint);
+}
+
+.lg-alert__close:focus-visible {
+  outline: 2px solid var(--lg-accent);
+  outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .lg-alert__close {
+    transition: none;
+  }
+}

@@ -1,0 +1,31 @@
+.lg-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--lg-space-2);
+  padding: calc(var(--lg-space-4) * 1.5);
+  color: var(--lg-text-secondary);
+  text-align: center;
+}
+
+.lg-empty__image {
+  font-size: 40px;
+  line-height: 1;
+  opacity: 0.7;
+}
+
+.lg-empty__title {
+  margin: 0;
+  color: var(--lg-text);
+  font-size: var(--lg-font-size-md);
+  font-weight: 600;
+}
+
+.lg-empty__description {
+  margin: 0;
+  font-size: var(--lg-font-size-sm);
+}
+
+.lg-empty__action {
+  margin-top: var(--lg-space-2);
+}

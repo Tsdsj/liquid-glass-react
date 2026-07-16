@@ -9,9 +9,10 @@ import {
   RadioGroup,
   Segmented,
   SideNav,
+  Steps,
   Tabs,
 } from '@ttqtt/liquid-glass-react';
-import type { MenuItem, SideNavItem } from '@ttqtt/liquid-glass-react';
+import type { MenuItem, SideNavItem, StepItem } from '@ttqtt/liquid-glass-react';
 import type { ComponentDoc } from './types';
 
 const MENU_ITEMS: MenuItem[] = [
@@ -546,6 +547,66 @@ import { Button, Menu } from '@ttqtt/liquid-glass-react';
         { prop: 'key / label', type: 'string / ReactNode', description: { 'zh-CN': '标识 / 文案', 'en-US': 'Key / label' } },
         { prop: 'icon / disabled / danger', type: 'ReactNode / boolean / boolean', description: { 'zh-CN': '图标 / 禁用 / 危险项', 'en-US': 'Icon / disabled / danger' } },
         { prop: "{ type: 'divider' }", type: 'object', description: { 'zh-CN': '分隔线(role=separator)', 'en-US': 'Divider (role=separator)' } },
+      ],
+    },
+  ],
+};
+
+const STEP_ITEMS: StepItem[] = [
+  { key: 'a', title: '填写信息', description: '基本资料' },
+  { key: 'b', title: '确认订单', description: '核对明细' },
+  { key: 'c', title: '完成', description: '提交成功' },
+];
+
+export const stepsDoc: ComponentDoc = {
+  slug: 'steps',
+  name: 'Steps',
+  title: { 'zh-CN': '步骤条', 'en-US': 'Steps' },
+  category: NAVIGATION,
+  description: {
+    'zh-CN': '流程步骤指示:完成/进行中/待办三态走 token,当前步 aria-current="step",支持横向与纵向。',
+    'en-US': 'A process indicator with finished / current / waiting states, aria-current="step" on the active step, horizontal or vertical.',
+  },
+  renderPreview: () => (
+    <div style={{ width: 420 }}>
+      <Steps items={STEP_ITEMS} current={1} />
+    </div>
+  ),
+  demos: [
+    {
+      id: 'basic',
+      title: { 'zh-CN': '横向与纵向', 'en-US': 'Horizontal & vertical' },
+      description: {
+        'zh-CN': 'current 指定当前步(0 基);之前为完成态、之后为待办态。direction 切换方向。',
+        'en-US': 'current sets the active step (0-based); earlier ones are finished, later ones waiting. direction switches orientation.',
+      },
+      code: `
+import { Steps } from '@ttqtt/liquid-glass-react';
+
+<Steps
+  current={1}
+  items={[
+    { key: 'a', title: '填写信息' },
+    { key: 'b', title: '确认订单' },
+    { key: 'c', title: '完成' },
+  ]}
+/>`,
+      render: () => (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 28, width: 460 }}>
+          <Steps items={STEP_ITEMS} current={1} />
+          <Steps items={STEP_ITEMS} current={1} direction="vertical" />
+        </div>
+      ),
+    },
+  ],
+  api: [
+    {
+      title: 'Steps',
+      rows: [
+        { prop: 'items', type: 'StepItem[]', description: { 'zh-CN': '步骤项({ key, title, description? })', 'en-US': 'Steps ({ key, title, description? })' } },
+        { prop: 'current', type: 'number', defaultValue: '0', description: { 'zh-CN': '当前步索引(0 基)', 'en-US': 'Active step index (0-based)' } },
+        { prop: 'direction', type: "'horizontal' | 'vertical'", defaultValue: "'horizontal'", description: { 'zh-CN': '方向', 'en-US': 'Direction' } },
+        { prop: 'size', type: "'sm' | 'md' | 'lg'", defaultValue: "'md'", description: { 'zh-CN': '尺寸', 'en-US': 'Size' } },
       ],
     },
   ],

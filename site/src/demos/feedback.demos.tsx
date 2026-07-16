@@ -1,8 +1,41 @@
 import { useState } from 'react';
-import { Button, Modal, Popover, Tooltip, toast } from '@ttqtt/liquid-glass-react';
+import {
+  Alert,
+  Button,
+  Command,
+  Modal,
+  Popover,
+  Tooltip,
+  toast,
+  type CommandItem,
+} from '@ttqtt/liquid-glass-react';
 import type { ComponentDoc } from './types';
 
 const CATEGORY = { 'zh-CN': '反馈', 'en-US': 'Feedback' };
+
+const COMMAND_ITEMS: CommandItem[] = [
+  { key: 'new', label: '新建文件', keywords: ['create', 'new'], group: '文件' },
+  { key: 'open', label: '打开文件', keywords: ['open'], group: '文件' },
+  { key: 'copy', label: '复制链接', keywords: ['copy', 'link'], group: '编辑' },
+  { key: 'theme', label: '切换主题', keywords: ['theme', 'dark'], group: '视图' },
+];
+
+function CommandDemo() {
+  const [open, setOpen] = useState(false);
+  return (
+    <>
+      <Button onClick={() => setOpen(true)}>打开命令面板 ⌘K</Button>
+      <Command
+        items={COMMAND_ITEMS.map((item) => ({
+          ...item,
+          onRun: () => toast.success(`执行:${item.label}`),
+        }))}
+        open={open}
+        onOpenChange={setOpen}
+      />
+    </>
+  );
+}
 
 function ModalDemo() {
   const [open, setOpen] = useState(false);
@@ -245,6 +278,101 @@ toast.info('已同步 3 条记录');`,
         { prop: 'toast.success / error / info', type: '(content, options?) => string', description: { 'zh-CN': '带语义图标的快捷方法', 'en-US': 'Shortcuts with semantic icons' } },
         { prop: 'toast.dismiss(id?)', type: '(id?: string) => void', description: { 'zh-CN': '关闭指定或全部通知', 'en-US': 'Dismiss one or all toasts' } },
         { prop: 'options.duration', type: 'number', defaultValue: '3000', description: { 'zh-CN': '自动关闭时长(ms),Infinity 常驻', 'en-US': 'Auto-dismiss delay in ms; Infinity persists' } },
+      ],
+    },
+  ],
+};
+
+export const alertDoc: ComponentDoc = {
+  slug: 'alert',
+  name: 'Alert',
+  title: { 'zh-CN': '警告提示', 'en-US': 'Alert' },
+  category: CATEGORY,
+  description: {
+    'zh-CN': '玻璃质感的行内提示,四种语义色(info/success/warning/danger),可选图标与关闭按钮;warning/danger 用 role="alert"。',
+    'en-US': 'Inline glass alert in four semantic kinds (info/success/warning/danger), optional icon and close button; warning/danger use role="alert".',
+  },
+  renderPreview: () => (
+    <Alert kind="success" title="成功">操作已完成。</Alert>
+  ),
+  demos: [
+    {
+      id: 'kinds',
+      title: { 'zh-CN': '语义色与关闭', 'en-US': 'Kinds & closable' },
+      description: {
+        'zh-CN': 'kind 决定强调色与无障碍角色;closable 渲染关闭按钮,onClose 后由使用方卸载;icon={false} 隐藏图标。',
+        'en-US': 'kind sets the accent and a11y role; closable renders a close button (unmount on onClose yourself); icon={false} hides the icon.',
+      },
+      code: `
+import { Alert } from '@ttqtt/liquid-glass-react';
+
+<Alert kind="info" title="提示">这是一条普通信息。</Alert>
+<Alert kind="warning" title="注意" closable onClose={() => {}}>请确认。</Alert>`,
+      render: () => (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 12, minWidth: 340 }}>
+          <Alert kind="info" title="提示">这是一条普通信息。</Alert>
+          <Alert kind="success" title="成功">操作已完成。</Alert>
+          <Alert kind="warning" title="注意" closable onClose={() => undefined}>请确认后再继续。</Alert>
+          <Alert kind="danger" title="错误">出现了一个问题。</Alert>
+        </div>
+      ),
+    },
+  ],
+  api: [
+    {
+      title: 'Alert',
+      rows: [
+        { prop: 'kind', type: "'info' | 'success' | 'warning' | 'danger'", defaultValue: "'info'", description: { 'zh-CN': '语义色', 'en-US': 'Semantic kind' } },
+        { prop: 'title', type: 'ReactNode', description: { 'zh-CN': '标题', 'en-US': 'Title' } },
+        { prop: 'closable', type: 'boolean', defaultValue: 'false', description: { 'zh-CN': '显示关闭按钮', 'en-US': 'Show close button' } },
+        { prop: 'onClose', type: '() => void', description: { 'zh-CN': '关闭回调', 'en-US': 'Close callback' } },
+        { prop: 'icon', type: 'ReactNode | false', description: { 'zh-CN': '自定义图标,false 隐藏', 'en-US': 'Custom icon; false hides it' } },
+      ],
+    },
+  ],
+};
+
+export const commandDoc: ComponentDoc = {
+  slug: 'command',
+  name: 'Command',
+  title: { 'zh-CN': '命令面板', 'en-US': 'Command' },
+  category: CATEGORY,
+  description: {
+    'zh-CN': '⌘K 式命令面板:自写模糊匹配过滤、上下键导航(aria-activedescendant)、Enter 执行、Escape 关闭,分组展示。玻璃浮层,焦点自动落到输入框。',
+    'en-US': 'A ⌘K-style palette: hand-written fuzzy filtering, arrow-key navigation (aria-activedescendant), Enter to run, Escape to close, grouped items. Glass overlay with the input auto-focused.',
+  },
+  renderPreview: () => <CommandDemo />,
+  demos: [
+    {
+      id: 'basic',
+      title: { 'zh-CN': '打开与搜索', 'en-US': 'Open & search' },
+      description: {
+        'zh-CN': 'items 提供 label/keywords/group/onRun;open 受控。输入过滤(匹配 label 或 keywords),上下键移动高亮,Enter 执行。',
+        'en-US': 'items carry label/keywords/group/onRun; open is controlled. Type to filter (label or keywords), arrow keys move the highlight, Enter runs it.',
+      },
+      code: `
+import { Command } from '@ttqtt/liquid-glass-react';
+
+const [open, setOpen] = useState(false);
+
+<Command
+  open={open}
+  onOpenChange={setOpen}
+  items={[
+    { key: 'new', label: '新建文件', keywords: ['create'], group: '文件', onRun: () => {} },
+    { key: 'copy', label: '复制链接', keywords: ['copy', 'link'], group: '编辑', onRun: () => {} },
+  ]}
+/>`,
+      render: () => <CommandDemo />,
+    },
+  ],
+  api: [
+    {
+      title: 'Command',
+      rows: [
+        { prop: 'items', type: 'CommandItem[]', description: { 'zh-CN': '命令项({ key, label, keywords?, group?, onRun? })', 'en-US': 'Commands ({ key, label, keywords?, group?, onRun? })' } },
+        { prop: 'open / onOpenChange', type: 'boolean / (open) => void', description: { 'zh-CN': '受控开合', 'en-US': 'Controlled open state' } },
+        { prop: 'placeholder', type: 'string', description: { 'zh-CN': '输入框占位', 'en-US': 'Input placeholder' } },
       ],
     },
   ],

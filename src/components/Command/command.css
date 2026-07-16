@@ -1,0 +1,77 @@
+.lg-command__overlay {
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  padding-top: 12vh;
+  background: var(--lg-dim-layer);
+  z-index: var(--lg-z-overlay);
+}
+
+.lg-command__panel {
+  --lg-r: var(--lg-radius-lg);
+  max-width: min(560px, 92vw);
+  padding: var(--lg-space-3);
+}
+
+.lg-command {
+  display: flex;
+  flex-direction: column;
+  gap: var(--lg-space-2);
+  min-width: min(420px, 80vw);
+}
+
+.lg-command__input {
+  width: 100%;
+  padding: var(--lg-space-2) var(--lg-space-3);
+  border: 1px solid var(--lg-shade);
+  border-radius: var(--lg-radius-md);
+  background: var(--lg-tint);
+  color: var(--lg-text);
+  font: inherit;
+}
+
+.lg-command__input:focus-visible {
+  outline: 2px solid var(--lg-accent);
+  outline-offset: 1px;
+}
+
+.lg-command__list {
+  display: flex;
+  flex-direction: column;
+  max-height: 320px;
+  margin: 0;
+  padding: 0;
+  overflow-y: auto;
+  list-style: none;
+}
+
+.lg-command__group {
+  padding: var(--lg-space-2) var(--lg-space-3) var(--lg-space-1);
+  color: var(--lg-text-secondary);
+  font-size: var(--lg-font-size-sm);
+  font-weight: 600;
+}
+
+.lg-command__option {
+  padding: var(--lg-space-2) var(--lg-space-3);
+  border-radius: var(--lg-radius-sm);
+  color: var(--lg-text);
+  cursor: pointer;
+  transition: background var(--lg-duration-press) var(--lg-ease);
+}
+
+.lg-command__option[data-active] {
+  background: var(--lg-accent-glass);
+}
+
+.lg-command__empty {
+  padding: var(--lg-space-4);
+  color: var(--lg-text-secondary);
+  text-align: center;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .lg-command__option {
+    transition: none;
+  }
+}

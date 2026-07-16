@@ -9,7 +9,14 @@ import {
   switchDoc,
   textareaDoc,
 } from './entry.demos';
-import { modalDoc, popoverDoc, toastDoc, tooltipDoc } from './feedback.demos';
+import {
+  alertDoc,
+  commandDoc,
+  modalDoc,
+  popoverDoc,
+  toastDoc,
+  tooltipDoc,
+} from './feedback.demos';
 import {
   breadcrumbDoc,
   drawerDoc,
@@ -18,12 +25,15 @@ import {
   radioGroupDoc,
   segmentedDoc,
   sideNavDoc,
+  stepsDoc,
   tabsDoc,
 } from './navigation.demos';
 import {
+  accordionDoc,
   avatarDoc,
   badgeDoc,
   cardDoc,
+  emptyDoc,
   progressDoc,
   skeletonDoc,
   spinDoc,
@@ -58,6 +68,7 @@ export const COMPONENT_DOCS: ComponentDoc[] = [
   sideNavDoc,
   drawerDoc,
   menuDoc,
+  stepsDoc,
   // Display
   cardDoc,
   avatarDoc,
@@ -67,11 +78,15 @@ export const COMPONENT_DOCS: ComponentDoc[] = [
   spinDoc,
   skeletonDoc,
   tableDoc,
+  emptyDoc,
+  accordionDoc,
   // Feedback
   tooltipDoc,
   popoverDoc,
   modalDoc,
   toastDoc,
+  alertDoc,
+  commandDoc,
 ];
 
 export function findComponentDoc(slug: string): ComponentDoc | undefined {

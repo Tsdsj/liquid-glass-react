@@ -9,10 +9,15 @@
 @import '../components/Button/button.css';
 @import '../components/Card/card.css';
 @import '../components/Checkbox/checkbox.css';
+@import '../components/Accordion/accordion.css';
+@import '../components/Alert/alert.css';
+@import '../components/Command/command.css';
 @import '../components/DatePicker/datepicker.css';
 @import '../components/Drawer/drawer.css';
+@import '../components/Empty/empty.css';
 @import '../components/Form/form.css';
 @import '../components/Input/input.css';
+@import '../components/Steps/steps.css';
 @import '../components/Menu/menu.css';
 @import '../components/Modal/modal.css';
 @import '../components/Pagination/pagination.css';

@@ -11,18 +11,23 @@
 import { renderToString } from 'react-dom/server';
 import { describe, expect, it } from 'vitest';
 import {
+  Accordion,
+  Alert,
   Avatar,
   Badge,
   Breadcrumb,
   Button,
   Card,
   Checkbox,
+  Command,
   DatePicker,
   Drawer,
+  Empty,
   Form,
   FormItem,
   GlassSurface,
   Input,
+  Steps,
   LiquidGlassConfig,
   Menu,
   Modal,
@@ -58,6 +63,14 @@ function AmbientProbe() {
 
 const CASES: Array<[name: string, element: React.ReactElement]> = [
   ['GlassSurface', <GlassSurface>x</GlassSurface>],
+  [
+    'Accordion',
+    <Accordion items={[{ key: 'a', title: '标题', content: '内容' }]} defaultValue={['a']} />,
+  ],
+  ['Alert', <Alert kind="success" title="成功">已保存</Alert>],
+  ['Command (closed)', <Command items={[{ key: 'a', label: '命令' }]} open={false} onOpenChange={() => {}} />],
+  ['Empty', <Empty title="空" description="无数据" />],
+  ['Steps', <Steps items={[{ key: 'a', title: '一' }, { key: 'b', title: '二' }]} current={0} />],
   ['Avatar', <Avatar alt="用户" fallback="U" />],
   [
     'Badge',

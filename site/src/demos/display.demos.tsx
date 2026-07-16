@@ -1,13 +1,16 @@
 import {
+  Accordion,
   Avatar,
   Badge,
   Button,
   Card,
+  Empty,
   Progress,
   Skeleton,
   Spin,
   Table,
   Tag,
+  type AccordionItem,
   type TableColumn,
 } from '@ttqtt/liquid-glass-react';
 import type { ComponentDoc } from './types';
@@ -500,6 +503,108 @@ const columns: TableColumn<Member>[] = [
         { prop: 'sorter', type: '(a, b) => number', description: { 'zh-CN': '自定义比较(缺省按 dataIndex)', 'en-US': 'Custom comparator (defaults to dataIndex)' } },
         { prop: 'align', type: "'left' | 'center' | 'right'", description: { 'zh-CN': '对齐', 'en-US': 'Alignment' } },
         { prop: 'width', type: 'number | string', description: { 'zh-CN': '列宽', 'en-US': 'Column width' } },
+      ],
+    },
+  ],
+};
+
+const FAQ_ITEMS: AccordionItem[] = [
+  { key: 'a', title: '什么是液态玻璃?', content: '一种会折射身后内容的玻璃材质,不是一张模糊贴图。' },
+  { key: 'b', title: '不支持的浏览器怎么办?', content: '自动降级为细腻毛玻璃,布局与交互完全一致。' },
+  { key: 'c', title: '可以定制外观吗?', content: '所有视觉参数都是 --lg-* CSS 变量,用 createTheme 或直接覆盖即可。' },
+];
+
+export const emptyDoc: ComponentDoc = {
+  slug: 'empty',
+  name: 'Empty',
+  title: { 'zh-CN': '空状态', 'en-US': 'Empty' },
+  category: DISPLAY,
+  description: {
+    'zh-CN': '无数据占位:插画/标题/描述 + 可选操作区,可对接 Table 的 emptyText。',
+    'en-US': 'A no-data placeholder: image / title / description plus an optional action slot; pairs with Table emptyText.',
+  },
+  renderPreview: () => <Empty title="空空如也" description="这里还没有内容" />,
+  demos: [
+    {
+      id: 'basic',
+      title: { 'zh-CN': '带操作的空态', 'en-US': 'Empty with action' },
+      description: {
+        'zh-CN': 'image 缺省用默认图标;children 放引导操作。',
+        'en-US': 'image falls back to a default glyph; children hold a call to action.',
+      },
+      code: `
+import { Empty, Button } from '@ttqtt/liquid-glass-react';
+
+<Empty title="没有项目" description="创建第一个项目开始使用">
+  <Button variant="accent">新建项目</Button>
+</Empty>`,
+      render: () => (
+        <Empty title="没有项目" description="创建第一个项目开始使用">
+          <Button variant="accent">新建项目</Button>
+        </Empty>
+      ),
+    },
+  ],
+  api: [
+    {
+      title: 'Empty',
+      rows: [
+        { prop: 'image', type: 'ReactNode', description: { 'zh-CN': '插画/图标,缺省用默认', 'en-US': 'Illustration/icon; default when omitted' } },
+        { prop: 'title', type: 'ReactNode', description: { 'zh-CN': '标题', 'en-US': 'Title' } },
+        { prop: 'description', type: 'ReactNode', description: { 'zh-CN': '描述', 'en-US': 'Description' } },
+        { prop: 'children', type: 'ReactNode', description: { 'zh-CN': '操作区', 'en-US': 'Action slot' } },
+      ],
+    },
+  ],
+};
+
+export const accordionDoc: ComponentDoc = {
+  slug: 'accordion',
+  name: 'Accordion',
+  title: { 'zh-CN': '折叠面板', 'en-US': 'Accordion' },
+  category: DISPLAY,
+  description: {
+    'zh-CN': '可折叠内容区:默认单开,multiple 允许多开;受控/非受控双模,头部 aria-expanded + 面板 role="region",展开走 grid 高度动画、reduced-motion 瞬变。',
+    'en-US': 'Collapsible sections: single-open by default, multiple allows several; controlled/uncontrolled, aria-expanded triggers + role="region" panels, grid-height expand animation that degrades under reduced motion.',
+  },
+  renderPreview: () => (
+    <div style={{ width: 320 }}>
+      <Accordion items={FAQ_ITEMS} defaultValue={['a']} />
+    </div>
+  ),
+  demos: [
+    {
+      id: 'basic',
+      title: { 'zh-CN': '单开与多开', 'en-US': 'Single & multiple' },
+      description: {
+        'zh-CN': '缺省单开(展开一个自动收起其它);multiple 允许多个同时展开;disabled 项不可切换。',
+        'en-US': 'Single-open by default (opening one closes the rest); multiple allows several open at once; disabled items cannot toggle.',
+      },
+      code: `
+import { Accordion } from '@ttqtt/liquid-glass-react';
+
+<Accordion
+  items={[
+    { key: 'a', title: '标题一', content: '内容一' },
+    { key: 'b', title: '标题二', content: '内容二' },
+  ]}
+  defaultValue={['a']}
+/>`,
+      render: () => (
+        <div style={{ maxWidth: 460 }}>
+          <Accordion items={FAQ_ITEMS} defaultValue={['a']} />
+        </div>
+      ),
+    },
+  ],
+  api: [
+    {
+      title: 'Accordion',
+      rows: [
+        { prop: 'items', type: 'AccordionItem[]', description: { 'zh-CN': '面板项({ key, title, content, disabled? })', 'en-US': 'Panels ({ key, title, content, disabled? })' } },
+        { prop: 'multiple', type: 'boolean', defaultValue: 'false', description: { 'zh-CN': '允许多个同时展开', 'en-US': 'Allow multiple open' } },
+        { prop: 'value / defaultValue', type: 'string[]', description: { 'zh-CN': '受控 / 非受控展开键', 'en-US': 'Controlled / uncontrolled open keys' } },
+        { prop: 'onChange', type: '(keys: string[]) => void', description: { 'zh-CN': '展开变化', 'en-US': 'Open-change callback' } },
       ],
     },
   ],
