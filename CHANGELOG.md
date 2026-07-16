@@ -3,7 +3,7 @@
 本项目遵循 [Keep a Changelog](https://keepachangelog.com/zh-CN/1.1.0/) 与
 [语义化版本](https://semver.org/lang/zh-CN/)。
 
-## [未发布 / Unreleased]
+## [0.2.0] - 2026-07-16
 
 ### 新增
 
@@ -51,4 +51,5 @@
 - **国际化**:内置文案中/英,经 `LiquidGlassConfig` 的 `locale` 切换。
 - 文档站(组件总览 + 交互演示 + API,中英双语)。
 
+[0.2.0]: https://github.com/Tsdsj/liquid-glass-react/releases/tag/v0.2.0
 [0.1.0]: https://github.com/Tsdsj/liquid-glass-react/releases/tag/v0.1.0
