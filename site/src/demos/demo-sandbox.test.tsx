@@ -1,7 +1,16 @@
 import { fireEvent, render } from '@testing-library/react';
-import { describe, expect, it } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { DemoBlock } from '../components/DemoBlock';
 import { COMPONENT_DOCS } from './registry';
+
+// The sandbox hint fires toast without a mounted <Toaster/> here — that DEV
+// warning is expected (and asserted in toast-store.test); keep output clean.
+beforeEach(() => {
+  vi.spyOn(console, 'warn').mockImplementation(() => undefined);
+});
+afterEach(() => {
+  vi.restoreAllMocks();
+});
 
 // M27 guard: demos render real components (Breadcrumb/SideNav carry genuine
 // `#/…` hrefs), but clicking them inside a demo stage must never move the

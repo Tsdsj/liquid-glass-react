@@ -37,7 +37,8 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "test:visual": "playwright test",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "smoke:consumer": "node scripts/smoke-consumer.mjs"
   },
   "keywords": [
     "react",

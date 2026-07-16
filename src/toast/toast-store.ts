@@ -67,7 +67,19 @@ export function getToastServerSnapshot(): readonly ToastItem[] {
   return EMPTY_TOASTS;
 }
 
+// One-shot DEV hint (M28 consumer audit): calling toast with no <Toaster/>
+// mounted silently shows nothing — surface that instead of leaving new users
+// guessing. Same one-time-warning posture as GlassSurface's string-radius hint.
+let hasWarnedMissingHost = false;
+
 export function showToast(content: ReactNode, options: ToastOptions = {}): string {
+  if (import.meta.env.DEV && listeners.size === 0 && !hasWarnedMissingHost) {
+    hasWarnedMissingHost = true;
+    console.warn(
+      '[liquid-glass-react] toast was called but no <Toaster/> is mounted — nothing will be shown. Mount <Toaster/> once near the app root.',
+    );
+  }
+
   nextId += 1;
   const id = `lg-toast-${nextId}`;
   const duration = options.duration ?? DEFAULT_DURATION;
@@ -136,5 +148,6 @@ export function resetToastStore(): void {
   removalTimers.clear();
   snapshot = EMPTY_TOASTS;
   nextId = 0;
+  hasWarnedMissingHost = false;
   emit();
 }

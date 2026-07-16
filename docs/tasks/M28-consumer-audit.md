@@ -1,5 +1,5 @@
 ---
-status: todo
+status: done
 depends: [M27]
 ---
 
@@ -58,4 +58,34 @@ depends: [M27]
 
 ## 完成记录
 
-（实现后追加）
+- **消费者环境**(`scripts/smoke-consumer.mjs` + `pnpm smoke:consumer`):build → pack →
+  tarball 解包进 `mkdtemp` 临时项目的 `node_modules/@ttqtt/liquid-glass-react`;
+  react/react-dom/@floating-ui/react/@types/react(-dom)/jsdom 以 **realpath 符号链接**自仓库
+  pnpm store 注入(pnpm 布局保证传递依赖可解析)——**全程无网络**。临时项目自带独立 strict
+  tsconfig,**无任何仓库 paths/alias**,类型只可能来自包内 `dist/index.d.ts`。产物用毕清理。
+- **用例**(`scripts/consumer-cases/consumer.cases.tsx`,版本化):39 条「新手第一次用」姿势
+  覆盖全部公共导出(35 组件 + GlassSurface/LiquidGlassConfig/createTheme/presetThemes/
+  ProgressiveBlur/useAmbientFromImage/useForm/toast/Toaster);含受控 Input、外部 useForm、
+  Table 泛型推断、主题作用域等真实形态;closed 浮层标记 `allowEmpty`。
+- **三层验证**:① 类型层——仓库 tsc 对临时项目 strict 编译(顺带产出 JS 供后两层);
+  ② SSR 层——裸 Node `renderToString` 全部用例,并断言 Button 服务端首帧
+  `data-refraction="off"`(**首次在 dist 层面验证**);③ 运行层——jsdom + `createRoot` 渲染
+  全部用例(桩对齐库自身 setup:ResizeObserver/matchMedia/OffscreenCanvas/rAF)+ 2 条真实
+  交互冒烟(Button onClick、Accordion aria-expanded 切换)。另有 CSS 层:`./style.css`
+  exports 可达 + 关键组件类名齐全。
+- **故障注入验证**(防空转):向用例注入 `const x: number = 'str'` → 类型层准确报 TS2322、
+  脚本退出非 0;还原后全绿。三层非摆设。
+- **审计发现与处置**:
+  - 🐛 **修复**:`toast.*()` 在无 `<Toaster/>` 挂载时**静默丢失**且无提示——新手极难排查。
+    回库加 DEV 一次性 `console.warn`(仿 GlassSurface string-radius 先例;`resetToastStore`
+    复位标志)。RED→GREEN 2 测试;店内 hostless 套件与 demo-sandbox 扫描按「预期警告」静音。
+  - 📝 记 M29 指南 tips(合理设计,但值得写明):内联自定义 `--lg-*` 变量需
+    `['--lg-x' as string]` 断言(React CSSProperties 通病,主题场景用 createTheme 规避);
+    多数控件 `aria-label` 可选——裸用能编译能渲染但无可访问名,使用者需自给;Form 布尔控件需
+    `valuePropName/trigger`;Modal/Drawer 仅受控(open 必填)是刻意设计。
+  - ✅ 顺畅项:包内 d.ts strict 零障碍;Table 泛型自 `data` 推断无需显式标注、`rowKey` keyof
+    约束生效;createTheme 返回值可直接 spread;默认值(size/variant/duration 等)裸用合理;
+    className/style 透传正常(runtime 渲染层佐证)。
+- 验证:`pnpm typecheck` ✓、`pnpm test` **545/545 绿**(+2 toast 警告测试)、
+  `pnpm smoke:consumer` ✓(39×3 层 + 2 交互 + CSS)、`pnpm smoke:pack` ✓(不回归,build 于脚本内执行)。
+- **无破坏性变更**待确认项:无(唯一修复为纯新增 DEV 警告)。

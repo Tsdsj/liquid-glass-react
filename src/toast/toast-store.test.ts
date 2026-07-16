@@ -13,11 +13,16 @@ import {
 
 beforeEach(() => {
   resetToastStore();
+  // Store unit tests are intentionally hostless; silence the missing-<Toaster/>
+  // DEV warning so the output stays pristine (the warning itself is asserted
+  // in its own tests below).
+  vi.spyOn(console, 'warn').mockImplementation(() => undefined);
 });
 
 afterEach(() => {
   act(() => resetToastStore());
   vi.useRealTimers();
+  vi.restoreAllMocks();
 });
 
 describe('toast store', () => {
@@ -113,5 +118,27 @@ describe('toast store', () => {
     expect(region).toHaveTextContent('Second');
     expect(region).not.toHaveTextContent('First');
     expect(getToastSnapshot()).toHaveLength(2);
+  });
+
+  it('warns once in DEV when toast fires with no <Toaster/> mounted (M28 audit)', () => {
+    showToast('孤儿一号', { duration: Infinity });
+    showToast('孤儿二号', { duration: Infinity });
+
+    const hostWarnings = vi
+      .mocked(console.warn)
+      .mock.calls.filter(([message]) => typeof message === 'string' && message.includes('<Toaster'));
+    expect(hostWarnings).toHaveLength(1);
+  });
+
+  it('does not warn when a Toaster is mounted', () => {
+    render(createElement(Toaster));
+    act(() => {
+      showToast('有宿主', { duration: Infinity });
+    });
+
+    const hostWarnings = vi
+      .mocked(console.warn)
+      .mock.calls.filter(([message]) => typeof message === 'string' && message.includes('<Toaster'));
+    expect(hostWarnings).toHaveLength(0);
   });
 });
