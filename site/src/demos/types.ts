@@ -15,6 +15,19 @@ export interface ApiSection {
   rows: PropRow[];
 }
 
+export type PlaygroundControl =
+  | { key: string; type: 'select'; label: Bilingual; options: { value: string; label: string }[]; default: string }
+  | { key: string; type: 'boolean'; label: Bilingual; default: boolean }
+  | { key: string; type: 'text'; label: Bilingual; default: string };
+
+export type PlaygroundProps = Record<string, string | boolean>;
+
+export interface PlaygroundSpec {
+  controls: PlaygroundControl[];
+  render: (props: PlaygroundProps) => ReactNode;
+  code: (props: PlaygroundProps) => string;
+}
+
 export interface ComponentDoc {
   slug: string;
   name: string;
@@ -24,4 +37,6 @@ export interface ComponentDoc {
   renderPreview: () => ReactNode;
   demos: DemoSpec[];
   api: ApiSection[];
+  /** Optional interactive props playground (progressive — high-frequency components only). */
+  playground?: PlaygroundSpec;
 }

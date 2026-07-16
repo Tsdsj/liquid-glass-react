@@ -84,6 +84,7 @@ export const SITE_COPY = {
   onThisPage: { 'zh-CN': '本页内容', 'en-US': 'On this page' },
   backToOverview: { 'zh-CN': '返回组件总览', 'en-US': 'Back to overview' },
   demosTitle: { 'zh-CN': '代码演示', 'en-US': 'Examples' },
+  playgroundTitle: { 'zh-CN': '交互调参', 'en-US': 'Playground' },
   apiTitle: { 'zh-CN': 'API', 'en-US': 'API' },
   showCode: { 'zh-CN': '显示代码', 'en-US': 'Show code' },
   hideCode: { 'zh-CN': '收起代码', 'en-US': 'Hide code' },

@@ -1,5 +1,5 @@
 ---
-status: todo
+status: done
 depends: [M25]
 ---
 
@@ -63,4 +63,25 @@ depends: [M25]
 
 ## 完成记录
 
-（实现后追加）
+- **浅色模式玻璃可读性(用户追加需求)**:发现根因——demo 详情舞台用照片壁纸尚可,但**总览预览卡
+  (`.site-card__preview`/`.site-home-component__preview`)根本无 background-image、只有平铺 tan 底色**,
+  白色 tint 玻璃在平底色上几乎不可见,浅色模式最糟。修:App 把壁纸暴露为 `--site-wallpaper` CSS 变量;
+  新增**主题感知对比 scrim** `--site-demo-scrim`(浅色更重的冷→暖渐变压暗壁纸让白玻璃与高光跳出,
+  深色仅轻微),三处预览面(舞台 + 两种卡片)统一 `background-image: var(--site-demo-scrim), var(--site-wallpaper)`;
+  DemoBlock 去掉内联壁纸改由 CSS 统一。玻璃在明暗两模式下均有变化的背景可折射/对比。
+- **站内搜索(dogfood Command)**:`SiteSearch` 用**本库 Command 面板**——`/` 键(非输入区)或 header
+  「搜索组件 /」按钮打开,列出全部组件(label=名+标题,keywords=名/slug/中英标题/分类,按分类分组),
+  模糊过滤 + 上下键 + Enter 跳转 `#/components/<slug>`。键盘路径复用 Command 既有能力(Escape 关闭)。
+- **Props Playground**:扩展 `ComponentDoc` 增可选 `playground`(`PlaygroundSpec`:controls + render + code);
+  `Playground` 组件用**本库 Segmented/Switch/Input** 渲染控件(吃狗粮),实时预览 + 同步生成代码。
+  接入高频组件 **Button / Alert**(渐进增强,无 playground 的组件只出 API 表);详情页有则渲染「交互调参」节。
+- **代码复制**:核对发现 **DemoBlock 早已实现**(`navigator.clipboard` + try/catch 降级 + toast 反馈,
+  SSR 安全);本卡沿用,未重复造。
+- **测试**:site App.test 增两条(① `/` 开面板 + 输入 + Enter 跳转;② Button playground 改 variant→生成
+  代码同步);既有「显示代码」断言因 playground 新增一块 `.site-code` 而调整为「任一代码块含包名导入」
+  (仍验证 demo 导入,不削弱)。
+- 验证:`pnpm typecheck` ✓、`pnpm build` ✓、`pnpm test` **505/505 绿**(较 M25 的 503 +2)、
+  `pnpm site:build` ✓ 且产物资产仍带 `/liquid-glass-react/` 子路径前缀(M18 不回归)。
+- **总览计数**:全程由 `COMPONENT_DOCS` 派生,M19–M25 新增组件已自动计入,无硬编码需同步。
+- **留本地目检**:浅色/深色下玻璃预览与交互(hover/press/折射)的实际可读性、playground 调参手感、
+  搜索面板玻璃观感。scrim 浓淡为可调参数,若浅色仍偏暗/偏亮可调 `--site-demo-scrim` 透明度。

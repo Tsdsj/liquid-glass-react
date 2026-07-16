@@ -1,17 +1,20 @@
 import { useEffect, useState } from 'react';
 import {
+  Button,
   LiquidGlassConfig,
   Select,
   Switch,
   Toaster,
   type LiquidGlassLocale,
 } from '@ttqtt/liquid-glass-react';
+import { SiteSearch } from './components/SiteSearch';
 import { ComponentDetailPage } from './pages/ComponentDetailPage';
 import { ComponentsPage } from './pages/ComponentsPage';
 import { GuidePage } from './pages/GuidePage';
 import { HomePage } from './pages/HomePage';
 import { useHashRoute, type Route } from './router';
 import { SITE_COPY, SiteLocaleContext, useT } from './site-i18n';
+import { PHOTO_WALLPAPER } from './wallpaper';
 import './site.css';
 
 const LOCALE_OPTIONS = [
@@ -29,9 +32,17 @@ interface SiteHeaderProps {
   onLocaleChange: (locale: LiquidGlassLocale) => void;
   theme: 'light' | 'dark';
   onThemeChange: (theme: 'light' | 'dark') => void;
+  onOpenSearch: () => void;
 }
 
-function SiteHeader({ route, locale, onLocaleChange, theme, onThemeChange }: SiteHeaderProps) {
+function SiteHeader({
+  route,
+  locale,
+  onLocaleChange,
+  theme,
+  onThemeChange,
+  onOpenSearch,
+}: SiteHeaderProps) {
   const t = useT();
   const links = [
     { href: '#/', label: t(SITE_COPY.navHome), active: isActive(route, 'home') },
@@ -58,6 +69,15 @@ function SiteHeader({ route, locale, onLocaleChange, theme, onThemeChange }: Sit
           ))}
         </nav>
         <div className="site-header__controls">
+          <Button
+            size="sm"
+            variant="ghost"
+            className="site-header__search"
+            onClick={onOpenSearch}
+            aria-keyshortcuts="/"
+          >
+            {locale === 'zh-CN' ? '搜索组件 /' : 'Search /'}
+          </Button>
           <div className="site-header__theme">
             <span className="site-header__theme-label">
               {theme === 'dark' ? t(SITE_COPY.themeDark) : t(SITE_COPY.themeLight)}
@@ -103,10 +123,17 @@ export function App() {
   const route = useHashRoute();
   const [locale, setLocale] = useState<LiquidGlassLocale>('zh-CN');
   const [theme, setTheme] = useState<'light' | 'dark'>('light');
+  const [searchOpen, setSearchOpen] = useState(false);
 
   useEffect(() => {
     document.documentElement.dataset.theme = theme;
   }, [theme]);
+
+  // Expose the bundled wallpaper as a CSS var so every demo/preview surface can
+  // sit glass on the same textured backdrop (see --site-demo-scrim in site.css).
+  useEffect(() => {
+    document.documentElement.style.setProperty('--site-wallpaper', PHOTO_WALLPAPER);
+  }, []);
 
   useEffect(() => {
     document.documentElement.lang = locale;
@@ -125,11 +152,13 @@ export function App() {
             onLocaleChange={setLocale}
             theme={theme}
             onThemeChange={setTheme}
+            onOpenSearch={() => setSearchOpen(true)}
           />
           <main id="site-main" className="site__main">
             <PageForRoute route={route} />
           </main>
           <SiteFooter />
+          <SiteSearch open={searchOpen} onOpenChange={setSearchOpen} />
           <Toaster position="top-center" />
         </div>
       </SiteLocaleContext.Provider>

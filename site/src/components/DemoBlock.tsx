@@ -1,7 +1,6 @@
 import { useState, type ReactNode } from 'react';
 import { Button, toast } from '@ttqtt/liquid-glass-react';
 import { SITE_COPY, useT, type Bilingual } from '../site-i18n';
-import { PHOTO_WALLPAPER } from '../wallpaper';
 
 export interface DemoBlockProps {
   title: Bilingual;
@@ -34,9 +33,7 @@ export function DemoBlock({ title, description, code, children }: DemoBlockProps
 
   return (
     <section className="site-demo" data-testid="demo-block">
-      <div className="site-demo__stage" style={{ backgroundImage: PHOTO_WALLPAPER }}>
-        {children}
-      </div>
+      <div className="site-demo__stage">{children}</div>
       <div className="site-demo__meta">
         <div>
           <h3 className="site-demo__title">{t(title)}</h3>

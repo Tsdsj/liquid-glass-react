@@ -1,6 +1,7 @@
 import { Button } from '@ttqtt/liquid-glass-react';
 import { ComponentSidebar } from '../components/ComponentSidebar';
 import { DemoBlock } from '../components/DemoBlock';
+import { Playground } from '../components/Playground';
 import { PropsTable } from '../components/PropsTable';
 import { findComponentDoc } from '../demos/registry';
 import { SITE_COPY, useT } from '../site-i18n';
@@ -50,6 +51,15 @@ export function ComponentDetailPage({ slug }: ComponentDetailPageProps) {
           </h1>
           <p className="site-page-header__description">{t(doc.description)}</p>
         </header>
+
+        {doc.playground ? (
+          <section className="site-detail__section" aria-labelledby="playground-title">
+            <h2 id="playground-title" className="site-detail__section-title">
+              {t(SITE_COPY.playgroundTitle)}
+            </h2>
+            <Playground spec={doc.playground} />
+          </section>
+        ) : null}
 
         <section className="site-detail__section" aria-labelledby="examples-title">
           <h2 id="examples-title" className="site-detail__section-title">

@@ -125,8 +125,11 @@ describe('docs site', () => {
 
     const [firstShow] = screen.getAllByRole('button', { name: '显示代码' });
     await user.click(firstShow);
-    expect(document.querySelector('.site-code')?.textContent).toContain(
-      "@ttqtt/liquid-glass-react",
+    // The playground also renders a .site-code block, so assert some code block
+    // (the revealed demo) carries the package import.
+    const codeBlocks = Array.from(document.querySelectorAll('.site-code'));
+    expect(codeBlocks.some((el) => el.textContent?.includes('@ttqtt/liquid-glass-react'))).toBe(
+      true,
     );
   });
 
@@ -150,6 +153,30 @@ describe('docs site', () => {
     // Full token reference is rendered from the drift-checked table.
     expect(themingDemo).toHaveTextContent('--lg-accent');
     expect(themingDemo).toHaveTextContent('--lg-radius-md');
+  });
+
+  it('opens the search palette with "/" and jumps to a component', async () => {
+    const user = userEvent.setup();
+    render(<App />);
+
+    fireEvent.keyDown(document.body, { key: '/' });
+    const input = await screen.findByPlaceholderText('搜索组件…');
+    await user.type(input, 'form');
+    await user.keyboard('{Enter}');
+
+    expect(window.location.hash).toBe('#/components/form');
+  });
+
+  it('renders an interactive playground whose generated code tracks the controls', async () => {
+    const user = userEvent.setup();
+    window.location.hash = '#/components/button';
+    render(<App />);
+
+    const code = screen.getByTestId('playground-code');
+    expect(code).toHaveTextContent('variant="accent"');
+
+    await user.click(screen.getByRole('radio', { name: 'ghost' }));
+    expect(screen.getByTestId('playground-code')).toHaveTextContent('variant="ghost"');
   });
 
   it('navigates between pages on hash changes', async () => {

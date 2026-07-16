@@ -295,6 +295,37 @@ export const alertDoc: ComponentDoc = {
   renderPreview: () => (
     <Alert kind="success" title="成功">操作已完成。</Alert>
   ),
+  playground: {
+    controls: [
+      {
+        key: 'kind',
+        type: 'select',
+        label: { 'zh-CN': '语义', 'en-US': 'Kind' },
+        options: [
+          { value: 'info', label: 'info' },
+          { value: 'success', label: 'success' },
+          { value: 'warning', label: 'warning' },
+          { value: 'danger', label: 'danger' },
+        ],
+        default: 'info',
+      },
+      { key: 'closable', type: 'boolean', label: { 'zh-CN': '可关闭', 'en-US': 'Closable' }, default: true },
+      { key: 'title', type: 'text', label: { 'zh-CN': '标题', 'en-US': 'Title' }, default: '提示' },
+      { key: 'body', type: 'text', label: { 'zh-CN': '正文', 'en-US': 'Body' }, default: '这是一条提示信息。' },
+    ],
+    render: (p) => (
+      <Alert
+        kind={p.kind as 'info' | 'success' | 'warning' | 'danger'}
+        title={p.title as string}
+        closable={p.closable as boolean}
+        onClose={() => undefined}
+      >
+        {p.body as string}
+      </Alert>
+    ),
+    code: (p) =>
+      `<Alert kind="${p.kind}" title="${p.title}"${p.closable ? ' closable onClose={...}' : ''}>${p.body}</Alert>`,
+  },
   demos: [
     {
       id: 'kinds',

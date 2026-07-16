@@ -9,6 +9,9 @@
   --lg-site-accent-soft: rgb(10 132 255 / 0.09);
   --lg-site-hero-wash: rgb(243 247 243 / 0.84);
   --lg-site-demo-fallback: #b99a76;
+  /* Light mode: a stronger cool→warm scrim darkens the wallpaper so the
+     white-tinted glass and its specular edges read clearly. */
+  --site-demo-scrim: linear-gradient(150deg, rgb(26 36 66 / 0.4), rgb(58 32 66 / 0.4));
   --lg-site-control-shelf: #e3eae5;
   --lg-site-switch-track: #93a29a;
   --lg-site-switch-thumb: #f8fbf9;
@@ -34,6 +37,8 @@
   --lg-site-accent-soft: rgb(10 132 255 / 0.16);
   --lg-site-hero-wash: rgb(18 24 21 / 0.78);
   --lg-site-demo-fallback: #54483a;
+  /* Dark mode: the page is already dark, so only a light touch is needed. */
+  --site-demo-scrim: linear-gradient(150deg, rgb(0 0 0 / 0.18), rgb(0 0 0 / 0.18));
   --lg-site-control-shelf: #202824;
   --lg-site-switch-track: #637169;
   --lg-site-switch-thumb: #edf3ef;
@@ -447,6 +452,7 @@ body {
   gap: var(--lg-space-2);
   padding: var(--lg-space-3);
   background-color: var(--lg-site-demo-fallback);
+  background-image: var(--site-demo-scrim), var(--site-wallpaper);
   background-position: center;
   background-size: cover;
   pointer-events: none;
@@ -721,6 +727,7 @@ body {
   gap: var(--lg-space-2);
   padding: var(--lg-space-3);
   background-color: var(--lg-site-demo-fallback);
+  background-image: var(--site-demo-scrim), var(--site-wallpaper);
   background-position: center;
   background-size: cover;
   pointer-events: none;
@@ -833,6 +840,7 @@ body {
   gap: var(--lg-space-3);
   padding: calc(var(--lg-space-4) * 2);
   background-color: var(--lg-site-demo-fallback);
+  background-image: var(--site-demo-scrim), var(--site-wallpaper);
   background-position: center;
   background-size: cover;
 }
@@ -1054,6 +1062,56 @@ body {
 
 .theming-demo__table td:last-child {
   color: var(--lg-site-text-secondary);
+}
+
+/* Props playground */
+
+.site-playground {
+  display: flex;
+  flex-direction: column;
+  gap: var(--lg-space-3);
+  border: 1px solid var(--lg-site-border);
+  border-radius: var(--lg-radius-lg);
+  overflow: hidden;
+}
+
+.site-playground__preview {
+  min-height: 200px;
+  border-radius: 0;
+}
+
+.site-playground__controls {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: var(--lg-space-3);
+  padding: var(--lg-space-4);
+}
+
+.site-playground__control {
+  display: flex;
+  flex-direction: column;
+  gap: var(--lg-space-1);
+}
+
+.site-playground__label {
+  color: var(--lg-site-text-secondary);
+  font-size: var(--lg-font-size-sm);
+  font-weight: 600;
+}
+
+.site-playground .site-code {
+  margin: 0;
+  border-radius: 0;
+}
+
+.site-header__search {
+  white-space: nowrap;
+}
+
+@media (max-width: 720px) {
+  .site-header__search {
+    display: none;
+  }
 }
 
 /* Footer */

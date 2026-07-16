@@ -113,6 +113,50 @@ export const buttonDoc: ComponentDoc = {
       <Button variant="accent">主要</Button>
     </>
   ),
+  playground: {
+    controls: [
+      {
+        key: 'variant',
+        type: 'select',
+        label: { 'zh-CN': '变体', 'en-US': 'Variant' },
+        options: [
+          { value: 'glass', label: 'glass' },
+          { value: 'accent', label: 'accent' },
+          { value: 'ghost', label: 'ghost' },
+          { value: 'danger', label: 'danger' },
+        ],
+        default: 'accent',
+      },
+      {
+        key: 'size',
+        type: 'select',
+        label: { 'zh-CN': '尺寸', 'en-US': 'Size' },
+        options: [
+          { value: 'sm', label: 'sm' },
+          { value: 'md', label: 'md' },
+          { value: 'lg', label: 'lg' },
+        ],
+        default: 'md',
+      },
+      { key: 'disabled', type: 'boolean', label: { 'zh-CN': '禁用', 'en-US': 'Disabled' }, default: false },
+      { key: 'loading', type: 'boolean', label: { 'zh-CN': '加载中', 'en-US': 'Loading' }, default: false },
+      { key: 'children', type: 'text', label: { 'zh-CN': '文案', 'en-US': 'Label' }, default: '点我' },
+    ],
+    render: (p) => (
+      <Button
+        variant={p.variant as 'glass' | 'accent' | 'ghost' | 'danger'}
+        size={p.size as 'sm' | 'md' | 'lg'}
+        disabled={p.disabled as boolean}
+        loading={p.loading as boolean}
+      >
+        {(p.children as string) || 'Button'}
+      </Button>
+    ),
+    code: (p) =>
+      `<Button variant="${p.variant}" size="${p.size}"${p.disabled ? ' disabled' : ''}${
+        p.loading ? ' loading' : ''
+      }>${p.children}</Button>`,
+  },
   demos: [
     {
       id: 'variants',
