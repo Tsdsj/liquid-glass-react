@@ -89,6 +89,27 @@ export function Notify() {
 }`,
   },
   {
+    id: 'advanced',
+    title: { 'zh-CN': '进阶引擎', 'en-US': 'Advanced engine' },
+    body: {
+      'zh-CN': '两个可选的进阶视觉 API,均自动降级、SSR 安全。ProgressiveBlur 沿一个方向叠加渐进模糊,用于顶栏或 hero 边缘的一条带(逐层合成,不要铺满整页);它是装饰元素(aria-hidden),需要一个定位祖先。useAmbientFromImage 从同源 / 允许 CORS 的图片取样主色,写入容器的 --lg-ambient 让玻璃带上环境色;取样失败(跨域污染 / 解码失败 / 服务端)静默返回 null,调用方保持手动值。下方即环境取样的实时演示。',
+      'en-US': 'Two optional advanced visual APIs, both self-degrading and SSR-safe. ProgressiveBlur stacks a directional progressive blur for a top bar or hero edge (per-layer compositing — a bounded strip, never a full page); it is decorative (aria-hidden) and needs a positioned ancestor. useAmbientFromImage samples the dominant colour from a same-origin / CORS-enabled image into a container’s --lg-ambient so the glass picks up the surrounding hue; on failure (cross-origin taint / decode error / server) it silently returns null and the caller keeps its manual value. The live ambient-sampling demo is below.',
+    },
+    code: `import { ProgressiveBlur, useAmbientFromImage } from '@ttqtt/liquid-glass-react';
+
+// Progressive blur along one edge — a bounded strip inside a positioned box
+<div style={{ position: 'relative' }}>
+  <Content />
+  <ProgressiveBlur direction="to-bottom" size={96} />
+</div>
+
+// Sample a wallpaper's dominant colour into --lg-ambient
+function Hero({ src }) {
+  const ambient = useAmbientFromImage(src, { strategy: 'edge' });
+  return <section style={{ '--lg-ambient': ambient ?? 'transparent' }}>…</section>;
+}`,
+  },
+  {
     id: 'browsers',
     title: { 'zh-CN': '浏览器支持与降级', 'en-US': 'Browser support' },
     body: {

@@ -13,6 +13,10 @@ export type {
   LiquidGlassThemeTokens,
 } from './core/theme/createTheme';
 export { presetThemes } from './core/theme/presetThemes';
+export { ProgressiveBlur } from './core/progressive-blur';
+export type { ProgressiveBlurProps } from './core/progressive-blur';
+export { useAmbientFromImage } from './core/hooks/useAmbientFromImage';
+export type { AmbientSampleOptions } from './core/utils/ambient-color';
 export { Avatar } from './components/Avatar';
 export type { AvatarProps } from './components/Avatar';
 export { Badge } from './components/Badge';

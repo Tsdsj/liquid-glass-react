@@ -26,6 +26,7 @@ import {
   Pagination,
   Popover,
   Progress,
+  ProgressiveBlur,
   Radio,
   RadioGroup,
   Segmented,
@@ -40,8 +41,16 @@ import {
   Textarea,
   Toaster,
   Tooltip,
+  useAmbientFromImage,
 } from '../index';
 import { detectGlassSupport } from '../core/hooks/useGlassSupport';
+
+// Exercises the public advanced-engine hook on the server: it must degrade to
+// null (no window/Image) without throwing.
+function AmbientProbe() {
+  const color = useAmbientFromImage('https://example.test/a.png');
+  return <span>{color ?? 'none'}</span>;
+}
 
 const CASES: Array<[name: string, element: React.ReactElement]> = [
   ['GlassSurface', <GlassSurface>x</GlassSurface>],
@@ -83,6 +92,7 @@ const CASES: Array<[name: string, element: React.ReactElement]> = [
     </Popover>,
   ],
   ['Progress', <Progress aria-label="进度" value={50} />],
+  ['ProgressiveBlur', <ProgressiveBlur size={80} />],
   [
     'RadioGroup',
     <RadioGroup aria-label="套餐" defaultValue="a">
@@ -123,6 +133,10 @@ describe('SSR smoke', () => {
 
   it.each(CASES)('%s renders to a string on the server', (_name, element) => {
     expect(() => renderToString(element)).not.toThrow();
+  });
+
+  it('useAmbientFromImage degrades to null on the server', () => {
+    expect(renderToString(<AmbientProbe />)).toContain('none');
   });
 
   it('degrades to the frosted fallback (refraction off) on the server', () => {

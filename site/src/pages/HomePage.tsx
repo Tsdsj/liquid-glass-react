@@ -1,7 +1,11 @@
-import { Button, Checkbox, Select, Slider, Switch } from '@ttqtt/liquid-glass-react';
-// ProgressiveBlur is an internal primitive (not part of the public API, same as
-// ScrollEdge); the site consumes it directly from source per the M12 design.
-import { ProgressiveBlur } from '../../../src/core/progressive-blur';
+import {
+  Button,
+  Checkbox,
+  ProgressiveBlur,
+  Select,
+  Slider,
+  Switch,
+} from '@ttqtt/liquid-glass-react';
 import { COMPONENT_DOCS } from '../demos/registry';
 import { SITE_COPY, useT, type Bilingual } from '../site-i18n';
 import { PHOTO_WALLPAPER } from '../wallpaper';

@@ -143,6 +143,7 @@ describe('docs site', () => {
       'pnpm add @ttqtt/liquid-glass-react',
     );
     expect(screen.getByTestId('guide-browsers')).toBeInTheDocument();
+    expect(screen.getByTestId('guide-advanced')).toHaveTextContent('ProgressiveBlur');
     expect(screen.getByTestId('ambient-demo')).toBeInTheDocument();
     const themingDemo = screen.getByTestId('theming-demo');
     expect(themingDemo).toBeInTheDocument();

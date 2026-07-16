@@ -1,5 +1,5 @@
 ---
-status: todo
+status: done
 depends: [M20]
 ---
 
@@ -61,4 +61,34 @@ depends: [M20]
 
 ## 完成记录
 
-（实现后追加）
+**逐特性成熟度判定(审阅 M12–M14 完成记录 + 源码后):**
+
+| 来源 | 特性 | 决定 | 理由 |
+|---|---|---|---|
+| M12 | ProgressiveBlur | **转正** | 已是自洽组件(direction/size/maxBlur/layers/className),reduced-transparency/forced-colors 降级完备,SSR 安全,纯函数 `computeBlurLayers` 有测试,站点已消费 |
+| M14 | 环境取样 `useAmbientFromImage` | **转正** | SSR 守卫(window/document)、CORS 污染/解码失败/无 2D context 均静默回退 null,纯函数 `computeAmbientColor` 有测试 |
+| M13 | 液态 morph L0 | **保持内部** | L0(`useMorphTransition`/`computeMorphFrames`)correctness 达标,但公共**人机工程太低**——使用者需自行测量 rect → 计算帧 → play,缺可用 DX。给它一个体面的公共面需新设计 `<Morph>` 自动测量包裹器,超出「产品化既有」范围且触碰 AGENTS「不做设计发挥」。L1/L1.5/L2 在 M13 已实证不可行(合成模型互斥)。故不导出。 |
+
+**转正实现:**
+- `src/index.ts` 新增导出:`ProgressiveBlur` + `ProgressiveBlurProps`;`useAmbientFromImage` +
+  `AmbientSampleOptions`(类型来自 `core/utils/ambient-color`)。**最小公共面**——不导出内部
+  纯函数 `computeBlurLayers`/`computeAmbientColor`/`BlurLayer`(避免过度暴露)。
+- 组件源码**零改动**:两者本就写成干净的组件/hook,只是此前未挂到公共 barrel。
+  `progressive-blur.css` 早已被 `styles/index.css` @import,转正即随包发出;`dist/index.d.ts`
+  已含四个新公共类型/值(构建校验)。
+- **站点吃狗粮**:HomePage hero 的 `ProgressiveBlur`、AmbientDemo 的 `useAmbientFromImage`
+  从 `../../../src/...` 内部路径改为 `@ttqtt/liquid-glass-react` 公共包导入(证明公共 API 端到端可用)。
+
+**测试/文档:**
+- SSR 冒烟:`ssr.smoke.test.tsx` import 从公共 barrel,CASES 增 `ProgressiveBlur`;新增
+  `useAmbientFromImage` 在 Node 环境降级为 null 的断言(RED→GREEN:先因未导出 undefined 失败)。
+- ProgressiveBlur 是**装饰元素**(`aria-hidden="true"`),不属 a11y 冒烟「可达控件/内容面」范畴,
+  故未纳入 a11y.smoke——由 SSR 冒烟覆盖(诚实判断,非遗漏)。
+- 文档:GuidePage 新增「进阶引擎 / Advanced」章节(两 API 用法 + 何时用 + 降级说明,自动进导航);
+  既有 AmbientDemo 仍作实时演示。App.test 增 `guide-advanced` 含 `ProgressiveBlur` 断言。
+- 验证:`pnpm typecheck` ✓、`pnpm build` ✓(dist 首次因新增导出而变化,类型含四新项)、
+  `pnpm test` **412/412 绿**(较 M20 的 410 +2)、`pnpm site:build` ✓。
+- **现有默认行为不变**:两特性此前即 opt-in,转正只加导出、未改任何组件默认。morph 保持内部,
+  既有 GlassSurface/指示器测试零改动。
+- **留本地目检**(服务器无浏览器):ProgressiveBlur 3/5/8 层带状伪影与流畅度、环境取样的取色可信度
+  (edge vs average),沿用 M12/M14 的退出条件判据。
