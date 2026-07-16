@@ -78,6 +78,16 @@ export function Command({ items, open, onOpenChange, placeholder }: CommandProps
     }
   }, [isOpen]);
 
+  useEffect(() => {
+    if (!isOpen || filtered.length === 0) {
+      return;
+    }
+
+    document
+      .getElementById(optionId(activeIndex))
+      ?.scrollIntoView?.({ block: 'nearest' });
+  }, [activeIndex, filtered.length, isOpen]);
+
   const run = (item: CommandItem) => {
     item.onRun?.();
     setIsOpen(false);
@@ -86,10 +96,20 @@ export function Command({ items, open, onOpenChange, placeholder }: CommandProps
   const handleKeyDown = (event: KeyboardEvent<HTMLInputElement>) => {
     if (event.key === 'ArrowDown') {
       event.preventDefault();
-      setActiveIndex((index) => Math.min(index + 1, filtered.length - 1));
+      if (filtered.length > 0) {
+        setActiveIndex((index) => Math.min(index + 1, filtered.length - 1));
+      }
     } else if (event.key === 'ArrowUp') {
       event.preventDefault();
-      setActiveIndex((index) => Math.max(index - 1, 0));
+      if (filtered.length > 0) {
+        setActiveIndex((index) => Math.max(index - 1, 0));
+      }
+    } else if (event.key === 'Home') {
+      event.preventDefault();
+      setActiveIndex(0);
+    } else if (event.key === 'End') {
+      event.preventDefault();
+      setActiveIndex(Math.max(filtered.length - 1, 0));
     } else if (event.key === 'Enter') {
       event.preventDefault();
       const item = filtered[activeIndex];
@@ -124,6 +144,7 @@ export function Command({ items, open, onOpenChange, placeholder }: CommandProps
         aria-selected={index === activeIndex}
         className="lg-command__option"
         data-active={index === activeIndex ? '' : undefined}
+        onPointerMove={() => setActiveIndex(index)}
         onClick={() => run(item)}
       >
         {item.label}
@@ -144,23 +165,33 @@ export function Command({ items, open, onOpenChange, placeholder }: CommandProps
             aria-modal="true"
           >
             <div className="lg-command">
-              <input
-                ref={inputRef}
-                type="text"
-                role="combobox"
-                className="lg-command__input"
-                aria-expanded
-                aria-controls={listId}
-                aria-activedescendant={activeItem ? optionId(activeIndex) : undefined}
-                aria-label={copy.title}
-                placeholder={placeholder ?? copy.placeholder}
-                value={query}
-                onChange={(event) => {
-                  setQuery(event.target.value);
-                  setActiveIndex(0);
-                }}
-                onKeyDown={handleKeyDown}
-              />
+              <GlassSurface
+                as="div"
+                refraction="off"
+                material="clear"
+                className="lg-command__search"
+              >
+                <input
+                  ref={inputRef}
+                  type="text"
+                  role="combobox"
+                  className="lg-command__input"
+                  aria-expanded
+                  aria-autocomplete="list"
+                  aria-controls={listId}
+                  aria-activedescendant={activeItem ? optionId(activeIndex) : undefined}
+                  aria-label={copy.title}
+                  autoComplete="off"
+                  spellCheck={false}
+                  placeholder={placeholder ?? copy.placeholder}
+                  value={query}
+                  onChange={(event) => {
+                    setQuery(event.target.value);
+                    setActiveIndex(0);
+                  }}
+                  onKeyDown={handleKeyDown}
+                />
+              </GlassSurface>
               <ul id={listId} role="listbox" aria-label={copy.title} className="lg-command__list">
                 {filtered.length === 0 ? (
                   <li className="lg-command__empty" role="presentation">

@@ -22,12 +22,33 @@ describe('docs site', () => {
   it('renders the Chinese home page by default', () => {
     render(<App />);
     expect(screen.getByText('液态玻璃质感的 React 组件库')).toBeInTheDocument();
-    expect(screen.getByTestId('hero-showcase')).toBeInTheDocument();
+    expect(screen.getByTestId('hero-showcase')).toHaveClass('lg-surface');
+    expect(screen.getByTestId('hero-showcase')).toHaveAttribute('data-effect', 'refraction');
     expect(document.querySelector('.lg-progressive-blur')).toBeInTheDocument();
     expect(screen.getByRole('link', { name: '组件' })).toHaveAttribute(
       'href',
       '#/components',
     );
+  });
+
+  it('lets the home showcase control the demonstrated glass material', async () => {
+    const user = userEvent.setup();
+    render(<App />);
+
+    const showcase = screen.getByTestId('hero-showcase');
+    const enabledSwitch = screen.getByRole('switch', { name: '启用效果' });
+    const effectSelect = screen.getByRole('combobox', { name: '效果类型' });
+    const intensitySlider = screen.getByRole('slider', { name: '效果强度' });
+
+    await user.click(enabledSwitch);
+    expect(showcase).not.toHaveAttribute('data-enabled');
+    expect(effectSelect).toBeDisabled();
+    expect(intensitySlider).toBeDisabled();
+
+    await user.click(enabledSwitch);
+    await user.click(effectSelect);
+    await user.click(await screen.findByRole('option', { name: '动态高光 Specular' }));
+    expect(showcase).toHaveAttribute('data-effect', 'specular');
   });
 
   it('switches the whole site to English via the language select', async () => {

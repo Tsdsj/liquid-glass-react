@@ -22,6 +22,8 @@ describe('Command', () => {
     renderCommand(<Command items={makeItems(() => {})} open onOpenChange={() => {}} />);
 
     const input = screen.getByRole('combobox');
+    expect(input).toHaveAttribute('aria-autocomplete', 'list');
+    expect(input.closest('.lg-command__search')).toHaveClass('lg-surface');
     expect(screen.getAllByRole('option')).toHaveLength(3);
 
     await user.type(input, 'dup'); // keyword of "Copy link"
@@ -43,8 +45,18 @@ describe('Command', () => {
     const input = screen.getByRole('combobox');
     const options = screen.getAllByRole('option');
     await waitFor(() => expect(input).toHaveAttribute('aria-activedescendant', options[0].id));
+    await waitFor(() => expect(input).toHaveFocus());
 
     await user.keyboard('{ArrowDown}');
+    expect(input).toHaveAttribute('aria-activedescendant', options[1].id);
+
+    await user.keyboard('{End}');
+    expect(input).toHaveAttribute('aria-activedescendant', options[2].id);
+
+    await user.keyboard('{Home}');
+    expect(input).toHaveAttribute('aria-activedescendant', options[0].id);
+
+    await user.hover(options[1]);
     expect(input).toHaveAttribute('aria-activedescendant', options[1].id);
 
     await user.keyboard('{Enter}');

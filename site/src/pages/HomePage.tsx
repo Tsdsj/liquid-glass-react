@@ -1,6 +1,8 @@
+import { useState } from 'react';
 import {
   Button,
   Checkbox,
+  GlassSurface,
   ProgressiveBlur,
   Select,
   Slider,
@@ -49,8 +51,15 @@ const SHOWCASE_OPTIONS: Array<{ value: string; label: Bilingual }> = [
   },
 ];
 
+type ShowcaseEffect = 'refraction' | 'specular' | 'motion';
+
 export function HomePage() {
   const t = useT();
+  const [showcaseEnabled, setShowcaseEnabled] = useState(true);
+  const [showcaseEffect, setShowcaseEffect] = useState<ShowcaseEffect>('refraction');
+  const [showcaseIntensity, setShowcaseIntensity] = useState(64);
+  const [rememberPreference, setRememberPreference] = useState(true);
+  const showcaseDepth = 0.7 + showcaseIntensity / 100;
 
   return (
     <div>
@@ -81,13 +90,26 @@ export function HomePage() {
               </Button>
             </div>
           </div>
-          <div className="site-hero__showcase" data-testid="hero-showcase">
+          <GlassSurface
+            className="site-hero__showcase"
+            data-testid="hero-showcase"
+            data-effect={showcaseEffect}
+            data-enabled={showcaseEnabled ? '' : undefined}
+            refraction={showcaseEnabled ? 'auto' : 'off'}
+            material={showcaseEffect === 'specular' ? 'clear' : 'regular'}
+            depth={showcaseDepth}
+            bezel={16}
+          >
             <div className="site-hero__showcase-row site-hero__showcase-row--actions">
               <Button variant="accent">{t(SHOWCASE_COPY.primary)}</Button>
               <Button>{t(SHOWCASE_COPY.glass)}</Button>
               <label className="site-hero__toggle">
                 <span className="site-hero__toggle-label">{t(SHOWCASE_COPY.toggle)}</span>
-                <Switch defaultChecked aria-label={t(SHOWCASE_COPY.toggle)} />
+                <Switch
+                  checked={showcaseEnabled}
+                  onCheckedChange={setShowcaseEnabled}
+                  aria-label={t(SHOWCASE_COPY.toggle)}
+                />
               </label>
             </div>
             <div className="site-hero__showcase-row">
@@ -98,21 +120,33 @@ export function HomePage() {
                     value: option.value,
                     label: t(option.label),
                   }))}
-                  defaultValue="refraction"
+                  value={showcaseEffect}
+                  disabled={!showcaseEnabled}
+                  onChange={(value) => setShowcaseEffect(value as ShowcaseEffect)}
                 />
               </div>
             </div>
             <div className="site-hero__showcase-row">
               <div className="site-hero__slider">
-                <Slider defaultValue={64} aria-label={t(SHOWCASE_COPY.slider)} />
+                <Slider
+                  value={showcaseIntensity}
+                  disabled={!showcaseEnabled}
+                  onChange={setShowcaseIntensity}
+                  aria-label={t(SHOWCASE_COPY.slider)}
+                />
               </div>
-              <Checkbox defaultChecked>{t(SHOWCASE_COPY.remember)}</Checkbox>
+              <Checkbox
+                checked={rememberPreference}
+                onCheckedChange={setRememberPreference}
+              >
+                {t(SHOWCASE_COPY.remember)}
+              </Checkbox>
             </div>
-          </div>
+          </GlassSurface>
         </div>
         {/* Progressive blur strip softening the wallpaper→content transition at
             the hero's bottom edge (M12 experiment; needs a browser to see). */}
-        <ProgressiveBlur direction="to-bottom" />
+        <ProgressiveBlur direction="to-bottom" size={72} maxBlur={10} />
       </section>
 
       <section className="site-section">
@@ -126,11 +160,8 @@ export function HomePage() {
             </div>
           </header>
           <div className="site-feature-grid">
-            {FEATURES.map((feature, index) => (
+            {FEATURES.map((feature) => (
               <article key={feature.title['en-US']} className="site-feature">
-                <span className="site-feature__index" aria-hidden="true">
-                  {String(index + 1).padStart(2, '0')}
-                </span>
                 <h3 className="site-feature__title">{t(feature.title)}</h3>
                 <p className="site-feature__description">{t(feature.desc)}</p>
               </article>
