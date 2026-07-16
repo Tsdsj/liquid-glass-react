@@ -1,5 +1,5 @@
 ---
-status: todo
+status: done
 depends: [M22]
 ---
 
@@ -86,4 +86,27 @@ export interface TableProps<T> {
 
 ## 完成记录
 
-（实现后追加）
+- **纯函数** `table-utils.ts`:`defaultCompare`(nullish 优先、数字比大小、其余 localeCompare)、
+  `applySort`(拷贝排序,desc 用**取负**而非 reverse 以保稳定)、`paginate`/`pageCount`、选中集合
+  `toggleKey`/`toggleAll`(仅当前页键)/`selectionState`(表头 checked/indeterminate)。9 单测(RED→GREEN)。
+- **Table 组件**:排序/选中/分页三条链路各用 `useControllableState` 受控+非受控双模。
+  - 排序:点 sortable 表头循环 `asc→desc→null`;`comparator = column.sorter ?? 按 dataIndex defaultCompare`;
+    `<th aria-sort>` 反映 none/ascending/descending;排序箭头 CSS(aria-hidden,不污染表头可访问名)。
+  - 选中:表头 Checkbox(`indeterminate` 半选)`toggleAll` 当前页;行 Checkbox `toggleKey`;
+    行 `data-selected` 高亮。
+  - 分页:复用 `Pagination`(`total=sortedData.length`),排序在翻页间保持(先排序后切片)。
+- **玻璃合规(AGENTS §5)**:整表根为**单个 `GlassSurface` 卡**;表头 tint 与行 hover 用**普通
+  token 背景**(`--lg-tint`/`--lg-accent-glass`),`table.css` **不含任何 backdrop-filter**——玻璃只
+  来自外层 GlassSurface。行 hover 是纯背景过渡(吃 `--lg-duration-press`),不改尺寸、不触发滤镜重建。
+- **a11y**:原生 `<table>` 语义 + `<th scope="col">`;排序表头是 `<button>` 键盘可触发;选择列
+  Checkbox 有 aria-label;空态 `colSpan` 占位。纳入 a11y 冒烟(sortable+selectable,无 critical/serious)。
+- **导出/注册**:`src/index.ts` 增 `Table` + `TableColumn`/`TableProps`/`TableSort`;`styles/index.css`
+  @import `table.css`;五件套齐全(含 `Table.stories.tsx` Basic + SortableSelectablePaged)。
+  纳入 SSR 冒烟(GlassSurface+Pagination+useControllableState 均 SSR 安全)。
+- **文档**:`display.demos.tsx` 新增 `tableDoc`(排序+选中+分页真实示例 + Table/TableColumn 两张 API 表,
+  中英双语),接入 registry「展示」组;总览计数由 `COMPONENT_DOCS` 派生自动 +1。
+- **测试**:`Table.test.tsx` 6 条(语义渲染、排序循环+aria-sort、自定义 sorter+受控 sort、
+  选中+表头半选/全选、分页+排序跨页保持、空态)。
+- 验证:`pnpm typecheck` ✓、`pnpm build` ✓(dist 含 4 个 Table 公共项)、`pnpm test` **454/454 绿**
+  (较 M22 的 437 +17)、`pnpm site:build` ✓。**无新增运行时依赖**。
+- **留本地目检**:玻璃表头 tint、行 hover 高光与选中态、粘性表头、分页联动观感。

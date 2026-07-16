@@ -26,6 +26,7 @@ import {
   progressDoc,
   skeletonDoc,
   spinDoc,
+  tableDoc,
   tagDoc,
 } from './display.demos';
 import type { ComponentDoc } from './types';
@@ -63,6 +64,7 @@ export const COMPONENT_DOCS: ComponentDoc[] = [
   progressDoc,
   spinDoc,
   skeletonDoc,
+  tableDoc,
   // Feedback
   tooltipDoc,
   popoverDoc,

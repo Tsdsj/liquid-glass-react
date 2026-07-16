@@ -20,6 +20,7 @@ import {
   SideNav,
   Slider,
   Switch,
+  Table,
   Tabs,
   Tag,
 } from '../index';
@@ -119,6 +120,22 @@ const CASES: Array<[name: string, element: React.ReactElement]> = [
   ],
   ['Card', <Card>卡片内容</Card>],
   ['Tag', <Tag>标签</Tag>],
+  [
+    'Table',
+    <Table
+      aria-label="用户表"
+      rowKey="id"
+      columns={[
+        { key: 'name', title: '姓名', dataIndex: 'name', sortable: true },
+        { key: 'age', title: '年龄', dataIndex: 'age' },
+      ]}
+      data={[
+        { id: '1', name: '甲', age: 30 },
+        { id: '2', name: '乙', age: 25 },
+      ]}
+      selectable
+    />,
+  ],
   [
     'Badge',
     <Badge count={5}>

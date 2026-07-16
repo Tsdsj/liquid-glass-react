@@ -1,7 +1,39 @@
-import { Avatar, Badge, Button, Card, Progress, Skeleton, Spin, Tag } from '@ttqtt/liquid-glass-react';
+import {
+  Avatar,
+  Badge,
+  Button,
+  Card,
+  Progress,
+  Skeleton,
+  Spin,
+  Table,
+  Tag,
+  type TableColumn,
+} from '@ttqtt/liquid-glass-react';
 import type { ComponentDoc } from './types';
 
 const DISPLAY = { 'zh-CN': '展示', 'en-US': 'Display' };
+
+interface Member {
+  id: string;
+  name: string;
+  role: string;
+  score: number;
+}
+
+const MEMBERS: Member[] = [
+  { id: '1', name: '林清', role: '设计', score: 92 },
+  { id: '2', name: '陈默', role: '前端', score: 88 },
+  { id: '3', name: '苏岚', role: '产品', score: 95 },
+  { id: '4', name: '周野', role: '前端', score: 79 },
+  { id: '5', name: '吴回', role: '设计', score: 84 },
+];
+
+const MEMBER_COLUMNS: TableColumn<Member>[] = [
+  { key: 'name', title: '姓名', dataIndex: 'name', sortable: true },
+  { key: 'role', title: '角色', dataIndex: 'role' },
+  { key: 'score', title: '评分', dataIndex: 'score', sortable: true, align: 'right' },
+];
 
 const AVATAR_BOX = {
   display: 'inline-flex',
@@ -382,6 +414,92 @@ import { Avatar } from '@ttqtt/liquid-glass-react';
         { prop: 'fallback', type: 'ReactNode', description: { 'zh-CN': '失败/缺省回退内容', 'en-US': 'Fallback content' } },
         { prop: 'size', type: "'sm' | 'md' | 'lg'", defaultValue: "'md'", description: { 'zh-CN': '尺寸档位', 'en-US': 'Size preset' } },
         { prop: 'shape', type: "'circle' | 'square'", defaultValue: "'circle'", description: { 'zh-CN': '形状', 'en-US': 'Shape' } },
+      ],
+    },
+  ],
+};
+
+export const tableDoc: ComponentDoc = {
+  slug: 'table',
+  name: 'Table',
+  title: { 'zh-CN': '表格', 'en-US': 'Table' },
+  category: DISPLAY,
+  description: {
+    'zh-CN': '数据表格:点表头循环排序、行/全选(半选态)、分页联动,玻璃表头与行悬浮高光。受控/非受控双模,零运行时依赖。',
+    'en-US': 'Data table: click-to-cycle sorting, row / select-all (with indeterminate), linked pagination, glass header and row-hover highlight. Controlled or uncontrolled, no runtime dependency.',
+  },
+  renderPreview: () => (
+    <Table aria-label="成员预览" columns={MEMBER_COLUMNS} data={MEMBERS.slice(0, 3)} rowKey="id" />
+  ),
+  demos: [
+    {
+      id: 'full',
+      title: { 'zh-CN': '排序 + 选中 + 分页', 'en-US': 'Sort + select + paginate' },
+      description: {
+        'zh-CN': 'sortable 列点击表头 asc→desc→无;selectable 加选择列,表头半选态自动计算;pagination 传 pageSize 即联动 Pagination,排序在翻页间保持。',
+        'en-US': 'Click a sortable header to cycle asc→desc→none; selectable adds a selection column with an auto indeterminate header; pass pagination.pageSize to link Pagination, and sorting persists across pages.',
+      },
+      code: `
+import { Table, type TableColumn } from '@ttqtt/liquid-glass-react';
+
+interface Member { id: string; name: string; role: string; score: number }
+
+const columns: TableColumn<Member>[] = [
+  { key: 'name', title: '姓名', dataIndex: 'name', sortable: true },
+  { key: 'role', title: '角色', dataIndex: 'role' },
+  { key: 'score', title: '评分', dataIndex: 'score', sortable: true, align: 'right' },
+];
+
+<Table
+  aria-label="成员"
+  rowKey="id"
+  columns={columns}
+  data={members}
+  selectable
+  defaultSort={{ key: 'score', order: 'desc' }}
+  pagination={{ pageSize: 3 }}
+/>`,
+      render: () => (
+        <Table
+          aria-label="成员"
+          columns={MEMBER_COLUMNS}
+          data={MEMBERS}
+          rowKey="id"
+          selectable
+          defaultSort={{ key: 'score', order: 'desc' }}
+          pagination={{ pageSize: 3 }}
+        />
+      ),
+    },
+  ],
+  api: [
+    {
+      title: 'Table',
+      rows: [
+        { prop: 'columns', type: 'TableColumn<T>[]', description: { 'zh-CN': '列定义', 'en-US': 'Column definitions' } },
+        { prop: 'data', type: 'T[]', description: { 'zh-CN': '行数据', 'en-US': 'Row data' } },
+        { prop: 'rowKey', type: 'keyof T | (row) => string', description: { 'zh-CN': '行唯一键', 'en-US': 'Unique row key' } },
+        { prop: 'sort / defaultSort', type: '{ key, order } | null', description: { 'zh-CN': '受控 / 非受控排序', 'en-US': 'Controlled / uncontrolled sort' } },
+        { prop: 'onSortChange', type: '(sort) => void', description: { 'zh-CN': '排序变化', 'en-US': 'Sort change' } },
+        { prop: 'selectable', type: 'boolean', defaultValue: 'false', description: { 'zh-CN': '开启行选择列', 'en-US': 'Enable the selection column' } },
+        { prop: 'selectedKeys / defaultSelectedKeys', type: 'string[]', description: { 'zh-CN': '受控 / 非受控选中', 'en-US': 'Controlled / uncontrolled selection' } },
+        { prop: 'onSelectionChange', type: '(keys) => void', description: { 'zh-CN': '选中变化', 'en-US': 'Selection change' } },
+        { prop: 'pagination', type: '{ pageSize, page?, onChange? } | false', defaultValue: 'false', description: { 'zh-CN': '分页(联动 Pagination)', 'en-US': 'Pagination (links Pagination)' } },
+        { prop: 'size', type: "'sm' | 'md' | 'lg'", defaultValue: "'md'", description: { 'zh-CN': '尺寸', 'en-US': 'Size' } },
+        { prop: 'emptyText', type: 'ReactNode', description: { 'zh-CN': '空数据占位', 'en-US': 'Empty placeholder' } },
+      ],
+    },
+    {
+      title: 'TableColumn<T>',
+      rows: [
+        { prop: 'key', type: 'string', description: { 'zh-CN': '列唯一键', 'en-US': 'Unique column key' } },
+        { prop: 'title', type: 'ReactNode', description: { 'zh-CN': '表头', 'en-US': 'Header content' } },
+        { prop: 'dataIndex', type: 'keyof T', description: { 'zh-CN': '取值字段', 'en-US': 'Field to read' } },
+        { prop: 'render', type: '(row, index) => ReactNode', description: { 'zh-CN': '自定义单元格', 'en-US': 'Custom cell' } },
+        { prop: 'sortable', type: 'boolean', description: { 'zh-CN': '可排序', 'en-US': 'Sortable' } },
+        { prop: 'sorter', type: '(a, b) => number', description: { 'zh-CN': '自定义比较(缺省按 dataIndex)', 'en-US': 'Custom comparator (defaults to dataIndex)' } },
+        { prop: 'align', type: "'left' | 'center' | 'right'", description: { 'zh-CN': '对齐', 'en-US': 'Alignment' } },
+        { prop: 'width', type: 'number | string', description: { 'zh-CN': '列宽', 'en-US': 'Column width' } },
       ],
     },
   ],

@@ -38,6 +38,7 @@ import {
   Slider,
   Spin,
   Switch,
+  Table,
   Tabs,
   Tag,
   Textarea,
@@ -117,6 +118,17 @@ const CASES: Array<[name: string, element: React.ReactElement]> = [
   ['Slider', <Slider aria-label="音量" defaultValue={20} />],
   ['Spin', <Spin />],
   ['Switch', <Switch aria-label="通知" />],
+  [
+    'Table',
+    <Table
+      aria-label="表格"
+      rowKey="id"
+      columns={[{ key: 'name', title: '名称', dataIndex: 'name', sortable: true }]}
+      data={[{ id: '1', name: '甲' }]}
+      selectable
+      pagination={{ pageSize: 10 }}
+    />,
+  ],
   ['Tabs', <Tabs aria-label="视图" items={[{ key: 'a', label: '概览', content: '内容' }]} />],
   ['Tag', <Tag>标签</Tag>],
   ['Textarea', <Textarea aria-label="备注" />],

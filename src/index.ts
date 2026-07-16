@@ -66,6 +66,8 @@ export { Spin } from './components/Spin';
 export type { SpinProps } from './components/Spin';
 export { Switch } from './components/Switch';
 export type { SwitchProps } from './components/Switch';
+export { Table } from './components/Table';
+export type { TableColumn, TableProps, TableSort } from './components/Table';
 export { Tabs } from './components/Tabs';
 export type { TabItem, TabsProps } from './components/Tabs';
 export { Tag } from './components/Tag';
