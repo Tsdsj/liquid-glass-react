@@ -2,6 +2,7 @@ import { useState } from 'react';
 import {
   Button,
   Checkbox,
+  DatePicker,
   Form,
   FormItem,
   Input,
@@ -418,6 +419,77 @@ import { Form, FormItem, Button, Input, Checkbox } from '@ttqtt/liquid-glass-rea
         { prop: 'setValue(name, value)', type: 'void', description: { 'zh-CN': '设置某字段', 'en-US': 'Set a field' } },
         { prop: 'validate()', type: '() => Promise<boolean>', description: { 'zh-CN': '手动全量校验', 'en-US': 'Validate all fields' } },
         { prop: 'reset()', type: '() => void', description: { 'zh-CN': '复位到 initialValues', 'en-US': 'Reset to initialValues' } },
+      ],
+    },
+  ],
+};
+
+function DatePickerDemo() {
+  const [value, setValue] = useState<Date | null>(new Date(2024, 0, 15));
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 12, minWidth: 260 }}>
+      <DatePicker
+        aria-label="日期"
+        placeholder="选择日期"
+        value={value}
+        onChange={setValue}
+        min={new Date(2024, 0, 5)}
+        max={new Date(2024, 1, 20)}
+        disabledDate={(date) => date.getDay() === 0 || date.getDay() === 6}
+      />
+      <span style={{ color: 'var(--lg-text-secondary)' }}>
+        {value ? value.toLocaleDateString() : '未选择(周末与范围外禁用)'}
+      </span>
+    </div>
+  );
+}
+
+export const datePickerDoc: ComponentDoc = {
+  slug: 'date-picker',
+  name: 'DatePicker',
+  title: { 'zh-CN': '日期选择', 'en-US': 'DatePicker' },
+  category: CATEGORY,
+  description: {
+    'zh-CN': '只读输入 + 弹出日历面板:方向键/PageUp·Down/Home·End 键盘导航,min/max 与 disabledDate 拦截,日期算法自写,零运行时依赖。',
+    'en-US': 'A read-only input with a popup calendar: arrow / PageUp·Down / Home·End keyboard navigation, min/max and disabledDate gating, hand-written date math, no runtime dependency.',
+  },
+  renderPreview: () => <DatePickerDemo />,
+  demos: [
+    {
+      id: 'range',
+      title: { 'zh-CN': '受控 + 范围 + 禁用日', 'en-US': 'Controlled + range + disabled days' },
+      description: {
+        'zh-CN': 'min/max 限定可选范围,disabledDate 逐日拦截(此处禁用周末)。点开面板用方向键移动、Enter/点击选中、Escape 关闭,焦点自动进入网格并在关闭后复位到输入框。',
+        'en-US': 'min/max bound the range and disabledDate blocks days (weekends here). Open the panel, move with the arrow keys, select with Enter/click, close with Escape — focus enters the grid and returns to the input on close.',
+      },
+      code: `
+import { DatePicker } from '@ttqtt/liquid-glass-react';
+
+const [value, setValue] = useState<Date | null>(new Date(2024, 0, 15));
+
+<DatePicker
+  aria-label="日期"
+  value={value}
+  onChange={setValue}
+  min={new Date(2024, 0, 5)}
+  max={new Date(2024, 1, 20)}
+  disabledDate={(date) => date.getDay() === 0 || date.getDay() === 6}
+/>`,
+      render: () => <DatePickerDemo />,
+    },
+  ],
+  api: [
+    {
+      title: 'DatePicker',
+      rows: [
+        { prop: 'value / defaultValue', type: 'Date | null', description: { 'zh-CN': '受控 / 非受控值', 'en-US': 'Controlled / uncontrolled value' } },
+        { prop: 'onChange', type: '(date: Date | null) => void', description: { 'zh-CN': '选中变化', 'en-US': 'Change callback' } },
+        { prop: 'min / max', type: 'Date', description: { 'zh-CN': '可选范围边界', 'en-US': 'Selectable range bounds' } },
+        { prop: 'disabledDate', type: '(date: Date) => boolean', description: { 'zh-CN': '逐日禁用判定', 'en-US': 'Per-day disable predicate' } },
+        { prop: 'format', type: 'string', defaultValue: "'YYYY-MM-DD'", description: { 'zh-CN': '显示格式', 'en-US': 'Display format' } },
+        { prop: 'weekStartsOn', type: '0 | 1', defaultValue: '1', description: { 'zh-CN': '周起始(0 周日 / 1 周一)', 'en-US': 'Week start (0 Sun / 1 Mon)' } },
+        { prop: 'size', type: "'sm' | 'md' | 'lg'", defaultValue: "'md'", description: { 'zh-CN': '尺寸', 'en-US': 'Size' } },
+        { prop: 'locale', type: "'zh-CN' | 'en-US'", description: { 'zh-CN': '缺省取 LiquidGlassConfig', 'en-US': 'Defaults to LiquidGlassConfig' } },
       ],
     },
   ],

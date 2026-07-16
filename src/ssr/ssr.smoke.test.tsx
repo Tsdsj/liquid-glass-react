@@ -17,6 +17,7 @@ import {
   Button,
   Card,
   Checkbox,
+  DatePicker,
   Drawer,
   Form,
   FormItem,
@@ -68,6 +69,7 @@ const CASES: Array<[name: string, element: React.ReactElement]> = [
   ['Button', <Button>保存</Button>],
   ['Card', <Card>卡片</Card>],
   ['Checkbox', <Checkbox>同意</Checkbox>],
+  ['DatePicker (closed)', <DatePicker aria-label="日期" placeholder="选择日期" />],
   [
     'Drawer (closed)',
     <Drawer open={false} onOpenChange={() => {}}>

@@ -1,6 +1,7 @@
 import { buttonDoc, glassSurfaceDoc } from './general.demos';
 import {
   checkboxDoc,
+  datePickerDoc,
   formDoc,
   inputDoc,
   selectDoc,
@@ -45,6 +46,7 @@ export const COMPONENT_DOCS: ComponentDoc[] = [
   selectDoc,
   sliderDoc,
   switchDoc,
+  datePickerDoc,
   formDoc,
   // Selection
   radioGroupDoc,

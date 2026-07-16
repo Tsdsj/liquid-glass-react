@@ -27,6 +27,8 @@ export { Button } from './components/Button';
 export type { ButtonProps } from './components/Button';
 export { Card } from './components/Card';
 export type { CardProps } from './components/Card';
+export { DatePicker } from './components/DatePicker';
+export type { DatePickerProps } from './components/DatePicker';
 export { Checkbox } from './components/Checkbox';
 export type { CheckboxProps } from './components/Checkbox';
 export { Drawer } from './components/Drawer';

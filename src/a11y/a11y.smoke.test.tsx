@@ -8,6 +8,7 @@ import {
   Button,
   Card,
   Checkbox,
+  DatePicker,
   Form,
   FormItem,
   Input,
@@ -57,6 +58,7 @@ const CASES: Array<[name: string, element: React.ReactElement]> = [
     </Form>,
   ],
   ['Checkbox', <Checkbox defaultChecked>同意条款</Checkbox>],
+  ['DatePicker', <DatePicker aria-label="生日" placeholder="选择日期" />],
   [
     'RadioGroup',
     <RadioGroup aria-label="套餐" defaultValue="pro">

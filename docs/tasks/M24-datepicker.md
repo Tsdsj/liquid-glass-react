@@ -1,5 +1,5 @@
 ---
-status: todo
+status: done
 depends: [M23]
 ---
 
@@ -76,4 +76,29 @@ export interface DatePickerProps {
 
 ## 完成记录
 
-（实现后追加）
+- **日期纯函数** `src/core/utils/date.ts`(自写,无 dayjs/date-fns):`isLeapYear`/`daysInMonth`、
+  `buildMonthGrid`(固定 42 格,按 `weekStartsOn` 对齐,前后补邻月)、`addDays`/`addMonths`(**月末
+  钳日**,Jan31+1→Feb29/28)、`isSameDay`/`inRange`/`clampDate`(按天粒度)、`formatDate`/`parseDate`
+  (token 格式,拒绝 2024-02-30 等非法)。11 单测(RED→GREEN,含闰年/跨月/周起始/往返)。
+- **Calendar 面板**(内部):`role="grid"` 的 `<table>` + `<th scope=col>` 周名 + `gridcell` 里放
+  日期 `<button>`;roving tabindex(仅 focusedDate 的按钮 tabIndex=0),`useEffect` 在 focusedDate
+  变化时聚焦对应按钮(**开面板即焦点入网格**)。键盘:方向键跨行跨月、PageUp/Down 换月(Shift 换年)、
+  Home/End 本周首末——均在 grid `onKeyDown` 处理并 preventDefault。
+- **关键决策**:选中(Enter/Space)**交给聚焦日 `<button>` 的原生 click**,grid 的 keydown **不**再处理
+  Enter/Space,避免原生激活与手动处理**双触发**。禁用日(超 min/max 或 disabledDate)`aria-disabled`,
+  onClick 守卫不选。
+- **DatePicker 组件**:`useControllableState` 管 `value`(Date|null),内部 `open`;`<Popover>` 承载
+  Calendar(玻璃面板/外点/Escape/关闭复焦由 Popover 复用),只读 `<Input>` 作触发。locale 缺省取
+  `LiquidGlassConfig`;`today` 用运行时 `new Date()` 注入 Calendar(纯函数不碰 now)。
+- **a11y 踩坑**:Input 触发上 floating-ui(`useRole:dialog`)会加 `aria-haspopup`/`aria-expanded`,
+  这些在纯 `textbox` 上不被 axe 允许(aria-allowed-attr critical)。修:给 Input 加 **`role="combobox"`**
+  (combobox 允许这两个属性,正是日期输入弹层的正确模式)。a11y 冒烟随后通过。
+- **导出/注册**:`src/index.ts` 增 `DatePicker` + `DatePickerProps`;`styles/index.css` @import
+  `datepicker.css`;五件套齐全(含 stories:Basic + WithRange)。closed 态纳入 SSR 与 a11y 冒烟。
+- **文档**:`entry.demos.tsx` 新增 `datePickerDoc`(受控 + min/max + 禁用周末真实示例 + API 表,
+  中英双语),接入 registry「数据录入」组;总览计数派生 +1。
+- **测试**:`DatePicker.test.tsx` 7 条(开合、选日+onChange+回填+关闭、受控 format、方向键移焦+Enter 选、
+  换月、min 禁用日不选、Escape 关闭)。
+- 验证:`pnpm typecheck` ✓、`pnpm build` ✓(dist 含 DatePicker/DatePickerProps)、`pnpm test`
+  **474/474 绿**(较 M23 的 454 +20)、`pnpm site:build` ✓。**无新增运行时依赖**。
+- **留本地目检**:日历面板玻璃折射、今天/选中/禁用/跨月态配色、方向键移动的焦点观感。
