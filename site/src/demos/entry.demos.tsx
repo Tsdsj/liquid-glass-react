@@ -1,6 +1,9 @@
 import { useState } from 'react';
 import {
+  Button,
   Checkbox,
+  Form,
+  FormItem,
   Input,
   Select,
   Slider,
@@ -295,6 +298,126 @@ import { Switch } from '@ttqtt/liquid-glass-react';
         { prop: 'checked / defaultChecked', type: 'boolean', description: { 'zh-CN': '受控 / 非受控开关态', 'en-US': 'Controlled / uncontrolled state' } },
         { prop: 'onCheckedChange', type: '(checked: boolean) => void', description: { 'zh-CN': '切换回调', 'en-US': 'Change callback' } },
         { prop: 'size', type: "'sm' | 'md' | 'lg'", defaultValue: "'md'", description: { 'zh-CN': '尺寸', 'en-US': 'Size' } },
+      ],
+    },
+  ],
+};
+
+function LoginFormDemo() {
+  const [submitted, setSubmitted] = useState<string | null>(null);
+  return (
+    <div style={{ minWidth: 320, maxWidth: 400 }}>
+      <Form
+        initialValues={{ email: '', password: '', agree: false }}
+        onSubmit={(values) => setSubmitted(JSON.stringify(values))}
+      >
+        <FormItem
+          name="email"
+          label="邮箱"
+          required
+          rules={[{ pattern: /.+@.+\..+/, message: '邮箱格式不正确' }]}
+        >
+          <Input placeholder="you@example.com" />
+        </FormItem>
+        <FormItem name="password" label="密码" required rules={[{ min: 6, message: '至少 6 位' }]}>
+          <Input type="password" placeholder="至少 6 位" />
+        </FormItem>
+        <FormItem name="agree" valuePropName="checked" trigger="onCheckedChange" required>
+          <Checkbox>我已阅读并同意服务条款</Checkbox>
+        </FormItem>
+        <Button variant="accent" type="submit">
+          登录
+        </Button>
+      </Form>
+      {submitted ? (
+        <p style={{ marginTop: 12, color: 'var(--lg-text-secondary)' }}>提交成功:{submitted}</p>
+      ) : null}
+    </div>
+  );
+}
+
+export const formDoc: ComponentDoc = {
+  slug: 'form',
+  name: 'Form',
+  title: { 'zh-CN': '表单', 'en-US': 'Form' },
+  category: CATEGORY,
+  description: {
+    'zh-CN': '把现有输入组件编排成受控表单:自写校验、字段布局、错误提示与 a11y 关联,零运行时依赖。',
+    'en-US': 'Orchestrates the input components into a controlled form: hand-written validation, field layout, error messaging and a11y wiring — with no runtime dependency.',
+  },
+  renderPreview: () => <LoginFormDemo />,
+  demos: [
+    {
+      id: 'login',
+      title: { 'zh-CN': '登录表单与校验', 'en-US': 'Login form with validation' },
+      description: {
+        'zh-CN': 'required 加内置必填规则;rules 支持 min/max/pattern/validator。布尔控件用 valuePropName/trigger 适配。提交时全量校验,全通过才回调 onSubmit。',
+        'en-US': 'required adds the built-in rule; rules cover min/max/pattern/validator. Boolean controls adapt via valuePropName/trigger. Submit validates everything and only then calls onSubmit.',
+      },
+      code: `
+import { Form, FormItem, Button, Input, Checkbox } from '@ttqtt/liquid-glass-react';
+
+<Form
+  initialValues={{ email: '', password: '', agree: false }}
+  onSubmit={(values) => console.log(values)}
+>
+  <FormItem name="email" label="邮箱" required
+    rules={[{ pattern: /.+@.+\\..+/, message: '邮箱格式不正确' }]}>
+    <Input placeholder="you@example.com" />
+  </FormItem>
+  <FormItem name="password" label="密码" required
+    rules={[{ min: 6, message: '至少 6 位' }]}>
+    <Input type="password" />
+  </FormItem>
+  {/* 布尔控件:声明它的受控 prop 名与事件名 */}
+  <FormItem name="agree" valuePropName="checked" trigger="onCheckedChange" required>
+    <Checkbox>我已阅读并同意服务条款</Checkbox>
+  </FormItem>
+  <Button variant="accent" type="submit">登录</Button>
+</Form>`,
+      render: () => <LoginFormDemo />,
+    },
+  ],
+  api: [
+    {
+      title: 'Form',
+      rows: [
+        { prop: 'form', type: 'FormInstance', description: { 'zh-CN': 'useForm() 外部实例(可选)', 'en-US': 'External useForm() instance (optional)' } },
+        { prop: 'initialValues', type: 'Partial<T>', description: { 'zh-CN': '初始值', 'en-US': 'Initial values' } },
+        { prop: 'onSubmit', type: '(values: T) => void', description: { 'zh-CN': '全部校验通过后回调', 'en-US': 'Called after all rules pass' } },
+        { prop: 'onValuesChange', type: '(changed, all) => void', description: { 'zh-CN': '值变化回调', 'en-US': 'Value change callback' } },
+        { prop: 'layout', type: "'vertical' | 'horizontal'", defaultValue: "'vertical'", description: { 'zh-CN': '布局', 'en-US': 'Layout' } },
+        { prop: 'disabled', type: 'boolean', defaultValue: 'false', description: { 'zh-CN': '整表禁用', 'en-US': 'Disable the whole form' } },
+      ],
+    },
+    {
+      title: 'FormItem',
+      rows: [
+        { prop: 'name', type: 'string', description: { 'zh-CN': '字段键', 'en-US': 'Field key' } },
+        { prop: 'label', type: 'ReactNode', description: { 'zh-CN': '标签(与控件自动关联)', 'en-US': 'Label (auto-associated)' } },
+        { prop: 'required', type: 'boolean', defaultValue: 'false', description: { 'zh-CN': '必填(星标 + 内置规则)', 'en-US': 'Required (marker + built-in rule)' } },
+        { prop: 'rules', type: 'FormRule[]', description: { 'zh-CN': '校验规则', 'en-US': 'Validation rules' } },
+        { prop: 'help', type: 'ReactNode', description: { 'zh-CN': '辅助说明', 'en-US': 'Helper text' } },
+        { prop: 'valuePropName', type: 'string', defaultValue: "'value'", description: { 'zh-CN': "控件受控 prop 名(如 'checked')", 'en-US': "Control's value prop (e.g. 'checked')" } },
+        { prop: 'trigger', type: 'string', defaultValue: "'onChange'", description: { 'zh-CN': "控件变化事件名(如 'onCheckedChange')", 'en-US': "Control's change event (e.g. 'onCheckedChange')" } },
+      ],
+    },
+    {
+      title: 'FormRule',
+      rows: [
+        { prop: '{ required, message }', type: '{ required: true }', description: { 'zh-CN': '必填', 'en-US': 'Required' } },
+        { prop: '{ min / max, message }', type: 'number', description: { 'zh-CN': '数字比大小,字符串/数组比长度', 'en-US': 'Number magnitude, or string/array length' } },
+        { prop: '{ pattern, message }', type: 'RegExp', description: { 'zh-CN': '正则(空值跳过)', 'en-US': 'Regex (skips empty)' } },
+        { prop: '{ validator }', type: '(value, all) => string | null', description: { 'zh-CN': '自定义,返回错误文案或 null', 'en-US': 'Custom; return an error message or null' } },
+      ],
+    },
+    {
+      title: 'useForm() → FormInstance',
+      rows: [
+        { prop: 'getValues()', type: '() => T', description: { 'zh-CN': '读取全部值', 'en-US': 'Read all values' } },
+        { prop: 'setValue(name, value)', type: 'void', description: { 'zh-CN': '设置某字段', 'en-US': 'Set a field' } },
+        { prop: 'validate()', type: '() => Promise<boolean>', description: { 'zh-CN': '手动全量校验', 'en-US': 'Validate all fields' } },
+        { prop: 'reset()', type: '() => void', description: { 'zh-CN': '复位到 initialValues', 'en-US': 'Reset to initialValues' } },
       ],
     },
   ],

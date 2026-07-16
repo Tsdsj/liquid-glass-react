@@ -18,6 +18,8 @@ import {
   Card,
   Checkbox,
   Drawer,
+  Form,
+  FormItem,
   GlassSurface,
   Input,
   LiquidGlassConfig,
@@ -70,6 +72,14 @@ const CASES: Array<[name: string, element: React.ReactElement]> = [
     <Drawer open={false} onOpenChange={() => {}}>
       抽屉内容
     </Drawer>,
+  ],
+  [
+    'Form',
+    <Form initialValues={{ email: '' }}>
+      <FormItem name="email" label="邮箱" required>
+        <Input />
+      </FormItem>
+    </Form>,
   ],
   ['Input', <Input aria-label="邮箱" />],
   [

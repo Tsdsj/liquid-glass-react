@@ -31,6 +31,13 @@ export { Checkbox } from './components/Checkbox';
 export type { CheckboxProps } from './components/Checkbox';
 export { Drawer } from './components/Drawer';
 export type { DrawerProps } from './components/Drawer';
+export { Form, FormItem, useForm } from './components/Form';
+export type {
+  FormProps,
+  FormItemProps,
+  FormInstance,
+  FormRule,
+} from './components/Form';
 export { Input } from './components/Input';
 export type { InputProps } from './components/Input';
 export { Menu } from './components/Menu';

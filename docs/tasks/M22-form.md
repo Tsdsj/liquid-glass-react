@@ -1,5 +1,5 @@
 ---
-status: todo
+status: done
 depends: [M21]
 ---
 
@@ -90,4 +90,35 @@ export function useForm<T>(): FormInstance<T>;   // 可选外部实例
 
 ## 完成记录
 
-（实现后追加）
+- **纯校验** `src/core/utils/validate-rules.ts`:`validateValue(value, rules, all?)` → 首个失败
+  message 或 null。`required`/`validator` 恒跑,`min/max/pattern` 跳过空值;min/max 对数字比
+  magnitude、对字符串/数组比 length;`false`/空串/空数组视为空(必填能拦未勾选)。17 单测(RED→GREEN)。
+- **Form 架构**(`src/components/Form/`):
+  - `form-store.ts` `FormStore` 类:values/errors + `subscribe`/`getSnapshot`(useSyncExternalStore)
+    + `initialize`(幂等种子)+ `setValue`(已有错误时即时重校验,否则不打扰)+ `validateField` /
+    `validate`(全量)+ `reset`。
+  - `FormContext` + `useForm()`(返回稳定 `FormInstance`;store 经 WeakMap 隐藏,不进公共类型)。
+  - `Form`:解析 store(外部 `form` 或内部)、种子 initialValues、submit 前全量校验、通过才 onSubmit。
+  - `FormItem`:`cloneElement` 注入受控 prop——`useSyncExternalStore` 取本字段值/错误,注入
+    `[valuePropName]`/`[trigger]`/`onBlur`(失焦校验)/`id`/`disabled`/`aria-invalid`/`aria-required`/
+    `aria-describedby`;label 经 `htmlFor` 关联,错误 `role="alert"`。
+- **API 细化(记录偏差,均落在卡内「或组件既有的受控 prop 名」的意图内)**:
+  - `FormProps` 增 `form?: FormInstance`——`useForm()` 外部实例需要它接线(卡内 API 表未列,
+    但「可选外部实例」隐含);
+  - `FormItemProps` 增 `valuePropName`(默认 'value')/ `trigger`(默认 'onChange')/
+    `getValueFromEvent`——因输入组件受控约定**不统一**(Input/Textarea 原生 `onChange(event)`、
+    Select/Slider/RadioGroup `onChange(value)`、Checkbox/Switch `checked`+`onCheckedChange`)。
+    默认 `getValueFromEvent` 自动拆 DOM 事件(取 `target.value`),否则透传首参——覆盖全部约定。
+- **实现决策**:① 必填星标用 CSS `::after '*'`(不污染 label 文本 → 控件可访问名干净、
+  `getByLabelText` 精确匹配;真无障碍靠注入的 `aria-required`);② `FormItem` 的
+  `useSyncExternalStore` 传第三参 `getServerSnapshot`(否则 `renderToString` 抛错)——SSR 冒烟捕获;
+  ③ 未种子字段注入值兜底(checked→false、其余→''),避免受控/非受控警告(数值字段建议 initialValues 种子)。
+- **导出/注册**:`src/index.ts` 增 `Form`/`FormItem`/`useForm` + 类型 `FormProps`/`FormItemProps`/
+  `FormInstance`/`FormRule`;`styles/index.css` @import `form.css`;五件套齐全(含 `Form.stories.tsx`)。
+- **文档**:`entry.demos.tsx` 新增 `formDoc`(登录表单真实示例 + Form/FormItem/FormRule/FormInstance
+  四张 API 表,中英双语),接入 registry「数据录入」组;站点总览计数由 `COMPONENT_DOCS` 派生自动 +1。
+- **测试**:`Form.test.tsx` 6 条(label 关联+提交、必填拦截+a11y、改正清错、布尔控件注入、整表禁用、
+  外部 useForm 读写/reset);Form 纳入 SSR 冒烟与 a11y 冒烟(无 critical/serious 违规)。
+- 验证:`pnpm typecheck` ✓、`pnpm build` ✓(dist 类型含 7 个 Form 公共项)、`pnpm test`
+  **437/437 绿**(较 M21 的 412 +25)、`pnpm site:build` ✓。**无新增运行时依赖**(校验自写)。
+- **留本地目检**:表单玻璃控件观感、错误态红色描边与星标、horizontal 布局。

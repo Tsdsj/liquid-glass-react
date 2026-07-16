@@ -8,6 +8,8 @@ import {
   Button,
   Card,
   Checkbox,
+  Form,
+  FormItem,
   Input,
   Pagination,
   Progress,
@@ -45,6 +47,14 @@ function formatViolations(violations: Result[]): string {
 // we exercise the always-on surface controls plus a couple of closed triggers.
 const CASES: Array<[name: string, element: React.ReactElement]> = [
   ['Button', <Button>保存</Button>],
+  [
+    'Form',
+    <Form initialValues={{ email: '' }}>
+      <FormItem name="email" label="邮箱" required help="我们不会公开你的邮箱">
+        <Input />
+      </FormItem>
+    </Form>,
+  ],
   ['Checkbox', <Checkbox defaultChecked>同意条款</Checkbox>],
   [
     'RadioGroup',
