@@ -9,6 +9,7 @@ import {
   inRange,
   isLeapYear,
   isSameDay,
+  orderDates,
   parseDate,
 } from './date';
 
@@ -76,6 +77,13 @@ describe('comparison helpers', () => {
   it('isSameDay ignores time of day', () => {
     expect(isSameDay(new Date(2024, 0, 1, 9), new Date(2024, 0, 1, 23))).toBe(true);
     expect(isSameDay(new Date(2024, 0, 1), new Date(2024, 0, 2))).toBe(false);
+  });
+
+  it('orderDates returns the pair earliest-first', () => {
+    const early = new Date(2024, 0, 5);
+    const late = new Date(2024, 0, 20);
+    expect(orderDates(late, early).map((d) => d.getDate())).toEqual([5, 20]);
+    expect(orderDates(early, late).map((d) => d.getDate())).toEqual([5, 20]);
   });
 
   it('inRange and clampDate honour min/max by day', () => {

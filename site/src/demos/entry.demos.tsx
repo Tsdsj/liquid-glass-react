@@ -7,12 +7,15 @@ import {
   FormItem,
   Input,
   InputNumber,
+  RangePicker,
   Rate,
   Select,
   Slider,
   Switch,
   Textarea,
+  TimePicker,
   Upload,
+  type DateRange,
   type SelectOption,
   type UploadFile,
 } from '@ttqtt/liquid-glass-react';
@@ -660,6 +663,116 @@ const [files, setFiles] = useState<UploadFile[]>([]);
         { prop: 'accept / multiple', type: 'string / boolean', description: { 'zh-CN': '透传给文件选择器', 'en-US': 'Forwarded to the file picker' } },
         { prop: 'maxCount', type: 'number', description: { 'zh-CN': '超量选择被忽略', 'en-US': 'Extra picks are ignored' } },
         { prop: 'UploadFile.status', type: "'ready' | 'uploading' | 'done' | 'error'", description: { 'zh-CN': '由使用者驱动;uploading 配 percent 显示进度', 'en-US': 'Consumer-driven; uploading shows percent progress' } },
+      ],
+    },
+  ],
+};
+
+
+function RangePickerDemo() {
+  const [range, setRange] = useState<DateRange>([new Date(2024, 0, 5), new Date(2024, 0, 12)]);
+  return (
+    <RangePicker
+      aria-label="日期范围"
+      value={range}
+      onChange={setRange}
+      disabledDate={(date) => date.getDay() === 0 || date.getDay() === 6}
+    />
+  );
+}
+
+export const rangePickerDoc: ComponentDoc = {
+  slug: 'range-picker',
+  name: 'RangePicker',
+  title: { 'zh-CN': '日期范围', 'en-US': 'RangePicker' },
+  category: CATEGORY,
+  description: {
+    'zh-CN': '起止两段输入 + 弹出日历:点选起点→悬停预览区间→点选终点(反序自动交换),复用 DatePicker 的日期算法与键盘网格,Escape 取消半程。',
+    'en-US': 'Two inputs plus a calendar: click a start, preview the span on hover, click the end (reversed clicks auto-swap). Reuses DatePicker\'s date math and keyboard grid; Escape cancels a half selection.',
+  },
+  renderPreview: () => <RangePickerDemo />,
+  demos: [
+    {
+      id: 'basic',
+      title: { 'zh-CN': '选择范围', 'en-US': 'Pick a range' },
+      description: {
+        'zh-CN': 'value 为 [Date | null, Date | null];两次点选成范围,反序自动交换;min/max 与 disabledDate 逐日拦截。',
+        'en-US': 'value is [Date | null, Date | null]; two clicks make a range (reversed swaps); min/max and disabledDate gate days.',
+      },
+      code: `
+const [range, setRange] = useState<DateRange>([null, null]);
+
+<RangePicker
+  aria-label="日期范围"
+  value={range}
+  onChange={setRange}
+  disabledDate={(d) => d.getDay() === 0 || d.getDay() === 6}
+/>`,
+      render: () => <RangePickerDemo />,
+    },
+  ],
+  api: [
+    {
+      title: 'RangePicker',
+      rows: [
+        { prop: 'value / defaultValue', type: 'DateRange = [Date | null, Date | null]', description: { 'zh-CN': '受控 / 非受控范围', 'en-US': 'Controlled / uncontrolled range' } },
+        { prop: 'onChange', type: '(range: DateRange) => void', description: { 'zh-CN': '选定范围回调(已排序)', 'en-US': 'Range callback (ordered)' } },
+        { prop: 'min / max', type: 'Date', description: { 'zh-CN': '可选边界', 'en-US': 'Selectable bounds' } },
+        { prop: 'disabledDate', type: '(date: Date) => boolean', description: { 'zh-CN': '逐日禁用判定', 'en-US': 'Per-day disable predicate' } },
+        { prop: 'format', type: 'string', defaultValue: "'YYYY-MM-DD'", description: { 'zh-CN': '显示格式', 'en-US': 'Display format' } },
+        { prop: 'weekStartsOn', type: '0 | 1', defaultValue: '1', description: { 'zh-CN': '周起始', 'en-US': 'Week start' } },
+        { prop: 'locale', type: "'zh-CN' | 'en-US'", description: { 'zh-CN': '缺省取 LiquidGlassConfig', 'en-US': 'Defaults to LiquidGlassConfig' } },
+      ],
+    },
+  ],
+};
+
+function TimePickerDemo() {
+  const [value, setValue] = useState<string | null>('09:30');
+  return <TimePicker aria-label="时间" value={value} onChange={setValue} />;
+}
+
+export const timePickerDoc: ComponentDoc = {
+  slug: 'time-picker',
+  name: 'TimePicker',
+  title: { 'zh-CN': '时间选择', 'en-US': 'TimePicker' },
+  category: CATEGORY,
+  description: {
+    'zh-CN': '时/分(/秒)滚动列选择:值是 HH:mm 字符串(不带日期/时区),列内方向键步进,min/max 钳制,时间解析/格式化自写。',
+    'en-US': 'Scrollable hour/minute(/second) columns; value is an HH:mm string (no date/timezone), arrow keys step within a column, min/max clamp, all time math hand-written.',
+  },
+  renderPreview: () => <TimePickerDemo />,
+  demos: [
+    {
+      id: 'basic',
+      title: { 'zh-CN': '选择时间', 'en-US': 'Pick a time' },
+      description: {
+        'zh-CN': 'format 决定是否含秒;hourStep/minuteStep/secondStep 控制列粒度;min/max 同格式钳制。',
+        'en-US': 'format toggles seconds; hourStep/minuteStep/secondStep set the column granularity; min/max clamp in the same format.',
+      },
+      code: `
+const [value, setValue] = useState<string | null>('09:30');
+
+<TimePicker aria-label="时间" value={value} onChange={setValue} />
+<TimePicker aria-label="时间" format="HH:mm:ss" minuteStep={5} min="09:00:00" max="18:00:00" />`,
+      render: () => (
+        <div style={{ display: 'flex', gap: 12 }}>
+          <TimePickerDemo />
+          <TimePicker aria-label="精确时间" format="HH:mm:ss" defaultValue="12:00:00" minuteStep={5} />
+        </div>
+      ),
+    },
+  ],
+  api: [
+    {
+      title: 'TimePicker',
+      rows: [
+        { prop: 'value / defaultValue', type: 'string | null', description: { 'zh-CN': "受控 / 非受控值(与 format 一致的 'HH:mm')", 'en-US': "Controlled / uncontrolled value (matches format, e.g. 'HH:mm')" } },
+        { prop: 'onChange', type: '(value: string | null) => void', description: { 'zh-CN': '变化回调', 'en-US': 'Change callback' } },
+        { prop: 'format', type: "'HH:mm' | 'HH:mm:ss'", defaultValue: "'HH:mm'", description: { 'zh-CN': '是否含秒', 'en-US': 'With or without seconds' } },
+        { prop: 'hourStep / minuteStep / secondStep', type: 'number', defaultValue: '1', description: { 'zh-CN': '各列步进', 'en-US': 'Per-column step' } },
+        { prop: 'min / max', type: 'string', description: { 'zh-CN': '同格式边界', 'en-US': 'Bounds in the same format' } },
+        { prop: 'locale', type: "'zh-CN' | 'en-US'", description: { 'zh-CN': '列标签本地化', 'en-US': 'Column label locale' } },
       ],
     },
   ],

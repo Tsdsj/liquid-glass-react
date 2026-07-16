@@ -1,0 +1,61 @@
+.lg-time-picker__input {
+  cursor: pointer;
+}
+
+.lg-time-picker__panel {
+  --lg-r: var(--lg-radius-lg);
+  padding: var(--lg-space-2);
+}
+
+.lg-time-picker__columns {
+  display: flex;
+  gap: var(--lg-space-1);
+}
+
+.lg-time-picker__column {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  max-height: 220px;
+  margin: 0;
+  padding: 0;
+  overflow-y: auto;
+  list-style: none;
+  scrollbar-width: thin;
+}
+
+.lg-time-picker__option {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: calc(var(--lg-control-h-md) + var(--lg-space-2));
+  padding: var(--lg-space-1) var(--lg-space-2);
+  border: none;
+  border-radius: var(--lg-radius-sm);
+  background: none;
+  color: var(--lg-text);
+  cursor: pointer;
+  font: inherit;
+  font-variant-numeric: tabular-nums;
+  transition: background var(--lg-duration-press) var(--lg-ease);
+}
+
+.lg-time-picker__option:hover {
+  background: var(--lg-tint);
+}
+
+.lg-time-picker__option[data-selected] {
+  background: var(--lg-accent);
+  color: var(--lg-accent-contrast);
+}
+
+.lg-time-picker__option:focus-visible {
+  outline: 2px solid var(--lg-accent);
+  outline-offset: -2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .lg-time-picker__option {
+    transition: none;
+  }
+}

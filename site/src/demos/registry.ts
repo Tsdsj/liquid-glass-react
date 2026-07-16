@@ -5,7 +5,9 @@ import {
   formDoc,
   inputDoc,
   inputNumberDoc,
+  rangePickerDoc,
   rateDoc,
+  timePickerDoc,
   uploadDoc,
   selectDoc,
   sliderDoc,
@@ -65,6 +67,8 @@ export const COMPONENT_DOCS: ComponentDoc[] = [
   rateDoc,
   uploadDoc,
   datePickerDoc,
+  rangePickerDoc,
+  timePickerDoc,
   formDoc,
   // Selection
   radioGroupDoc,

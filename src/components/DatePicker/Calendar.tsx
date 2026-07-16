@@ -7,6 +7,7 @@ import {
   clampDate,
   inRange,
   isSameDay,
+  orderDates,
 } from '../../core/utils/date';
 import type { DatePickerLocale } from './locale';
 import { CALENDAR_LABELS, MONTH_NAMES, WEEKDAY_NAMES } from './locale';
@@ -20,6 +21,14 @@ export interface CalendarProps {
   disabledDate?: (date: Date) => boolean;
   weekStartsOn: 0 | 1;
   locale: DatePickerLocale;
+  // Range-highlight extensions (internal, used by RangePicker; single-date
+  // DatePicker leaves them undefined and behaves exactly as before).
+  rangeStart?: Date | null;
+  rangeEnd?: Date | null;
+  /** Tentative end while the second endpoint is being chosen. */
+  previewDate?: Date | null;
+  onHover?: (date: Date | null) => void;
+  onFocusDate?: (date: Date) => void;
 }
 
 function dayLabel(date: Date, locale: DatePickerLocale): string {
@@ -37,18 +46,30 @@ export function Calendar({
   disabledDate,
   weekStartsOn,
   locale,
+  rangeStart,
+  rangeEnd,
+  previewDate,
+  onHover,
+  onFocusDate,
 }: CalendarProps) {
   const labels = CALENDAR_LABELS[locale];
   const [focusedDate, setFocusedDate] = useState<Date>(() =>
-    clampDate(value ?? today, min, max),
+    clampDate(rangeStart ?? value ?? today, min, max),
   );
   const focusedRef = useRef<HTMLButtonElement | null>(null);
 
   // Move real focus onto the roving-tabindex day whenever it changes (also on
-  // open, so focus enters the grid).
+  // open, so focus enters the grid). Report it so a range picker can preview
+  // against the keyboard-focused day too.
   useEffect(() => {
     focusedRef.current?.focus();
-  }, [focusedDate]);
+    onFocusDate?.(focusedDate);
+  }, [focusedDate, onFocusDate]);
+
+  // Ordered [lo, hi] for the active range (committed end, else tentative end).
+  const rangeBounds = rangeStart
+    ? orderDates(rangeStart, rangeEnd ?? previewDate ?? rangeStart)
+    : null;
 
   const viewYear = focusedDate.getFullYear();
   const viewMonth = focusedDate.getMonth();
@@ -126,7 +147,12 @@ export function Calendar({
           ›
         </button>
       </div>
-      <table role="grid" className="lg-calendar__grid" onKeyDown={handleKeyDown}>
+      <table
+        role="grid"
+        className="lg-calendar__grid"
+        onKeyDown={handleKeyDown}
+        onPointerLeave={onHover ? () => onHover(null) : undefined}
+      >
         <thead>
           <tr>
             {weekdays.map((weekday, index) => (
@@ -141,7 +167,16 @@ export function Calendar({
             <tr key={weekIndex}>
               {week.map((day) => {
                 const disabled = isDisabled(day);
-                const selected = value ? isSameDay(day, value) : false;
+                const inSelectedRange = rangeBounds
+                  ? inRange(day, rangeBounds[0], rangeBounds[1])
+                  : false;
+                const isRangeStart = rangeBounds ? isSameDay(day, rangeBounds[0]) : false;
+                const isRangeEnd = rangeBounds ? isSameDay(day, rangeBounds[1]) : false;
+                const selected = rangeBounds
+                  ? isRangeStart || isRangeEnd
+                  : value
+                    ? isSameDay(day, value)
+                    : false;
                 const focused = isSameDay(day, focusedDate);
                 const isToday = isSameDay(day, today);
                 const outside = day.getMonth() !== viewMonth;
@@ -163,6 +198,10 @@ export function Calendar({
                       data-outside={outside ? '' : undefined}
                       data-selected={selected ? '' : undefined}
                       data-today={isToday ? '' : undefined}
+                      data-in-range={inSelectedRange && !selected ? '' : undefined}
+                      data-range-start={isRangeStart ? '' : undefined}
+                      data-range-end={isRangeEnd ? '' : undefined}
+                      onPointerEnter={onHover ? () => onHover(day) : undefined}
                       onClick={() => {
                         setFocusedDate(day);
                         if (!disabled) {

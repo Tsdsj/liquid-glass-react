@@ -1,5 +1,5 @@
 ---
-status: todo
+status: done
 depends: [M31]
 ---
 
@@ -94,4 +94,30 @@ export interface TimePickerProps {
 
 ## 完成记录
 
-（实现后追加）
+五阶段收官。两组件落地(RED→GREEN),组件总数 40 → **42**。
+
+- **纯函数**:`src/core/utils/time.ts`(parseTime/formatTime/buildTimeColumn/compareTime/clampTime,
+  6 测——含 24:00、10:60 越界拒绝、format 含秒不匹配拒绝)+ date.ts 增 `orderDates`(端点排序,
+  2 测)。
+- **Calendar 内部扩展(不改 DatePicker 公共 API)**:新增可选 `rangeStart/rangeEnd/previewDate/
+  onHover/onFocusDate`;有 rangeStart 时按 `orderDates(start, end ?? preview ?? start)` 标注
+  `data-in-range`/`data-range-start`/`data-range-end`,`onHover`(pointer)+`onFocusDate`(键盘焦点)
+  驱动预览。DatePicker 7 测零回归。
+- **RangePicker**:双 Input(起/止,i18n aria-label)+ 自建浮层(useFloating+dismiss+role dialog+
+  FloatingFocusManager,同 Select/Command)。选择流:第一次点 `pendingStart` 并预览 → 第二次点
+  `orderDates` 后 setValue 关闭(**onChange 仅一次**);Escape 半程取消——因只在第二次点提交,
+  关闭时 effect 复位 pendingStart,原值保留。3 测(反序交换、受控回填、半程取消)。
+  **范围内联样式**放在 range-picker.css(不进 datepicker.css)。
+- **TimePicker**:值为**字符串**(HH:mm / HH:mm:ss,无日期/时区,消费者拼装自由)。只读 Input
+  `role=combobox` + 浮层内 时/分(/秒)列,每列 `role=listbox`、选项 `role=option` roving tabindex;
+  点击/方向键(Home/End)在列内步进并**实时提交**,提交经 clampTime 钳制。5 测(开合+提交、
+  受控含秒、方向键步进、min/max 钳制、Escape)。
+- **单面板决策(诚实记录)**:卡内草案写「双月并排」;实测**协调双月**(共享上/下月、左右月联动、
+  键盘焦点跨月)复杂且风险高,而**单面板范围选择已完整、可键盘、a11y 达标**。故实现单面板,
+  双月并排作为纯视觉增强**延后**(不影响功能/键盘/受控/边界),记此备后续。
+- **接入**:`src/index.ts` 导出 2 组件 + 3 类型(含 DateRange);`styles/index.css` @import ×2;
+  五件套齐全;SSR + a11y 冒烟各 +2;**smoke:consumer 44 → 46** 三层全绿;site 两条 ComponentDoc
+  (数据录入)+ registry;README「42 个组件」与 CHANGELOG「27 → 42」同步(防漂移测试盯住)。
+- 验证:`pnpm typecheck` ✓、`pnpm build` ✓、`pnpm test` **624/624 绿**(较 M31 的 603 +21)、
+  `pnpm smoke:consumer` ✓、`pnpm site:build` ✓。无新增运行时依赖。
+- **留本地目检**:范围底色与端点圆角、时间列滚动到选中项、双 Input 布局。

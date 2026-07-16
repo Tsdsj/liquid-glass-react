@@ -25,6 +25,7 @@ import {
   Progress,
   Radio,
   RadioGroup,
+  RangePicker,
   Segmented,
   Select,
   SideNav,
@@ -33,6 +34,7 @@ import {
   Table,
   Tabs,
   Tag,
+  TimePicker,
 } from '../index';
 
 // Automated a11y smoke guard (M17). jsdom has no layout or paint, so rules that
@@ -71,6 +73,8 @@ const CASES: Array<[name: string, element: React.ReactElement]> = [
   ['Dropdown', <Dropdown label="更多操作" items={[{ key: 'a', label: '编辑' }]} />],
   ['InputNumber', <InputNumber aria-label="数量" defaultValue={3} min={0} max={10} />],
   ['Rate', <Rate aria-label="评分" defaultValue={3} />],
+  ['RangePicker', <RangePicker aria-label="日期范围" defaultValue={[new Date(2024, 0, 1), new Date(2024, 0, 8)]} />],
+  ['TimePicker', <TimePicker aria-label="时间" value="09:30" />],
   ['Timeline', <Timeline items={[{ key: 'a', content: '创建项目', time: '09:00' }]} />],
   ['Upload', <Upload defaultFileList={[{ key: 'k', name: 'a.txt', status: 'done' }]} />],
   [

@@ -1,0 +1,33 @@
+.lg-range-picker {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--lg-space-2);
+}
+
+.lg-range-picker__input {
+  cursor: pointer;
+}
+
+.lg-range-picker__separator {
+  color: var(--lg-text-secondary);
+}
+
+.lg-range-picker__panel {
+  --lg-r: var(--lg-radius-lg);
+}
+
+/* Range highlight on the shared Calendar (endpoints + in-between band). */
+.lg-calendar__day[data-in-range] {
+  background: color-mix(in srgb, var(--lg-accent) 16%, transparent);
+  border-radius: 0;
+}
+
+.lg-calendar__day[data-range-start] {
+  border-top-right-radius: 0;
+  border-bottom-right-radius: 0;
+}
+
+.lg-calendar__day[data-range-end] {
+  border-top-left-radius: 0;
+  border-bottom-left-radius: 0;
+}

@@ -41,6 +41,11 @@ export function inRange(date: Date, min?: Date, max?: Date): boolean {
   return true;
 }
 
+/** Return the two dates earliest-first (for range endpoints picked in any order). */
+export function orderDates(a: Date, b: Date): [Date, Date] {
+  return dayValue(a) <= dayValue(b) ? [a, b] : [b, a];
+}
+
 export function clampDate(date: Date, min?: Date, max?: Date): Date {
   if (min && dayValue(date) < dayValue(min)) {
     return min;

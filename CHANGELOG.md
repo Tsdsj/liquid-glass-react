@@ -13,7 +13,8 @@
   由内部实验提升为公共 API。
 - **13 个新组件**:Form(自写校验的受控表单)、Table(排序/选中/分页/展开行)、DatePicker
   (自写日期算法 + 键盘日历)、Alert、Accordion、Command(⌘K 命令面板)、Empty、Steps、
-  Dropdown、InputNumber、Rate、Timeline、Upload(受控文件列表)—— 组件总数 27 → 40。
+  Dropdown、InputNumber、Rate、Timeline、Upload(受控文件列表)、RangePicker(日期范围)、
+  TimePicker(时间选择)—— 组件总数 27 → 42。
 - **既有组件增强**:Select 多选 + 搜索、Table 展开行、`Modal.confirm()` 命令式确认、
   Tabs 可关闭页签(全部向后兼容)。
 - **交互动效**:交互面板 hover 升起(`--lg-hover-lift`)与更跟手的按压时长
