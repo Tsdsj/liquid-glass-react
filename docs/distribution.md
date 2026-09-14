@@ -1,35 +1,43 @@
-# 分发、版本与包体
+# 分发
 
-## 当前分发形态
+单包发布：`@ttqtt/liquid-glass-react`。发版步骤见 [`../RELEASING.md`](../RELEASING.md)。
 
-三个 npm workspace 包均为 private alpha。它们没有公共 registry 发布状态，也没有 npm 名称占用/商标审查保证。本交付是压缩包源码 + 离线检查预览。
+## 产物
 
-```bash
-npm run registry:build
-npm run source:copy -- ../app/src/vendor/liquid-glass
+`pnpm build` 产出三样东西，`files` 字段只允许 `dist/` 加三份说明文件进入 npm 包：
+
+| 文件 | 内容 |
+| --- | --- |
+| `dist/index.js` | 单个 ESM 产物，顶部带 `"use client"`。React 走 external，不会把第二份 React 打进来。 |
+| `dist/index.d.ts` 及分目录声明 | 类型。内部引用全部是相对路径，使用方不需要配任何映射。 |
+| `dist/style.css` | 合并后的样式表。另外单独提供 `dist/tokens.css` 与 `dist/components.css`，方便只想覆盖 token 的场景。 |
+
+没有源码需要被复制粘贴——这不是 shadcn 那种把组件源码抄进项目的分发方式，装包就行。
+
+## 入口
+
+```json
+"exports": {
+  ".": { "types": "./dist/index.d.ts", "default": "./dist/index.js" },
+  "./style.css": "./dist/style.css",
+  "./tokens.css": "./dist/tokens.css",
+  "./components.css": "./dist/components.css"
+}
 ```
 
-registry.json 是本项目本地 source-copy 清单，包含源文件内容、SHA-256 与版本。**它不是 shadcn registry schema，也没有宣称能通过 shadcn CLI 安装。** 源码复制脚本会把 core/tokens 引用改成相对路径，保留 React 导入与 LICENSE，拒绝覆盖已有目标。
+`sideEffects` 只列了 CSS，所以打包工具可以安全地摇掉没用到的组件；引入的样式表不会被误删。
 
-## 本地 npm 包
+## 体积
+
+`pnpm size` 会输出 `dist/` 与站点产物里每个 JS/CSS 文件的原始大小和 gzip 大小，写进 `reports/size.json`。
+
+这是**逐文件**的统计。它既不是「只 import 一个按钮要付出的代价」——那取决于你的打包工具摇掉了多少——也不是真实的网络传输量，几个文件各自的 gzip 大小加起来并不等于合并传输的结果。想知道真实成本，在你自己的应用里量。
+
+## 验证包内容
 
 ```bash
-npm install
-npm run typecheck
-npm run build:packages
-npm run pack:local
+pnpm pack
+tar -tzf ttqtt-liquid-glass-react-*.tgz
 ```
 
-`artifacts/` 中的三个 tgz 必须一起安装到消费项目，保证 @liquid-glass-ui/core/tokens/react 同步版本。先执行检查与构建，不能直接将未经语义检查的离线转译文件当成发布产物。
-
-当前交付只包含已真实编译的 core/tokens dist；React 标准 dist 留给联网标准构建生成。离线 React 组件 JS 位于 preview，不作为公共包类型声明使用。
-
-## 大小报告
-
-`npm run size` 报告当前存在的 JS/CSS 文件原始和 gzip 大小。它明确标记为逐文件统计；未经过 tree-shaking 的总大小不是单独 import GlassButton 的成本，多个单独 gzip 结果之和也不等于真实 HTTP 分包结果。
-
-正式发行前需要分别构建“单按钮”“共享工具栏”“SVG 场景”等独立消费入口，固定 bundler/压缩参数，再公布真实导入成本。当前没有虚构这一测量。
-
-## 版本策略
-
-alpha 可以调整 API，但每次变更要在 CHANGELOG 记录并同步三个内部包版本。未来达到正式发布门槛后再决定 SemVer 稳定区间、公共名字、registry 兼容与迁移脚本。private 字段是防止误发布的保护，不应仅为 npm publish 成功就删掉。
+重点确认两件事：包里没有 `src/`、`site/`、`tests/` 这些不该发出去的目录；`dist/index.js` 第一行是 `"use client";`，少了它在 Next.js App Router 的服务端组件里会直接报错。

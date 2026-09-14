@@ -151,4 +151,4 @@ iOS 文本样式全表，字号、行高、字距由样式一起决定：
 
 ## 12. 修改 token
 
-结构化的材质 / 密度 / 文本样式参数在 `packages/tokens/src/index.ts`；颜色、字号、间距、形状、时长在 `packages/tokens/src/tokens.css`。局部换品牌色覆盖明确主题选择器中的 `--lg-accent` / `--lg-accent-contrast`，不要依赖无界的全局 button 选择器。
+结构化的材质 / 密度 / 文本样式参数在 `src/tokens/index.ts`；颜色、字号、间距、形状、时长在 `src/styles/tokens.css`。局部换品牌色覆盖明确主题选择器中的 `--lg-accent` / `--lg-accent-contrast`，不要依赖无界的全局 button 选择器。

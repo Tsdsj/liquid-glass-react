@@ -1,12 +1,12 @@
 # API
 
-`@liquid-glass-ui/react` 共 65 个导出：41 个组件与 Provider、10 个 Hook、14 个纯函数与诊断工具。所有组件都是 `'use client'`。
+`@ttqtt/liquid-glass-react` 共 65 个导出：41 个组件与 Provider、10 个 Hook、14 个纯函数与诊断工具。所有组件都是 `'use client'`。
 
 样式必须引入一次，顺序不能颠倒：
 
 ```ts
-import '@liquid-glass-ui/react/tokens.css';
-import '@liquid-glass-ui/react/styles.css';
+import '@ttqtt/liquid-glass-react/tokens.css';
+import '@ttqtt/liquid-glass-react/styles.css';
 ```
 
 ## 系统

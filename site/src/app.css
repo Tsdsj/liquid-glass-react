@@ -125,7 +125,7 @@ code { font-family: var(--lg-font-mono); font-size: .92em; }
 /* Fixtures a few examples need. */
 .demo-tabbar-frame { position: relative; display: grid; gap: var(--lg-space-4); justify-items: center; width: 100%; }
 .demo-tabbar-frame .lg-tabbar { position: static; padding: 0; }
-.demo-sidebar-row { display: flex; align-items: center; min-height: 40px; padding-inline: var(--lg-space-3);
+.demo-sidebar-row { display: flex; align-items: center; min-height: var(--lg-hit-min); padding-inline: var(--lg-space-3);
   border-radius: var(--lg-radius-s); text-decoration: none; color: var(--lg-glass-fg-secondary);
   font-size: var(--lg-text-subhead-size); }
 .demo-sidebar-row[aria-current="page"] { background: var(--lg-selected); color: var(--lg-glass-fg); font-weight: var(--lg-weight-semibold); }
@@ -239,6 +239,9 @@ code { font-family: var(--lg-font-mono); font-size: .92em; }
   .outline-link:hover { color: var(--lg-label); }
   .outline-link[aria-current="location"] { color: var(--lg-label); border-inline-start-color: var(--lg-accent);
     font-weight: var(--lg-weight-semibold); }
+}
+@media (pointer: coarse) {
+  .subnav-link, .outline-link { min-height: var(--lg-hit-min); }
 }
 @media (max-width: 560px) {
   .page { padding-block-start: var(--lg-space-3); }

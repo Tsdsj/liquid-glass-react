@@ -10,7 +10,7 @@
 
 **SF 字体与 SF Symbols 都没有捆绑**，因为许可不覆盖网页分发。`-apple-system` 只在 Apple 设备解析为 SF，其他平台落到 Segoe UI / Roboto，字形度量不同；字号用 px 定死并在这些平台复核过行长，但排版观感必然有差异。图标为 24×24 / 1.8 描边自绘。
 
-本地已完成 `npm install` 后的 typecheck、Vite 构建、62 项核心测试、3 项 SSR 测试与正式 Chrome 回归。**未完成**：依赖安全审计、CI 上的可重现构建、React 完整 SSR/hydration 流程与开发 Strict Mode 的运行时验证。预览包使用明确单列的 React 19.1.1 运行时，不应当成生产依赖版本已验证的证据。
+本地已完成 `pnpm install` 后的 typecheck、Vite 构建、62 项核心测试、3 项 SSR 测试与正式 Chrome 回归。**未完成**：依赖安全审计、CI 上的可重现构建、React 完整 SSR/hydration 流程与开发 Strict Mode 的运行时验证。预览包使用明确单列的 React 19.1.1 运行时，不应当成生产依赖版本已验证的证据。
 
 菜单只支持单层动作，Toolbar 的 roving focus 只覆盖按钮型子控件。没有 Combobox、Tree、DatePicker、富文本、数据表格、嵌套子菜单、拖放或完整命令面板。`GlassSheet` 只支持 medium / large 两个停靠高度，不支持自定义比例或自由高度。Popover 的顶层显示走原生 `popover`，不是 React Portal，不能照搬 Portal 容器 API。
 

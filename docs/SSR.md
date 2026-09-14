@@ -3,9 +3,9 @@
 组件模块不在 import 阶段调用 document、Canvas 或 ResizeObserver。首次服务端渲染输出普通 CSS 材质；客户端测量后才启用 SVG，滤镜 ID 由 React useId 生成。这样设计的目标是避免服务端依赖 DOM 和客户端首帧缺失可读内容。
 
 ```bash
-npm install
-npm run build:packages
-npm run test:ssr
+pnpm install
+pnpm build
+ppnpm test:ssr
 node examples/ssr/render.mjs
 ```
 

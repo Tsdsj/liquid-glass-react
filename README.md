@@ -1,104 +1,116 @@
-# Liquid Glass UI
+# Liquid Glass React
 
-以 Apple 的设计语言（HIG + Liquid Glass）为参照的 **React + TypeScript 组件系统与文档站**。独立设计研究，非 Apple 官方产品，不包含 Apple 字体、SF Symbols、商标图形或壁纸素材。
+[![CI](https://github.com/Tsdsj/liquid-glass-react/actions/workflows/ci.yml/badge.svg)](https://github.com/Tsdsj/liquid-glass-react/actions/workflows/ci.yml)
+[![npm](https://img.shields.io/npm/v/@ttqtt/liquid-glass-react.svg)](https://www.npmjs.com/package/@ttqtt/liquid-glass-react)
 
-**版本：0.2.0-alpha.1。定位：可运行、可继续开发的工程交付，不是已完成真机认证的正式发行版。**
+按 Apple 的设计语言做的一套 React 组件库：会折射背景的玻璃材质、完整的语义色与文字体系、可以拖动的原生控件。
 
-核心立场只有一条：**玻璃属于浮动的操作与导航层，内容层保持实色或标准材质。** 如果所有东西都半透明，就没有东西在"浮起来"。
+**文档站：https://tsdsj.github.io/liquid-glass-react/**
 
-## 1. 立即运行：不用安装 npm 依赖
+独立项目，不是 Apple 官方产品，也不包含 Apple 的字体或图标素材。
 
-先安装 Node.js 22.12 或更高版本。解压后在项目目录执行：
+---
 
-```bash
-cd liquid-glass-ui
-node scripts/serve-preview.mjs
-```
-
-在 Google Chrome 中打开 **http://127.0.0.1:4173**。不要双击 HTML，也不要把 `file://` 行为当作支持范围。
-
-该命令只使用 Node 标准库，默认只监听本机 `127.0.0.1`，并带一条限制性 CSP（`script-src 'self' 'nonce-…'`，无 `unsafe-eval`）。演示站不请求任何外部资源。可用 `PORT=4300 node scripts/serve-preview.mjs` 修改端口。
-
-> `preview/` 是可离线运行的检查用预构建文件，运行时为 **React / ReactDOM 19.1.1**；源码工作区声明 19.2.7。两者明确分开：预览不能证明 npm 版本组合已经构建、测试或通过依赖安全审计。源码改动后必须执行 `npm run preview:rebuild` 才会同步。
-
-## 2. 开发源码与标准构建
+## 安装
 
 ```bash
-npm install
-npm run dev
-# http://127.0.0.1:5173
-
-npm run typecheck
-npm run build
-npm test
-npm run test:ssr
-npx playwright install --with-deps chrome
-npm run test:chrome
+pnpm add @ttqtt/liquid-glass-react
 ```
 
-## 3. 工程结构
+需要 React 19。除此之外没有其它运行时依赖。
 
-```text
-liquid-glass-ui/
-├── packages/
-│   ├── tokens/       # 语义色、iOS 文本样式、间距、形状、动效 token
-│   ├── core/         # 无 DOM 几何、位移图、LRU、弹簧积分器、同心圆角
-│   └── react/
-│       ├── system/       Provider · 材质 · 背景色调 · pull · fusion
-│       ├── content/      Text · Card · List · MaterialView · Divider   ← 非玻璃
-│       ├── controls/     Button · Segmented · Switch · Slider · Stepper · Progress · Badge
-│       ├── fields/       TextField · SearchField
-│       ├── navigation/   Toolbar · TabBar · Sidebar · NavigationBar · Tabs · ScrollEdge
-│       └── overlays/     Popover · Menu · Sheet · Alert · ActionSheet · Dialog · Toast
-├── apps/playground/  # 文档站：概览 / 基础 / 27 个组件页 / 实验室 / 指南
-├── preview/          # 随包可运行的离线检查版
-├── tests/
-│   ├── core/         # Node test：几何、缓存、弹簧、同心圆角（62 项）
-│   ├── browser/      # Playwright：正式 Chrome / Chromium 分项目（60 项）
-│   └── local/        # 生成 reports 的 Python Playwright 脚本
-└── docs/             # 设计系统、API、无障碍、迁移、架构、测试口径
-```
-
-公开 API 共 65 个导出：41 个组件与 Provider、10 个 Hook、14 个纯函数与诊断工具。
-
-## 4. 最小接入
+## 使用
 
 ```tsx
-import { GlassProvider, ToastProvider, GlassToolbar, ToolbarGroup, ToolbarSpacer, GlassButton } from '@liquid-glass-ui/react';
-import '@liquid-glass-ui/react/tokens.css';
-import '@liquid-glass-ui/react/styles.css';
+import {
+  GlassProvider, ToastProvider,
+  GlassToolbar, ToolbarGroup, ToolbarSpacer, GlassButton,
+} from '@ttqtt/liquid-glass-react';
+import '@ttqtt/liquid-glass-react/style.css';
 
-<GlassProvider theme="system">
-  <ToastProvider>
-    <GlassToolbar aria-label="图片操作">
-      <ToolbarGroup><GlassButton>查看原图</GlassButton></ToolbarGroup>
-      <ToolbarSpacer variant="flexible" />
-      <ToolbarGroup prominent><GlassButton variant="glassProminent">导出</GlassButton></ToolbarGroup>
-    </GlassToolbar>
-  </ToastProvider>
-</GlassProvider>
+export function App() {
+  return (
+    <GlassProvider theme="system">
+      <ToastProvider>
+        <GlassToolbar aria-label="图片操作">
+          <ToolbarGroup>
+            <GlassButton>查看原图</GlassButton>
+          </ToolbarGroup>
+          <ToolbarSpacer variant="flexible" />
+          <ToolbarGroup prominent>
+            <GlassButton variant="glassProminent">导出</GlassButton>
+          </ToolbarGroup>
+        </GlassToolbar>
+      </ToastProvider>
+    </GlassProvider>
+  );
+}
 ```
 
-`tokens.css` 必须在 `styles.css` 之前引入一次。组件 CSS 全部在 `.lg-*` 命名空间下，不要求 Tailwind、Turbo 或任何动画库。
+样式表在应用入口引一次就够了。
 
-## 5. 这套系统明确不承诺什么
+## 有什么
 
-- 不是 Apple 官方产品。图标按 24×24 / 1.8 描边自绘；SF 字体与 SF Symbols 的许可不覆盖网页分发，因此都没有捆绑。
-- 背景色调由 `GlassBackdrop` **显式声明**，不做 DOM 截屏或跨源像素采样。这意味着"小玻璃随背景翻转"是可预期的，而不是自动猜测的。
-- 性能页记录的是 `requestAnimationFrame` 回调间隔与 Long Tasks，**不是**合成器帧时间、掉帧率、INP 或设备 GPU 结论。
-- 真机 Chrome 矩阵、屏幕阅读器人工验证、200% 缩放与能耗测量仍是发布前的人工门槛，没有因为组件数量增加而降低。详见 `docs/action-items.md`。
+41 个组件，分成两层——这个分层本身就是这套设计的核心：
 
-## 6. 文档
-
-| 文档 | 内容 |
+| 层 | 组件 |
 | --- | --- |
-| `docs/design-system.md` | token 体系、三类形状、两类玻璃、内容层与操作层的分工 |
-| `docs/api.md` | 全部公开 API |
-| `docs/accessibility.md` | 四项系统偏好、键盘模型、RTL、Dynamic Type |
-| `docs/migration-0.2.md` | 从 0.1 迁移 |
-| `docs/architecture.md` | 材质管线、资源上限、SSR 与顶层显示 |
-| `docs/testing.md` | 验证口径与发布前人工矩阵 |
-| `docs/action-items.md` | 阶段状态与剩余条件 |
-| `docs/known-limitations.md` | 已知限制 |
+| **内容**（实色，不透明） | Text、Card、Concentric、List、MaterialView、Divider |
+| **控件** | GlassButton、GlassSegmentedControl、GlassSwitch、GlassSlider、GlassStepper、GlassProgress、GlassBadge |
+| **输入** | TextField、SearchField |
+| **导航** | GlassToolbar、TabBar、Sidebar、NavigationBar、GlassTabs、ScrollEdge |
+| **浮层** | GlassPopover、GlassMenu、GlassSheet、GlassAlert、GlassActionSheet、GlassDialog、ToastProvider |
 
-许可：MIT，见 `LICENSE` 与 `THIRD_PARTY_NOTICES.md`。
+玻璃只用在浮起来的那一层。正文、列表、卡片保持不透明——如果满屏都是半透明的，就没有东西真的浮起来了。
+
+## 几件值得知道的事
+
+- **控件是可以拖的。** 分段控件按住当前项就能滑着换，开关可以甩过去，滑块跟手。这是它和"长得像"的实现之间最明显的区别。
+- **系统设置会被尊重。** 用户开了减少透明度、增强对比度或减少动效，界面立刻跟着变，你不用写任何代码。
+- **背景色调由你声明，不靠猜。** 用 `GlassBackdrop` 告诉它背后是深是浅，库不会去读取页面像素。
+
+## 浏览器支持
+
+Chrome 和 Edge 上有完整的边缘折射。Safari 和 Firefox 退化成磨砂玻璃——模糊、提色、高光都在，布局和交互完全一致。
+
+## 换主题色
+
+```css
+:root, [data-lg-theme="light"] { --lg-accent: #6d28d9; }
+[data-lg-theme="dark"]        { --lg-accent: #8b5cf6; }
+```
+
+更多在[主题指南](https://tsdsj.github.io/liquid-glass-react/#/guides/theming)里。
+
+## 服务端渲染
+
+服务端先出磨砂效果，到浏览器再升级成折射，中间不会闪。Next.js App Router 只需在根布局里引一次样式表；整个包已经标成客户端组件。
+
+## 本地开发
+
+```bash
+pnpm install
+pnpm dev            # 文档站 http://127.0.0.1:5173
+pnpm check          # 类型检查 → 构建 → 单元测试 → SSR → 站点构建 → 真实 Chrome
+```
+
+```text
+src/
+  tokens/    颜色、文字、间距、形状、动效的取值
+  core/      不依赖浏览器的几何计算、弹簧、缓存
+  react/     组件，按 内容 / 控件 / 输入 / 导航 / 浮层 分目录
+  styles/    tokens.css + components.css
+site/        文档站
+tests/       core 单元测试、SSR 测试、Playwright 浏览器测试
+docs/        设计系统、API、无障碍、迁移、架构、测试口径
+```
+
+## 还没做完的
+
+- 屏幕阅读器的实机验证还没做完。自动化测试覆盖了角色、键盘路径和四项系统设置，但代替不了真人用 VoiceOver 走一遍。
+- 玻璃在真实合成背景上的对比度还没实测过——玻璃的最终颜色取决于它背后是什么，把两个色值填进计算器不算数。
+- 详细清单见 [`docs/known-limitations.md`](docs/known-limitations.md)。
+
+## 许可
+
+MIT，见 [LICENSE](LICENSE) 与 [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md)。

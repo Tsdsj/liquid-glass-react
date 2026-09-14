@@ -1,63 +1,68 @@
 # 测试与验收
 
-## 两条不混淆的验证路径
-
-标准项目路径是在联网安装后执行 TypeScript、Vite、Node 单元测试、React SSR 和 Playwright Chrome channel。当前交付环境执行的是核心真实 TS 编译、Node 测试，以及通过 Python Playwright 注入本地编写页面的 Chromium 检查。
+## 命令
 
 ```bash
-npm run typecheck
-npm run build
-npm test
-npm run test:ssr
-npx playwright install --with-deps chrome
-npm run test:chrome
+pnpm install
+pnpm check      # typecheck → build → 单元测试 → SSR → 站点构建 → 真实 Chrome
 ```
 
-Chrome 项目默认服务 **标准构建** `apps/playground/dist`，不是附带的旧运行时预览。为避免误连同端口旧服务器，执行正式回归前关闭 `npm run preview`。也可通过 TEST_URL 指定已部署的标准构建。
+拆开看：
 
 ```bash
-# 只作为额外 Chromium 回归，不冒充 Chrome 产品测试
-npx playwright install chromium
-npm run test:e2e -- --project=chromium
+pnpm typecheck
+pnpm build          # 包产物 dist/
+pnpm test           # tests/core，先编译 src/core 再跑
+pnpm test:ssr       # 针对 dist/，也就是真正会发出去的那份
+pnpm build:site
+pnpm exec playwright install --with-deps chrome
+pnpm test:chrome
 ```
 
-## 当前实际执行的本地脚本
-
-`tests/local/` 保存生成 reports 的 Python Playwright 脚本。依赖 Python、Playwright、Pillow、NumPy，以及 CHROMIUM_PATH 指定的浏览器；这些不是运行组件库所需的生产依赖。
+Chrome 项目伺服的是 `site/dist`，所以跑之前站点必须先构建。也可以用 `TEST_URL` 指向一个已经部署好的地址。
 
 ```bash
-pip install -r tests/local/requirements.txt
-# 安装本机 Chromium 或设置 CHROMIUM_PATH
-python tests/local/test-interactions.py
-python tests/local/test-optics.py
-python tests/local/test-quality.py
+# 额外的 Chromium 回归。它不能代替正式 Chrome：折射路径依赖后者。
+pnpm exec playwright install chromium
+pnpm test:e2e --project=chromium
 ```
 
-它们使用同一套离线 preview 代码，载入自己创建的页面，不访问外部服务，也不修改浏览器管理策略。测试失败时会输出失败条目并以非零退出，截图仅作证据，不自动认定为正确基线。
+## 各层测什么
 
-## 证据口径
+**核心（`tests/core/`，62 项）** —— 不碰浏览器的那部分：有符号距离场的方向与中性值、非法输入的拒绝、贴图尺寸预算、LRU 的字节记账、弹簧积分器（收敛、过冲幅度、大 dt 钳制、非有限输入）、同心圆角（含掐角与喇叭口的边界）。
 
-**62 项**核心检查（`tests/core/`）覆盖 SDF / 方向 / 中性值、输入拒绝、尺寸预算、LRU、字节估算、无 DOM 导入，以及新增的弹簧积分器（收敛、过冲、dt 钳制、非有限输入拒绝）与同心圆角（含掐角 / 喇叭口的边界条件）。
+**SSR（`tests/ssr.test.mjs`，3 项）** —— 服务端导入不需要 DOM，多个渲染根的 id 不冲突，默认打开的对话框在服务端输出安全标记。它导入的是 `dist/`，因此测的是真正发布的产物。
 
-**60 项**浏览器检查（`tests/browser/`，真实 Google Chrome）分为：组件语义 12、导航与站壳 7、浮层 8、拖拽手势 6、无障碍 10、材质 6、液滴融合 4、响应式与视觉证据 5、CSP 与外部请求 2。其中响应式一项内部又包含 6 页面 × 4 宽度；不要把内部组合数与用例数相加包装成更大的覆盖率。
+**浏览器（`tests/browser/`，66 项，真实 Google Chrome）**：
 
-3 项 SSR 检查验证无 DOM 导入、稳定 ID 与默认打开的 dialog 的服务端标记。
+| 文件 | 覆盖 |
+| --- | --- |
+| `catalog.spec.ts` | 每个组件页都完整、无控制台报错、代码可展开；焦点环只在键盘时出现且只有一层；深色下浮层是深色；演示链接不改路由；左栏高亮跟随 |
+| `components.spec.ts` | 各组件的语义与键盘路径 |
+| `navigation.spec.ts` | 标签栏与侧边栏的变形、⌘K 搜索、跳过链接、导航栏没有自己的背景 |
+| `overlays.spec.ts` | 面板停靠高度与拖拽、警告框焦点、操作表排序、撤销 |
+| `scrub.spec.ts` | 三个可拖动控件的 1:1 跟随、拉伸、方向判定 |
+| `a11y.spec.ts` | 四项系统设置、最大字号回流、从右到左、字号下限、表单错误关联 |
+| `materials.spec.ts` | 大小玻璃的行为差异、内容层不采样背景 |
+| `fusion.spec.ts` | 共享表面上的液滴融合 |
+| `visual.spec.ts` | 四个宽度下的布局与截图证据 |
+| `csp.spec.ts` | 限制性 CSP 下无违规、零外部请求 |
 
-SVG 光学对照在固定细线背景中仅修改 scale=0/64，比较同一个矩形区域，检查边缘变化、中心与不透明前景不变。它证明该配置发生了真实背景位移，不代表复杂媒体的全部视觉正确性。
+`visual.spec.ts` 内部还有 6 页面 × 4 宽度的组合。不要把内部组合数和用例数相加，那不是覆盖率。
 
-rAF 采样报告只代表当前容器的 180 次回调间隔，既不是 GPU 帧时间，也不是真实掉帧率、INP 或低端设备性能保证。物理 GPU 未识别，不能据此宣称硬件加速。
+截图是证据，不是自动通过的基线——没有人看过就不算验证过。
 
-## 发布前人工矩阵
+## 发布前还需要人做的事
 
-| 维度 | 必测项 | 当前状态 |
+| 维度 | 需要什么 | 现状 |
 | --- | --- | --- |
-| 正式浏览器 | Chrome 完整版本、OS、硬件加速设置 | 未执行 |
-| 设备 | 至少真实集显设备、Apple GPU 设备；仅声明实测平台 | 未执行 |
-| 显示 | DPR 1/2、100%/125%/200% 浏览器缩放与 OS 缩放 | 当前仅 DPR1、4 个视口；Dynamic Type 已覆盖到 AX5 |
-| 输入 | 鼠标、键盘、触控（如纳入支持） | 当前鼠标/键盘 |
-| 可读性 | 白/黑/明暗交界、真实照片/视频、正文、密集网格 | 页面已提供；人工对比度未完成 |
-| 辅助技术 | 屏幕阅读器、系统减少透明度/动效/增强对比度、forced-colors | 已自动覆盖 motion / contrast / forced-colors / 应用级减少透明度；**真实屏幕阅读器与语音控制未执行** |
-| 生命周期 | Strict Mode、SSR hydration、多根、路由、弹层 | 当前生产预览路由/卸载；其余待测 |
-| 性能 | DevTools 主线程/绘制/合成 trace、温度/能耗、拖动与滚动 | 当前仅诊断 rAF/Long Tasks |
+| 浏览器矩阵 | 多个 Chrome 版本、多个操作系统、开关硬件加速 | 只在一台机器上跑过 |
+| 设备 | 集显机器与 Apple 芯片机器各一台 | 未执行 |
+| 显示 | 1x / 2x 像素比，浏览器与系统缩放 100% / 125% / 200% | 只覆盖了 1x 与四个视口宽度 |
+| 输入 | 触摸屏实机 | 只覆盖鼠标与键盘 |
+| 可读性 | 玻璃压在真实照片、视频、密集内容上的实际对比度 | **未测**。把两个色值填进对比度计算器不算数，玻璃的最终颜色取决于背后是什么 |
+| 辅助技术 | VoiceOver / NVDA 的朗读顺序，语音控制的名称匹配 | **未执行**。自动化只能证明角色和键盘路径是对的 |
+| 生命周期 | Strict Mode、hydration、多根 | 部分覆盖 |
+| 性能 | DevTools 录制、能耗、低端设备 | 未执行 |
 
-对比度检查要看实际合成背景，不能只把两个 CSS token 填入计算器。原报告列出了相关 WCAG 条款；当前结果不是可访问性认证。
+这些没有因为组件数量增加而放宽。状态同步记录在 `action-items.md`。

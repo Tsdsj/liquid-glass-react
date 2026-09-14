@@ -1,28 +1,60 @@
-name: Validate engineering preview
-on: [push, pull_request]
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
-  chrome:
+  verify:
     runs-on: ubuntu-latest
     timeout-minutes: 20
     steps:
       - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
       - uses: actions/setup-node@v4
         with:
           node-version: 22
-      - name: Install (commit package-lock.json after the first verified install)
-        run: |
-          if [ -f package-lock.json ]; then npm ci; else npm install; fi
-      - run: npm run typecheck
-      - run: npm run build
-      - run: npm test
-      - run: npm run test:ssr
-      - run: npx playwright install --with-deps chrome
-      - run: npm run test:chrome
-      - run: npm run size && npm run registry:build
+          cache: pnpm
+
+      - run: pnpm install --frozen-lockfile
+
+      - name: Type check
+        run: pnpm typecheck
+
+      - name: Build the package
+        run: pnpm build
+
+      - name: Unit tests
+        run: pnpm test
+
+      # Runs against dist/, so it checks what actually gets published.
+      - name: Server-side rendering
+        run: pnpm test:ssr
+
+      - name: Build the documentation site
+        run: pnpm build:site
+
+      # The real Chrome channel, not bundled Chromium: the refraction path depends on it.
+      - name: Install Chrome
+        run: pnpm exec playwright install --with-deps chrome
+
+      - name: Browser tests
+        run: pnpm test:chrome
+
+      - name: Size report
+        run: pnpm size
+
       - uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: verification-evidence
+          name: test-evidence
           path: |
             reports/
             test-results/
+          retention-days: 14

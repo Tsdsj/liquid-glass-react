@@ -335,11 +335,12 @@
 .lg-button[data-control-size="small"] { --lg-control-height: 32px; padding-inline: 12px; font-size: var(--lg-text-footnote-size); }
 .lg-button[data-control-size="large"] { --lg-control-height: 50px; padding-inline: 22px; font-size: var(--lg-text-callout-size); }
 .lg-button[data-control-size="extraLarge"] { --lg-control-height: 60px; padding-inline: 26px; font-size: var(--lg-text-body-size); }
-/* A visual control may be small; the target may not. On touch the hit region is padded back
-   out to 44x44 with a pseudo-element rather than by inflating the artwork. */
+/* A control may look smaller than 44x44; it must not be smaller to a finger. The pseudo-element
+   grows the hit area outwards from the centre without touching the artwork. */
 @media (pointer: coarse) {
-  .lg-button::after { content: ''; position: absolute; inset: 50% 0 0 0; translate: 0 -50%;
-    min-height: var(--lg-hit-min); min-width: var(--lg-hit-min); inset-inline: 50%; width: 100%; transform: translateX(-50%); }
+  .lg-button::after { content: ''; position: absolute;
+    inset-block-start: 50%; inset-inline-start: 50%; translate: -50% -50%;
+    width: 100%; height: 100%; min-width: var(--lg-hit-min); min-height: var(--lg-hit-min); }
 }
 /* The one prominent action: the *background* is tinted and the label goes white. Tinting the
    label instead, or tinting several controls, means nothing stands out. */
@@ -465,6 +466,9 @@
   font: var(--lg-weight-regular) max(16px, var(--lg-text-body-size))/var(--lg-text-body-leading) var(--lg-font-text);
   padding-block: var(--lg-space-2); }
 .lg-field-input::placeholder { color: var(--lg-placeholder); }
+/* The ring belongs to the container. Stated with enough specificity that an application
+   stylesheet loaded after this one cannot put a second ring back on the input itself. */
+.lg-field .lg-field-input:focus-visible, .lg-search .lg-search-input:focus-visible { outline: none; }
 .lg-field-leading, .lg-field-trailing { display: inline-flex; align-items: center; color: var(--lg-label-secondary); flex-shrink: 0; }
 .lg-field-message { margin: 0; }
 .lg-visually-hidden { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }

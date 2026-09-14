@@ -11,5 +11,5 @@ async function collect(dir,prefix){
   }
 }
 for(const layer of ['tokens','core','react','styles'])await collect(path.join(root,'src',layer),`src/${layer}`);
-const manifest={schema:'liquid-glass-ui/local-source-registry/v1',version:'0.2.0-alpha.1',license:'MIT',note:'Local source-copy manifest. NOT a shadcn registry and NOT a published service.',items};
+const manifest={schema:'liquid-glass-ui/local-source-registry/v1',version:'0.2.0-alpha.2',license:'MIT',note:'Local source-copy manifest. NOT a shadcn registry and NOT a published service.',items};
 await mkdir(path.join(root,'registry'),{recursive:true});await writeFile(path.join(root,'registry/registry.json'),JSON.stringify(manifest,null,2)+'\n');console.log(`Registry: ${items.length} source files.`);
