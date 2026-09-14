@@ -1,0 +1,87 @@
+{
+  "name": "@ttqtt/liquid-glass-react",
+  "version": "0.2.0-alpha.1",
+  "description": "遵循 Apple 设计语言的 React 组件库：Liquid Glass 材质、语义色与文本样式、可拖动的原生控件。",
+  "type": "module",
+  "license": "MIT",
+  "author": "ttqtt",
+  "homepage": "https://tsdsj.github.io/liquid-glass-react/",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Tsdsj/liquid-glass-react.git"
+  },
+  "bugs": {
+    "url": "https://github.com/Tsdsj/liquid-glass-react/issues"
+  },
+  "keywords": [
+    "react",
+    "react-components",
+    "ui",
+    "design-system",
+    "liquid-glass",
+    "apple",
+    "hig",
+    "typescript"
+  ],
+  "sideEffects": [
+    "**/*.css"
+  ],
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    },
+    "./style.css": "./dist/style.css",
+    "./tokens.css": "./dist/tokens.css",
+    "./components.css": "./dist/components.css",
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE",
+    "THIRD_PARTY_NOTICES.md"
+  ],
+  "engines": {
+    "node": ">=20.19.0"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "peerDependencies": {
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0"
+  },
+  "scripts": {
+    "dev": "vite --config site/vite.config.ts",
+    "build": "pnpm build:lib && pnpm build:types && pnpm build:css",
+    "build:lib": "vite build --config vite.lib.config.ts",
+    "build:types": "tsc -p tsconfig.build.json",
+    "build:css": "node scripts/build-css.mjs",
+    "build:site": "vite build --config site/vite.config.ts",
+    "preview:site": "node scripts/serve-preview.mjs --root site/dist",
+    "typecheck": "tsc -p tsconfig.check.json --noEmit",
+    "test": "node --test tests/core/*.test.mjs",
+    "test:ssr": "node --test tests/ssr.test.mjs",
+    "test:e2e": "playwright test",
+    "test:chrome": "playwright test --project=chrome",
+    "test:csp": "playwright test tests/browser/csp.spec.ts --project=chrome",
+    "check": "pnpm typecheck && pnpm build && pnpm test && pnpm test:ssr && pnpm build:site && pnpm test:chrome",
+    "size": "node scripts/size-report.mjs",
+    "registry:build": "node scripts/build-registry.mjs",
+    "manifest:build": "node scripts/build-delivery-manifest.mjs",
+    "pretest": "tsc -p tsconfig.core-test.json"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.57.0",
+    "@types/node": "^22.15.30",
+    "@types/react": "^19.1.8",
+    "@types/react-dom": "^19.1.6",
+    "react": "^19.1.1",
+    "react-dom": "^19.1.1",
+    "typescript": "~5.8.3",
+    "vite": "^7.1.12"
+  }
+}

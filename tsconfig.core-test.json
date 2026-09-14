@@ -1,0 +1,14 @@
+{
+  "//": "Compiles just the DOM-free kernel so its unit tests run against real JavaScript. Node can execute .ts directly but will not remap the '.js' specifiers the rest of the source uses.",
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "rootDir": "src/core",
+    "outDir": ".tmp/core",
+    "declaration": false,
+    "declarationMap": false,
+    "sourceMap": false,
+    "noEmit": false,
+    "types": []
+  },
+  "include": ["src/core"]
+}

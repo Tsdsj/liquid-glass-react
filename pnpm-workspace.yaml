@@ -1,0 +1,6 @@
+# Single package; this file exists for pnpm settings, which pnpm 11 reads from here
+# rather than from package.json.
+#
+# esbuild needs its postinstall to link the platform binary that Vite drives.
+allowBuilds:
+  esbuild: true

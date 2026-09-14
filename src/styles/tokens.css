@@ -1,0 +1,333 @@
+/* ==========================================================================
+   Liquid Glass UI — token layer
+   Sources: Apple HIG (Color, Typography, Layout, Materials), WWDC25 219 / 356.
+   Values are design references for an independent study; they are NOT Apple's
+   shipped constants and no Apple font, symbol or wallpaper asset is included.
+
+   Theming is attribute-driven, not `color-scheme`-driven: the provider stamps
+   `data-lg-theme="light|dark"` on every surface, so a dark toolbar can sit in a
+   light page. `light-dark()` cannot express that, hence the explicit blocks.
+   ========================================================================== */
+@layer lg.tokens {
+
+/* --------------------------------------------------------------------------
+   1. Non-color foundations
+   -------------------------------------------------------------------------- */
+:root {
+  /* Fonts. -apple-system resolves to SF only on Apple devices; everywhere else
+     it falls back to Segoe UI / Roboto, whose metrics differ. SF is NOT bundled
+     — self-hosting it on the web is outside its licence. */
+  --lg-font-text: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "PingFang SC", "Microsoft YaHei", sans-serif;
+  --lg-font-display: var(--lg-font-text);
+  --lg-font-rounded: ui-rounded, "SF Pro Rounded", var(--lg-font-text);
+  --lg-font-mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
+  --lg-font: var(--lg-font-text); /* legacy alias */
+
+  /* Dynamic Type. One multiplier over the whole scale — Apple compresses large
+     titles slightly at accessibility sizes, so this is an approximation, but it
+     is the axis that matters: every layout must still reflow at AX5.
+     Root attribute: data-lg-text-size="xs|s|m|l|xl|xxl|xxxl|ax1..ax5". */
+  --lg-text-scale: 1;
+
+  /* iOS text styles at the Large (default) content size.
+     Tracking is in em (1/1000 em column of the HIG table) so it survives scaling. */
+  --lg-text-largetitle-size: calc(34px * var(--lg-text-scale));
+  --lg-text-largetitle-leading: calc(41px * var(--lg-text-scale));
+  --lg-text-largetitle-tracking: .012em;
+  --lg-text-title1-size: calc(28px * var(--lg-text-scale));
+  --lg-text-title1-leading: calc(34px * var(--lg-text-scale));
+  --lg-text-title1-tracking: .014em;
+  --lg-text-title2-size: calc(22px * var(--lg-text-scale));
+  --lg-text-title2-leading: calc(28px * var(--lg-text-scale));
+  --lg-text-title2-tracking: -.012em;
+  --lg-text-title3-size: calc(20px * var(--lg-text-scale));
+  --lg-text-title3-leading: calc(25px * var(--lg-text-scale));
+  --lg-text-title3-tracking: -.023em;
+  --lg-text-headline-size: calc(17px * var(--lg-text-scale));
+  --lg-text-headline-leading: calc(22px * var(--lg-text-scale));
+  --lg-text-headline-tracking: -.026em;
+  --lg-text-body-size: calc(17px * var(--lg-text-scale));
+  --lg-text-body-leading: calc(22px * var(--lg-text-scale));
+  --lg-text-body-tracking: -.026em;
+  --lg-text-callout-size: calc(16px * var(--lg-text-scale));
+  --lg-text-callout-leading: calc(21px * var(--lg-text-scale));
+  --lg-text-callout-tracking: -.020em;
+  --lg-text-subhead-size: calc(15px * var(--lg-text-scale));
+  --lg-text-subhead-leading: calc(20px * var(--lg-text-scale));
+  --lg-text-subhead-tracking: -.016em;
+  --lg-text-footnote-size: calc(13px * var(--lg-text-scale));
+  --lg-text-footnote-leading: calc(18px * var(--lg-text-scale));
+  --lg-text-footnote-tracking: -.006em;
+  --lg-text-caption1-size: calc(12px * var(--lg-text-scale));
+  --lg-text-caption1-leading: calc(16px * var(--lg-text-scale));
+  --lg-text-caption1-tracking: 0em;
+  /* 11pt is the HIG floor for readable text. Nothing may go below caption2. */
+  --lg-text-caption2-size: calc(11px * var(--lg-text-scale));
+  --lg-text-caption2-leading: calc(13px * var(--lg-text-scale));
+  --lg-text-caption2-tracking: .006em;
+
+  --lg-weight-regular: 400;
+  --lg-weight-medium: 500;
+  --lg-weight-semibold: 600;
+  --lg-weight-bold: 700;
+
+  /* Spacing: 4pt grid */
+  --lg-space-1: 4px;  --lg-space-2: 8px;  --lg-space-3: 12px; --lg-space-4: 16px;
+  --lg-space-5: 20px; --lg-space-6: 24px; --lg-space-8: 32px; --lg-space-10: 40px;
+
+  /* Layout metrics */
+  --lg-margin: 16px;            /* compact width */
+  --lg-margin-regular: 20px;    /* regular width */
+  --lg-hit-min: 44px;           /* minimum hit region, 44x44pt */
+  --lg-readable: 672px;         /* readable content guide */
+  --lg-sidebar-width: 260px;
+
+  /* Shapes. Three types (WWDC25/356): fixed, capsule (height/2), concentric
+     (parent radius - inset). --lg-radius-container / --lg-concentric-inset are
+     the inputs to the concentric helper. */
+  --lg-radius-xs: 6px;  --lg-radius-s: 10px;  --lg-radius-m: 14px;
+  --lg-radius-l: 20px;  --lg-radius-xl: 26px; --lg-radius-xxl: 34px;
+  --lg-radius-capsule: 9999px;
+  --lg-radius-sheet: 38px;      /* nests into the display corner */
+  --lg-radius-window: 24px;
+  --lg-radius-container: var(--lg-radius-xl);
+  --lg-concentric-inset: 0px;
+
+  /* Stacking bands. New overlays pick a band, they do not invent numbers. */
+  --lg-z-content: 0; --lg-z-scroll-edge: 10; --lg-z-sidebar: 15; --lg-z-tabbar: 20;
+  --lg-z-sheet-backdrop: 30; --lg-z-sheet: 31; --lg-z-menu: 40; --lg-z-alert: 41; --lg-z-toast: 60;
+
+  /* Motion. Press is immediate; release springs back with a small overshoot.
+     Spring curves sampled from a damped oscillator (Chrome linear() easing). */
+  --lg-duration-press: 90ms;
+  --lg-duration-release: 220ms;
+  --lg-duration-layout: 280ms;
+  --lg-duration-spring: 520ms;
+  --lg-duration-overlay: 360ms;
+  --lg-ease: cubic-bezier(.2,.8,.2,1);
+  --lg-ease-out: cubic-bezier(.16,1,.3,1);
+  --lg-spring: linear(0, .008 1.1%, .03 2.2%, .118 4.6%, .43 9.6%, .657 13.4%, .84 17.4%, .94 20.7%, 1.006 23.9%, 1.05 27.5%, 1.072 31.5%, 1.07 35.9%, 1.05 41.4%, 1.011 51.3%, .995 61.4%, .994 70.3%, 1.001 87.4%, 1);
+  --lg-spring-soft: linear(0, .011 1.6%, .045 3.4%, .164 7%, .49 14%, .71 19.4%, .866 24.8%, .955 30.3%, 1.004 36%, 1.02 42.2%, 1.018 49.3%, 1.005 61.3%, .999 78%, 1);
+  --lg-spring-bouncy: linear(0, .01 .9%, .043 2%, .152 4.3%, .49 9.2%, .74 12.9%, .91 16.2%, 1.05 19.8%, 1.13 23.4%, 1.16 26.4%, 1.15 29.5%, 1.11 33.6%, 1.03 40.8%, .985 47.3%, .972 53.2%, .985 63%, 1.004 75.2%, 1);
+
+  /* Gel flex: glass "instantly flexes" on touch and moves in tandem with the
+     interaction. Independent glass grows toward the pointer; shared pills lift
+     out of their bar. */
+  --lg-press-scale: 1.06;
+  --lg-press-scale-shared: 1.07;
+  --lg-hover-scale: 1.015;
+
+  /* Glass geometry.
+     Blur, saturation, refraction and edge width are NOT declared here: they vary per
+     material x size and are the `materialTokens` table in `packages/tokens/src/index.ts`,
+     which the surface writes out as an inline `--lg-backdrop`. Declaring them twice would
+     mean a value you can edit that quietly has no effect. */
+  /* One ring, one width, one offset. Two stacked 3px rings on a field read as a bug. */
+  --lg-focus-width: 2px;
+  --lg-focus-offset: 2px;
+
+  --lg-glass-rim-width: 1px;
+  /* Virtual light source. The pointer overwrites this per element; the value here is where
+     the highlight rests. Registered as an <angle> in styles.css so it can be transitioned. */
+  --lg-light-angle: 145deg;
+  --lg-glass-contrast: 1.05;       /* re-level the backdrop instead of brightening it */
+  --lg-material-blur: 30px;        /* standard materials, content layer */
+}
+
+/* Dynamic Type steps. Body 17pt is the reference; ratios follow the HIG size
+   tables (xSmall 14 -> xxxLarge 23, AX1 28 -> AX5 53). */
+:root[data-lg-text-size="xs"]   { --lg-text-scale: .824; }
+:root[data-lg-text-size="s"]    { --lg-text-scale: .882; }
+:root[data-lg-text-size="m"]    { --lg-text-scale: .941; }
+:root[data-lg-text-size="l"]    { --lg-text-scale: 1; }
+:root[data-lg-text-size="xl"]   { --lg-text-scale: 1.118; }
+:root[data-lg-text-size="xxl"]  { --lg-text-scale: 1.235; }
+:root[data-lg-text-size="xxxl"] { --lg-text-scale: 1.353; }
+:root[data-lg-text-size="ax1"]  { --lg-text-scale: 1.647; }
+:root[data-lg-text-size="ax2"]  { --lg-text-scale: 1.941; }
+:root[data-lg-text-size="ax3"]  { --lg-text-scale: 2.353; }
+:root[data-lg-text-size="ax4"]  { --lg-text-scale: 2.765; }
+:root[data-lg-text-size="ax5"]  { --lg-text-scale: 3.118; }
+
+/* --------------------------------------------------------------------------
+   2. Light appearance
+   -------------------------------------------------------------------------- */
+:root,
+[data-lg-theme="light"] {
+  /* System colors */
+  --lg-red: rgb(255 56 60);      --lg-orange: rgb(255 141 40);  --lg-yellow: rgb(255 204 0);
+  --lg-green: rgb(52 199 89);    --lg-mint: rgb(0 200 179);     --lg-teal: rgb(0 195 208);
+  --lg-cyan: rgb(0 192 232);     --lg-blue: rgb(0 136 255);     --lg-indigo: rgb(97 85 245);
+  --lg-purple: rgb(203 48 224);  --lg-pink: rgb(255 45 85);     --lg-brown: rgb(172 127 94);
+  --lg-gray: rgb(142 142 147);   --lg-gray2: rgb(174 174 178);  --lg-gray3: rgb(199 199 204);
+  --lg-gray4: rgb(209 209 214);  --lg-gray5: rgb(229 229 234);  --lg-gray6: rgb(242 242 247);
+
+  /* App accent. System blue by default: one accent, reserved for the primary action and
+     for selection. Fork this single pair to re-brand — nothing else encodes the colour. */
+  --lg-accent: var(--lg-blue);
+  --lg-accent-contrast: #fff;
+
+  /* Semantic labels and separators */
+  --lg-label: rgb(0 0 0);
+  --lg-label-secondary: rgb(60 60 67 / .60);
+  --lg-label-tertiary: rgb(60 60 67 / .30);
+  --lg-label-quaternary: rgb(60 60 67 / .18);
+  --lg-placeholder: var(--lg-label-tertiary);
+  --lg-separator: rgb(60 60 67 / .29);
+  --lg-separator-opaque: rgb(198 198 200);
+  --lg-link: var(--lg-blue);
+
+  /* Backgrounds and fills */
+  --lg-bg: rgb(255 255 255);
+  --lg-bg-secondary: rgb(242 242 247);
+  --lg-bg-tertiary: rgb(255 255 255);
+  --lg-bg-grouped: rgb(242 242 247);
+  --lg-bg-grouped-2: rgb(255 255 255);
+  --lg-bg-grouped-3: rgb(242 242 247);
+  --lg-fill: rgb(120 120 128 / .20);
+  --lg-fill-secondary: rgb(120 120 128 / .16);
+  --lg-fill-tertiary: rgb(118 118 128 / .12);
+  --lg-fill-quaternary: rgb(116 116 128 / .08);
+
+  /* Standard materials (content layer). Thickness = opacity of the fill. */
+  --lg-material-ultrathin: rgb(255 255 255 / .55);
+  --lg-material-thin: rgb(255 255 255 / .70);
+  --lg-material-regular: rgb(255 255 255 / .82);
+  --lg-material-thick: rgb(255 255 255 / .93);
+
+  /* Liquid Glass. Light is bent, not painted: one hairline rim plus a faint
+     inner refraction ring. No body-wide gloss gradient, no second bevel. */
+  --lg-glass-fg: rgb(0 0 0 / .88);
+  --lg-glass-fg-secondary: rgb(0 0 0 / .55);
+  --lg-glass-rim-hi: rgb(255 255 255 / .82);
+  --lg-glass-rim-lo: rgb(0 0 0 / .17);
+  --lg-glass-shadow: 0 3px 8px rgb(0 0 0 / .05), 0 12px 36px rgb(0 0 0 / .10);
+  --lg-glass-shadow-lift: 0 6px 14px rgb(0 0 0 / .08), 0 22px 48px rgb(0 0 0 / .15);
+  --lg-glass-shadow-large: 0 12px 28px rgb(0 0 0 / .11), 0 32px 64px rgb(0 0 0 / .19);
+  --lg-glass-opaque: #f2f2f7;    /* reduced-transparency substitute */
+
+  /* Interaction states on a shared surface */
+  --lg-hover: rgb(255 255 255 / .5);
+  --lg-pressed: rgb(255 255 255 / .78);
+  --lg-selected: rgb(255 255 255 / .84);
+  --lg-pressed-alpha: .78;
+  --lg-selected-alpha: .84;
+  --lg-focus: var(--lg-blue);
+
+  /* ---- Legacy aliases (0.1.x). Removed once every component is migrated. ---- */
+  --lg-fg: var(--lg-label);
+  --lg-muted: var(--lg-label-secondary);
+  --lg-edge: var(--lg-separator);
+  --lg-opaque: var(--lg-glass-opaque);
+  --lg-shadow: var(--lg-glass-shadow);
+  --lg-shadow-lift: var(--lg-glass-shadow-lift);
+  /* The material fill, split into colour + opacity so component states can override the
+     opacity alone (pressed, selected, large glass) without restating the colour. */
+  --lg-tint-color: 255 255 255;
+  --lg-tint-opacity: .7;
+}
+
+/* --------------------------------------------------------------------------
+   3. Dark appearance
+   -------------------------------------------------------------------------- */
+[data-lg-theme="dark"] {
+  --lg-red: rgb(255 66 69);      --lg-orange: rgb(255 146 48);  --lg-yellow: rgb(255 214 0);
+  --lg-green: rgb(48 209 88);    --lg-mint: rgb(0 218 195);     --lg-teal: rgb(0 210 224);
+  --lg-cyan: rgb(60 211 254);    --lg-blue: rgb(0 145 255);     --lg-indigo: rgb(109 124 255);
+  --lg-purple: rgb(219 52 242);  --lg-pink: rgb(255 55 95);     --lg-brown: rgb(183 138 102);
+  --lg-gray: rgb(142 142 147);   --lg-gray2: rgb(99 99 102);    --lg-gray3: rgb(72 72 74);
+  --lg-gray4: rgb(58 58 60);     --lg-gray5: rgb(44 44 46);     --lg-gray6: rgb(28 28 30);
+
+  --lg-accent: var(--lg-blue);
+  --lg-accent-contrast: #fff;
+
+  --lg-label: rgb(255 255 255);
+  --lg-label-secondary: rgb(235 235 245 / .60);
+  --lg-label-tertiary: rgb(235 235 245 / .30);
+  --lg-label-quaternary: rgb(235 235 245 / .16);
+  --lg-placeholder: var(--lg-label-tertiary);
+  --lg-separator: rgb(84 84 88 / .60);
+  --lg-separator-opaque: rgb(56 56 58);
+  --lg-link: var(--lg-blue);
+
+  --lg-bg: rgb(0 0 0);
+  --lg-bg-secondary: rgb(28 28 30);
+  --lg-bg-tertiary: rgb(44 44 46);
+  --lg-bg-grouped: rgb(0 0 0);
+  --lg-bg-grouped-2: rgb(28 28 30);
+  --lg-bg-grouped-3: rgb(44 44 46);
+  --lg-fill: rgb(120 120 128 / .36);
+  --lg-fill-secondary: rgb(120 120 128 / .32);
+  --lg-fill-tertiary: rgb(118 118 128 / .24);
+  --lg-fill-quaternary: rgb(118 118 128 / .18);
+
+  --lg-material-ultrathin: rgb(30 30 30 / .55);
+  --lg-material-thin: rgb(30 30 30 / .70);
+  --lg-material-regular: rgb(30 30 30 / .82);
+  --lg-material-thick: rgb(30 30 30 / .93);
+
+  --lg-glass-fg: rgb(255 255 255 / .94);
+  --lg-glass-fg-secondary: rgb(255 255 255 / .62);
+  --lg-glass-rim-hi: rgb(255 255 255 / .28);
+  --lg-glass-rim-lo: rgb(0 0 0 / .45);
+  --lg-glass-shadow: 0 3px 8px rgb(0 0 0 / .1), 0 16px 40px rgb(0 0 0 / .24);
+  --lg-glass-shadow-lift: 0 8px 18px rgb(0 0 0 / .18), 0 28px 56px rgb(0 0 0 / .34);
+  --lg-glass-shadow-large: 0 16px 34px rgb(0 0 0 / .26), 0 40px 76px rgb(0 0 0 / .42);
+  --lg-glass-opaque: #1c1c1e;
+
+  --lg-hover: rgb(255 255 255 / .12);
+  --lg-pressed: rgb(255 255 255 / .22);
+  --lg-selected: rgb(255 255 255 / .16);
+  --lg-pressed-alpha: .22;
+  --lg-selected-alpha: .16;
+  --lg-focus: var(--lg-blue);
+
+  --lg-fg: var(--lg-label);
+  --lg-muted: var(--lg-label-secondary);
+  --lg-edge: var(--lg-separator);
+  --lg-opaque: var(--lg-glass-opaque);
+  --lg-shadow: var(--lg-glass-shadow);
+  --lg-shadow-lift: var(--lg-glass-shadow-lift);
+  --lg-tint-color: 30 30 32;
+  --lg-tint-opacity: .78;
+}
+
+/* --------------------------------------------------------------------------
+   4. Increase Contrast
+   The HIG ships a separate palette for this setting, and the material becomes
+   predominantly black/white with a contrasting border (handled in styles.css).
+   Both the OS preference and an explicit opt-in are honoured.
+   -------------------------------------------------------------------------- */
+@media (prefers-contrast: more) {
+  :root,
+  [data-lg-theme="light"] {
+    --lg-red: rgb(233 21 45);     --lg-orange: rgb(197 83 0);   --lg-yellow: rgb(161 106 0);
+    --lg-green: rgb(0 137 50);    --lg-mint: rgb(0 133 117);    --lg-teal: rgb(0 129 152);
+    --lg-cyan: rgb(0 126 174);    --lg-blue: rgb(30 110 244);   --lg-indigo: rgb(86 74 222);
+    --lg-purple: rgb(176 47 194); --lg-pink: rgb(231 18 77);    --lg-brown: rgb(149 109 81);
+    --lg-label-secondary: rgb(60 60 67 / .82);
+    --lg-label-tertiary: rgb(60 60 67 / .55);
+    --lg-separator: rgb(0 0 0 / .55);
+  }
+  [data-lg-theme="dark"] {
+    --lg-red: rgb(255 97 101);    --lg-orange: rgb(255 160 86);  --lg-yellow: rgb(254 223 67);
+    --lg-green: rgb(74 217 104);  --lg-mint: rgb(84 223 203);    --lg-teal: rgb(59 221 236);
+    --lg-cyan: rgb(109 217 255);  --lg-blue: rgb(92 184 255);    --lg-indigo: rgb(167 170 255);
+    --lg-purple: rgb(234 141 255);--lg-pink: rgb(255 138 196);   --lg-brown: rgb(219 166 121);
+    --lg-label-secondary: rgb(235 235 245 / .85);
+    --lg-label-tertiary: rgb(235 235 245 / .60);
+    --lg-separator: rgb(255 255 255 / .60);
+  }
+}
+[data-lg-contrast="more"] {
+  --lg-label-secondary: rgb(60 60 67 / .82);
+  --lg-label-tertiary: rgb(60 60 67 / .55);
+  --lg-separator: rgb(0 0 0 / .55);
+}
+[data-lg-contrast="more"][data-lg-theme="dark"] {
+  --lg-label-secondary: rgb(235 235 245 / .85);
+  --lg-label-tertiary: rgb(235 235 245 / .60);
+  --lg-separator: rgb(255 255 255 / .60);
+}
+
+}

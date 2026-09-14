@@ -1,0 +1,37 @@
+{
+  "compilerOptions": {
+    "target": "ES2022",
+    "lib": [
+      "ES2022",
+      "DOM",
+      "DOM.Iterable"
+    ],
+    "module": "ESNext",
+    "moduleResolution": "Bundler",
+    "jsx": "react-jsx",
+    "strict": true,
+    "declaration": true,
+    "declarationMap": true,
+    "sourceMap": true,
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "forceConsistentCasingInFileNames": true,
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+    "verbatimModuleSyntax": false,
+    "paths": {
+      "@ttqtt/liquid-glass-react": [
+        "./src/index.ts"
+      ]
+    },
+    "baseUrl": "."
+  },
+  "include": [
+    "src",
+    "site/src",
+    "tests/browser",
+    "site/vite.config.ts",
+    "vite.lib.config.ts",
+    "playwright.config.ts"
+  ]
+}
