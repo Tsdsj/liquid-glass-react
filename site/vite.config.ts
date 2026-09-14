@@ -13,7 +13,7 @@ const src = (file: string) => fileURLToPath(new URL(`../src/${file}`, import.met
  * the /liquid-glass-react/ sub-path GitHub Pages uses, with no rebuild in between. Hash
  * routing means every route comes from the single index.html, so no server rewrites either.
  */
-export default defineConfig(() => ({
+export default defineConfig({
   root: site,
   base: './',
   resolve: {
@@ -25,4 +25,4 @@ export default defineConfig(() => ({
   esbuild: { jsx: 'automatic' },
   server: { host: '127.0.0.1', port: 5173, strictPort: true },
   build: { target: 'chrome120', outDir: 'dist', sourcemap: true, emptyOutDir: true },
-}));
+});

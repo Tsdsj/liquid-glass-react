@@ -2,14 +2,14 @@ import { test, expect } from '@playwright/test';
 
 test('buttons carry real semantics for disabled, loading and press state', async ({ page }) => {
   await page.goto('/#/components/button');
-  await page.getByRole('button', { name: 'Glass', exact: true }).click();
-  await expect(page.getByText('按下计数：1')).toBeVisible();
+  await page.getByRole('button', { name: '玻璃', exact: true }).click();
+  await expect(page.getByText('按了 1 次')).toBeVisible();
   await expect(page.getByRole('button', { name: '不可用' })).toBeDisabled();
   const loading = page.getByRole('button', { name: '处理中' });
   await expect(loading).toHaveAttribute('aria-busy', 'true');
   await expect(loading).toBeDisabled();
   // Icon-only controls must still have an accessible name.
-  await expect(page.getByRole('button', { name: '收藏' })).toBeVisible();
+  await expect(page.getByRole('button', { name: '收藏', exact: true })).toBeVisible();
 });
 
 test('only one action per view is prominent', async ({ page }) => {
@@ -20,10 +20,11 @@ test('only one action per view is prominent', async ({ page }) => {
 
 test('segmented control is a native radio group', async ({ page }) => {
   await page.goto('/#/components/segmented-control');
-  await page.getByRole('radio', { name: '日', exact: true }).focus();
+  const basic = page.locator('#segmented-basic');
+  await basic.getByRole('radio', { name: '日', exact: true }).focus();
   await page.keyboard.press('ArrowRight');
-  await expect(page.getByRole('radio', { name: '周', exact: true })).toBeChecked();
-  await expect(page.getByRole('radio', { name: '年', exact: true })).toBeDisabled();
+  await expect(basic.getByRole('radio', { name: '周', exact: true })).toBeChecked();
+  await expect(page.locator('#segmented-disabled').getByRole('radio', { name: '年', exact: true })).toBeDisabled();
 });
 
 test('slider and switch keep their native keyboard behaviour', async ({ page }) => {
@@ -42,9 +43,9 @@ test('slider and switch keep their native keyboard behaviour', async ({ page }) 
 
 test('the slider knob is quiet at rest and becomes glass only while held', async ({ page }) => {
   await page.goto('/#/components/slider');
-  const decoration = page.locator('.demo-content .lg-slider-lens > .lg-decoration').first();
+  const decoration = page.locator('#slider-basic .lg-slider-lens > .lg-decoration').first();
   await expect(decoration).toHaveCSS('opacity', '0');
-  const knob = page.locator('.demo-content .lg-slider-lens').first();
+  const knob = page.locator('#slider-basic .lg-slider-lens').first();
   const box = (await knob.boundingBox())!;
   await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2);
   await page.mouse.down();
@@ -76,7 +77,7 @@ test('in-page tabs swap panels and expose tab semantics', async ({ page }) => {
 
 test('popover closes on Escape and on an outside click, returning focus', async ({ page }) => {
   await page.goto('/#/components/popover');
-  const trigger = page.getByRole('button', { name: '打开浮层' });
+  const trigger = page.getByRole('button', { name: '打开面板' });
   await trigger.click();
   const panel = page.getByRole('dialog', { name: '查看设置' });
   await expect(panel).toBeVisible();
@@ -93,13 +94,13 @@ test('menu arrows skip disabled items and typeahead finds a label', async ({ pag
   const trigger = page.getByRole('button', { name: '打开菜单' });
   await trigger.click();
   await expect(page.getByRole('menuitem', { name: '打开', exact: true })).toBeFocused();
-  await expect(page.getByRole('menuitem', { name: '不可用项' })).toBeDisabled();
+  await expect(page.getByRole('menuitem', { name: '暂不可用' })).toBeDisabled();
   await page.keyboard.press('ArrowDown');
   await expect(page.getByRole('menuitemcheckbox', { name: '置顶' })).toBeFocused();
   await page.keyboard.press('ArrowDown');
   await expect(page.getByRole('menuitem', { name: '删除' })).toBeFocused();
   await page.keyboard.press('Enter');
-  await expect(page.locator('.demo-content [role="status"]')).toHaveText('删除');
+  await expect(page.locator('#menu-basic [role="status"]')).toHaveText('删除');
   await expect(trigger).toBeFocused();
 });
 

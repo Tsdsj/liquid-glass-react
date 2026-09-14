@@ -9,7 +9,6 @@ const SECTIONS = [
   { key: 'overview', path: 'overview', label: '概览', icon: 'grid' },
   { key: 'foundations', path: 'foundations/materials', label: '基础', icon: 'layer' },
   { key: 'components', path: 'components', label: '组件', icon: 'code' },
-  { key: 'labs', path: 'labs/materials', label: '实验室', icon: 'tune' },
   { key: 'guides', path: 'guides/install', label: '指南', icon: 'shield' },
 ] as const;
 

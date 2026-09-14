@@ -2,7 +2,7 @@ import { test, expect } from '@playwright/test';
 
 test('a sheet settles at its detents and goes opaque at full height', async ({ page }) => {
   await page.goto('/#/components/sheet');
-  await page.getByRole('button', { name: '打开 Sheet' }).click();
+  await page.getByRole('button', { name: '打开面板' }).click();
   const sheet = page.getByRole('dialog', { name: '分享这一刻' });
   await expect(sheet).toBeVisible();
   const offset = async () => parseFloat(await sheet.evaluate(node => node.style.getPropertyValue('--lg-sheet-offset')));
@@ -24,7 +24,7 @@ test('a sheet settles at its detents and goes opaque at full height', async ({ p
 
 test('dragging the grabber tracks the pointer and snaps to the nearest detent', async ({ page }) => {
   await page.goto('/#/components/sheet');
-  await page.getByRole('button', { name: '打开 Sheet' }).click();
+  await page.getByRole('button', { name: '打开面板' }).click();
   const sheet = page.getByRole('dialog', { name: '分享这一刻' });
   // The sheet rises into place, so wait for it to settle before measuring the grabber —
   // otherwise the recorded position is somewhere along the entry animation.
@@ -50,11 +50,11 @@ test('an alert focuses the safe action and Escape runs cancel', async ({ page })
   await expect(alert.getByRole('button', { name: '取消' })).toBeFocused();
   await page.keyboard.press('Escape');
   await expect(alert).toBeHidden();
-  await expect(page.getByText('已取消')).toBeVisible();
+  await expect(page.locator('#alert-destructive [role="status"]')).toHaveText('已取消');
 
   await trigger.click();
   await alert.getByRole('button', { name: '删除', exact: true }).click();
-  await expect(page.getByText('已删除（仅本地状态）')).toBeVisible();
+  await expect(page.locator('#alert-destructive [role="status"]')).toHaveText('已删除（只是演示）');
 });
 
 test('an alert title is bold and left aligned, never centred', async ({ page }) => {
@@ -71,13 +71,13 @@ test('an alert title is bold and left aligned, never centred', async ({ page }) 
 
 test('an action sheet orders destructive choices last and separates cancel', async ({ page }) => {
   await page.goto('/#/components/action-sheet');
-  await page.getByRole('button', { name: '打开操作表' }).click();
+  await page.getByRole('button', { name: '更多操作' }).click();
   const items = page.locator('.lg-action-item');
   await expect(items).toHaveCount(3);
   await expect(items.last()).toHaveAttribute('data-destructive', 'true');
   await expect(page.locator('.lg-action-cancel')).toBeVisible();
   await page.getByRole('menuitem', { name: '分享' }).click();
-  await expect(page.locator('.demo-content [role="status"]')).toHaveText('分享');
+  await expect(page.locator('#sheet-actions [role="status"]')).toHaveText('分享');
 });
 
 test('a reversible delete offers undo instead of a confirmation', async ({ page }) => {

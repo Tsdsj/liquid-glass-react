@@ -10,7 +10,7 @@ const read = (root: Element) => Array.from(root.querySelectorAll('.lg-fusion-blo
 
 test('shared surfaces expose a decorative, non-interactive fusion layer', async ({ page }) => {
   await page.goto('/#/components/toolbar');
-  const layer = page.locator('.demo-content .lg-toolbar-group .lg-fusion').first();
+  const layer = page.locator('#toolbar-groups .lg-toolbar-group .lg-fusion').first();
   await expect(layer).toHaveAttribute('aria-hidden', 'true');
   await expect(layer.locator('.lg-fusion-blob')).toHaveCount(3);
   expect(await layer.evaluate(x => getComputedStyle(x).pointerEvents)).toBe('none');
@@ -21,7 +21,7 @@ test('shared surfaces expose a decorative, non-interactive fusion layer', async 
 
 test('pulling a shared button toward its neighbour fuses the two pills', async ({ page }, info) => {
   await page.goto('/#/components/toolbar');
-  const group = page.locator('.demo-content .lg-toolbar-group').first();
+  const group = page.locator('#toolbar-groups .lg-toolbar-group').first();
   const first = group.getByRole('button', { name: '网格' });
   await first.scrollIntoViewIfNeeded();
   await first.hover();
@@ -51,7 +51,7 @@ test('pulling a shared button toward its neighbour fuses the two pills', async (
 
 test('the segmented lens flows into the next slot and keeps radio semantics', async ({ page }) => {
   await page.goto('/#/components/segmented-control');
-  const track = page.locator('.demo-content .lg-segmented-track');
+  const track = page.locator('#segmented-basic .lg-segmented-track');
   await track.scrollIntoViewIfNeeded();
   const week = (await track.getByText('周', { exact: true }).boundingBox())!;
   const month = (await track.getByText('月', { exact: true }).boundingBox())!;
@@ -62,7 +62,7 @@ test('the segmented lens flows into the next slot and keeps radio semantics', as
   // The old slot leaves a collapsing droplet behind the moving lens.
   expect(sized(await track.evaluate(read))).toBeGreaterThanOrEqual(2);
   await page.mouse.up();
-  await expect(page.getByRole('radio', { name: '月', exact: true })).toBeChecked();
+  await expect(page.locator('#segmented-basic').getByRole('radio', { name: '月', exact: true })).toBeChecked();
   await expect(track.locator('.lg-selection-lens')).toHaveCount(1);
 });
 
@@ -70,7 +70,7 @@ test('reduced motion removes the fusion layer entirely', async ({ page }) => {
   await page.emulateMedia({ reducedMotion: 'reduce' });
   await page.goto('/#/components/toolbar');
   await expect(page.locator('.lg-fusion')).toHaveCount(0);
-  const first = page.locator('.demo-content .lg-toolbar-group').first().getByRole('button', { name: '网格' });
+  const first = page.locator('#toolbar-groups .lg-toolbar-group').first().getByRole('button', { name: '网格' });
   await first.scrollIntoViewIfNeeded();
   await first.hover();
   const box = (await first.boundingBox())!;

@@ -8,66 +8,115 @@ import type { ComponentDoc } from './types.js';
 
 export const controlDocs: ComponentDoc[] = [
   {
-    slug: 'button', name: 'GlassButton', group: '控件',
-    summary: '七种样式，从浮动玻璃到内容层的扁平按钮。',
-    rule: '区分首选项的是样式而不是尺寸，一个视图里最多一个 prominent。tint 只加在这一个主操作的背景上，标签保持白色——如果什么都被着色，就什么都不突出。',
-    backdrop: 'both', demoHeight: 260,
-    example: function ButtonExample() {
-      const [count, setCount] = useState(0);
-      return <div style={{ display: 'grid', gap: 12, justifyItems: 'center' }}>
-        <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', justifyContent: 'center' }}>
-          <GlassButton onClick={() => setCount(n => n + 1)}>Glass</GlassButton>
-          <GlassButton variant="glassProminent" onClick={() => setCount(n => n + 1)}>主操作</GlassButton>
-          <GlassIconButton aria-label="收藏" onClick={() => setCount(n => n + 1)}><Icon name="heart" /></GlassIconButton>
-        </div>
-        <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', justifyContent: 'center' }}>
-          <GlassButton variant="plain">Plain</GlassButton>
-          <GlassButton variant="gray">Gray</GlassButton>
-          <GlassButton variant="tinted">Tinted</GlassButton>
-          <GlassButton variant="destructive">删除</GlassButton>
-        </div>
-        <div style={{ display: 'flex', gap: 10, alignItems: 'center', flexWrap: 'wrap', justifyContent: 'center' }}>
-          <GlassButton controlSize="small">Small</GlassButton>
-          <GlassButton controlSize="large">Large</GlassButton>
+    slug: 'button', name: 'GlassButton', title: '按钮', group: '控件',
+    summary: '七种样式，从浮在内容之上的玻璃按钮到内容里的扁平按钮。',
+    when: [
+      '一屏里最多一个主操作。把它设成 glassProminent，其余保持普通——都强调就等于都不强调。',
+      '按钮浮在内容之上（工具栏、媒体控制）时用玻璃；嵌在内容里时用 plain、gray 或 tinted。',
+      '删除这类不可逆的操作用 destructive，并且配上确认或撤销。',
+    ],
+    examples: [
+      {
+        id: 'button-variants', title: '七种样式', description: '前两种是浮动层的玻璃，后五种是内容里的扁平按钮。',
+        backdrop: 'both', height: 230,
+        render: function ButtonVariants() {
+          const [count, setCount] = useState(0);
+          return <div style={{ display: 'grid', gap: 12, justifyItems: 'center' }}>
+            <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', justifyContent: 'center' }}>
+              <GlassButton onClick={() => setCount(n => n + 1)}>玻璃</GlassButton>
+              <GlassButton variant="glassProminent" onClick={() => setCount(n => n + 1)}>主操作</GlassButton>
+            </div>
+            <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', justifyContent: 'center' }}>
+              <GlassButton variant="plain">文字</GlassButton>
+              <GlassButton variant="gray">灰底</GlassButton>
+              <GlassButton variant="tinted">淡色</GlassButton>
+              <GlassButton variant="destructive">删除</GlassButton>
+            </div>
+            <Text variant="caption1" tone="secondary" role="status">按了 {count} 次</Text>
+          </div>;
+        },
+        code: `<GlassButton>玻璃</GlassButton>
+<GlassButton variant="glassProminent">主操作</GlassButton>
+<GlassButton variant="plain">文字</GlassButton>
+<GlassButton variant="destructive">删除</GlassButton>`,
+      },
+      {
+        id: 'button-size', title: '尺寸', description: '视觉可以更小，但手指能点到的范围不会小于 44×44。',
+        height: 180,
+        render: () => <div style={{ display: 'flex', gap: 10, alignItems: 'center', flexWrap: 'wrap', justifyContent: 'center' }}>
+          <GlassButton controlSize="small">小</GlassButton>
+          <GlassButton>默认</GlassButton>
+          <GlassButton controlSize="large">大</GlassButton>
+          <GlassButton controlSize="extraLarge">超大</GlassButton>
+        </div>,
+        code: `<GlassButton controlSize="small">小</GlassButton>
+<GlassButton controlSize="large">大</GlassButton>`,
+      },
+      {
+        id: 'button-state', title: '不可用与处理中', description: '处理中同时不可点，并会告诉读屏“正在忙”。',
+        height: 180,
+        render: () => <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', justifyContent: 'center' }}>
           <GlassButton disabled>不可用</GlassButton>
           <GlassButton loading>处理中</GlassButton>
-        </div>
-        <Text variant="caption1" tone="secondary" role="status">按下计数：{count}</Text>
-      </div>;
-    },
-    code: `<GlassButton>Glass</GlassButton>
-<GlassButton variant="glassProminent">Done</GlassButton>
-<GlassButton variant="destructive">删除</GlassButton>
-<GlassIconButton aria-label="收藏"><HeartIcon /></GlassIconButton>`,
-    props: [
-      { name: 'variant', type: "'glass' | 'glassProminent' | 'plain' | 'gray' | 'tinted' | 'destructive' | 'destructiveProminent'", default: "'glass'", description: '样式。glass 系列属于浮动操作层，其余属于内容层。' },
-      { name: 'controlSize', type: "'small' | 'regular' | 'large' | 'extraLarge'", default: "'regular'", description: '视觉高度；与选择玻璃厚度的 size 不是一回事。' },
-      { name: 'size', type: "'small' | 'large'", default: "'small'", description: '玻璃厚度。大玻璃更厚且不随背景翻转。' },
-      { name: 'loading', type: 'boolean', default: 'false', description: '同时禁用并置 aria-busy。' },
-      { name: 'chroma', type: 'boolean', default: 'false', description: '色散折射。成本约为三倍，只用于少数非固定元素。' },
-      { name: 'independent', type: 'boolean', default: 'false', description: '在共享表面内仍保留自己的玻璃——这是“玻璃叠玻璃”，慎用。' },
+          <GlassButton variant="destructive" disabled>删除</GlassButton>
+        </div>,
+        code: `<GlassButton disabled>不可用</GlassButton>
+<GlassButton loading>处理中</GlassButton>`,
+      },
+      {
+        id: 'button-icon', title: '图标按钮', description: '没有可见文字，所以必须给一个名字，否则读屏只会念“按钮”。',
+        backdrop: 'both', height: 170,
+        render: function IconButtons() {
+          const [liked, setLiked] = useState(false);
+          return <div style={{ display: 'flex', gap: 10 }}>
+            <GlassIconButton aria-label={liked ? '取消收藏' : '收藏'} aria-pressed={liked} onClick={() => setLiked(!liked)}>
+              <Icon name="heart" style={liked ? { fill: 'currentColor' } : undefined} />
+            </GlassIconButton>
+            <GlassIconButton aria-label="分享"><Icon name="arrow" /></GlassIconButton>
+            <GlassIconButton aria-label="更多"><Icon name="more" /></GlassIconButton>
+          </div>;
+        },
+        code: `<GlassIconButton aria-label="收藏" aria-pressed={liked} onClick={toggle}>
+  <HeartIcon />
+</GlassIconButton>`,
+      },
     ],
-    a11y: [
-      '默认 type="button"，不会意外提交表单。',
-      'Enter / Space 触发与指针相同的按压编排（Chrome 下 Enter 不会置 :active）。',
-      '粗指针设备上即使视觉更小，命中区也补足到 44×44。',
-      '图标按钮的 aria-label 是必填类型。',
+    props: [
+      { name: 'variant', type: "'glass' | 'glassProminent' | 'plain' | 'gray' | 'tinted' | 'destructive' | 'destructiveProminent'", default: "'glass'", description: '样式。前两种属于浮动层，其余属于内容层。' },
+      { name: 'controlSize', type: "'small' | 'regular' | 'large' | 'extraLarge'", default: "'regular'", description: '按钮高度。' },
+      { name: 'size', type: "'small' | 'large'", default: "'small'", description: '玻璃的厚薄。大玻璃更厚，而且不会随背景明暗翻转。' },
+      { name: 'loading', type: 'boolean', default: 'false', description: '显示转圈，同时禁用。' },
+      { name: 'chroma', type: 'boolean', default: 'false', description: '让边缘像真玻璃一样出现色散。开销大约三倍，只给少数几个元素用。' },
+      { name: 'independent', type: 'boolean', default: 'false', description: '在工具栏这类共享背景里仍然保留自己的玻璃。会变成玻璃叠玻璃，慎用。' },
+    ],
+    notes: [
+      '默认是普通按钮，不会误提交表单。',
+      '回车和空格的按下反馈和鼠标完全一致。',
+      '在触摸屏上，即使按钮看起来更小，可点范围也会补足到 44×44。',
+      '图标按钮的名字是必填的，类型层面就会提醒你。',
     ],
   },
   {
-    slug: 'segmented-control', name: 'GlassSegmentedControl', group: '控件',
-    summary: '2–5 个等宽分段，可以按住选中项拖动切换。',
-    rule: '它是一个可拖动的控件而不是一排按钮：按住选中分段滑动，透镜 1:1 跟随指针、随拖动拉伸、跨过分段时即时切换，松手后弹簧归位。只能点击的实现是“不像 Apple”的最明显特征。',
-    demoHeight: 200,
-    example: function SegmentedExample() {
-      const [value, setValue] = useState('week');
-      return <div style={{ display: 'grid', gap: 12, justifyItems: 'center' }}>
-        <GlassSegmentedControl aria-label="时间范围" value={value} onValueChange={setValue}
-          items={[{ value: 'day', label: '日' }, { value: 'week', label: '周' }, { value: 'month', label: '月' }, { value: 'year', label: '年', disabled: true }]} />
-        <Text variant="caption1" tone="secondary">按住选中项左右拖动试试 · 当前：{value}</Text>
-      </div>;
-    },
-    code: `<GlassSegmentedControl
+    slug: 'segmented-control', name: 'GlassSegmentedControl', title: '分段控件', group: '控件',
+    summary: '在 2–5 个并列选项里选一个。',
+    when: [
+      '选项数量固定、都能一眼看完，并且需要立刻切换视图或范围。',
+      '选项超过五个，或者名字很长，改用下拉菜单。',
+      '这是选择，不是操作。不要拿它当一排按钮用。',
+    ],
+    examples: [
+      {
+        id: 'segmented-basic', title: '基础用法', description: '按住当前选项左右滑动就能换，手指到哪它跟到哪——松手前就已经切好了。',
+        height: 200,
+        render: function SegmentedBasic() {
+          const [value, setValue] = useState('week');
+          return <div style={{ display: 'grid', gap: 12, justifyItems: 'center' }}>
+            <GlassSegmentedControl aria-label="时间范围" value={value} onValueChange={setValue}
+              items={[{ value: 'day', label: '日' }, { value: 'week', label: '周' }, { value: 'month', label: '月' }]} />
+            <Text variant="caption1" tone="secondary">当前：{value}</Text>
+          </div>;
+        },
+        code: `<GlassSegmentedControl
   aria-label="时间范围"
   value={range}
   onValueChange={setRange}
@@ -77,156 +126,240 @@ export const controlDocs: ComponentDoc[] = [
     { value: 'month', label: '月' },
   ]}
 />`,
-    props: [
-      { name: 'items', type: 'GlassChoice[]', required: true, description: '2–5 项。文字或图标，不要混用。' },
-      { name: 'value / defaultValue', type: 'string', description: '受控或非受控选中值。' },
-      { name: 'onValueChange', type: '(value: string) => void', description: '拖动过程中即时触发，不等到松手。' },
-      { name: 'name', type: 'string', description: '原生 radio 的 name，用于表单提交。' },
-      { name: 'aria-label', type: 'string', required: true, description: 'radiogroup 的可访问名称。' },
+      },
+      {
+        id: 'segmented-disabled', title: '不可选与紧凑', description: '暂时不能选的项留在原位，不要让它消失导致其它项跳动。',
+        height: 190,
+        render: () => <div style={{ display: 'grid', gap: 14, justifyItems: 'center' }}>
+          <GlassSegmentedControl aria-label="时间范围（含不可选）" defaultValue="week"
+            items={[{ value: 'day', label: '日' }, { value: 'week', label: '周' }, { value: 'year', label: '年', disabled: true }]} />
+          <GlassSegmentedControl aria-label="密度" density="compact" defaultValue="b"
+            items={[{ value: 'a', label: '紧凑' }, { value: 'b', label: '常规' }]} />
+        </div>,
+        code: `<GlassSegmentedControl
+  aria-label="时间范围"
+  items={[
+    { value: 'week', label: '周' },
+    { value: 'year', label: '年', disabled: true },
+  ]}
+/>`,
+      },
     ],
-    a11y: [
-      '底层是原生 radio：参与表单提交，方向键切换由浏览器提供。',
-      'touch-action: pan-y —— 横向拖动归控件，纵向滚动仍归页面。',
-      '减少动效时关闭拖拽与弹簧，仅保留点击选择。',
+    props: [
+      { name: 'items', type: 'GlassChoice[]', required: true, description: '2–5 项。全用文字或全用图标，不要混。' },
+      { name: 'value / defaultValue', type: 'string', description: '受控或非受控的选中值。' },
+      { name: 'onValueChange', type: '(value: string) => void', description: '拖动过程中就会触发，不等到松手。' },
+      { name: 'name', type: 'string', description: '表单字段名。' },
+      { name: 'aria-label', type: 'string', required: true, description: '这组选项是在选什么。' },
+    ],
+    notes: [
+      '底层是浏览器原生的单选按钮，能参与表单提交，方向键切换也是浏览器自带的。',
+      '横向拖动归控件，纵向滚动仍然归页面，两者不会打架。',
+      '用户开启“减少动效”后只保留点击选择。',
     ],
   },
   {
-    slug: 'switch', name: 'GlassSwitch', group: '控件',
-    summary: '胶囊开关，打开态为系统绿，可以把旋钮“甩”过去。',
-    rule: '标签描述的是打开后的状态（“Wi‑Fi”，不是“启用 Wi‑Fi”）。旋钮在静止时是安静的，只有被操作时才发生变化。',
-    demoHeight: 180,
-    example: function SwitchExample() {
-      const [on, setOn] = useState(true);
-      const [off, setOff] = useState(false);
-      return <div style={{ display: 'grid', gap: 14, justifyItems: 'start' }}>
-        <GlassSwitch aria-label="Wi‑Fi" label="Wi‑Fi" checked={on} onCheckedChange={setOn} />
-        <GlassSwitch aria-label="低数据模式" label="低数据模式" checked={off} onCheckedChange={setOff} />
-        <GlassSwitch aria-label="不可用开关" label="不可用" disabled />
-        <Text variant="caption1" tone="secondary">按住旋钮向任一侧甩动试试</Text>
-      </div>;
-    },
-    code: `<GlassSwitch aria-label="Wi‑Fi" label="Wi‑Fi"
+    slug: 'switch', name: 'GlassSwitch', title: '开关', group: '控件',
+    summary: '打开或关闭一件事，改动立刻生效。',
+    when: [
+      '设置项里的二选一，并且切换之后马上就生效，不需要再点“保存”。',
+      '标签写打开之后的状态：写“Wi‑Fi”，不要写“启用 Wi‑Fi”。',
+      '如果改动需要确认才生效，用复选框加一个提交按钮，不要用开关。',
+    ],
+    examples: [
+      {
+        id: 'switch-basic', title: '基础用法', description: '除了点，还可以按住旋钮往任意一侧甩过去，往哪甩就是哪个结果。',
+        height: 210,
+        render: function SwitchBasic() {
+          const [wifi, setWifi] = useState(true);
+          const [low, setLow] = useState(false);
+          return <div style={{ display: 'grid', gap: 14, justifyItems: 'start' }}>
+            <GlassSwitch aria-label="Wi‑Fi" label="Wi‑Fi" checked={wifi} onCheckedChange={setWifi} />
+            <GlassSwitch aria-label="低数据模式" label="低数据模式" checked={low} onCheckedChange={setLow} />
+            <GlassSwitch aria-label="不可用开关" label="暂不可用" disabled />
+          </div>;
+        },
+        code: `<GlassSwitch aria-label="Wi‑Fi" label="Wi‑Fi"
   checked={enabled} onCheckedChange={setEnabled} />`,
+      },
+    ],
     props: [
       { name: 'checked / defaultChecked', type: 'boolean', description: '受控或非受控状态。' },
-      { name: 'onCheckedChange', type: '(checked: boolean) => void', description: '点击或拖动释放时触发。' },
-      { name: 'label', type: 'string', description: '可见文字标签。' },
-      { name: 'aria-label', type: 'string', required: true, description: '描述打开后的状态。' },
+      { name: 'onCheckedChange', type: '(checked: boolean) => void', description: '点击或拖动松手时触发。' },
+      { name: 'label', type: 'string', description: '开关旁边的可见文字。' },
+      { name: 'aria-label', type: 'string', required: true, description: '描述打开之后的状态。' },
     ],
-    a11y: [
-      '底层是 input[type=checkbox][role=switch]，Space 切换。',
-      '明确的拖动会抑制 label 产生的合成 click，避免切换两次。',
+    notes: [
+      '底层是原生复选框，空格键切换。',
+      '一次明确的拖动不会再额外触发一次点击，所以不会切换两遍。',
+      '打开时是系统绿色，不跟随主题色——这是这个控件的固定含义。',
     ],
   },
   {
-    slug: 'slider', name: 'GlassSlider', group: '控件',
-    summary: '原生 range 之上的轨道与旋钮；旋钮只在被拖动时抬升为玻璃。',
-    rule: '内容层里的旋钮属于“瞬时控件”：被操作时才变成玻璃，静止时保持安静。永远是玻璃的旋钮，就是内容层里的玻璃。',
-    demoHeight: 200,
-    example: function SliderExample() {
-      const [volume, setVolume] = useState(62);
-      return <div style={{ display: 'grid', gap: 14, width: 300 }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-          <Text variant="subhead">音量</Text>
-          <Text variant="subhead" tone="secondary" tabular>{volume}%</Text>
-        </div>
-        <GlassSlider aria-label="音量" value={volume} onValueChange={setVolume} formatValue={v => `${v} 百分比`}
-          minLabel={<Icon name="volume" size={16} />} maxLabel={<Icon name="volume" size={20} />} />
-        <GlassSlider aria-label="不可用滑块" defaultValue={30} disabled />
-      </div>;
-    },
-    code: `<GlassSlider
+    slug: 'slider', name: 'GlassSlider', title: '滑块', group: '控件',
+    summary: '在一段连续范围里取值。',
+    when: [
+      '取值范围连续、并且调整时能立刻看到或听到效果，比如音量、亮度、缩放。',
+      '两端可以放小图标说明方向。',
+      '只有几个离散档位时，用分段控件或步进器更清楚。',
+    ],
+    examples: [
+      {
+        id: 'slider-basic', title: '基础用法', description: '旋钮平时是安静的，只有被按住拖动时才变成玻璃。',
+        height: 200,
+        render: function SliderBasic() {
+          const [volume, setVolume] = useState(62);
+          return <div style={{ display: 'grid', gap: 14, width: 300 }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+              <Text variant="subhead">音量</Text>
+              <Text variant="subhead" tone="secondary" tabular>{volume}%</Text>
+            </div>
+            <GlassSlider aria-label="音量" value={volume} onValueChange={setVolume} formatValue={v => `${v} 百分比`} />
+          </div>;
+        },
+        code: `<GlassSlider
   aria-label="音量"
   value={volume}
   onValueChange={setVolume}
   formatValue={v => \`\${v} 百分比\`}
 />`,
-    props: [
-      { name: 'value / defaultValue', type: 'number', default: '50', description: '受控或非受控值。' },
-      { name: 'min / max / step', type: 'number', default: '0 / 100 / 1', description: '取值范围，min 必须小于 max。' },
-      { name: 'formatValue', type: '(value: number) => string', description: '朗读用的 aria-valuetext；数字本身往往不够。' },
-      { name: 'minLabel / maxLabel', type: 'ReactNode', description: '轨道两端的提示图形。' },
-      { name: 'aria-label', type: 'string', required: true, description: '可访问名称。' },
+      },
+      {
+        id: 'slider-labels', title: '两端图标与不可用', description: '两端的图标说明往哪边是大、往哪边是小。',
+        height: 200,
+        render: function SliderLabels() {
+          const [level, setLevel] = useState(40);
+          return <div style={{ display: 'grid', gap: 16, width: 300 }}>
+            <GlassSlider aria-label="亮度" value={level} onValueChange={setLevel}
+              minLabel={<Icon name="sun" size={15} />} maxLabel={<Icon name="sun" size={20} />} />
+            <GlassSlider aria-label="不可用滑块" defaultValue={30} disabled />
+          </div>;
+        },
+        code: `<GlassSlider
+  aria-label="亮度"
+  minLabel={<SunSmall />}
+  maxLabel={<SunLarge />}
+/>`,
+      },
     ],
-    a11y: [
-      '底层是原生 input[type=range]：键盘、表单、aria-valuetext 全部免费获得。',
-      '旋钮尺寸变化时不会重建几何贴图。',
+    props: [
+      { name: 'value / defaultValue', type: 'number', default: '50', description: '当前值。' },
+      { name: 'min / max / step', type: 'number', default: '0 / 100 / 1', description: '范围与步长。' },
+      { name: 'formatValue', type: '(value: number) => string', description: '读屏念出来的说法。光念一个数字往往不够。' },
+      { name: 'minLabel / maxLabel', type: 'ReactNode', description: '两端的提示图形。' },
+      { name: 'aria-label', type: 'string', required: true, description: '这个滑块在调什么。' },
+    ],
+    notes: [
+      '底层是浏览器原生的范围输入，方向键、Home、End、翻页键全都可用。',
+      '拖动时不会重新计算图形，所以拖多久都不会卡。',
     ],
   },
   {
-    slug: 'stepper', name: 'GlassStepper', group: '控件',
-    summary: '共享一个表面的加减两段，用于很小的整数范围。',
-    rule: '只适合几下点击能到位的范围；再大就应该用滑块或输入框。值必须始终可见。',
-    demoHeight: 170,
-    example: function StepperExample() {
-      const [count, setCount] = useState(2);
-      return <div style={{ display: 'grid', gap: 12, justifyItems: 'center' }}>
-        <GlassStepper aria-label="份数" value={count} onValueChange={setCount} min={1} max={9}
-          decrementLabel="减少份数" incrementLabel="增加份数" />
-        <Text variant="caption1" tone="secondary">到达边界时对应按钮自动禁用</Text>
-      </div>;
-    },
-    code: `<GlassStepper aria-label="份数"
+    slug: 'stepper', name: 'GlassStepper', title: '步进器', group: '控件',
+    summary: '在很小的整数范围里加一减一。',
+    when: [
+      '份数、人数、行数这类几下就能点到位的数字。',
+      '范围一大就换滑块或输入框——让人点二十次不合适。',
+      '当前值必须一直看得见，或者就在旁边。',
+    ],
+    examples: [
+      {
+        id: 'stepper-basic', title: '基础用法', description: '到达上下限时对应的按钮自动变灰。',
+        height: 180,
+        render: function StepperBasic() {
+          const [count, setCount] = useState(2);
+          return <div style={{ display: 'grid', gap: 12, justifyItems: 'center' }}>
+            <GlassStepper aria-label="份数" value={count} onValueChange={setCount} min={1} max={9}
+              decrementLabel="减少份数" incrementLabel="增加份数" />
+            <Text variant="caption1" tone="secondary">范围 1–9，当前 {count}</Text>
+          </div>;
+        },
+        code: `<GlassStepper aria-label="份数"
   value={count} onValueChange={setCount} min={1} max={9}
   decrementLabel="减少份数" incrementLabel="增加份数" />`,
+      },
+    ],
     props: [
       { name: 'value / defaultValue', type: 'number', default: '0', description: '当前值。' },
       { name: 'min / max / step', type: 'number', default: '-∞ / ∞ / 1', description: '范围与步长。' },
-      { name: 'showValue', type: 'boolean', default: 'true', description: '值已在旁边显示时可以关掉。' },
-      { name: 'decrementLabel / incrementLabel', type: 'string', description: '两个按钮各自的可访问名称。' },
+      { name: 'showValue', type: 'boolean', default: 'true', description: '值已经在旁边显示时可以关掉。' },
+      { name: 'decrementLabel / incrementLabel', type: 'string', description: '两个按钮各自的名字。' },
     ],
-    a11y: ['渲染为 role="group" 加两个具名按钮，而不是一个 spinbutton。', '两个按钮各自满足 44×44。'],
+    notes: ['是两个有名字的按钮，不是一个需要键盘调节的数字框。', '两个按钮各自都满足 44×44 的点击范围。'],
   },
   {
-    slug: 'progress', name: 'GlassProgress', group: '控件',
-    summary: '确定进度条与不确定指示器。',
-    rule: '知道时长就用确定进度——不确定的转圈除了“还活着”之外什么都没告诉用户。永远不要阻塞界面。',
-    demoHeight: 190,
-    example: function ProgressExample() {
-      const [value, setValue] = useState(38);
-      return <div style={{ display: 'grid', gap: 16, width: 280 }}>
-        <GlassProgress aria-label="导出进度" value={value} />
-        <GlassSlider aria-label="调整演示进度" value={value} onValueChange={setValue} />
-        <div style={{ display: 'flex', gap: 12, alignItems: 'center' }}>
-          <GlassProgress aria-label="不确定进度" />
-        </div>
-        <div style={{ display: 'flex', gap: 12, alignItems: 'center' }}>
-          <GlassProgress aria-label="载入中" variant="circular" />
-          <Text variant="footnote" tone="secondary">不确定的圆环</Text>
-        </div>
-      </div>;
-    },
-    code: `<GlassProgress aria-label="导出进度" value={done} total={total} />
+    slug: 'progress', name: 'GlassProgress', title: '进度', group: '控件',
+    summary: '告诉用户还要等多久，或者至少告诉他们还在动。',
+    when: [
+      '知道总量就用确定进度条——不确定的转圈除了“还活着”之外什么都没说。',
+      '短暂等待用圆环，长任务用横条。',
+      '不要因为在加载就把整个界面锁住。能先显示的内容就先显示。',
+    ],
+    examples: [
+      {
+        id: 'progress-determinate', title: '确定进度', description: '拖下面的滑块可以看到进度条跟着走。',
+        height: 190,
+        render: function ProgressDeterminate() {
+          const [value, setValue] = useState(38);
+          return <div style={{ display: 'grid', gap: 16, width: 280 }}>
+            <GlassProgress aria-label="导出进度" value={value} />
+            <GlassSlider aria-label="调整演示进度" value={value} onValueChange={setValue} />
+          </div>;
+        },
+        code: `<GlassProgress aria-label="导出进度" value={done} total={total} />`,
+      },
+      {
+        id: 'progress-indeterminate', title: '不确定进度', description: '只有在真的算不出总量时才用。',
+        height: 180,
+        render: () => <div style={{ display: 'grid', gap: 18, width: 280 }}>
+          <GlassProgress aria-label="处理中" />
+          <div style={{ display: 'flex', gap: 12, alignItems: 'center' }}>
+            <GlassProgress aria-label="载入中" variant="circular" />
+            <Text variant="footnote" tone="secondary">载入中</Text>
+          </div>
+        </div>,
+        code: `<GlassProgress aria-label="处理中" />
 <GlassProgress aria-label="载入中" variant="circular" />`,
-    props: [
-      { name: 'value', type: 'number', description: '省略即为不确定状态；一旦知道时长就应传入。' },
-      { name: 'total', type: 'number', default: '100', description: '分母。' },
-      { name: 'variant', type: "'bar' | 'circular'", default: "'bar'", description: '已知任务用条，短暂等待用圆环。' },
+      },
     ],
-    a11y: ['role="progressbar"，确定状态下带 aria-valuenow / min / max。', '减少动效时不确定指示器停止运动，改为静态轨道。'],
+    props: [
+      { name: 'value', type: 'number', description: '不传就是不确定状态。一旦能算出进度就应该传。' },
+      { name: 'total', type: 'number', default: '100', description: '总量。' },
+      { name: 'variant', type: "'bar' | 'circular'", default: "'bar'", description: '横条或圆环。' },
+    ],
+    notes: ['确定状态会把百分比报给读屏。', '用户开启“减少动效”后不确定指示器会停下来，变成一条静止的轨道。'],
   },
   {
-    slug: 'badge', name: 'GlassBadge', group: '控件',
-    summary: '计数或状态标记。',
-    rule: '颜色不能单独承载含义：徽标里始终有数字或文字，可访问名称说明它在计数什么。',
-    demoHeight: 150,
-    example: () => <div style={{ display: 'flex', gap: 16, alignItems: 'center' }}>
-      <GlassBadge count={3} aria-label="3 条未读消息" />
-      <GlassBadge count={128} max={99} aria-label="128 条未读消息" />
-      <GlassBadge tone="neutral">Beta</GlassBadge>
-      <GlassBadge tone="accent">New</GlassBadge>
-      <GlassBadge dot aria-label="有更新" />
-    </div>,
-    code: `<GlassBadge count={3} aria-label="3 条未读消息" />
+    slug: 'badge', name: 'GlassBadge', title: '徽标', group: '控件',
+    summary: '一个数字或一小段状态文字。',
+    when: [
+      '提示有多少条未读、多少个待办。',
+      '给一个数字配上说明它在数什么的名字，否则读屏只会念出一个孤零零的数。',
+      '没有有意义的数字时用小圆点，别硬凑一个。',
+    ],
+    examples: [
+      {
+        id: 'badge-basic', title: '计数与状态', description: '超过上限会显示成“99+”。',
+        height: 160,
+        render: () => <div style={{ display: 'flex', gap: 16, alignItems: 'center', flexWrap: 'wrap', justifyContent: 'center' }}>
+          <GlassBadge count={3} aria-label="3 条未读消息" />
+          <GlassBadge count={128} max={99} aria-label="128 条未读消息" />
+          <GlassBadge tone="neutral">测试版</GlassBadge>
+          <GlassBadge tone="accent">新</GlassBadge>
+          <GlassBadge dot aria-label="有更新" />
+        </div>,
+        code: `<GlassBadge count={3} aria-label="3 条未读消息" />
 <GlassBadge count={128} max={99} aria-label="128 条未读消息" />
 <GlassBadge dot aria-label="有更新" />`,
+      },
+    ],
     props: [
-      { name: 'count', type: 'number', description: '计数；超过 max 显示为 “max+”。' },
+      { name: 'count', type: 'number', description: '数量。超过 max 显示成 “max+”。' },
       { name: 'max', type: 'number', default: '99', description: '折叠阈值。' },
       { name: 'tone', type: "'notification' | 'neutral' | 'accent'", default: "'notification'", description: '色调。' },
-      { name: 'dot', type: 'boolean', default: 'false', description: '没有有意义数字时的小圆点。' },
-      { name: 'aria-label', type: 'string', description: '说明数字的含义；否则屏幕阅读器只会念一个孤零零的数字。' },
+      { name: 'dot', type: 'boolean', default: 'false', description: '不显示数字，只显示一个小圆点。' },
+      { name: 'aria-label', type: 'string', description: '说明这个数字在数什么。' },
     ],
-    a11y: ['没有内容时不渲染，避免出现一个空的装饰圆。'],
+    notes: ['没有内容时不会渲染，不会留下一个空的装饰圆。', '颜色不是唯一信息，徽标里始终有数字或文字。'],
   },
 ];

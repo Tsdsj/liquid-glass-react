@@ -7,32 +7,32 @@ import { Icon } from '../icons.js';
 const PRINCIPLES = [
   {
     icon: 'layer' as const,
-    title: '材质有边界',
-    body: '玻璃属于浮动的操作与导航层。正文、列表、卡片与页面背景使用实色或标准材质——如果所有东西都半透明，就没有东西在“浮起来”。',
+    title: '只有该浮起来的才浮起来',
+    body: '玻璃留给工具栏、标签栏和弹出面板。正文、列表、卡片保持不透明——满屏半透明的结果是什么都不突出。',
   },
   {
     icon: 'shield' as const,
-    title: '清晰是默认值',
-    body: 'Regular 优先保证可读，Clear 只用于受控的媒体背景。减少透明度、增强对比度、减少动效三项系统偏好永远优先于视觉效果。',
+    title: '看得清排在好看前面',
+    body: '用户在系统里开了减少透明度、增强对比度或减少动效，界面立刻跟着变，不需要你写一行代码。',
   },
   {
     icon: 'code' as const,
     title: '控件是可以拖的',
-    body: '分段控件、开关、滑块都 1:1 跟随指针、随拖动拉伸、松手弹簧归位。只能点击的实现，是一套界面“不像 Apple”的最明显特征。',
+    body: '分段控件、开关、滑块都跟手，松开会回弹。只能点的实现，是一套界面"差那么一点"最明显的地方。',
   },
 ];
 
 export function OverviewPage({ go }: { go: (path: string) => void }) {
   return <Page title="轻盈有形，清晰如初。"
-    lede="一套遵循 Apple 设计语言的 React 组件系统：内容层与操作层分开，材质只用在该用的地方，交互细节按 HIG 实现到位。">
+    lede="一套 React 组件库。内容和操作分开，材质只用在该用的地方，交互细节做到位。">
     <div className="hero-actions">
       <GlassButton variant="glassProminent" controlSize="large" onClick={() => go('components')}>
         浏览 {componentDocs.length} 个组件<LibraryIcon name="chevronForward" size={17} />
       </GlassButton>
-      <GlassButton variant="gray" controlSize="large" onClick={() => go('guides/install')}>接入指南</GlassButton>
+      <GlassButton variant="gray" controlSize="large" onClick={() => go('guides/install')}>安装与使用</GlassButton>
     </div>
 
-    <Section title="一个真实场景" description="玻璃承载操作，内容保持清晰。按住工具栏按钮，感受它从玻璃中浮起再回弹。">
+    <Section title="先看一眼" description="玻璃承载操作，照片保持清晰。按住工具栏上的按钮，感受它从玻璃里浮起来再落回去。">
       <MediaViewer />
     </Section>
 
@@ -46,13 +46,13 @@ export function OverviewPage({ go }: { go: (path: string) => void }) {
       </div>
     </Section>
 
-    <Section title="这套系统不承诺什么" description="把边界写清楚，比把演示做得更炫更有价值。">
+    <Section title="先说清楚边界" description="把做不到的事写在前面，比把演示做得更炫有用。">
       <Card fill="secondary" radius={20} padding={20}>
         <ul className="plain-list">
-          <li><Text as="span" variant="subhead">不是 Apple 官方产品，不包含 Apple 字体、SF Symbols 或壁纸素材。图标全部按 24×24 / 1.8 描边自绘。</Text></li>
-          <li><Text as="span" variant="subhead">背景色调由 <code>GlassBackdrop</code> 显式声明，不做 DOM 截屏或跨源像素采样。</Text></li>
-          <li><Text as="span" variant="subhead">性能页记录的是 rAF 回调间隔，不是合成器帧时间、掉帧率或 INP。</Text></li>
-          <li><Text as="span" variant="subhead">真机 Chrome 矩阵与屏幕阅读器人工验证仍是发布前门槛，没有因为组件变多而降低。</Text></li>
+          <li><Text as="span" variant="subhead">这是一个独立项目，不是 Apple 官方产品，也不包含 Apple 的字体和图标素材。所有图标都是自己画的。</Text></li>
+          <li><Text as="span" variant="subhead">玻璃需要你告诉它背后是深是浅，它不会去截屏猜测——这样行为可预期，也不碰用户的画面内容。</Text></li>
+          <li><Text as="span" variant="subhead">Chrome 和 Edge 上有完整折射；Safari 和 Firefox 退化成磨砂玻璃，布局和交互不变。</Text></li>
+          <li><Text as="span" variant="subhead">屏幕阅读器的实机验证还没做完，这一条写在这里，不藏着。</Text></li>
         </ul>
       </Card>
     </Section>

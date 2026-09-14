@@ -11,7 +11,7 @@ test('the preview server serves a restrictive CSP without script unsafe-eval', a
   expect(csp).toContain("script-src 'self'");
   expect(csp).not.toContain("'unsafe-eval'");
   // Displacement textures are data: URLs, so the SVG path needs no eval and no remote fetch.
-  await page.getByRole('button', { name: '打开浮层' }).click();
+  await page.getByRole('button', { name: '打开面板' }).click();
   await expect(page.getByRole('dialog', { name: '查看设置' })).toBeVisible();
   violations.push(...await page.evaluate(() => (window as unknown as { csp: string[] }).csp));
   expect(violations).toEqual([]);

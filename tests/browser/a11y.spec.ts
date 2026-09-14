@@ -13,8 +13,8 @@ test('reduced transparency drops every backdrop filter and the SVG path', async 
     nodes.every(node => getComputedStyle(node).backdropFilter === 'none'));
   expect(clear).toBe(true);
   // The control still works; only the material changed.
-  await page.getByRole('button', { name: 'Glass', exact: true }).click();
-  await expect(page.getByText('按下计数：1')).toBeVisible();
+  await page.getByRole('button', { name: '玻璃', exact: true }).click();
+  await expect(page.getByText('按了 1 次')).toBeVisible();
 });
 
 test('increase contrast turns the material black and white with a border', async ({ page }) => {

@@ -2,22 +2,33 @@ import type { FC } from 'react';
 import type { DemoBackdrop } from '../site/demo.js';
 import type { PropRow } from '../site/props-table.js';
 
-export type ComponentGroup = '内容层' | '控件' | '输入' | '导航' | '浮层';
+export type ComponentGroup = '内容' | '控件' | '输入' | '导航' | '浮层';
+
+export interface DemoEntry {
+  /** Anchor id, also used by the outline on the right. */
+  id: string;
+  title: string;
+  description?: string;
+  render: FC;
+  code: string;
+  backdrop?: DemoBackdrop;
+  height?: number;
+}
 
 export interface ComponentDoc {
   /** URL segment under `#/components/`. */
   slug: string;
+  /** The export name, e.g. GlassButton. */
   name: string;
+  /** The Chinese name shown first everywhere: 「按钮 GlassButton」. */
+  title: string;
   group: ComponentGroup;
-  /** One sentence: what it is and when to reach for it. */
+  /** One sentence: what it is. */
   summary: string;
-  /** The design rule this component encodes, in the guidance's own terms. */
-  rule?: string;
-  backdrop?: DemoBackdrop;
-  demoHeight?: number;
-  example: FC;
-  code: string;
+  /** When to reach for it, and when not to. */
+  when: string[];
+  examples: DemoEntry[];
   props: PropRow[];
-  /** Keyboard model, roles and anything a screen-reader user depends on. */
-  a11y: string[];
+  /** What keyboard and screen-reader users get. */
+  notes: string[];
 }

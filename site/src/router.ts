@@ -3,7 +3,7 @@ import { useEffect, useState } from 'react';
 export interface Route {
   /** Path after the leading `#/`, e.g. `components/button`. */
   path: string;
-  section: 'overview' | 'foundations' | 'components' | 'labs' | 'guides';
+  section: 'overview' | 'foundations' | 'components' | 'guides';
   title: string;
 }
 
@@ -27,7 +27,6 @@ export function useRoute(): [string, (path: string) => void] {
 export const sectionOf = (path: string): Route['section'] => {
   if (path.startsWith('components')) return 'components';
   if (path.startsWith('foundations')) return 'foundations';
-  if (path.startsWith('labs')) return 'labs';
   if (path.startsWith('guides')) return 'guides';
   return 'overview';
 };

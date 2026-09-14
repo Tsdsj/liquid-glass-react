@@ -9,7 +9,7 @@ test('the tab bar and the sidebar are one element that scales', async ({ page })
   await page.setViewportSize({ width: 600, height: 900 });
   await expect(nav).toHaveAttribute('data-layout', 'tabbar');
   // Same element, same links — not a second component kept in sync by hand.
-  await expect(nav.locator('.lg-tab-link')).toHaveCount(5);
+  await expect(nav.locator('.lg-tab-link')).toHaveCount(4);
 });
 
 test('navigation is a nav of links with aria-current, not a tablist', async ({ page }) => {
@@ -72,7 +72,10 @@ test('every component page is reachable and complete', async ({ page }) => {
   for (const href of links) {
     await page.goto(`/${href}`);
     await expect(page.locator('h1')).not.toHaveText('没有这一页');
-    await expect(page.locator('.demo')).toHaveCount(1);
+    await expect(page.locator('.demo-card').first()).toBeVisible();
     await expect(page.locator('.props-table tbody tr').first()).toBeVisible();
+    // Chinese name first, export name second — the same label the sidebar shows.
+    const heading = await page.locator('h1').textContent();
+    expect(heading).toMatch(/^\S+\s\S+/);
   }
 });
