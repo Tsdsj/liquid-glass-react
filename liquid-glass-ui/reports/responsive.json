@@ -1,0 +1,92 @@
+[
+  {
+    "width": 390,
+    "scrollWidth": 390,
+    "route": "overview"
+  },
+  {
+    "width": 390,
+    "scrollWidth": 390,
+    "route": "materials"
+  },
+  {
+    "width": 390,
+    "scrollWidth": 390,
+    "route": "components"
+  },
+  {
+    "width": 390,
+    "scrollWidth": 390,
+    "route": "stress"
+  },
+  {
+    "width": 390,
+    "scrollWidth": 390,
+    "route": "performance"
+  },
+  {
+    "width": 390,
+    "scrollWidth": 390,
+    "route": "docs"
+  },
+  {
+    "width": 768,
+    "scrollWidth": 768,
+    "route": "overview"
+  },
+  {
+    "width": 768,
+    "scrollWidth": 768,
+    "route": "materials"
+  },
+  {
+    "width": 768,
+    "scrollWidth": 768,
+    "route": "components"
+  },
+  {
+    "width": 768,
+    "scrollWidth": 768,
+    "route": "stress"
+  },
+  {
+    "width": 768,
+    "scrollWidth": 768,
+    "route": "performance"
+  },
+  {
+    "width": 768,
+    "scrollWidth": 768,
+    "route": "docs"
+  },
+  {
+    "width": 1440,
+    "scrollWidth": 1440,
+    "route": "overview"
+  },
+  {
+    "width": 1440,
+    "scrollWidth": 1440,
+    "route": "materials"
+  },
+  {
+    "width": 1440,
+    "scrollWidth": 1440,
+    "route": "components"
+  },
+  {
+    "width": 1440,
+    "scrollWidth": 1440,
+    "route": "stress"
+  },
+  {
+    "width": 1440,
+    "scrollWidth": 1440,
+    "route": "performance"
+  },
+  {
+    "width": 1440,
+    "scrollWidth": 1440,
+    "route": "docs"
+  }
+]

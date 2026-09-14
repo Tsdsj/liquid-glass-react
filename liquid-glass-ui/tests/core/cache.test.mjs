@@ -1,0 +1,12 @@
+import test from 'node:test';import assert from 'node:assert/strict';import { BoundedCache } from '../../packages/core/dist/cache.js';
+test('cache stores and retrieves',()=>{const c=new BoundedCache();c.set('a',42,12);assert.equal(c.get('a'),42);assert.equal(c.stats.bytes,12);});
+test('oldest gets evicted by count',()=>{const c=new BoundedCache(2,100);c.set('a',1,10);c.set('b',2,10);c.set('c',3,10);assert.equal(c.get('a'),undefined);assert.equal(c.stats.entries,2);});
+test('reads promote recency',()=>{const c=new BoundedCache(2,100);c.set('a',1,10);c.set('b',2,10);c.get('a');c.set('c',3,10);assert.equal(c.get('b'),undefined);assert.equal(c.get('a'),1);});
+test('byte budget evicts even under item budget',()=>{const c=new BoundedCache(10,15);c.set('a',1,10);c.set('b',2,10);assert.equal(c.stats.entries,1);assert.equal(c.stats.bytes,10);});
+test('replacement correctly accounts bytes',()=>{const c=new BoundedCache();c.set('a',1,10);c.set('a',2,3);assert.equal(c.stats.bytes,3);assert.equal(c.get('a'),2);});
+test('oversize entry not retained',()=>{const c=new BoundedCache(3,10);c.set('a',1,11);assert.equal(c.stats.entries,0);});
+test('delete nonexistent key harmless',()=>{const c=new BoundedCache();c.delete('missing');assert.equal(c.stats.bytes,0);});
+test('clear resets bytes and entries',()=>{const c=new BoundedCache();c.set('a',1,20);c.clear();assert.equal(c.stats.bytes,0);assert.equal(c.stats.entries,0);});
+test('invalid capacity rejected',()=>{assert.throws(()=>new BoundedCache(0,1),RangeError);assert.throws(()=>new BoundedCache(1,Infinity),RangeError);});
+test('invalid cost rejected',()=>{const c=new BoundedCache();assert.throws(()=>c.set('a',1,-1),RangeError);assert.throws(()=>c.set('a',1,NaN),RangeError);});
+test('stats cannot mutate internal state',()=>{const c=new BoundedCache();c.stats.entries=99;assert.equal(c.stats.entries,0);});

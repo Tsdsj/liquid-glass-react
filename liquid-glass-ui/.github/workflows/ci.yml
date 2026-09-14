@@ -1,0 +1,28 @@
+name: Validate engineering preview
+on: [push, pull_request]
+jobs:
+  chrome:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Install (commit package-lock.json after the first verified install)
+        run: |
+          if [ -f package-lock.json ]; then npm ci; else npm install; fi
+      - run: npm run typecheck
+      - run: npm run build
+      - run: npm test
+      - run: npm run test:ssr
+      - run: npx playwright install --with-deps chrome
+      - run: npm run test:chrome
+      - run: npm run size && npm run registry:build
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: verification-evidence
+          path: |
+            reports/
+            test-results/

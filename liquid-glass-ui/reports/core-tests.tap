@@ -1,0 +1,220 @@
+TAP version 13
+# Subtest: cache stores and retrieves
+ok 1 - cache stores and retrieves
+  ---
+  duration_ms: 3.733143
+  type: 'test'
+  ...
+# Subtest: oldest gets evicted by count
+ok 2 - oldest gets evicted by count
+  ---
+  duration_ms: 0.364878
+  type: 'test'
+  ...
+# Subtest: reads promote recency
+ok 3 - reads promote recency
+  ---
+  duration_ms: 0.233511
+  type: 'test'
+  ...
+# Subtest: byte budget evicts even under item budget
+ok 4 - byte budget evicts even under item budget
+  ---
+  duration_ms: 0.152403
+  type: 'test'
+  ...
+# Subtest: replacement correctly accounts bytes
+ok 5 - replacement correctly accounts bytes
+  ---
+  duration_ms: 0.18862
+  type: 'test'
+  ...
+# Subtest: oversize entry not retained
+ok 6 - oversize entry not retained
+  ---
+  duration_ms: 0.198329
+  type: 'test'
+  ...
+# Subtest: delete nonexistent key harmless
+ok 7 - delete nonexistent key harmless
+  ---
+  duration_ms: 0.192475
+  type: 'test'
+  ...
+# Subtest: clear resets bytes and entries
+ok 8 - clear resets bytes and entries
+  ---
+  duration_ms: 0.239838
+  type: 'test'
+  ...
+# Subtest: invalid capacity rejected
+ok 9 - invalid capacity rejected
+  ---
+  duration_ms: 3.536762
+  type: 'test'
+  ...
+# Subtest: invalid cost rejected
+ok 10 - invalid cost rejected
+  ---
+  duration_ms: 0.515231
+  type: 'test'
+  ...
+# Subtest: stats cannot mutate internal state
+ok 11 - stats cannot mutate internal state
+  ---
+  duration_ms: 0.306412
+  type: 'test'
+  ...
+# Subtest: SDF center is inside
+ok 12 - SDF center is inside
+  ---
+  duration_ms: 3.041957
+  type: 'test'
+  ...
+# Subtest: SDF straight boundary is zero
+ok 13 - SDF straight boundary is zero
+  ---
+  duration_ms: 0.624578
+  type: 'test'
+  ...
+# Subtest: rounded corner is outside
+ok 14 - rounded corner is outside
+  ---
+  duration_ms: 0.197334
+  type: 'test'
+  ...
+# Subtest: SDF symmetric horizontally
+ok 15 - SDF symmetric horizontally
+  ---
+  duration_ms: 0.377206
+  type: 'test'
+  ...
+# Subtest: clamp bounds values
+ok 16 - clamp bounds values
+  ---
+  duration_ms: 0.129872
+  type: 'test'
+  ...
+# Subtest: neutral center uses 128, not black
+ok 17 - neutral center uses 128, not black
+  ---
+  duration_ms: 16.482713
+  type: 'test'
+  ...
+# Subtest: left and right edge vectors have opposite signs
+ok 18 - left and right edge vectors have opposite signs
+  ---
+  duration_ms: 6.105836
+  type: 'test'
+  ...
+# Subtest: top and bottom use green displacement
+ok 19 - top and bottom use green displacement
+  ---
+  duration_ms: 8.93695
+  type: 'test'
+  ...
+# Subtest: outside rounded corner stays neutral
+ok 20 - outside rounded corner stays neutral
+  ---
+  duration_ms: 7.983113
+  type: 'test'
+  ...
+# Subtest: pixels all opaque; RG stays byte encoded
+ok 21 - pixels all opaque; RG stays byte encoded
+  ---
+  duration_ms: 12.811528
+  type: 'test'
+  ...
+# Subtest: high resolution respects area cap
+ok 22 - high resolution respects area cap
+  ---
+  duration_ms: 15.678512
+  type: 'test'
+  ...
+# Subtest: long thin texture respects side cap
+ok 23 - long thin texture respects side cap
+  ---
+  duration_ms: 1.212867
+  type: 'test'
+  ...
+# Subtest: tiny dimensions produce a valid pixel
+ok 24 - tiny dimensions produce a valid pixel
+  ---
+  duration_ms: 0.253017
+  type: 'test'
+  ...
+# Subtest: negative radius clamps to zero
+ok 25 - negative radius clamps to zero
+  ---
+  duration_ms: 0.127345
+  type: 'test'
+  ...
+# Subtest: radius cannot exceed half shortest side
+ok 26 - radius cannot exceed half shortest side
+  ---
+  duration_ms: 0.106544
+  type: 'test'
+  ...
+# Subtest: equivalent rounded sizes share key
+ok 27 - equivalent rounded sizes share key
+  ---
+  duration_ms: 0.228193
+  type: 'test'
+  ...
+# Subtest: distinct geometric profiles use distinct keys
+ok 28 - distinct geometric profiles use distinct keys
+  ---
+  duration_ms: 0.156251
+  type: 'test'
+  ...
+# Subtest: invalid dimensions rejected: 0
+ok 29 - invalid dimensions rejected: 0
+  ---
+  duration_ms: 1.565639
+  type: 'test'
+  ...
+# Subtest: invalid dimensions rejected: -1
+ok 30 - invalid dimensions rejected: -1
+  ---
+  duration_ms: 0.165718
+  type: 'test'
+  ...
+# Subtest: invalid dimensions rejected: NaN
+ok 31 - invalid dimensions rejected: NaN
+  ---
+  duration_ms: 0.076962
+  type: 'test'
+  ...
+# Subtest: invalid dimensions rejected: Infinity
+ok 32 - invalid dimensions rejected: Infinity
+  ---
+  duration_ms: 0.066004
+  type: 'test'
+  ...
+# Subtest: invalid dimensions rejected: 1e+308
+ok 33 - invalid dimensions rejected: 1e+308
+  ---
+  duration_ms: 0.06813
+  type: 'test'
+  ...
+# Subtest: nonfinite edge rejected
+ok 34 - nonfinite edge rejected
+  ---
+  duration_ms: 0.151857
+  type: 'test'
+  ...
+# Subtest: module loads without DOM; browser helpers safely decline
+ok 35 - module loads without DOM; browser helpers safely decline
+  ---
+  duration_ms: 0.272478
+  type: 'test'
+  ...
+1..35
+# tests 35
+# suites 0
+# pass 35
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 230.562165

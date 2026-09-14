@@ -1,0 +1,29 @@
+{
+  "extends": "./tsconfig.base.json",
+  "compilerOptions": {
+    "noEmit": true,
+    "baseUrl": ".",
+    "paths": {
+      "@liquid-glass-ui/core": [
+        "packages/core/src/index.ts"
+      ],
+      "@liquid-glass-ui/tokens": [
+        "packages/tokens/src/index.ts"
+      ],
+      "@liquid-glass-ui/react": [
+        "packages/react/src/index.ts"
+      ]
+    },
+    "types": [
+      "vite/client",
+      "node"
+    ]
+  },
+  "include": [
+    "packages/*/src",
+    "apps/playground/src",
+    "apps/playground/vite.config.ts",
+    "tests/browser",
+    "playwright.config.ts"
+  ]
+}

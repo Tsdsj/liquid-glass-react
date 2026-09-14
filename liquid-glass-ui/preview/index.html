@@ -1,0 +1,32 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#f2f2f7" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#000000" media="(prefers-color-scheme: dark)">
+<title>Liquid Glass UI</title>
+<link rel="icon" href="./favicon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="./tokens.css">
+<link rel="stylesheet" href="./styles.css">
+<link rel="stylesheet" href="./app.css">
+<!-- data-csp-nonce is replaced with a real per-response nonce by scripts/serve-preview.mjs. -->
+<script data-csp-nonce>
+  /* Applied before first paint, so the theme never flashes and a system dark-mode user
+     does not get a light first frame. */
+  (function () {
+    try {
+      var stored = localStorage.getItem('lg-docs-theme') || 'system';
+      var dark = stored === 'dark' || (stored === 'system' && matchMedia('(prefers-color-scheme: dark)').matches);
+      var root = document.documentElement;
+      root.dataset.appTheme = dark ? 'dark' : 'light';
+      root.setAttribute('data-lg-theme', dark ? 'dark' : 'light');
+      root.style.colorScheme = dark ? 'dark' : 'light';
+      var size = localStorage.getItem('lg-docs-text-size');
+      if (size) root.dataset.lgTextSize = size;
+    } catch (error) { /* private mode: fall back to the system appearance */ }
+  })();
+</script>
+</head>
+<body><div id="root"></div><script src="./bundle.js"></script></body>
+</html>

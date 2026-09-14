@@ -1,0 +1,220 @@
+'use client';
+import { jsx as _jsx, jsxs as _jsxs } from "react/jsx-runtime";
+import { useEffect, useId, useRef } from 'react';
+import { clamp } from '@liquid-glass-ui/core';
+import { useGlassPolicy } from './provider.js';
+/** Goo pass tuned against 44px pills: 6px blur, then an alpha ramp steep enough to re-crisp the edge. */
+const BLUR = 7, SLOPE = 22, INTERCEPT = -9;
+/** The alpha threshold pushes a straight edge out by ~0.23 * blur; inset the blobs by the same amount. */
+const EDGE = 1.6;
+/** Pull distance (px) that fully engages a neighbour, and the widest gap that may still fuse. */
+const REACH = 11, GATE = 40;
+/** Neighbour lean toward the pressed pill, and its swell at full attraction. */
+const LEAN = 4, SWELL = .04;
+/** Release fade of a pressed pill, how long the loop outlives it, the lens trail life and the lens settle window. */
+const FADE = 220, RELEASE = 320, TRAIL = 300, SETTLE = 560;
+/** Hard cap: one pressed pill plus at most two neighbours. */
+const BLOBS = 3;
+function paint(node, blob) {
+    if (!node)
+        return;
+    if (!blob || blob.w < .5 || blob.h < .5) {
+        node.style.width = '0px';
+        node.style.height = '0px';
+        return;
+    }
+    node.style.width = `${blob.w.toFixed(2)}px`;
+    node.style.height = `${blob.h.toFixed(2)}px`;
+    node.style.borderRadius = `${blob.r.toFixed(2)}px`;
+    node.style.transform = `translate(${blob.x.toFixed(2)}px,${blob.y.toFixed(2)}px)`;
+}
+export function useFusion(root, options) {
+    const policy = useGlassPolicy();
+    // Reduced motion, reduced transparency (which already covers forced colours and opaque mode) always win.
+    const enabled = !policy.reduceMotion && !policy.reduceTransparency && !policy.forcedColors;
+    const filterId = `lg-fusion-${useId().replace(/[^a-zA-Z0-9_-]/g, '')}`;
+    const layer = useRef(null);
+    const sheen = useRef(null);
+    const blobs = useRef([]);
+    const latest = useRef(options);
+    latest.current = options;
+    useEffect(() => {
+        const host = root.current, box = layer.current;
+        if (!host || !box || !enabled)
+            return;
+        let frame = 0, held = false, releaseAt = 0, deadline = 0;
+        let primary = null, neighbours = [], radius = 9999, last = 0;
+        /** Smoothed attraction per neighbour, so droplets grow and melt apart with a little liquid lag. */
+        const attraction = [0, 0];
+        let trail = null, trailAt = 0, transform = '';
+        const items = () => Array.from(host.querySelectorAll(latest.current.itemSelector))
+            .filter(node => !node.matches(':disabled,[aria-disabled="true"],[data-disabled="true"]') && node.getClientRects().length > 0);
+        const stop = () => {
+            cancelAnimationFrame(frame);
+            frame = 0;
+            primary = null;
+            neighbours = [];
+            trail = null;
+            releaseAt = 0;
+            last = 0;
+            attraction[0] = attraction[1] = 0;
+            host.removeAttribute('data-fusion');
+            box.style.setProperty('--lg-fusion-fade', '0');
+            if (sheen.current)
+                sheen.current.style.opacity = '0';
+            for (const node of blobs.current)
+                paint(node, null);
+        };
+        const round = (w, h) => Math.min(radius, Math.min(w, h) / 2);
+        /** One rAF tick: every rect is read first, then every style is written. */
+        const step = () => {
+            frame = requestAnimationFrame(step);
+            const now = performance.now();
+            const source = latest.current.lensSelector ? host.querySelector(latest.current.lensSelector) : primary;
+            if (!source) {
+                stop();
+                return;
+            }
+            const lens = !!latest.current.lensSelector;
+            // --- reads ---
+            const lb = box.getBoundingClientRect();
+            const pr = source.getBoundingClientRect();
+            const rects = lens ? [] : neighbours.map(node => node.getBoundingClientRect());
+            const lightX = source.style.getPropertyValue('--lg-light-x') || '50%';
+            const lightY = source.style.getPropertyValue('--lg-light-y') || '50%';
+            // Pull's own rubber-banded offset: the pressed rect grows around the pointer, so its centre is not a reach.
+            const shiftX = parseFloat(source.style.getPropertyValue('--lg-shift-x')) || 0;
+            const shiftY = parseFloat(source.style.getPropertyValue('--lg-shift-y')) || 0;
+            const smooth = clamp((last ? now - last : 16) / 90, 0, 1);
+            last = now;
+            if (held) {
+                releaseAt = 0;
+                deadline = now + SETTLE;
+            }
+            const fade = lens ? 1 : releaseAt ? clamp(1 - (now - releaseAt) / FADE, 0, 1) : 1;
+            // --- geometry ---
+            const px = pr.left - lb.left, py = pr.top - lb.top;
+            const cx = px + pr.width / 2, cy = py + pr.height / 2;
+            const shapes = [{ x: px + EDGE, y: py + EDGE, w: pr.width - EDGE * 2, h: pr.height - EDGE * 2, r: round(pr.width, pr.height) }];
+            if (lens && trail) {
+                const age = clamp((now - trailAt) / TRAIL, 0, 1), k = 1 - age;
+                if (age >= 1)
+                    trail = null;
+                else {
+                    // The old slot collapses in place while drifting after the lens; the goo dissolves it once it is small.
+                    const tw = trail.w * k, th = trail.h * k;
+                    const tcx = trail.x + trail.w / 2 + (cx - (trail.x + trail.w / 2)) * age * .7;
+                    const tcy = trail.y + trail.h / 2 + (cy - (trail.y + trail.h / 2)) * age * .7;
+                    shapes.push({ x: tcx - tw / 2, y: tcy - th / 2, w: tw, h: th, r: Math.min(tw, th) / 2 });
+                }
+            }
+            for (let i = 0; i < rects.length; i++) {
+                const n = rects[i];
+                const nx = n.left - lb.left, ny = n.top - lb.top;
+                const ncx = nx + n.width / 2, ncy = ny + n.height / 2;
+                const dx = ncx - cx, dy = ncy - cy;
+                const horizontal = Math.abs(dx) >= Math.abs(dy);
+                const sign = (horizontal ? dx : dy) >= 0 ? 1 : -1;
+                const reach = (horizontal ? shiftX : shiftY) * sign;
+                const gap = horizontal
+                    ? (sign > 0 ? nx - (px + pr.width) : px - (nx + n.width))
+                    : (sign > 0 ? ny - (py + pr.height) : py - (ny + n.height));
+                const target = gap > GATE ? 0 : clamp((reach - 1) / REACH, 0, 1) * fade;
+                attraction[i] += (target - attraction[i]) * smooth;
+                const d = attraction[i];
+                if (d <= .02) {
+                    shapes.push(null);
+                    continue;
+                }
+                // A droplet emerges from nothing on the facing edge, then grows into the full neighbour pill.
+                const emerge = Math.min(1, d * 4) * (1 + SWELL * d);
+                const h0 = n.height * (.34 + .66 * d);
+                const bw = Math.min(n.width, h0 + (n.width - h0) * d) * emerge, bh = h0 * emerge;
+                const nearX = horizontal ? (sign > 0 ? nx + bw / 2 : nx + n.width - bw / 2) : ncx;
+                const nearY = horizontal ? ncy : (sign > 0 ? ny + bh / 2 : ny + n.height - bh / 2);
+                const bcx = nearX + (ncx - nearX) * d - (horizontal ? sign * LEAN * d : 0);
+                const bcy = nearY + (ncy - nearY) * d - (horizontal ? 0 : sign * LEAN * d);
+                shapes.push({ x: bcx - bw / 2, y: bcy - bh / 2, w: bw, h: bh, r: Math.min(bw, bh) / 2 });
+            }
+            // --- writes ---
+            box.style.setProperty('--lg-fusion-fade', fade.toFixed(3));
+            for (let i = 0; i < BLOBS; i++)
+                paint(blobs.current[i], shapes[i] ?? null);
+            const crisp = sheen.current;
+            if (crisp) {
+                // As the pills become one body the pressed pill's own rim would read as a seam, so it dissolves.
+                crisp.style.opacity = (fade * (1 - .8 * Math.max(attraction[0], attraction[1]))).toFixed(3);
+                crisp.style.width = `${pr.width.toFixed(2)}px`;
+                crisp.style.height = `${pr.height.toFixed(2)}px`;
+                crisp.style.borderRadius = `${round(pr.width, pr.height).toFixed(2)}px`;
+                crisp.style.transform = `translate(${px.toFixed(2)}px,${py.toFixed(2)}px)`;
+                crisp.style.setProperty('--lg-light-x', lightX);
+                crisp.style.setProperty('--lg-light-y', lightY);
+            }
+            if (lens ? now > deadline : releaseAt && now - releaseAt > RELEASE)
+                stop();
+        };
+        const start = () => { if (!frame)
+            frame = requestAnimationFrame(step); };
+        const release = () => { held = false; releaseAt = performance.now(); deadline = performance.now() + SETTLE; };
+        const detach = () => { window.removeEventListener('pointerup', up); window.removeEventListener('pointercancel', up); };
+        const up = () => { release(); detach(); };
+        const down = (event) => {
+            if (event.button !== 0 || !event.isPrimary)
+                return;
+            const list = items();
+            if (list.length < 2)
+                return;
+            if (latest.current.lensSelector) {
+                if (!host.querySelector(latest.current.lensSelector))
+                    return;
+            }
+            else {
+                // itemSelector may be scoped (":scope > ..."), which closest() cannot evaluate; match by containment instead.
+                const index = list.findIndex(item => item === event.target || item.contains(event.target));
+                if (index < 0)
+                    return;
+                primary = list[index];
+                neighbours = [list[index - 1], list[index + 1]].filter(Boolean);
+                attraction[0] = attraction[1] = 0;
+                last = 0;
+                radius = parseFloat(getComputedStyle(primary).borderTopLeftRadius) || 9999;
+            }
+            held = true;
+            releaseAt = 0;
+            deadline = performance.now() + SETTLE;
+            host.setAttribute('data-fusion', 'true');
+            window.addEventListener('pointerup', up);
+            window.addEventListener('pointercancel', up);
+            start();
+        };
+        host.addEventListener('pointerdown', down);
+        // Selection lens: any slot change (drag or keyboard) leaves the old position behind as a collapsing droplet.
+        let observer;
+        const lensNode = latest.current.lensSelector ? host.querySelector(latest.current.lensSelector) : null;
+        if (lensNode && typeof MutationObserver !== 'undefined') {
+            transform = lensNode.style.transform;
+            observer = new MutationObserver(() => {
+                const previous = transform;
+                if (lensNode.style.transform === previous)
+                    return;
+                transform = lensNode.style.transform;
+                // The first positioning pass is the lens taking its initial slot, not a flow between slots.
+                if (!previous || items().length < 2)
+                    return;
+                const r = lensNode.getBoundingClientRect(), lb = box.getBoundingClientRect();
+                trail = { x: r.left - lb.left, y: r.top - lb.top, w: r.width, h: r.height, r: Math.min(r.width, r.height) / 2 };
+                trailAt = performance.now();
+                deadline = trailAt + SETTLE;
+                radius = parseFloat(getComputedStyle(lensNode).borderTopLeftRadius) || 9999;
+                host.setAttribute('data-fusion', 'true');
+                start();
+            });
+            observer.observe(lensNode, { attributes: true, attributeFilter: ['style'] });
+        }
+        return () => { host.removeEventListener('pointerdown', down); detach(); observer?.disconnect(); stop(); };
+    }, [root, enabled]);
+    if (!enabled)
+        return null;
+    return _jsxs("span", { className: "lg-fusion", "aria-hidden": "true", ref: layer, children: [_jsx("svg", { width: "0", height: "0", className: "lg-filter-defs", focusable: "false", "aria-hidden": "true", children: _jsx("defs", { children: _jsxs("filter", { id: filterId, x: "-12%", y: "-70%", width: "124%", height: "240%", colorInterpolationFilters: "sRGB", children: [_jsx("feGaussianBlur", { in: "SourceGraphic", stdDeviation: BLUR, result: "lg-soft" }), _jsx("feColorMatrix", { in: "lg-soft", type: "matrix", values: `1 0 0 0 0 0 1 0 0 0 0 0 1 0 0 0 0 0 ${SLOPE} ${INTERCEPT}` })] }) }) }), _jsx("span", { className: "lg-fusion-goo", style: { filter: `url(#${filterId})` }, children: Array.from({ length: BLOBS }, (_, i) => _jsx("span", { className: "lg-fusion-blob", ref: node => { blobs.current[i] = node; } }, i)) }), _jsx("span", { className: "lg-fusion-sheen", ref: sheen })] });
+}

@@ -1,0 +1,29 @@
+{
+  "kind": "requestAnimationFrame intervals, NOT GPU frame timings / INP",
+  "aborted": false,
+  "date": "2026-09-10T12:38:04.957Z",
+  "userAgent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/144.0.0.0 Safari/537.36",
+  "devicePixelRatio": 1,
+  "hardwareConcurrency": 5,
+  "viewport": [
+    1440,
+    1000
+  ],
+  "renderer": "svg",
+  "reducedMotion": false,
+  "mode": "independent",
+  "count": 8,
+  "samples": 180,
+  "p50ms": 16.7,
+  "p95ms": 33.4,
+  "intervalsOver25ms": 36,
+  "longTasks": 0,
+  "diagnostics": {
+    "entries": 7,
+    "bytes": 46924,
+    "maxEntries": 24,
+    "maxBytes": 8388608,
+    "generated": 7,
+    "observers": 12
+  }
+}

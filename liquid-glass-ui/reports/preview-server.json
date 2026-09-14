@@ -1,0 +1,14 @@
+{
+  "kind": "Node HTTP client checks, NOT browser navigation",
+  "checks": [
+    "HTML entry and bundle reference",
+    "CSP and nosniff headers",
+    "Local JS/CSS assets",
+    "Hidden path denied",
+    "Encoded parent traversal denied",
+    "POST denied",
+    "HEAD body empty",
+    "Missing file 404"
+  ],
+  "status": "passed"
+}

@@ -1,0 +1,13 @@
+{
+  "name": "@liquid-glass-ui/playground",
+  "version": "0.2.0-alpha.1",
+  "private": true,
+  "type": "module",
+  "dependencies": {
+    "@liquid-glass-ui/react": "0.2.0-alpha.1",
+    "@liquid-glass-ui/core": "0.2.0-alpha.1",
+    "@liquid-glass-ui/tokens": "0.2.0-alpha.1",
+    "react": "19.2.7",
+    "react-dom": "19.2.7"
+  }
+}

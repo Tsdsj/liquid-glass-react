@@ -1,0 +1,7 @@
+{
+  "sourceCopy": "passed",
+  "preservesLicense": true,
+  "workspaceImportsRewritten": true,
+  "registrySchema": "liquid-glass-ui/local-source-registry/v1",
+  "notShadcnRegistry": true
+}

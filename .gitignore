@@ -1,0 +1,19 @@
+# Dependencies
+node_modules/
+
+# Build output
+dist/
+*.tsbuildinfo
+
+# Test run artefacts (the curated evidence in reports/ is committed; these are not)
+test-results/
+playwright-report/
+liquid-glass-ui/reports/playwright/
+
+# Local tooling
+.local/
+artifacts/
+.claude/settings.local.json
+
+# OS
+.DS_Store

@@ -1,0 +1,75 @@
+# Changelog
+
+## 0.2.0-alpha.1
+
+破坏性重构。迁移见 `docs/migration-0.2.md`。核心变化：**内容层与浮动的操作层被彻底分开**，并按 HIG 补齐了组件目录。
+
+### Token 体系（新）
+- 12 个系统色 × 浅色 / 深色 / **增强对比度**三套取值，加 gray1–6。
+- 语义色阶：`--lg-label`(1–4)、`--lg-separator`、`--lg-fill`(1–4)、`--lg-bg`(1–3)、`--lg-bg-grouped`(1–3)、标准材质四档。
+- iOS 文本样式全表（largeTitle…caption2），字距按 HIG 的 1/1000 em 表取值；**11pt 为可读下限**。
+- Dynamic Type：根节点 `data-lg-text-size="xs…ax5"`，整套比例缩放。
+- 4pt 间距栅格、`--lg-hit-min: 44px`、三类形状半径、同心圆角变量、z-index 分层。
+- accent 改为**系统蓝**（原墨绿品牌色移除），玻璃材质回到中性无色偏。
+
+### 材质引擎
+- 删除整面白色高光渐变与双层斜面；改为**随指针绕轮廓行进**的 conic 发丝高光（`--lg-light-angle`）。
+- 小玻璃 / 大玻璃分离：大玻璃更厚、更不透明、阴影更深、折射更强，且**不随背景翻转**明暗。
+- 小玻璃按声明的背景色调翻转明暗（`GlassBackdrop`，不做像素采样）。
+- 提亮改用 `--lg-glass-contrast` 重新拉开层次，而不是 `brightness()`。
+- 新增可选色散折射（`chroma`），三通道分别位移。
+- 新增 `prefers-contrast: more` 支持：材质转为接近黑白 + 对比边框。
+
+### 新组件
+TabBar（含搜索标签 / 滚动收起 / 宽屏变侧边栏）、Sidebar、NavigationBar（大标题→紧凑标题）、GlassSheet（停靠高度、可拖动、满高变不透明）、GlassAlert、GlassActionSheet、ToastProvider / useToast、List / ListSection / ListRow、Card、Concentric、MaterialView、Text、Divider、TextField、SearchField、GlassStepper、GlassProgress、GlassBadge、LibraryIcon、GlassBackdrop、ToolbarGroup、ToolbarSpacer。
+
+### 修正
+- **玻璃不再进入内容层**：演示中作为卡片使用的 `GlassSurface` 全部改为 `Card`。
+- `GlassToolbar` 自己不再是玻璃；每个 `ToolbarGroup` 才是。同组混排图标与文字会在开发模式告警。
+- 滑块旋钮静止时是安静的实心旋钮，**只在被拖动时**抬升为玻璃。
+- 开关打开态改为系统绿。
+- `ScrollEdge` 重写为渐进溶解（soft）/ 均匀边界（hard），不再用实色块盖住内容。
+- `styles.css` 全面改用逻辑属性，支持 RTL；方向性图标镜像。
+- 所有硬编码字号替换为文本样式 token。
+
+### core
+- 新增 `spring.ts`（阻尼弹簧积分器，从材质层抽出可复用）与 `concentric.ts`（同心圆角）。
+- `materialTokens` 按 `small` / `large` 分组。
+
+### 文档站
+重建为真正的组件文档站：概览 / 6 个基础章节 / **27 个组件页**（实时示例 + 浅深与媒体背景切换 + Props 表 + 可复制代码 + 无障碍说明）/ 3 个实验台 / 5 篇指南。站壳完全由本库自身组件搭建（宽屏侧边栏 ↔ 窄屏标签栏、⌘K 组件搜索、显示偏好面板）。主题在首屏绘制前应用，不再闪烁，并正确响应系统深色模式。
+
+### 验证
+core 测试 42 → **62**；浏览器测试 → **60**（真实 Google Chrome 全部通过），新增停靠高度、撤销、拖拽手势、Dynamic Type AX5 回流、RTL、增强对比度、CSP 与外部请求为零等用例。
+
+## 0.1.0-alpha.1
+
+首个工程交付：token/core/react 分层、CSS 与 SVG 边缘折射、共享材质、原生 Chrome 交互原语、16 项命名组件/能力、6 页演示站、几何/缓存/交互/光学夹具、SSR 测试入口、源码复制、本地 registry 与发布清单。
+
+默认 auto 使用 CSS，clear+mixed 使用 regular，系统与上级的保守偏好不能被覆盖。对照中确认固定场景下真实背景位移，文字层不进入滤镜。
+
+此版本包含明确的待验证项：联网标准构建、完整 React 类型与 SSR/Strict Mode、正式 Chrome 真机和辅助技术、第三方内核实测、发布依赖审计。不是稳定发行。
+
+## 0.1.0-alpha.2 (未发布)
+
+### 交互与动效
+- 按钮按下改为“朝指针放大 + 抬升 + 光斑”，松开按 `linear()` 阻尼弹簧回弹；共享表面（工具栏 / Group）内按钮按下时从表面中浮起。键盘 Enter / Space 触发同一编排（`data-pressed`）。
+- 新增动效 token：`--lg-duration-spring`、`--lg-spring`、`--lg-spring-soft`、`--lg-spring-bouncy`、`--lg-press-scale`、`--lg-press-scale-shared`、`--lg-hover-scale`、`--lg-shadow-lift`、`--lg-pressed`。
+- 分段控件透镜使用弹簧过渡，按住时轻微膨胀；Tabs 与 NavBar 改为共享滑动透镜（`useSelectionLens` 导出）。
+- Slider 透镜悬停 / 拖动放大并抬升，轨道按住增厚；Switch 拖动时拇指拉伸，切换弹簧回弹。
+- Popover / Menu 以触发器为原点缩放进入（`@starting-style` + `transition-behavior: allow-discrete`），关闭淡出；菜单项逐条进入。Dialog 弹簧进入、背板模糊、关闭淡出。
+- 所有新增动效在 `prefers-reduced-motion` 与 Provider `motion="reduced"` 下关闭。
+
+### 演示站
+- 顶栏改为吸顶玻璃条，导航使用滑动选中透镜；路由切换有进入过渡。
+- 材质实验室：试样可拖动穿越背景（键盘方向键微调），可开启背景漂移；参数面板改用分段控件与 Glass Slider；对照卡片内新增可按压按钮。
+- 文档页新增目录（滚动高亮）、代码块一键复制、按压动效说明章节。
+
+### alpha.2 追加
+- 指针眩光改为独立 `.lg-glow` 层：从指针进入点亮起、1:1 跟随、离开时原地淡出；位置不再重置，不会瞬移回左上角。`.lg-shine` 退化为静态顶部边缘弧光。
+- 新增 `usePull` / `attachPull`：按住并拖动时玻璃跟随指针位移（橡皮筋限幅）并沿拖动方向拉伸，松开由弹簧回弹。已接入按钮、分段控件、Tabs、NavBar、Slider、Switch 与演示站顶栏导航。分段 / Tabs 支持拖动透镜到目标项松手选中；Switch 支持拖动切换。
+- `GlassNavItem` 新增 `onSelect`，组件页示例导航用它拦截跳转，不再改变站点路由。
+- 分段控件 / Tabs / 站点导航：拖动透镜时选中项随指针实时切换（`onMove` 命中检测），松手停留在当前项；透镜位置变化时拉扯偏移平滑过渡而不跳变。
+- 按压折射：SVG 路径下按住时 `feDisplacementMap` 的 scale 经弹簧模型加深（约 1.6 倍 + 6px，上限 64），松开回弹到材质默认值；不重新生成位移贴图。减少动效下关闭。按住时边缘高光同步增亮。
+- 新增 `useFusion`：共享表面内的液滴融合。工具栏 / Group 内按住并朝相邻按钮拖动时，被按下的药丸与邻居像两滴液体一样融成一体（装饰性 `.lg-fusion` 层 + goo 滤镜：高斯模糊 + alpha 阈值），松开后弹簧回弹分离；分段控件透镜跨越分段边界时拉成液滴并留下收缩的尾迹汇入新槽位。融合期间抑制按钮自身的按下高亮，避免双重高亮；颜色沿用 `--lg-pressed` / `--lg-selected`（新增 `--lg-pressed-alpha`、`--lg-selected-alpha` token）。文字与图标不进入任何滤镜，blob 数量上限为 3。减少动效 / 减少透明 / 强制颜色 / `transparency="opaque"` 下完全不启用，退回原有的按下高亮。
+- `@liquid-glass-ui/core` 新增纯函数 `smoothUnion(d1, d2, k)`（多项式 smooth-min），用于推导融合几何；渲染路径仍是 SVG goo 滤镜，不做逐帧栅格化。

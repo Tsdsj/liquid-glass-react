@@ -1,0 +1,78 @@
+{
+  "browser": "144.0.7559.96",
+  "runtime": "React 19.1.1 production offline preview",
+  "method": "Local authored HTML + compiled code injection on about:blank; no blocked navigation or policy modification",
+  "results": [
+    {
+      "name": "Buttons: state, disabled, loading",
+      "status": "passed",
+      "ms": 673
+    },
+    {
+      "name": "Popover: open, autofocus, Escape, return focus, light dismiss",
+      "status": "passed",
+      "ms": 324
+    },
+    {
+      "name": "Menu: arrows skip disabled, typeahead, selection, focus return",
+      "status": "passed",
+      "ms": 202
+    },
+    {
+      "name": "Dialog: modal, focus loop, submit, Esc, scroll unlock",
+      "status": "passed",
+      "ms": 317
+    },
+    {
+      "name": "Segmented: native radio arrow keys and disabled skip",
+      "status": "passed",
+      "ms": 145
+    },
+    {
+      "name": "Tabs: arrow activation, panels, End",
+      "status": "passed",
+      "ms": 92
+    },
+    {
+      "name": "Slider and switch: native keyboard input",
+      "status": "passed",
+      "ms": 200
+    },
+    {
+      "name": "Toolbar: roving focus, End and one shared surface",
+      "status": "passed",
+      "ms": 137
+    },
+    {
+      "name": "ScrollEdge follows actual scroll position",
+      "status": "passed",
+      "ms": 245
+    },
+    {
+      "name": "Dark theme updates component policy",
+      "status": "passed",
+      "ms": 154
+    },
+    {
+      "name": "Explicit conservative preferences remove filters and animation",
+      "status": "passed",
+      "ms": 380
+    },
+    {
+      "name": "Media viewer: scene, favorite, zoom and local video stream",
+      "status": "passed",
+      "ms": 552
+    },
+    {
+      "name": "390px overview without horizontal overflow",
+      "status": "passed",
+      "ms": 298
+    },
+    {
+      "name": "Repeated route unmount: material observers stable, cache bounded",
+      "status": "passed",
+      "ms": 1063
+    }
+  ],
+  "pageErrors": []
+}

@@ -1,0 +1,47 @@
+{
+  "browser": "144.0.7559.96",
+  "runtime": "React 19.1.1 offline preview",
+  "results": [
+    {
+      "name": "Nonce CSP inline fixture: script, SVG data map and popover without violations",
+      "status": "passed",
+      "ms": 730
+    },
+    {
+      "name": "18 route/viewport combinations fit 390, 768, 1440 CSS px",
+      "status": "passed",
+      "ms": 3027
+    },
+    {
+      "name": "Dark theme screenshot evidence",
+      "status": "passed",
+      "ms": 1842
+    },
+    {
+      "name": "Skip-to-content preserves SPA route and focuses main",
+      "status": "passed",
+      "ms": 657
+    },
+    {
+      "name": "Layout boundary fixtures render; screenshot is evidence, not identical-optics approval",
+      "status": "passed",
+      "ms": 1865
+    },
+    {
+      "name": "Performance recorder completes 180 rAF intervals and records environment",
+      "status": "passed",
+      "ms": 4511
+    },
+    {
+      "name": "Repeated resize keeps bounded map cache and renderer usable",
+      "status": "passed",
+      "ms": 977
+    },
+    {
+      "name": "Export constructs SVG Blob and filename (download dispatch intercepted; no browser navigation)",
+      "status": "passed",
+      "ms": 334
+    }
+  ],
+  "pageErrors": []
+}

@@ -1,0 +1,325 @@
+{
+  "note": "Per-file emitted size, NOT tree-shaken application import cost. Preview bundles React 19.1.1. Individual gzip totals are not a network-transfer prediction.",
+  "files": [
+    {
+      "file": "packages/tokens/dist/index.js",
+      "bytes": 3216,
+      "gzipBytes": 1250
+    },
+    {
+      "file": "packages/tokens/dist/tokens.css",
+      "bytes": 16199,
+      "gzipBytes": 4936
+    },
+    {
+      "file": "packages/core/dist/browser.js",
+      "bytes": 1643,
+      "gzipBytes": 750
+    },
+    {
+      "file": "packages/core/dist/cache.js",
+      "bytes": 1520,
+      "gzipBytes": 563
+    },
+    {
+      "file": "packages/core/dist/concentric.js",
+      "bytes": 1185,
+      "gzipBytes": 497
+    },
+    {
+      "file": "packages/core/dist/geometry.js",
+      "bytes": 3643,
+      "gzipBytes": 1317
+    },
+    {
+      "file": "packages/core/dist/index.js",
+      "bytes": 184,
+      "gzipBytes": 122
+    },
+    {
+      "file": "packages/core/dist/spring.js",
+      "bytes": 3046,
+      "gzipBytes": 1075
+    },
+    {
+      "file": "packages/react/dist/backdrop.js",
+      "bytes": 1415,
+      "gzipBytes": 725
+    },
+    {
+      "file": "packages/react/dist/button.js",
+      "bytes": 1418,
+      "gzipBytes": 611
+    },
+    {
+      "file": "packages/react/dist/content/card.js",
+      "bytes": 1664,
+      "gzipBytes": 811
+    },
+    {
+      "file": "packages/react/dist/content/divider.js",
+      "bytes": 703,
+      "gzipBytes": 421
+    },
+    {
+      "file": "packages/react/dist/content/list.js",
+      "bytes": 2934,
+      "gzipBytes": 1101
+    },
+    {
+      "file": "packages/react/dist/content/material-view.js",
+      "bytes": 1048,
+      "gzipBytes": 607
+    },
+    {
+      "file": "packages/react/dist/content/text.js",
+      "bytes": 535,
+      "gzipBytes": 293
+    },
+    {
+      "file": "packages/react/dist/controls/badge.js",
+      "bytes": 746,
+      "gzipBytes": 463
+    },
+    {
+      "file": "packages/react/dist/controls/button.js",
+      "bytes": 1742,
+      "gzipBytes": 767
+    },
+    {
+      "file": "packages/react/dist/controls/progress.js",
+      "bytes": 1433,
+      "gzipBytes": 721
+    },
+    {
+      "file": "packages/react/dist/controls/segmented.js",
+      "bytes": 4430,
+      "gzipBytes": 1833
+    },
+    {
+      "file": "packages/react/dist/controls/slider.js",
+      "bytes": 3109,
+      "gzipBytes": 1386
+    },
+    {
+      "file": "packages/react/dist/controls/stepper.js",
+      "bytes": 1957,
+      "gzipBytes": 883
+    },
+    {
+      "file": "packages/react/dist/controls/switch.js",
+      "bytes": 2630,
+      "gzipBytes": 1161
+    },
+    {
+      "file": "packages/react/dist/controls.js",
+      "bytes": 4179,
+      "gzipBytes": 1549
+    },
+    {
+      "file": "packages/react/dist/fields/search-field.js",
+      "bytes": 2320,
+      "gzipBytes": 1050
+    },
+    {
+      "file": "packages/react/dist/fields/text-field.js",
+      "bytes": 2055,
+      "gzipBytes": 925
+    },
+    {
+      "file": "packages/react/dist/fusion.js",
+      "bytes": 12904,
+      "gzipBytes": 4200
+    },
+    {
+      "file": "packages/react/dist/index.js",
+      "bytes": 1869,
+      "gzipBytes": 590
+    },
+    {
+      "file": "packages/react/dist/material.js",
+      "bytes": 12412,
+      "gzipBytes": 3919
+    },
+    {
+      "file": "packages/react/dist/navigation/nav-bar.js",
+      "bytes": 2136,
+      "gzipBytes": 945
+    },
+    {
+      "file": "packages/react/dist/navigation/scroll-edge.js",
+      "bytes": 2065,
+      "gzipBytes": 946
+    },
+    {
+      "file": "packages/react/dist/navigation/sidebar.js",
+      "bytes": 1492,
+      "gzipBytes": 712
+    },
+    {
+      "file": "packages/react/dist/navigation/tab-bar.js",
+      "bytes": 4228,
+      "gzipBytes": 1600
+    },
+    {
+      "file": "packages/react/dist/navigation/tabs.js",
+      "bytes": 4232,
+      "gzipBytes": 1502
+    },
+    {
+      "file": "packages/react/dist/navigation/toolbar.js",
+      "bytes": 5555,
+      "gzipBytes": 2156
+    },
+    {
+      "file": "packages/react/dist/overlays/action-sheet.js",
+      "bytes": 4320,
+      "gzipBytes": 1535
+    },
+    {
+      "file": "packages/react/dist/overlays/alert.js",
+      "bytes": 4078,
+      "gzipBytes": 1610
+    },
+    {
+      "file": "packages/react/dist/overlays/anchor.js",
+      "bytes": 5085,
+      "gzipBytes": 1753
+    },
+    {
+      "file": "packages/react/dist/overlays/dialog.js",
+      "bytes": 3627,
+      "gzipBytes": 1404
+    },
+    {
+      "file": "packages/react/dist/overlays/menu.js",
+      "bytes": 4542,
+      "gzipBytes": 1552
+    },
+    {
+      "file": "packages/react/dist/overlays/popover.js",
+      "bytes": 2245,
+      "gzipBytes": 984
+    },
+    {
+      "file": "packages/react/dist/overlays/sheet.js",
+      "bytes": 8923,
+      "gzipBytes": 2938
+    },
+    {
+      "file": "packages/react/dist/overlays/toast.js",
+      "bytes": 3011,
+      "gzipBytes": 1280
+    },
+    {
+      "file": "packages/react/dist/overlays.js",
+      "bytes": 12565,
+      "gzipBytes": 3297
+    },
+    {
+      "file": "packages/react/dist/provider.js",
+      "bytes": 2410,
+      "gzipBytes": 901
+    },
+    {
+      "file": "packages/react/dist/pull.js",
+      "bytes": 3937,
+      "gzipBytes": 1288
+    },
+    {
+      "file": "packages/react/dist/scroll-edge.js",
+      "bytes": 1557,
+      "gzipBytes": 679
+    },
+    {
+      "file": "packages/react/dist/selection.js",
+      "bytes": 8902,
+      "gzipBytes": 2577
+    },
+    {
+      "file": "packages/react/dist/styles.css",
+      "bytes": 65142,
+      "gzipBytes": 12443
+    },
+    {
+      "file": "packages/react/dist/surface.js",
+      "bytes": 1702,
+      "gzipBytes": 747
+    },
+    {
+      "file": "packages/react/dist/system/backdrop.js",
+      "bytes": 1415,
+      "gzipBytes": 725
+    },
+    {
+      "file": "packages/react/dist/system/fusion.js",
+      "bytes": 12904,
+      "gzipBytes": 4200
+    },
+    {
+      "file": "packages/react/dist/system/icon.js",
+      "bytes": 988,
+      "gzipBytes": 599
+    },
+    {
+      "file": "packages/react/dist/system/material.js",
+      "bytes": 12412,
+      "gzipBytes": 3919
+    },
+    {
+      "file": "packages/react/dist/system/provider.js",
+      "bytes": 2410,
+      "gzipBytes": 901
+    },
+    {
+      "file": "packages/react/dist/system/pull.js",
+      "bytes": 3937,
+      "gzipBytes": 1288
+    },
+    {
+      "file": "packages/react/dist/system/surface.js",
+      "bytes": 1702,
+      "gzipBytes": 747
+    },
+    {
+      "file": "packages/react/dist/system/utils.js",
+      "bytes": 1556,
+      "gzipBytes": 674
+    },
+    {
+      "file": "packages/react/dist/tokens.css",
+      "bytes": 16199,
+      "gzipBytes": 4936
+    },
+    {
+      "file": "packages/react/dist/toolbar.js",
+      "bytes": 3621,
+      "gzipBytes": 1373
+    },
+    {
+      "file": "packages/react/dist/utils.js",
+      "bytes": 1556,
+      "gzipBytes": 674
+    },
+    {
+      "file": "preview/bundle.js",
+      "bytes": 768370,
+      "gzipBytes": 175233
+    },
+    {
+      "file": "preview/tokens.css",
+      "bytes": 16199,
+      "gzipBytes": 4936
+    },
+    {
+      "file": "preview/styles.css",
+      "bytes": 65142,
+      "gzipBytes": 12443
+    },
+    {
+      "file": "preview/app.css",
+      "bytes": 28799,
+      "gzipBytes": 5805
+    }
+  ]
+}

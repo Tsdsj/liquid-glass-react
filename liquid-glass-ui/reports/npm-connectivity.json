@@ -1,0 +1,14 @@
+{
+  "command": [
+    "npm",
+    "view",
+    "react@19.2.7",
+    "version",
+    "--fetch-retries=0",
+    "--fetch-timeout=2000"
+  ],
+  "exitCode": 1,
+  "stdout": "",
+  "stderr": "npm error code EAI_AGAIN\nnpm error syscall getaddrinfo\nnpm error errno EAI_AGAIN\nnpm error request to https://registry.npmjs.org/react failed, reason: getaddrinfo EAI_AGAIN registry.npmjs.org\nnpm error A complete log of this run can be found in: /home/oai/.npm/_logs/2026-09-10T12_38_56_438Z-debug-0.log\n",
+  "status": "blocked-or-failed"
+}

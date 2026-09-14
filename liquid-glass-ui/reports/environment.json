@@ -1,0 +1,14 @@
+{
+  "date": "2026-09-10",
+  "platform": "Linux-6.18.35-x86_64-with-glibc2.41",
+  "python": "3.13.5",
+  "node": "v22.16.0",
+  "typescript": "Version 5.8.3",
+  "browser": "Chromium 144.0.7559.96 built on Debian GNU/Linux 13 (trixie)",
+  "mode": "headless",
+  "verifiedReactRuntime": "19.1.1 production, offline inspection preview",
+  "sourceDeclaredReactRuntime": "19.2.7 (not installed/verified here)",
+  "physicalGPU": "not established; WebGL renderer query returned null",
+  "devicePixelRatio": 1,
+  "navigation": "Enterprise URLBlocklist denied browser URL navigation. No policy modified. Authored local HTML/code loaded on about:blank. HTTP server checked separately with Node fetch."
+}

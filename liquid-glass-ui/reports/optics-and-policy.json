@@ -1,0 +1,52 @@
+{
+  "browser": "144.0.7559.96",
+  "method": "Headless Chromium local authored fixture injection",
+  "renderer": null,
+  "results": [
+    {
+      "name": "SVG scale change alters actual edge pixels more than center, foreground unchanged",
+      "passed": true,
+      "measurements": {
+        "edgeMeanAbsoluteDifference": 15.146201566507246,
+        "centerMeanAbsoluteDifference": 0.0,
+        "opaqueForegroundMeanDifference": 0.0,
+        "changedPixelPercent": 5.045138888888888,
+        "foregroundGeometryUnchanged": true,
+        "foregroundFilter": "none"
+      }
+    },
+    {
+      "name": "Pointer moves do not rebuild displacement maps",
+      "passed": true
+    },
+    {
+      "name": "Unknown clear background downgraded to regular",
+      "passed": true
+    },
+    {
+      "name": "Auto renderer remains CSS unless opt-in",
+      "passed": true
+    },
+    {
+      "name": "OS reduced motion respected",
+      "passed": true
+    },
+    {
+      "name": "Forced colors disables background filters",
+      "passed": true
+    },
+    {
+      "name": "Unmount releases all material observers",
+      "passed": true
+    },
+    {
+      "name": "Child provider cannot override parent conservative preferences",
+      "passed": true
+    },
+    {
+      "name": "React 19 callback ref cleanup is preserved by merged refs",
+      "passed": true
+    }
+  ],
+  "pageErrors": []
+}

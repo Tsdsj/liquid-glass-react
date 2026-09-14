@@ -1,0 +1,18 @@
+import { jsx as _jsx, jsxs as _jsxs, Fragment as _Fragment } from "react/jsx-runtime";
+import { useState } from 'react';
+import { GlassButton, GlassPopover, GlassProvider, GlassSurface, GlassSwitch, GlassToolbar, GlassIconButton } from '@liquid-glass-ui/react';
+import { StressBackground } from './lab.js';
+import { Icon } from './icons.js';
+const fixtures = [
+    { name: '常规布局', description: '无额外合成属性的对照。', style: {} },
+    { name: '祖先 opacity', description: '祖先透明度可能改变背景采样边界。', style: { opacity: .88 } },
+    { name: '祖先 filter', description: '需要观察背景是否被局限到祖先内。', style: { filter: 'contrast(1.03)' } },
+    { name: '祖先 mask', description: '遮罩与裁剪是专项回归场景。', style: { maskImage: 'linear-gradient(black 85%,transparent)' } },
+    { name: '祖先 transform', description: '形成堆叠上下文不等于所有采样边界。', style: { transform: 'translateZ(0)' } },
+    { name: '嵌套共享表面', description: '内层按钮没有独立 backdrop-filter。', style: {} },
+];
+export function StressPage() {
+    const [opaque, setOpaque] = useState(false);
+    const [rtl, setRtl] = useState(false);
+    return _jsxs(_Fragment, { children: [_jsxs("div", { className: "page-heading", children: [_jsx("span", { className: "eyebrow", children: "03 / LAYOUT FIXTURES" }), _jsx("h1", { children: "\u597D\u770B\u4E4B\u5916\uFF0C\u4E5F\u8981\u7ECF\u5F97\u8D77\u53D8\u5316\u3002" }), _jsx("p", { children: "\u5C06\u9AD8\u98CE\u9669\u5E03\u5C40\u4FDD\u7559\u4E3A\u53EF\u91CD\u590D\u7684\u573A\u666F\uFF1B\u4E0D\u4F9D\u9760\u968F\u610F\u589E\u52A0 z-index \u6216 will-change \u4FEE\u8865\u3002" })] }), _jsxs("div", { className: "page-controls", children: [_jsx(GlassSwitch, { "aria-label": "\u538B\u529B\u6D4B\u8BD5\u4F7F\u7528\u4E0D\u900F\u660E\u6750\u8D28", checked: opaque, onCheckedChange: setOpaque, label: "\u4E0D\u900F\u660E\u56DE\u9000" }), _jsx(GlassSwitch, { "aria-label": "\u957F\u6807\u7B7E\u538B\u529B", checked: rtl, onCheckedChange: setRtl, label: "\u4E2D\u6587\u957F\u6807\u7B7E" })] }), _jsx(GlassProvider, { transparency: opaque ? 'opaque' : 'system', children: _jsx("div", { className: "stress-grid", children: fixtures.map((fixture, index) => _jsxs("section", { className: "stress-card", children: [_jsx(StressBackground, { kind: "grid", children: _jsxs("div", { className: "fixture-ancestor", style: fixture.style, children: [index === 5 ? _jsxs(GlassToolbar, { "aria-label": "\u5D4C\u5957\u5171\u4EAB\u6D4B\u8BD5", renderer: "svg", children: [_jsx(GlassIconButton, { "aria-label": "\u5D4C\u5957\u5DE5\u5177\u4E00", children: _jsx(Icon, { name: "layer" }) }), _jsx(GlassButton, { children: rtl ? '这是一个包含很长中文标签的操作' : '共享表面' })] }) : _jsxs(GlassSurface, { renderer: "svg", material: "clear", backdropTone: "dark", className: "fixture-glass", children: [_jsx("strong", { children: rtl ? '需要验证换行与放大后的中文文本内容' : '背景折射测试' }), _jsx("span", { children: "Foreground remains DOM." })] }), _jsx(GlassPopover, { title: `顶层弹出层：${fixture.name}`, description: "\u68C0\u67E5\u5B83\u662F\u5426\u4ECD\u951A\u5B9A\u3001\u53EF\u89C1\u3001\u53EF\u805A\u7126\uFF0C\u4EE5\u53CA\u5982\u4F55\u91C7\u6837\u9875\u9762\u80CC\u666F\u3002", trigger: _jsx(GlassButton, { renderer: "css", children: "\u6D4B\u8BD5\u9876\u5C42\u5F39\u51FA\u5C42" }), children: _jsx(GlassButton, { children: "\u53EF\u805A\u7126\u64CD\u4F5C" }) })] }) }), _jsx("h2", { children: fixture.name }), _jsx("p", { children: fixture.description })] }, fixture.name)) }) }), _jsxs("div", { className: "callout", children: [_jsx(Icon, { name: "info" }), _jsx("p", { children: "\u8FD9\u662F\u89C2\u5BDF\u4E0E\u56DE\u5F52\u5939\u5177\uFF0C\u4E0D\u4EE3\u8868\u6BCF\u79CD\u5E03\u5C40\u90FD\u80FD\u5B9E\u73B0\u540C\u6837\u7684\u6298\u5C04\u3002\u5916\u5C42 filter / opacity / mask \u573A\u666F\u5E94\u6309\u5B9E\u9645\u6548\u679C\u51B3\u5B9A\u662F\u5426\u56DE\u9000 CSS\u3002" })] })] });
+}

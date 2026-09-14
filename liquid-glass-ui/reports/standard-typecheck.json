@@ -1,0 +1,11 @@
+{
+  "command": [
+    "npm",
+    "run",
+    "typecheck"
+  ],
+  "exitCode": 2,
+  "stdout": "\n> liquid-glass-ui-workspace@0.1.0-alpha.1 typecheck\n> tsc -p tsconfig.check.json --noEmit\n\nerror TS2688: Cannot find type definition file for 'node'.\n  The file is in the program because:\n    Entry point of type library 'node' specified in compilerOptions\nerror TS2688: Cannot find type definition file for 'vite/client'.\n  The file is in the program because:\n    Entry point of type library 'vite/client' specified in compilerOptions\n",
+  "stderr": "",
+  "status": "blocked-or-failed"
+}
