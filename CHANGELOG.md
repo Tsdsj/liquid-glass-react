@@ -1,5 +1,37 @@
 # Changelog
 
+## 0.0.1
+
+第一个正式版本。
+
+`@ttqtt/liquid-glass-react` 在 2026 年 7 月发过 0.1.0 和 0.2.0，那是另一套实现；本轮是完整重写，没有代码继承关系，所以版本号从 0.0.1 重开，旧的两个版本已标记弃用。下面 `0.2.0-alpha.*` 各节是这次重写的开发日志，不是已发布的版本。
+
+### 有什么
+
+41 个组件，分成内容层与操作层——玻璃只用在浮起来的那一层，正文、列表、卡片保持不透明。默认是磨砂材质；边缘折射通过 `<GlassProvider enableSvgAuto>` 打开，Chromium 系走 SVG 位移拿到真折射，Safari 和 Firefox 退回磨砂。
+
+分段控件、开关、滑块是**可以拖的**：按住当前项滑动就能换，在自身行程内 1:1 跟手，形变由速度与阻力决定，不是一条固定曲线。
+
+减少透明度、增强对比度、减少动效、强制颜色四项系统设置会直接改变界面，调用方不用写代码。背景明暗由 `GlassBackdrop` 声明，库不读取页面像素、不做 DOM 截屏。
+
+### 怎么验的
+
+```text
+65 单元 · 3 SSR · 84 真实 Google Chrome · 16 WebKit + Firefox
+```
+
+SSR 那三项跑的是 `dist/`，也就是真正发出去的那份。玻璃上的文字对比度从**合成后的像素**上量——三个引擎最差的一块 7.83:1。macOS 本机与 CI 的 Ubuntu runner 上各跑过一遍完整套件。打出来的 tarball 装进空的 Vite + React 19 项目验证过：`skipLibCheck: false` 下类型检查通过，打包通过。
+
+### 还没做完
+
+屏幕阅读器的实机验证、触摸真机手感、真实低端 GPU 的能耗、Windows 与关闭硬件加速的浏览器矩阵。这四项没有自动化替代品，详见 `docs/known-limitations.md`。0.x 阶段仍可能有破坏性改动，每次都会给改名对照表。
+
+### 工程
+
+- `scripts/verify-package.mjs` 挂在 `prepublishOnly` 上：问打包器它到底会装哪些文件进去，核对源码没泄漏、每个 `exports` 入口都落到真实文件、`"use client"` 还在第一行、标签号与 `package.json` 一致。
+- `release.yml`：打 `v*` 标签 → 用 `workflow_call` 复用 `ci.yml`（不是复制一份，所以发版的检查不可能比 PR 松）→ 用 OIDC 免令牌发到 npm 并带构建溯源 → 用本文件对应小节作为正文建 GitHub Release。
+- 文档站 https://tsdsj.github.io/liquid-glass-react/ 随 `main` 自动部署。
+
 ## 0.2.0-alpha.6
 
 把审查报告里长期挂账的六项（R1–R6）逐条了结，能关的关掉，关不掉的说清楚为什么。

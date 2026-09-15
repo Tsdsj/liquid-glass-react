@@ -8,7 +8,7 @@ on:
 
 permissions:
   contents: write   # to create the GitHub Release
-  id-token: write   # to sign the npm tarball with build provenance
+  id-token: write   # to authenticate to npm as this workflow, and to sign the tarball
 
 jobs:
   # The same job that guards main, reused rather than copied, so a tag can never be
@@ -32,6 +32,11 @@ jobs:
           cache: pnpm
           registry-url: https://registry.npmjs.org
 
+      # Trusted publishing needs the OIDC support that landed in npm 11.5.1; the npm that
+      # ships with Node 22 is older and would silently fall back to looking for a token.
+      - name: Update npm for trusted publishing
+        run: npm install -g npm@latest
+
       - run: pnpm install --frozen-lockfile
       - run: pnpm build
 
@@ -51,10 +56,11 @@ jobs:
           if [[ "$version" == *-* ]]; then echo "dist=next" >> "$GITHUB_OUTPUT"; else echo "dist=latest" >> "$GITHUB_OUTPUT"; fi
           echo "version=$version" >> "$GITHUB_OUTPUT"
 
+      # No token: npm mints a short-lived credential from this job's OIDC identity, which is
+      # why the repository, this workflow file and the `npm` environment all have to match
+      # what is registered as the package's trusted publisher. Provenance comes with it.
       - name: Publish to npm
-        run: npm publish --provenance --access public --tag ${{ steps.tag.outputs.dist }}
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+        run: npm publish --access public --tag ${{ steps.tag.outputs.dist }}
 
       # The release notes are the CHANGELOG section for this version — one source of truth,
       # so the two cannot describe the same release differently.
