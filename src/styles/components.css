@@ -31,6 +31,15 @@
 @property --lg-stretch-y { syntax: '<number>'; inherits: false; initial-value: 1; }
 @property --lg-shift-x { syntax: '<length>'; inherits: false; initial-value: 0px; }
 @property --lg-shift-y { syntax: '<length>'; inherits: false; initial-value: 0px; }
+@property --lg-lens-shown { syntax: '<number>'; inherits: false; initial-value: 0; }
+/* Controls are gestures, not text. A link or an icon inside one must not start a native drag:
+   the drag both shows a URL ghost under the pointer and cancels the pointer stream the gesture
+   needs, which reads as "this component cannot be dragged at all". */
+.lg-root, .lg-root :is(a,img,svg) { -webkit-user-drag: none; }
+/* Selection is disabled on the control shells only; prose inside a card or an overlay stays selectable. */
+.lg-button, .lg-tab-link, .lg-tab, .lg-segment, .lg-sheet-grabber, .lg-selection-lens,
+.lg-switch, .lg-slider, .lg-stepper, .lg-menu-item,
+.lg-list-row[data-interactive="true"] .lg-row-hit { user-select: none; -webkit-user-select: none; }
 .lg-root[data-material="clear"] { --lg-tint-opacity: .06; --lg-fg: #fff; --lg-muted: rgb(255 255 255 / .7); --lg-glass-rim-hi: rgb(255 255 255 / .55); --lg-glass-rim-lo: rgb(0 0 0 / .3); --lg-focus: rgb(120 195 255); --lg-hover: rgb(255 255 255 / .16); --lg-pressed: rgb(255 255 255 / .3); --lg-selected: rgb(255 255 255 / .28); --lg-pressed-alpha: .3; --lg-selected-alpha: .28; }
 .lg-root[data-material="clear"][data-backdrop-tone="light"] { --lg-tint-color: 0 0 0; --lg-tint-opacity: .35; }
 .lg-root[data-backdrop-tone="mixed"] { --lg-tint-opacity: .84; }
@@ -119,7 +128,10 @@
 .lg-segmented-track { display: flex; position: relative; gap: 0; touch-action: pan-y; }
 .lg-segmented-track .lg-fusion { --lg-fusion-alpha: var(--lg-selected-alpha,.84); }
 .lg-segmented-track .lg-fusion-sheen { border: 1px solid var(--lg-glass-rim-hi); box-shadow: 0 1px 3px rgb(0 0 0 / .08), 0 4px 12px rgb(0 0 0 / .06), inset 0 1px 0 rgb(255 255 255 / .6); }
-.lg-segmented-track[data-fusion="true"] .lg-selection-lens { background: transparent; border-color: transparent; box-shadow: none; }
+/* While the goo layer is drawing the pill the lens itself steps back, and the two cross-fade
+   rather than swapping in one frame. `--lg-fusion-fade` is written on the track every frame, so
+   the lens must not put a transition of its own on top of it or the hand-back arrives late. */
+[data-fusion="true"] .lg-selection-lens { transition: transform var(--lg-duration-spring) var(--lg-spring), width var(--lg-duration-spring) var(--lg-spring), height var(--lg-duration-spring) var(--lg-spring), scale var(--lg-duration-spring) var(--lg-spring-bouncy), translate var(--lg-duration-spring) var(--lg-spring), box-shadow var(--lg-duration-release) var(--lg-ease); }
 .lg-segment { min-height: calc(var(--lg-control-height,44px) - 8px); padding: 0 16px; position: relative; display: inline-flex; align-items: center; justify-content: center; cursor: pointer; font-size: var(--lg-text-footnote-size); font-weight: var(--lg-weight-semibold); border-radius: inherit; white-space: nowrap; color: var(--lg-label-secondary); transition: color var(--lg-duration-release) var(--lg-ease); }
 .lg-segment > span { position: relative; pointer-events: none; transition: transform var(--lg-duration-spring) var(--lg-spring); }
 .lg-segment:has(input:checked) { color: var(--lg-fg); }
@@ -128,8 +140,11 @@
 .lg-segment input { position: absolute; margin: 0; inset: 0; width: 100%; height: 100%; opacity: 0; cursor: inherit; }
 .lg-segment:has(input:focus-visible) { outline: var(--lg-focus-width) solid var(--lg-focus); outline-offset: var(--lg-focus-offset); border-radius: 999px; }
 .lg-segment[data-disabled="true"] { opacity: .45; cursor: not-allowed; }
-.lg-selection-lens { position: absolute; left: 0; top: 0; background: var(--lg-selected); border: 1px solid var(--lg-glass-rim-hi); border-radius: 999px; box-shadow: 0 1px 3px rgb(0 0 0 / .08), 0 4px 12px rgb(0 0 0 / .06), inset 0 1px 0 rgb(255 255 255 / .6); pointer-events: none; translate: var(--lg-shift-x,0px) var(--lg-shift-y,0px); scale: var(--lg-stretch-x,1) var(--lg-stretch-y,1); transition: transform var(--lg-duration-spring) var(--lg-spring), width var(--lg-duration-spring) var(--lg-spring), height var(--lg-duration-spring) var(--lg-spring), opacity var(--lg-duration-release) var(--lg-ease), scale var(--lg-duration-spring) var(--lg-spring-bouncy), translate var(--lg-duration-spring) var(--lg-spring), box-shadow var(--lg-duration-release) var(--lg-ease); }
-.lg-selection-lens[data-pulling="true"] { transition: transform var(--lg-duration-spring) var(--lg-spring), width var(--lg-duration-spring) var(--lg-spring), box-shadow var(--lg-duration-press) var(--lg-ease); scale: calc(var(--lg-stretch-x,1) * 1.04) calc(var(--lg-stretch-y,1) * 1.06); box-shadow: 0 2px 6px rgb(0 0 0 / .12), 0 10px 24px rgb(0 0 0 / .12), inset 0 1px 0 rgb(255 255 255 / .7); z-index: 1; }
+.lg-selection-lens { position: absolute; left: 0; top: 0; background: var(--lg-selected); border: 1px solid var(--lg-glass-rim-hi); border-radius: 999px; box-shadow: 0 1px 3px rgb(0 0 0 / .08), 0 4px 12px rgb(0 0 0 / .06), inset 0 1px 0 rgb(255 255 255 / .6); pointer-events: none; opacity: calc(var(--lg-lens-shown,0) * (1 - var(--lg-fusion-fade,0))); translate: var(--lg-shift-x,0px) var(--lg-shift-y,0px); scale: var(--lg-stretch-x,1) var(--lg-stretch-y,1); transition: transform var(--lg-duration-spring) var(--lg-spring), width var(--lg-duration-spring) var(--lg-spring), height var(--lg-duration-spring) var(--lg-spring), opacity var(--lg-duration-release) var(--lg-ease), scale var(--lg-duration-spring) var(--lg-spring-bouncy), translate var(--lg-duration-spring) var(--lg-spring), box-shadow var(--lg-duration-release) var(--lg-ease); }
+/* Held: the slot the lens belongs to may change under the finger, but the finger is what decides
+   where it is drawn — so the slot move is instant and the offset cancels it out exactly. Spring
+   the two back together only once the gesture ends. */
+.lg-selection-lens[data-pulling="true"] { transition: width var(--lg-duration-spring) var(--lg-spring), box-shadow var(--lg-duration-press) var(--lg-ease); scale: calc(var(--lg-stretch-x,1) * 1.04) calc(var(--lg-stretch-y,1) * 1.06); box-shadow: 0 2px 6px rgb(0 0 0 / .12), 0 10px 24px rgb(0 0 0 / .12), inset 0 1px 0 rgb(255 255 255 / .7); z-index: 1; }
 .lg-segmented-track:has(input:checked:active) .lg-selection-lens:not([data-pulling="true"]) { scale: 1.06 1.1; transition-duration: var(--lg-duration-press); }
 
 /* ---------- Tabs: shared sliding indicator ---------- */
@@ -184,7 +199,9 @@
 .lg-switch-track { display: block; width: 48px; height: 28px; border-radius: 999px; transition: background var(--lg-duration-release) var(--lg-ease), transform var(--lg-duration-spring) var(--lg-spring); }
 .lg-switch-track[data-checked="true"] { background: var(--lg-green); }
 .lg-switch-track[data-checked="true"] > .lg-decoration .lg-tint { background: var(--lg-green); }
-.lg-switch-thumb { position: absolute; top: 3px; left: 3px; height: 22px; width: 22px; border-radius: 999px; background: #fff; box-shadow: 0 1px 4px rgb(0 0 0 / .2), 0 3px 8px rgb(0 0 0 / .12); --lg-travel: 0px; transform: translateX(calc(var(--lg-travel) + clamp(-3px, var(--lg-shift-x,0px), 23px))); scale: var(--lg-stretch-x,1) var(--lg-stretch-y,1); transform-origin: 50% 50%; transition: transform var(--lg-duration-spring) var(--lg-spring), scale var(--lg-duration-spring) var(--lg-spring-bouncy), width var(--lg-duration-spring) var(--lg-spring); z-index: 1; }
+/* The thumb crosses under the finger, so the clamp is on where it ends up, not on the offset:
+   0 to --lg-travel-max, plus a few pixels of give at each end for the rubber band. */
+.lg-switch-thumb { position: absolute; top: 3px; left: 3px; height: 22px; width: 22px; border-radius: 999px; background: #fff; box-shadow: 0 1px 4px rgb(0 0 0 / .2), 0 3px 8px rgb(0 0 0 / .12); --lg-travel: 0px; --lg-travel-max: 20px; transform: translateX(clamp(-4px, calc(var(--lg-travel) + var(--lg-shift-x,0px)), calc(var(--lg-travel-max) + 4px))); scale: var(--lg-stretch-x,1) var(--lg-stretch-y,1); transform-origin: 50% 50%; transition: transform var(--lg-duration-spring) var(--lg-spring), scale var(--lg-duration-spring) var(--lg-spring-bouncy), width var(--lg-duration-spring) var(--lg-spring); z-index: 1; }
 .lg-switch-track[data-checked="true"] .lg-switch-thumb { --lg-travel: 20px; }
 .lg-switch-thumb[data-pulling="true"] { transition: width var(--lg-duration-press) var(--lg-ease-out); }
 .lg-switch-track { translate: calc(var(--lg-shift-x,0px) * .12) 0; transition: background var(--lg-duration-release) var(--lg-ease), transform var(--lg-duration-spring) var(--lg-spring), translate var(--lg-duration-spring) var(--lg-spring); }
@@ -347,6 +364,13 @@
 .lg-button[data-variant="glassProminent"] { --lg-fg: var(--lg-accent-contrast); color: var(--lg-accent-contrast); }
 .lg-button[data-variant="glassProminent"] > .lg-decoration .lg-tint { background: var(--lg-accent); opacity: .92; }
 .lg-button[data-variant="glassProminent"]:not(:disabled):is(:active,[data-pressed="true"]) > .lg-decoration .lg-tint { opacity: .78; }
+/* On a shared surface — inside a sheet, a dialog, an alert, a toolbar group — a button has no
+   decoration layer of its own to tint, so the accent has to come from its own background.
+   Without this the label is white on nothing, which on a light surface is invisible. */
+.lg-button[data-renderer="shared"][data-variant="glassProminent"] { background: var(--lg-accent); color: var(--lg-accent-contrast); --lg-fg: var(--lg-accent-contrast); box-shadow: 0 1px 2px rgb(0 0 0 / .1); }
+.lg-button[data-renderer="shared"][data-variant="glassProminent"]:not(:disabled):hover { background: color-mix(in srgb, var(--lg-accent) 88%, #000); }
+.lg-button[data-renderer="shared"][data-variant="glassProminent"]:not(:disabled):is(:active,[data-pressed="true"]) { background: color-mix(in srgb, var(--lg-accent) 80%, #000); }
+.lg-button[data-renderer="shared"][data-variant="destructiveProminent"] { background: var(--lg-red); color: #fff; --lg-fg: #fff; }
 .lg-button[data-variant="plain"] { color: var(--lg-accent); }
 .lg-button[data-variant="plain"]:not(:disabled):hover { background: var(--lg-fill-quaternary); }
 .lg-button[data-variant="gray"] { background: var(--lg-fill-secondary); color: var(--lg-label); }
@@ -400,7 +424,8 @@
   padding: var(--lg-space-5) var(--lg-space-4) calc(var(--lg-space-5) + env(safe-area-inset-bottom)); overflow-y: auto; overscroll-behavior: contain; }
 .lg-tabbar-header { padding: var(--lg-space-2) var(--lg-space-3) var(--lg-space-4); }
 .lg-tabbar-group { padding: 6px; }
-.lg-tab-links { position: relative; display: flex; gap: 2px; }
+/* pan-y: scrolling the page (or the sidebar) always beats dragging the lens on a touch screen. */
+.lg-tab-links { position: relative; display: flex; gap: 2px; touch-action: pan-y; }
 .lg-tabbar[data-layout="sidebar"] .lg-tab-links { flex-direction: column; }
 .lg-tab-link { position: relative; z-index: 1; display: inline-flex; align-items: center; justify-content: center; gap: var(--lg-space-2);
   min-height: var(--lg-hit-min); min-width: var(--lg-hit-min); padding-inline: var(--lg-space-4); border-radius: 999px;

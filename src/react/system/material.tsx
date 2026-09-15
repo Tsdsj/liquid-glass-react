@@ -90,6 +90,13 @@ export function useGlassSurface<T extends HTMLElement>(options: GlassSurfaceOpti
      * the silhouette instead of sitting on one edge — the highlight is refraction, not a
      * gradient painted across the face.
      */
+    /**
+     * `atan2` jumps by a full turn when the pointer crosses the element's leading edge. Fed
+     * straight into a transitioned angle that reads as the highlight spinning right round —
+     * always in the same place, which is exactly what makes it look like a glitch rather than
+     * light. Keep a continuous angle instead and let it grow past 360°.
+     */
+    let turns = 0, previous = NaN;
     const setLight = (clientX: number, clientY: number) => {
       const box = node.getBoundingClientRect();
       if (!box.width || !box.height) return;
@@ -98,8 +105,13 @@ export function useGlassSurface<T extends HTMLElement>(options: GlassSurfaceOpti
       node.style.setProperty('--lg-light-x', `${x}%`);
       node.style.setProperty('--lg-light-y', `${y}%`);
       // CSS conic angles start at 12 o'clock and run clockwise; screen y grows downward.
-      const angle = 90 + Math.atan2(clientY - (box.top + box.height / 2), clientX - (box.left + box.width / 2)) * 180 / Math.PI;
-      node.style.setProperty('--lg-light-angle', `${angle.toFixed(1)}deg`);
+      const raw = 90 + Math.atan2(clientY - (box.top + box.height / 2), clientX - (box.left + box.width / 2)) * 180 / Math.PI;
+      if (Number.isFinite(previous)) {
+        if (raw - previous > 180) turns -= 1;
+        else if (previous - raw > 180) turns += 1;
+      }
+      previous = raw;
+      node.style.setProperty('--lg-light-angle', `${(raw + turns * 360).toFixed(1)}deg`);
     };
     // The glow enters where the pointer enters, follows it 1:1, and fades out where it left. Position is never reset.
     const onEnter = (event: PointerEvent) => { if (event.pointerType !== 'mouse') return; cancelAnimationFrame(frame.current); setLight(event.clientX, event.clientY); node.setAttribute('data-lit', 'true'); };

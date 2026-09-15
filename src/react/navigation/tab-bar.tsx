@@ -5,7 +5,7 @@ import { type GlassSurfaceOptions } from '../system/material.js';
 import { cx } from '../system/utils.js';
 import { usePull } from '../system/pull.js';
 import { useGlassPolicy, useMediaQuery } from '../system/provider.js';
-import { useSelectionLens, lensOrigin } from '../controls/segmented.js';
+import { useSelectionLens, lensOrigin, trackSpan } from '../controls/segmented.js';
 import { GlassBadge } from '../controls/badge.js';
 
 export interface TabBarItem {
@@ -62,12 +62,13 @@ export function TabBar({
   const list = useRef<HTMLDivElement>(null);
   const lensRef = useRef<HTMLSpanElement>(null);
   const activeKey = items.find(item => item.key === current)?.key ?? (search?.key === current ? current : undefined);
-  const lens = useSelectionLens(list, 'a[aria-current="page"]', [activeKey, items.length, asSidebar]);
+  useSelectionLens(list, lensRef, 'a[aria-current="page"]', [activeKey, items.length, asSidebar]);
 
   usePull(list, {
     axis: asSidebar ? 'y' : 'x', limit: 18, stretch: .8,
     targets: () => lensRef.current ? [lensRef.current] : [],
     origin: () => lensOrigin(lensRef.current),
+    range: () => trackSpan(list.current, lensRef.current, asSidebar ? 'y' : 'x'),
   }, !policy.reduceMotion);
 
   useEffect(() => {
@@ -85,8 +86,10 @@ export function TabBar({
     return () => { window.removeEventListener('scroll', onScroll); cancelAnimationFrame(frame); };
   }, [minimizeOnScroll, asSidebar, policy.reduceMotion]);
 
+  /* draggable={false}: a link that is also a drag target would otherwise start a native drag on
+     the first pointer move, which both shows the URL ghost and cancels the gesture. */
   const link = (item: TabBarItem, kind: 'tab' | 'search') => <a key={item.key} className="lg-tab-link" data-kind={kind}
-    href={item.href} aria-current={item.key === current ? 'page' : undefined}
+    href={item.href} draggable={false} aria-current={item.key === current ? 'page' : undefined}
     onClick={item.onSelect ? event => item.onSelect!(event) : undefined}>
     {item.icon && <span className="lg-tab-icon" aria-hidden="true">{item.icon}</span>}
     <span className="lg-tab-label">{item.label}</span>
@@ -98,7 +101,7 @@ export function TabBar({
     {asSidebar && sidebarHeader && <div className="lg-tabbar-header">{sidebarHeader}</div>}
     <GlassSurface {...surface} size={asSidebar ? 'large' : 'small'} radius={asSidebar ? 26 : 'pill'} className="lg-tabbar-group">
       <div className="lg-tab-links" ref={list}>
-        <span aria-hidden="true" className="lg-selection-lens" ref={lensRef} style={lens} />
+        <span aria-hidden="true" className="lg-selection-lens" ref={lensRef} />
         {items.map(item => link(item, 'tab'))}
       </div>
     </GlassSurface>

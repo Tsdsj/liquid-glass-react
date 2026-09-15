@@ -8,14 +8,22 @@
 :root {
   color-scheme: light dark;
   font-family: var(--lg-font-text);
-  background: var(--lg-bg-grouped);
   color: var(--lg-label);
   font-synthesis: none;
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
+
+  /* The page is the desk; cards are paper on it. Left at the grouped background the canvas
+     sits one percent away from the white of a card, so the whole page reads as a single sheet
+     at full brightness — glare with nothing to look at. Stepping it down gives the cards
+     somewhere to sit, and gives the glass something to actually refract. */
+  --site-canvas: #e8eaef;
+  --site-canvas-top: #eef0f4;
 }
+:root[data-app-theme="dark"] { --site-canvas: #000; --site-canvas-top: #0a0a0d; }
 * { box-sizing: border-box; }
-body { margin: 0; background: var(--lg-bg-grouped); }
+/* Fixed so the wash stays put while the page scrolls instead of sliding a gradient past the eye. */
+body { margin: 0; background: var(--site-canvas) linear-gradient(180deg, var(--site-canvas-top), var(--site-canvas) 640px) fixed; }
 button, input, select, textarea { font: inherit; }
 button, a, input, select { -webkit-tap-highlight-color: transparent; }
 button { cursor: pointer; }

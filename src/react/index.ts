@@ -5,7 +5,7 @@ export * from './system/backdrop.js';
 export * from './system/material.js';
 export * from './system/surface.js';
 export { useFusion, type FusionOptions } from './system/fusion.js';
-export { usePull, attachPull, elementAt, type PullOptions, type PullRelease } from './system/pull.js';
+export { usePull, attachPull, elementAt, type PullOptions, type PullRange, type PullRelease } from './system/pull.js';
 export { LibraryIcon, type LibraryIconProps, type LibraryIconName } from './system/icon.js';
 
 /* Content layer — solid surfaces and standard materials, never Liquid Glass. */

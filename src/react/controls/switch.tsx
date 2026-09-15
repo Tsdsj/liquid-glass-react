@@ -26,8 +26,19 @@ export function GlassSwitch({ checked, defaultChecked = false, onCheckedChange, 
   const glass = useGlassSurface<HTMLSpanElement>({ ...surface, radius: 'pill' });
   const thumb = useRef<HTMLSpanElement>(null); const dragged = useRef(false); const labelRef = useRef<HTMLLabelElement>(null);
   usePull(labelRef, {
-    axis: 'x', limit: 14, stretch: 1.2,
+    axis: 'x', limit: 10, stretch: 1.2,
     targets: () => [thumb.current!, glass.root.current!].filter(Boolean) as HTMLElement[],
+    /**
+     * The thumb crosses the track under the finger and only resists past the ends. `--lg-travel`
+     * already holds whichever side it started on, so the free span is the remaining travel.
+     */
+    range: () => {
+      const track = glass.root.current, knob = thumb.current;
+      if (!track || !knob) return null;
+      const travel = track.clientWidth - knob.offsetWidth - 6;
+      if (travel <= 0) return null;
+      return { x: [(active ? -travel : 0), (active ? 0 : travel)] as [number, number] };
+    },
     disabled: () => !!disabled,
     onRelease: ({ dx, cancelled }) => {
       if (cancelled || Math.abs(dx) < 6) { dragged.current = false; return; }

@@ -24,6 +24,12 @@ const REACH = 11, GATE = 40;
 const LEAN = 4, SWELL = .04;
 /** Release fade of a pressed pill, how long the loop outlives it, the lens trail life and the lens settle window. */
 const FADE = 220, RELEASE = 320, TRAIL = 300, SETTLE = 560;
+/**
+ * Hand-back: the goo draws the pill while it is fusing and the element's own CSS draws it the
+ * rest of the time. Switching between the two in one frame is visible as a pop, so the two
+ * representations cross-fade over this window and the layer only shuts down once it is invisible.
+ */
+const EXIT = 200;
 /** Hard cap: one pressed pill plus at most two neighbours. */
 const BLOBS = 3;
 interface Blob { x: number; y: number; w: number; h: number; r: number }
@@ -47,7 +53,7 @@ export function useFusion<T extends HTMLElement>(root: RefObject<T | null>, opti
   useEffect(() => {
     const host = root.current, box = layer.current;
     if (!host || !box || !enabled) return;
-    let frame = 0, held = false, releaseAt = 0, deadline = 0;
+    let frame = 0, held = false, releaseAt = 0, deadline = 0, exitAt = 0, faded = false;
     let primary: HTMLElement | null = null, neighbours: HTMLElement[] = [], radius = 9999, last = 0;
     /** Smoothed attraction per neighbour, so droplets grow and melt apart with a little liquid lag. */
     const attraction = [0, 0];
@@ -55,10 +61,10 @@ export function useFusion<T extends HTMLElement>(root: RefObject<T | null>, opti
     const items = () => Array.from(host.querySelectorAll<HTMLElement>(latest.current.itemSelector))
       .filter(node => !node.matches(':disabled,[aria-disabled="true"],[data-disabled="true"]') && node.getClientRects().length > 0);
     const stop = () => {
-      cancelAnimationFrame(frame); frame = 0; primary = null; neighbours = []; trail = null; releaseAt = 0; last = 0;
+      cancelAnimationFrame(frame); frame = 0; primary = null; neighbours = []; trail = null; releaseAt = 0; last = 0; exitAt = 0; faded = false;
       attraction[0] = attraction[1] = 0;
       host.removeAttribute('data-fusion');
-      box.style.setProperty('--lg-fusion-fade', '0');
+      host.style.setProperty('--lg-fusion-fade', '0');
       if (sheen.current) sheen.current.style.opacity = '0';
       for (const node of blobs.current) paint(node, null);
     };
@@ -80,8 +86,11 @@ export function useFusion<T extends HTMLElement>(root: RefObject<T | null>, opti
       const shiftX = parseFloat(source.style.getPropertyValue('--lg-shift-x')) || 0;
       const shiftY = parseFloat(source.style.getPropertyValue('--lg-shift-y')) || 0;
       const smooth = clamp((last ? now - last : 16) / 90, 0, 1); last = now;
-      if (held) { releaseAt = 0; deadline = now + SETTLE; }
-      const fade = lens ? 1 : releaseAt ? clamp(1 - (now - releaseAt) / FADE, 0, 1) : 1;
+      if (held) { releaseAt = 0; deadline = now + SETTLE; exitAt = 0; faded = false; }
+      // Everything has settled: start handing the pill back to the element's own CSS.
+      if (!exitAt && (lens ? now > deadline : releaseAt && now - releaseAt > RELEASE)) exitAt = now;
+      const exit = exitAt ? clamp(1 - (now - exitAt) / EXIT, 0, 1) : 1;
+      const fade = (lens ? 1 : releaseAt ? clamp(1 - (now - releaseAt) / FADE, 0, 1) : 1) * exit;
       // --- geometry ---
       const px = pr.left - lb.left, py = pr.top - lb.top;
       const cx = px + pr.width / 2, cy = py + pr.height / 2;
@@ -123,7 +132,8 @@ export function useFusion<T extends HTMLElement>(root: RefObject<T | null>, opti
         shapes.push({ x: bcx - bw / 2, y: bcy - bh / 2, w: bw, h: bh, r: Math.min(bw, bh) / 2 });
       }
       // --- writes ---
-      box.style.setProperty('--lg-fusion-fade', fade.toFixed(3));
+      // On the host, not the layer: the element the goo is standing in for has to read it too.
+      host.style.setProperty('--lg-fusion-fade', fade.toFixed(3));
       for (let i = 0; i < BLOBS; i++) paint(blobs.current[i], shapes[i] ?? null);
       const crisp = sheen.current;
       if (crisp) {
@@ -134,7 +144,9 @@ export function useFusion<T extends HTMLElement>(root: RefObject<T | null>, opti
         crisp.style.transform = `translate(${px.toFixed(2)}px,${py.toFixed(2)}px)`;
         crisp.style.setProperty('--lg-light-x', lightX); crisp.style.setProperty('--lg-light-y', lightY);
       }
-      if (lens ? now > deadline : releaseAt && now - releaseAt > RELEASE) stop();
+      // Shut down one frame after the fade reaches zero, not on the same one: the element only
+      // takes the pill back cleanly if it is already at full strength when the layer disappears.
+      if (exitAt && exit <= 0) { if (faded) stop(); else faded = true; }
     };
     const start = () => { if (!frame) frame = requestAnimationFrame(step); };
     const release = () => { held = false; releaseAt = performance.now(); deadline = performance.now() + SETTLE; };
@@ -174,7 +186,7 @@ export function useFusion<T extends HTMLElement>(root: RefObject<T | null>, opti
         if (!previous || items().length < 2) return;
         const r = lensNode.getBoundingClientRect(), lb = box.getBoundingClientRect();
         trail = { x: r.left - lb.left, y: r.top - lb.top, w: r.width, h: r.height, r: Math.min(r.width, r.height) / 2 };
-        trailAt = performance.now(); deadline = trailAt + SETTLE;
+        trailAt = performance.now(); deadline = trailAt + SETTLE; exitAt = 0; faded = false;
         radius = parseFloat(getComputedStyle(lensNode).borderTopLeftRadius) || 9999;
         host.setAttribute('data-fusion', 'true');
         start();

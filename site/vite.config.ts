@@ -1,8 +1,11 @@
 import { defineConfig } from 'vite';
+import { readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 
 const site = fileURLToPath(new URL('.', import.meta.url));
 const src = (file: string) => fileURLToPath(new URL(`../src/${file}`, import.meta.url));
+/** Single source of truth for the version the footer prints; a second copy only ever goes stale. */
+const { version } = JSON.parse(readFileSync(new URL('../package.json', import.meta.url), 'utf8')) as { version: string };
 
 /**
  * The documentation site builds straight from `src/`, not from `dist/` — so what you see in
@@ -22,6 +25,7 @@ export default defineConfig({
       { find: '@ttqtt/liquid-glass-react', replacement: src('index.ts') },
     ],
   },
+  define: { __LG_VERSION__: JSON.stringify(version) },
   esbuild: { jsx: 'automatic' },
   server: { host: '127.0.0.1', port: 5173, strictPort: true },
   build: { target: 'chrome120', outDir: 'dist', sourcemap: true, emptyOutDir: true },

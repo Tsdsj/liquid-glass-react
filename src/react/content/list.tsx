@@ -71,7 +71,7 @@ export function ListRow({ label, secondaryLabel, value, leading, accessory, href
   </>;
   return <li className={cx('lg-list-row', className)} data-interactive={interactive ? 'true' : undefined} data-disabled={disabled ? 'true' : undefined}>
     {href
-      ? <a className="lg-row-hit" href={href} onClick={onSelect} aria-disabled={disabled || undefined}>{body}</a>
+      ? <a className="lg-row-hit" href={href} draggable={false} onClick={onSelect} aria-disabled={disabled || undefined}>{body}</a>
       : onSelect
         ? <button className="lg-row-hit" type="button" onClick={onSelect} disabled={disabled}>{body}</button>
         : <div className="lg-row-hit">{body}</div>}

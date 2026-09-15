@@ -1,5 +1,5 @@
 'use client';
-import { useEffect, useId, useRef, useState, type CSSProperties, type ReactNode, type RefObject } from 'react';
+import { useEffect, useId, useRef, type ReactNode, type RefObject } from 'react';
 import { GlassSurface } from '../system/surface.js';
 import { type GlassSurfaceOptions } from '../system/material.js';
 import { cx, useControllable } from '../system/utils.js';
@@ -23,26 +23,59 @@ export function lensOrigin(lens: HTMLElement | null) {
  *
  * Both axes are tracked, not just the horizontal one: the same lens has to follow a row of
  * segments and a vertical column of sidebar rows, and a column's items all share `offsetLeft`.
+ *
+ * The geometry is written straight to the lens element rather than returned as a style object.
+ * The very first placement has to land with the transition switched off — otherwise every
+ * control on the page springs open from nothing on load — and that ordering (suppress, place,
+ * make the browser resolve it, restore) needs the DOM write to happen when we say it does,
+ * which React state does not promise.
  */
-export function useSelectionLens<T extends HTMLElement>(root: RefObject<T | null>, selector: string, deps: unknown[]) {
-  const [lens, setLens] = useState<CSSProperties>({ opacity: 0 });
+export function useSelectionLens<T extends HTMLElement>(root: RefObject<T | null>, lens: RefObject<HTMLElement | null>, selector: string, deps: unknown[]) {
+  const placed = useRef(false);
   useEffect(() => {
-    const node = root.current; if (!node) return;
+    const node = root.current, pill = lens.current; if (!node || !pill) return;
     const update = () => {
       const target = node.querySelector<HTMLElement>(selector);
-      if (target) setLens({
-        width: target.offsetWidth, height: target.offsetHeight,
-        transform: `translate(${target.offsetLeft}px, ${target.offsetTop}px)`,
-        opacity: 1,
-      });
-      else setLens({ opacity: 0 });
+      const first = !placed.current;
+      if (first) pill.style.transition = 'none';
+      if (target && target.offsetWidth) {
+        pill.style.width = `${target.offsetWidth}px`;
+        pill.style.height = `${target.offsetHeight}px`;
+        pill.style.transform = `translate(${target.offsetLeft}px, ${target.offsetTop}px)`;
+        // `--lg-lens-shown`, not `opacity`: the fusion layer also has a say in whether the lens
+        // is the thing painting the pill, and an inline opacity would overrule it.
+        pill.style.setProperty('--lg-lens-shown', '1');
+        placed.current = true;
+      } else {
+        pill.style.setProperty('--lg-lens-shown', '0');
+      }
+      // Forces the placement to resolve while the transition is still off, so nothing animates.
+      if (first) { void pill.offsetWidth; pill.style.transition = ''; }
     };
     update(); const observer = new ResizeObserver(update); observer.observe(node);
     if (typeof document !== 'undefined' && 'fonts' in document) document.fonts.ready.then(update, () => {});
     return () => observer.disconnect();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [root, selector, ...deps]);
-  return lens;
+  }, [root, lens, selector, ...deps]);
+}
+
+/**
+ * How far the lens may be carried, measured from its resting centre, before it starts to resist:
+ * exactly as far as the track lets it go without leaving either end.
+ */
+export function trackSpan(track: HTMLElement | null, lens: HTMLElement | null, axis: 'x' | 'y' = 'x') {
+  const origin = lensOrigin(lens);
+  if (!track || !lens || !origin) return null;
+  const box = track.getBoundingClientRect();
+  // A control that is not laid out has no span to give; rubber-band from the origin instead.
+  if (!box.width || !box.height) return null;
+  const span = (start: number, end: number): [number, number] => start <= end ? [start, end] : [0, 0];
+  if (axis === 'y') {
+    const half = lens.offsetHeight / 2;
+    return { y: span(box.top + half - origin.y, box.bottom - half - origin.y) };
+  }
+  const half = lens.offsetWidth / 2;
+  return { x: span(box.left + half - origin.x, box.right - half - origin.x) };
 }
 
 export interface GlassSegmentedControlProps extends GlassSurfaceOptions {
@@ -64,13 +97,15 @@ export function GlassSegmentedControl({ items, value, defaultValue, onValueChang
   const [selected, setSelected] = useControllable(value, defaultValue ?? items.find(x => !x.disabled)?.value ?? '', onValueChange);
   const root = useRef<HTMLDivElement>(null);
   const policy = useGlassPolicy();
-  const lens = useSelectionLens(root, '.lg-segment:has(input:checked)', [selected, items]);
   const lensRef = useRef<HTMLSpanElement>(null);
+  useSelectionLens(root, lensRef, '.lg-segment:has(input:checked)', [selected, items]);
   const fusion = useFusion(root, { itemSelector: '.lg-segment:not([data-disabled="true"])', lensSelector: '.lg-selection-lens' });
   usePull(root, {
     axis: 'x', limit: 18, stretch: .8,
     targets: () => lensRef.current ? [lensRef.current] : [],
     origin: () => lensOrigin(lensRef.current),
+    // The lens is carried across the whole track by the finger and only resists at the ends.
+    range: () => trackSpan(root.current, lensRef.current),
     disabled: event => !!disabled || !!(event.target as HTMLElement).closest('[data-disabled="true"]'),
     onPress: event => pick(event), onMove: event => pick(event),
   }, !policy.reduceMotion && !disabled);
@@ -80,7 +115,7 @@ export function GlassSegmentedControl({ items, value, defaultValue, onValueChang
   }
   return <GlassSurface {...surface} radius={surface.radius ?? 'pill'} className={cx('lg-segmented', className)}>
     <div className="lg-segmented-track" ref={root} role="radiogroup" aria-label={label}>
-      {fusion}<span aria-hidden="true" className="lg-selection-lens" ref={lensRef} style={lens} />
+      {fusion}<span aria-hidden="true" className="lg-selection-lens" ref={lensRef} />
       {items.map(item => <label key={item.value} className="lg-segment" data-disabled={disabled || item.disabled ? 'true' : 'false'}>
         <input type="radio" name={name ?? `segment-${id}`} value={item.value} checked={selected === item.value} disabled={disabled || item.disabled} onChange={() => setSelected(item.value)} />
         <span>{item.label}</span>

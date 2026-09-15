@@ -88,7 +88,7 @@ export function Shell({ path, go, secondaryNav, children }: {
         </main>
         <footer className="app-footer">
           <Text variant="caption1" tone="tertiary">
-            Liquid Glass UI 0.2.0-alpha.1 · 独立设计研究，非 Apple 官方产品，不含 Apple 字体、SF Symbols 或壁纸素材。
+            Liquid Glass UI {__LG_VERSION__} · 独立设计研究，非 Apple 官方产品，不含 Apple 字体、SF Symbols 或壁纸素材。
           </Text>
           <a className="app-footer-link" href="#/guides/install" onClick={navigate('guides/install')}>
             <Text as="span" variant="caption1">开始接入</Text>

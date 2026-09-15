@@ -5,7 +5,7 @@ import { type GlassSurfaceOptions } from '../system/material.js';
 import { cx, useControllable } from '../system/utils.js';
 import { usePull, elementAt } from '../system/pull.js';
 import { useGlassPolicy } from '../system/provider.js';
-import { useSelectionLens, lensOrigin, type GlassChoice } from '../controls/segmented.js';
+import { useSelectionLens, lensOrigin, trackSpan, type GlassChoice } from '../controls/segmented.js';
 
 export interface GlassTab extends GlassChoice { content: ReactNode }
 export interface GlassTabsProps extends GlassSurfaceOptions {
@@ -24,12 +24,13 @@ export function GlassTabs({ items, value, defaultValue, onValueChange, 'aria-lab
   const refs = useRef<(HTMLButtonElement | null)[]>([]);
   const list = useRef<HTMLDivElement>(null);
   const policy = useGlassPolicy();
-  const lens = useSelectionLens(list, '.lg-tab[aria-selected="true"]', [selected, items]);
   const lensRef = useRef<HTMLSpanElement>(null);
+  useSelectionLens(list, lensRef, '.lg-tab[aria-selected="true"]', [selected, items]);
   usePull(list, {
     axis: 'x', limit: 18, stretch: .8,
     targets: () => lensRef.current ? [lensRef.current] : [],
     origin: () => lensOrigin(lensRef.current),
+    range: () => trackSpan(list.current, lensRef.current),
     disabled: event => !!(event.target as HTMLElement).closest('button:disabled'),
     onPress: event => pick(event), onMove: event => pick(event),
     onRelease: ({ event, cancelled }) => { if (!cancelled) (elementAt(event, '.lg-tab') as HTMLButtonElement | null)?.focus({ preventScroll: true }); },
@@ -41,7 +42,7 @@ export function GlassTabs({ items, value, defaultValue, onValueChange, 'aria-lab
   return <div className={cx('lg-tabs', className)}>
     <GlassSurface {...surface} className="lg-tabs-surface" radius="pill">
       <div className="lg-tab-list" role="tablist" aria-label={label} ref={list}>
-        <span aria-hidden="true" className="lg-selection-lens" ref={lensRef} style={lens} />
+        <span aria-hidden="true" className="lg-selection-lens" ref={lensRef} />
         {items.map((item, index) => <button key={item.value} ref={node => { refs.current[index] = node; }} type="button" role="tab"
           id={`${id}-tab-${index}`} aria-controls={`${id}-panel-${index}`} aria-selected={selected === item.value}
           tabIndex={selected === item.value ? 0 : -1} disabled={item.disabled} className="lg-tab" onClick={() => setSelected(item.value)}
