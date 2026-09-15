@@ -30,7 +30,8 @@ reduceMotion: parent.reduceMotion || systemReduceMotion || policy.motion !== 'sy
 
 - 每个可交互元素不小于 **44×44**，控件间距不小于 8pt。视觉更小的按钮在 `(pointer: coarse)` 下用伪元素把命中区补回来，而不是放大图形。
 - 焦点环一律用 `outline` + `outline-offset`，**不用 `box-shadow`**——那是玻璃自己的。
-- 玻璃容器里的输入框把焦点环画在容器上（`:focus-within`），因为输入框自身的 outline 被替换掉了。没有替代就不写 `outline: none`。
+- 玻璃容器里的输入框把焦点环画在容器上（`:has(:focus-visible)`），因为输入框自身的 outline 被替换掉了。没有替代就不写 `outline: none`。
+- 用 `:focus-visible` 而不是 `:focus-within`：后者对容器里任何一次聚焦都亮，包括点一下里面的清除按钮。**但输入框是个例外**——浏览器规定文本框无论怎样获得焦点都匹配 `:focus-visible`，因为读者马上要打字，需要看见字会落在哪里；macOS 原生文本框点一下也是这样。所以"点击不亮环"只对按钮成立，对输入框不成立，这是对的。
 - 纯图标按钮的 `aria-label` 是**必填类型**，不是约定。
 
 ## 4. 角色与键盘模型

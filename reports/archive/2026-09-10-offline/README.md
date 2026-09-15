@@ -13,7 +13,7 @@
 | 用例 | 35 核心 + 31 组浏览器检查 | 65 核心 + 3 SSR + 84 Chrome + 16 WebKit/Firefox |
 | 组件 | 16 个 | 41 个 |
 
-截图同样是那一轮的，其中 `materials-*`、`layout-stress`、`performance-*` 拍的是三个实验室页面——它们在 0.2 里已经从站点移除。
+截图同样是那一轮的，其中 `materials-*`、`layout-stress`、`performance-*` 拍的是三个实验室页面——它们在 0.2 里已经从站点移除。（唯一留在 `reports/screenshots/` 的是 `fusion-mid-drag.png`，因为 `tests/browser/fusion.spec.ts` 每跑一次就重新生成它，那是当前证据。）
 
 留着不删，是因为它们是当时确实跑过的原始数据；移到这里，是因为放在 `reports/` 根上会被当成现状读。两件事都不该含糊。
 

@@ -56,21 +56,41 @@ test('每个示例都能展开看到代码', async ({ page }) => {
   }
 });
 
-test('键盘走到控件时才出现焦点环，而且只有一层', async ({ page }) => {
+test('焦点环只在该出现时出现，而且只有一层', async ({ page }) => {
   await page.goto('/#/components/text-field');
+
+  /**
+   * A button clicked with the mouse must not ring: the pointer already told the reader where
+   * they are. `:focus-visible` is what draws that line, and it is also the fix for the original
+   * defect — the container used to ring on `:focus-within`, which lights up for any focus at all.
+   */
+  const button = page.locator('.demo-code-toggle').first();
+  await button.click();
+  await expect(button).toBeFocused();
+  await expect(button).toHaveCSS('outline-style', 'none');
+
+  /**
+   * A text field is the documented exception: Chrome matches `:focus-visible` on it however it
+   * was focused, because the reader is about to type and needs to see where the characters will
+   * land. macOS rings a clicked text field too. So the thing worth holding is not "no ring on
+   * click" — it is that there is exactly ONE ring, on the container, and never a second on the
+   * input inside it. Two overlapping 3px rings were what the original report was about.
+   */
   const box = page.locator('.lg-field-box').first();
   const input = page.getByLabel('工作区名称');
-
-  // A pointer click focuses the field but must not ring it.
   await input.click();
   await expect(input).toBeFocused();
-  await expect(box).toHaveCSS('outline-color', 'rgba(0, 0, 0, 0)');
+  await expect(box).toHaveCSS('outline-width', '2px');
+  await expect(box).not.toHaveCSS('outline-color', 'rgba(0, 0, 0, 0)');
+  await expect(input).toHaveCSS('outline-style', 'none');
+  expect(await box.evaluate(node => [...node.querySelectorAll('*')]
+    .filter(child => getComputedStyle(child).outlineStyle !== 'none' && parseFloat(getComputedStyle(child).outlineWidth) > 0).length),
+    'something inside the field box draws a second ring').toBe(0);
 
-  // Arriving by keyboard does ring it — once, on the container, never also on the input.
+  // Arriving by keyboard lands in the same place: still one ring, still on the container.
   await page.keyboard.press('Shift+Tab');
   await page.keyboard.press('Tab');
   await expect(input).toBeFocused();
-  await expect(box).not.toHaveCSS('outline-color', 'rgba(0, 0, 0, 0)');
   await expect(box).toHaveCSS('outline-width', '2px');
   await expect(input).toHaveCSS('outline-style', 'none');
 });

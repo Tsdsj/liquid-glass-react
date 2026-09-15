@@ -88,8 +88,8 @@
     },
     {
       "path": "docs/accessibility.md",
-      "bytes": 5831,
-      "sha256": "22d065688d2ca89d0892f380050a8d77ff138287a55609298e3eb522fa90f526"
+      "bytes": 6276,
+      "sha256": "9c22e1e9e78a30c150cda57f0a95caa98167a993c8a38971da2ed033ef07d755"
     },
     {
       "path": "docs/action-items.md",
@@ -163,8 +163,8 @@
     },
     {
       "path": "docs/testing.md",
-      "bytes": 5933,
-      "sha256": "5ff1a89b1a0f4a05950705d5679a9d42b353b07387c895e0ef75d1e76622d546"
+      "bytes": 6005,
+      "sha256": "c06473eb68739ecba0234bb2fc85ae9f7e9bb5fe6474faab2c4c1dd8d7ed9285"
     },
     {
       "path": "examples/ssr/render.mjs",
@@ -258,8 +258,8 @@
     },
     {
       "path": "reports/archive/2026-09-10-offline/README.md",
-      "bytes": 1652,
-      "sha256": "e4a3f2591ebc3fe06dcd0da86fd84ce9f04d933cf4e7ec50cb5444ba09cb4854"
+      "bytes": 1817,
+      "sha256": "7970d4d9bacda642a302c05d7325b4f3fbc140b3d5496eef860b36b6b31abf8a"
     },
     {
       "path": "reports/archive/2026-09-10-offline/responsive.json",
@@ -275,11 +275,6 @@
       "path": "reports/archive/2026-09-10-offline/screenshots/components-mobile.png",
       "bytes": 403613,
       "sha256": "fb276b302359d7ac436741d476c75c6c8f3e4ce6a575766a78a92a9b3c7303f7"
-    },
-    {
-      "path": "reports/archive/2026-09-10-offline/screenshots/fusion-mid-drag.png",
-      "bytes": 13473,
-      "sha256": "a9178a20a94bf356c05396cdbfa929bc3068a7a861c12aee661bb9ce98d04596"
     },
     {
       "path": "reports/archive/2026-09-10-offline/screenshots/layout-stress.png",
@@ -353,13 +348,18 @@
     },
     {
       "path": "reports/hig-review.md",
-      "bytes": 17753,
-      "sha256": "c8d8778dd102eab276f26525f1b23f68d9e3f427d7ef545a8f251dad64926a79"
+      "bytes": 17807,
+      "sha256": "f0e382a89429e0b8eb5e3978d925d832a27f76987023c5f5b4d6c6e8787f6c9a"
     },
     {
       "path": "reports/playwright/index.html",
-      "bytes": 528515,
-      "sha256": "4110fc93cc9232485ddb8a3e279d9315c75aea9754880abb456d01a6a6fab681"
+      "bytes": 528391,
+      "sha256": "4bfffa4dbd724ca1a19876d3b838103f7bceecc1787c0f8e83c5ed901db1a77e"
+    },
+    {
+      "path": "reports/screenshots/fusion-mid-drag.png",
+      "bytes": 13593,
+      "sha256": "ba3d269d428f59f67251543ce6503c8be891c2e10b55eb5323aa451adfd084b3"
     },
     {
       "path": "reports/size.json",
@@ -813,8 +813,8 @@
     },
     {
       "path": "tests/browser/catalog.spec.ts",
-      "bytes": 5956,
-      "sha256": "908910bffa3d5d24cbb63832baa2a83dd2ac2e81c69ff68408905b83726e41fe"
+      "bytes": 7176,
+      "sha256": "91bcbf300215ca707b07ca51d556f6a991989702a5e2555268d1733ee2aca56b"
     },
     {
       "path": "tests/browser/components.spec.ts",
