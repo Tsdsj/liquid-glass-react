@@ -3,7 +3,7 @@ import { useEffect, useRef, useState, type MouseEvent, type ReactNode } from 're
 import { GlassSurface } from '../system/surface.js';
 import { type GlassSurfaceOptions } from '../system/material.js';
 import { cx } from '../system/utils.js';
-import { usePull } from '../system/pull.js';
+import { usePull, elementAt } from '../system/pull.js';
 import { useGlassPolicy, useMediaQuery } from '../system/provider.js';
 import { useSelectionLens, lensOrigin, trackSpan } from '../controls/segmented.js';
 import { GlassBadge } from '../controls/badge.js';
@@ -64,11 +64,26 @@ export function TabBar({
   const activeKey = items.find(item => item.key === current)?.key ?? (search?.key === current ? current : undefined);
   useSelectionLens(list, lensRef, 'a[aria-current="page"]', [activeKey, items.length, asSidebar]);
 
+  /**
+   * Sliding the lens changes section as it crosses each one, the same way the segmented control
+   * works — a lens you can drag but that decides nothing is worse than no drag at all. Only a
+   * move does this: a plain press-and-release is the link's own click.
+   */
+  const dragged = useRef(false);
+  function pick(event: PointerEvent) {
+    const hit = elementAt(event, '.lg-tab-link');
+    if (!hit || !list.current?.contains(hit) || hit.getAttribute('aria-current') === 'page') return;
+    // Lowered around the synthetic click so the guard below only ever swallows the real one.
+    dragged.current = false;
+    hit.click();
+    dragged.current = true;
+  }
   usePull(list, {
     axis: asSidebar ? 'y' : 'x', limit: 18, stretch: .8,
     targets: () => lensRef.current ? [lensRef.current] : [],
     origin: () => lensOrigin(lensRef.current),
     range: () => trackSpan(list.current, lensRef.current, asSidebar ? 'y' : 'x'),
+    onMove: pick,
   }, !policy.reduceMotion);
 
   useEffect(() => {
@@ -100,7 +115,9 @@ export function TabBar({
     data-layout={asSidebar ? 'sidebar' : 'tabbar'} data-minimized={minimized ? 'true' : undefined}>
     {asSidebar && sidebarHeader && <div className="lg-tabbar-header">{sidebarHeader}</div>}
     <GlassSurface {...surface} size={asSidebar ? 'large' : 'small'} radius={asSidebar ? 26 : 'pill'} className="lg-tabbar-group">
-      <div className="lg-tab-links" ref={list}>
+      {/* The drag already navigated; the click that ends it must not navigate a second time. */}
+      <div className="lg-tab-links" ref={list}
+        onClickCapture={event => { if (dragged.current) { dragged.current = false; event.preventDefault(); event.stopPropagation(); } }}>
         <span aria-hidden="true" className="lg-selection-lens" ref={lensRef} />
         {items.map(item => link(item, 'tab'))}
       </div>

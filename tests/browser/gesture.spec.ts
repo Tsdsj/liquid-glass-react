@@ -10,6 +10,72 @@ import { test, expect } from '@playwright/test';
 const centre = (box: { x: number; y: number; width: number; height: number }) =>
   [box.x + box.width / 2, box.y + box.height / 2] as const;
 
+/** Where an element's centre is, once it has stopped moving — pages animate in. */
+const restingCentre = async (locator: import('@playwright/test').Locator) => {
+  const read = () => locator.evaluate(node => {
+    const box = node.getBoundingClientRect();
+    return `${(box.left + box.width / 2).toFixed(1)},${(box.top + box.height / 2).toFixed(1)}`;
+  });
+  // Three reads in a row, not two: the tail of an ease can round to the same value twice.
+  let previous = await read(), steady = 0;
+  await expect.poll(async () => {
+    const now = await read(); steady = now === previous ? steady + 1 : 0; previous = now; return steady;
+  }, { intervals: Array.from({ length: 14 }, () => 80) }).toBeGreaterThanOrEqual(3);
+  return previous;
+};
+
+/**
+ * The offset is derived from where the lens currently is, so anything that makes the measurement
+ * disagree with what was written feeds straight back into the next frame. A still pointer is the
+ * cleanest way to catch it: the correct answer cannot change, so any movement at all is the bug.
+ */
+for (const control of [
+  { name: '分段控件', url: '/#/components/segmented-control', track: '#segmented-basic .lg-segmented-track', axis: 'x' as const },
+  { name: '侧边栏', url: '/#/components/button', track: '.lg-tabbar[data-layout="sidebar"] .lg-tab-links', axis: 'y' as const },
+]) {
+  test(`holding ${control.name} still leaves it still`, async ({ page }) => {
+    await page.setViewportSize({ width: 1280, height: 900 });
+    await page.goto(control.url);
+    const track = page.locator(control.track);
+    const lens = track.locator('.lg-selection-lens');
+    await restingCentre(lens); // the page animates in; press only once it has stopped
+    const current = (await track.locator('[aria-current="page"], .lg-segment:has(input:checked)').first().boundingBox())!;
+
+    await page.mouse.move(...centre(current));
+    await page.mouse.down();
+    const readings: string[] = [];
+    for (let i = 0; i < 10; i++) {
+      await page.waitForTimeout(40);
+      // Centre, not edge: the press swell legitimately grows the lens about its own centre.
+      readings.push(await lens.evaluate((node, axis) => {
+        const box = node.getBoundingClientRect();
+        return `${node.style.getPropertyValue(`--lg-shift-${axis}`)}@${(box.left + box.width / 2).toFixed(1)},${(box.top + box.height / 2).toFixed(1)}`;
+      }, control.axis));
+    }
+    await page.mouse.up();
+
+    expect(new Set(readings), `offset drifted while held still: ${readings.join(' ')}`).toHaveProperty('size', 1);
+  });
+}
+
+test('sliding the sidebar lens changes section as it crosses each one', async ({ page }) => {
+  await page.setViewportSize({ width: 1280, height: 900 });
+  await page.goto('/#/components/button');
+  const links = page.locator('.lg-tabbar[data-layout="sidebar"] .lg-tab-links');
+  const current = (await links.locator('a[aria-current="page"]').boundingBox())!;
+  const last = (await links.locator('.lg-tab-link').last().boundingBox())!;
+
+  await page.mouse.move(...centre(current));
+  await page.mouse.down();
+  await page.mouse.move(current.x + current.width / 2, last.y + last.height / 2, { steps: 8 });
+  // Live, before release — the same as pressing a segment and sliding.
+  await expect(links.locator('.lg-tab-link').last()).toHaveAttribute('aria-current', 'page');
+  await page.mouse.up();
+
+  await expect(links.locator('.lg-tab-link').last()).toHaveAttribute('aria-current', 'page');
+  await expect(links.locator('a[aria-current="page"]')).toHaveCount(1);
+});
+
 test('the lens is carried by the pointer, not merely leaning toward it', async ({ page }) => {
   await page.goto('/#/components/segmented-control');
   const track = page.locator('#segmented-basic .lg-segmented-track');

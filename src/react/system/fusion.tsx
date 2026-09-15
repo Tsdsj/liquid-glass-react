@@ -57,7 +57,7 @@ export function useFusion<T extends HTMLElement>(root: RefObject<T | null>, opti
     let primary: HTMLElement | null = null, neighbours: HTMLElement[] = [], radius = 9999, last = 0;
     /** Smoothed attraction per neighbour, so droplets grow and melt apart with a little liquid lag. */
     const attraction = [0, 0];
-    let trail: Blob | null = null, trailAt = 0, transform = '';
+    let trail: Blob | null = null, trailAt = 0, slot = '';
     const items = () => Array.from(host.querySelectorAll<HTMLElement>(latest.current.itemSelector))
       .filter(node => !node.matches(':disabled,[aria-disabled="true"],[data-disabled="true"]') && node.getClientRects().length > 0);
     const stop = () => {
@@ -176,12 +176,17 @@ export function useFusion<T extends HTMLElement>(root: RefObject<T | null>, opti
     // Selection lens: any slot change (drag or keyboard) leaves the old position behind as a collapsing droplet.
     let observer: MutationObserver | undefined;
     const lensNode = latest.current.lensSelector ? host.querySelector<HTMLElement>(latest.current.lensSelector) : null;
+    /** The slot the lens has been assigned, as written by `useSelectionLens`. */
+    const slotOf = (node: HTMLElement) => {
+      const x = node.style.getPropertyValue('--lg-slot-x'), y = node.style.getPropertyValue('--lg-slot-y');
+      return x || y ? `${x}|${y}` : '';
+    };
     if (lensNode && typeof MutationObserver !== 'undefined') {
-      transform = lensNode.style.transform;
+      slot = slotOf(lensNode);
       observer = new MutationObserver(() => {
-        const previous = transform;
-        if (lensNode.style.transform === previous) return;
-        transform = lensNode.style.transform;
+        const previous = slot;
+        if (slotOf(lensNode) === previous) return;
+        slot = slotOf(lensNode);
         // The first positioning pass is the lens taking its initial slot, not a flow between slots.
         if (!previous || items().length < 2) return;
         const r = lensNode.getBoundingClientRect(), lb = box.getBoundingClientRect();

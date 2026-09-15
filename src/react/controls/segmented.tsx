@@ -9,7 +9,16 @@ import { useGlassPolicy } from '../system/provider.js';
 
 export interface GlassChoice { value: string; label: ReactNode; disabled?: boolean }
 
-/** Lens centre with its live pull offset removed: when the selection changes mid-drag the lens glides to the new slot while the offset eases to zero. */
+/**
+ * Centre of the slot the lens belongs to, i.e. where it would sit with no pull applied: its
+ * measured centre with the live offset taken back off. Used as the reference the drag is
+ * measured from, so a selection change mid-drag moves the slot while the lens stays put.
+ *
+ * This is only exact because the lens composes its own transform with the scale applied *last*
+ * (see `--lg-slot-*` in the stylesheet). The individual `scale` property applies before
+ * `transform`, so it would multiply the slot offset, and the resulting error would feed back
+ * into the next frame's offset — a control that shakes as long as you hold it.
+ */
 export function lensOrigin(lens: HTMLElement | null) {
   if (!lens) return null;
   const box = lens.getBoundingClientRect();
@@ -41,7 +50,10 @@ export function useSelectionLens<T extends HTMLElement>(root: RefObject<T | null
       if (target && target.offsetWidth) {
         pill.style.width = `${target.offsetWidth}px`;
         pill.style.height = `${target.offsetHeight}px`;
-        pill.style.transform = `translate(${target.offsetLeft}px, ${target.offsetTop}px)`;
+        // Custom properties, not `transform`: the stylesheet composes the slot, the drag offset
+        // and the deformation into one chain, in the order that keeps them independent.
+        pill.style.setProperty('--lg-slot-x', `${target.offsetLeft}px`);
+        pill.style.setProperty('--lg-slot-y', `${target.offsetTop}px`);
         // `--lg-lens-shown`, not `opacity`: the fusion layer also has a say in whether the lens
         // is the thing painting the pill, and an inline opacity would overrule it.
         pill.style.setProperty('--lg-lens-shown', '1');

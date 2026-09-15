@@ -1,6 +1,6 @@
 {
   "name": "@ttqtt/liquid-glass-react",
-  "version": "0.2.0-alpha.3",
+  "version": "0.2.0-alpha.4",
   "description": "遵循 Apple 设计语言的 React 组件库：Liquid Glass 材质、语义色与文本样式、可拖动的原生控件。",
   "type": "module",
   "license": "MIT",
