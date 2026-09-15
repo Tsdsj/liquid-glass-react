@@ -1,8 +1,8 @@
 'use client';
-import { useEffect, useId, useRef, type ReactNode, type RefObject } from 'react';
+import { useId, useRef, type ReactNode, type RefObject } from 'react';
 import { GlassSurface } from '../system/surface.js';
 import { type GlassSurfaceOptions } from '../system/material.js';
-import { cx, useControllable } from '../system/utils.js';
+import { cx, useControllable, useMeasureEffect } from '../system/utils.js';
 import { usePull, elementAt } from '../system/pull.js';
 import { useFusion } from '../system/fusion.js';
 import { useGlassPolicy } from '../system/provider.js';
@@ -41,19 +41,36 @@ export function lensOrigin(lens: HTMLElement | null) {
  */
 export function useSelectionLens<T extends HTMLElement>(root: RefObject<T | null>, lens: RefObject<HTMLElement | null>, selector: string, deps: unknown[]) {
   const placed = useRef(false);
-  useEffect(() => {
+  const slot = useRef({ x: 0, y: 0 });
+  // Before paint, not after: a slot written a frame late is a frame of the lens in the wrong place.
+  useMeasureEffect(() => {
     const node = root.current, pill = lens.current; if (!node || !pill) return;
     const update = () => {
       const target = node.querySelector<HTMLElement>(selector);
       const first = !placed.current;
       if (first) pill.style.transition = 'none';
       if (target && target.offsetWidth) {
+        const x = target.offsetLeft, y = target.offsetTop;
+        /**
+         * Mid-drag the slot moves out from under a lens the finger is still holding, and the
+         * offset that is about to be added to it was measured against the slot it just left.
+         * Adding the two would throw the lens a whole segment clear of the track until the next
+         * frame corrects it. Absorb the move instead — same pixels on screen, and the offset once
+         * again means what it says.
+         */
+        if (!first && pill.getAttribute('data-pulling') === 'true') {
+          const shiftX = parseFloat(pill.style.getPropertyValue('--lg-shift-x')) || 0;
+          const shiftY = parseFloat(pill.style.getPropertyValue('--lg-shift-y')) || 0;
+          pill.style.setProperty('--lg-shift-x', `${(shiftX - (x - slot.current.x)).toFixed(2)}px`);
+          pill.style.setProperty('--lg-shift-y', `${(shiftY - (y - slot.current.y)).toFixed(2)}px`);
+        }
+        slot.current = { x, y };
         pill.style.width = `${target.offsetWidth}px`;
         pill.style.height = `${target.offsetHeight}px`;
         // Custom properties, not `transform`: the stylesheet composes the slot, the drag offset
         // and the deformation into one chain, in the order that keeps them independent.
-        pill.style.setProperty('--lg-slot-x', `${target.offsetLeft}px`);
-        pill.style.setProperty('--lg-slot-y', `${target.offsetTop}px`);
+        pill.style.setProperty('--lg-slot-x', `${x}px`);
+        pill.style.setProperty('--lg-slot-y', `${y}px`);
         // `--lg-lens-shown`, not `opacity`: the fusion layer also has a say in whether the lens
         // is the thing painting the pill, and an inline opacity would overrule it.
         pill.style.setProperty('--lg-lens-shown', '1');
@@ -119,7 +136,13 @@ export function GlassSegmentedControl({ items, value, defaultValue, onValueChang
     // The lens is carried across the whole track by the finger and only resists at the ends.
     range: () => trackSpan(root.current, lensRef.current),
     disabled: event => !!disabled || !!(event.target as HTMLElement).closest('[data-disabled="true"]'),
-    onPress: event => pick(event), onMove: event => pick(event),
+    /**
+     * Only a move picks. Selecting on the press as well would mean a plain tap on another segment
+     * teleports the lens under the finger — the carry has the transform transition switched off,
+     * so there is nothing left to glide. Left to the label's own click, which lands after the
+     * gesture has ended, the lens slides across the way the system control does.
+     */
+    onMove: event => pick(event),
   }, !policy.reduceMotion && !disabled);
   function pick(event: PointerEvent) {
     const hit = elementAt(event, '.lg-segment'); const input = hit?.querySelector<HTMLInputElement>('input');

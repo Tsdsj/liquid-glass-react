@@ -51,7 +51,7 @@ export function OverviewPage({ go }: { go: (path: string) => void }) {
         <ul className="plain-list">
           <li><Text as="span" variant="subhead">这是一个独立项目，不是 Apple 官方产品，也不包含 Apple 的字体和图标素材。所有图标都是自己画的。</Text></li>
           <li><Text as="span" variant="subhead">玻璃需要你告诉它背后是深是浅，它不会去截屏猜测——这样行为可预期，也不碰用户的画面内容。</Text></li>
-          <li><Text as="span" variant="subhead">Chrome 和 Edge 上有完整折射；Safari 和 Firefox 退化成磨砂玻璃，布局和交互不变。</Text></li>
+          <li><Text as="span" variant="subhead">默认是磨砂玻璃，所有浏览器一致。边缘折射要自己打开，而且只有 Chrome 和 Edge 能跑。</Text></li>
           <li><Text as="span" variant="subhead">屏幕阅读器的实机验证还没做完，这一条写在这里，不藏着。</Text></li>
         </ul>
       </Card>

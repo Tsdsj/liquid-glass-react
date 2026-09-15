@@ -4,6 +4,7 @@ import { getDisplacementTexture, supportsSvgBackdrop, trackObserver, clamp, crea
 import { materialTokens, densityTokens, type GlassMaterial, type BackdropTone, type GlassDensity, type GlassRenderer, type GlassSize } from '../../tokens/index.js';
 import { useGlassPolicy } from './provider.js';
 import { useBackdropTone } from './backdrop.js';
+import { useSharedSurface } from './shared.js';
 import { useMergedRef } from './utils.js';
 import { attachPull } from './pull.js';
 
@@ -33,9 +34,10 @@ export interface GlassSurfaceOptions {
 /** Chromatic spread: red bends least, blue most, matching normal glass dispersion. */
 const CHROMA_SPREAD = [1.09, 1, .91] as const;
 
-export function useGlassSurface<T extends HTMLElement>(options: GlassSurfaceOptions, externalRef?: Ref<T>, shared = false, pressable = false) {
+export function useGlassSurface<T extends HTMLElement>(options: GlassSurfaceOptions, externalRef?: Ref<T>, forceShared = false, pressable = false) {
   const policy = useGlassPolicy();
   const inheritedTone = useBackdropTone();
+  const onSharedSurface = useSharedSurface();
   const [root, ref] = useMergedRef<T>(externalRef);
   const id = `lg-${useId().replace(/[^a-zA-Z0-9_-]/g, '')}`;
   const [texture, setTexture] = useState<EncodedMap | null>(null);
@@ -45,6 +47,14 @@ export function useGlassSurface<T extends HTMLElement>(options: GlassSurfaceOpti
   const requestedMaterial = options.material ?? policy.material;
   const tone = options.backdropTone ?? inheritedTone;
   const size = options.size ?? 'small';
+  /**
+   * Glass on glass is muddy: a second blur over an already-translucent panel buys nothing but a
+   * compositing layer, and a second fill leaves the control the same colour as the thing it sits
+   * on. A control inside a sheet, a popover or a toolbar group therefore renders flat and borrows
+   * that surface — which is also what the system controls do. Large glass is the container, never
+   * the passenger, so it always keeps its own material.
+   */
+  const shared = forceShared || (size === 'small' && onSharedSurface);
   // Unknown backgrounds deliberately use regular, not an unverified auto-contrast heuristic.
   const material = requestedMaterial === 'clear' && tone === 'mixed' ? 'regular' : requestedMaterial;
   const density = options.density ?? policy.density;

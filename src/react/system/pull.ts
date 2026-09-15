@@ -52,6 +52,8 @@ export function attachPull(source: HTMLElement, getOptions: () => PullOptions = 
     event: PointerEvent | null; fresh: boolean;
     /** Applied offset and its smoothed velocity, so the deformation decays when the finger stops. */
     px: number; py: number; vx: number; vy: number; time: number;
+    /** Last origin, to tell a moving reference point apart from a moving finger. */
+    ox: number; oy: number;
   }
   let active: Active | null = null;
   const clear = (targets: HTMLElement[]) => { for (const t of targets) { for (const p of PROPS) t.style.removeProperty(p); t.removeAttribute('data-pulling'); } };
@@ -72,8 +74,18 @@ export function attachPull(source: HTMLElement, getOptions: () => PullOptions = 
     const dx = axis === 'y' ? 0 : event.clientX - origin.x, dy = axis === 'x' ? 0 : event.clientY - origin.y;
     const px = band(dx, limit, free?.x), py = band(dy, limit, free?.y);
     const now = performance.now(), dt = Math.max(8, now - active.time);
-    active.vx += ((px - active.px) / dt - active.vx) * SMOOTH;
-    active.vy += ((py - active.py) / dt - active.vy) * SMOOTH;
+    /**
+     * The offset is measured from a reference point that can itself move — a selection change
+     * puts the lens in a new slot, and the offset absorbs the difference in one step. That is the
+     * reference frame moving, not the finger, so it must not register as speed or the glass
+     * snaps taut for a frame over a gesture the user made smoothly.
+     */
+    const rebase = !(Math.abs(origin.x - active.ox) < .5 && Math.abs(origin.y - active.oy) < .5);
+    active.ox = origin.x; active.oy = origin.y;
+    if (!rebase) {
+      active.vx += ((px - active.px) / dt - active.vx) * SMOOTH;
+      active.vy += ((py - active.py) / dt - active.vy) * SMOOTH;
+    }
     active.px = px; active.py = py; active.time = now;
     // Resistance: the part of the travel the band is holding back. Following freely does not deform.
     const rx = Math.abs(dx - px), ry = Math.abs(dy - py);
@@ -102,7 +114,7 @@ export function attachPull(source: HTMLElement, getOptions: () => PullOptions = 
     if (event.button !== 0 || !event.isPrimary || active) return;
     const o = getOptions(); if (o.disabled?.(event)) return;
     const targets = (o.targets?.(event) ?? [source]).filter(Boolean); if (!targets.length) return;
-    active = { id: event.pointerId, x: event.clientX, y: event.clientY, targets, frame: 0, event, fresh: false, px: 0, py: 0, vx: 0, vy: 0, time: performance.now() };
+    active = { id: event.pointerId, x: event.clientX, y: event.clientY, targets, frame: 0, event, fresh: false, px: 0, py: 0, vx: 0, vy: 0, time: performance.now(), ox: NaN, oy: NaN };
     for (const t of targets) t.setAttribute('data-pulling', 'true');
     o.onPress?.(event);
     window.addEventListener('pointermove', move, { passive: true }); window.addEventListener('pointerup', up); window.addEventListener('pointercancel', cancel);

@@ -1,4 +1,9 @@
-import { useCallback, useRef, useState, type Ref, type RefObject } from 'react';
+import { useCallback, useEffect, useLayoutEffect, useRef, useState, type Ref, type RefObject } from 'react';
+/**
+ * Runs before the browser paints, so a measurement written here is never seen a frame late.
+ * Falls back to a plain effect on the server, where there is no layout to read and React warns.
+ */
+export const useMeasureEffect = typeof document === 'undefined' ? useEffect : useLayoutEffect;
 export const cx = (...values: (string | false | null | undefined)[]) => values.filter(Boolean).join(' ');
 export function assignRef<T>(ref: Ref<T> | undefined, value: T | null): void | (() => void) {
   if (typeof ref === 'function') return ref(value);

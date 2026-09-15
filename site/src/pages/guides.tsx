@@ -43,8 +43,8 @@ export function App() {
     <Section title="浏览器支持">
       <Card fill="secondary" radius={20} padding={20}>
         <ul className="plain-list">
-          <li><Text as="span" variant="subhead">Chrome 和 Edge 上有完整的边缘折射。</Text></li>
-          <li><Text as="span" variant="subhead">Safari 和 Firefox 上退化成磨砂玻璃：模糊、提色、高光都在，只是没有折射。布局和交互完全一样。</Text></li>
+          <li><Text as="span" variant="subhead">默认到处都是磨砂玻璃：模糊、提色、高光。这是所有浏览器都能跑的那一档。</Text></li>
+          <li><Text as="span" variant="subhead">边缘折射要自己打开，而且目前只有 Chrome 和 Edge 能跑；Safari 和 Firefox 会退回磨砂。见「效果与性能」。</Text></li>
           <li><Text as="span" variant="subhead">用户开了减少透明度、增强对比度或减少动效，会在此基础上进一步退化到实色和简单淡入淡出。</Text></li>
         </ul>
       </Card>

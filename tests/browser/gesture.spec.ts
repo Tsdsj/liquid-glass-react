@@ -24,6 +24,54 @@ const restingCentre = async (locator: import('@playwright/test').Locator) => {
   return previous;
 };
 
+interface TraceFrame { cx: number; left: number; right: number; p: number }
+
+test('crossing into the next segment never throws the lens off the track', async ({ page }) => {
+  await page.goto('/#/components/segmented-control');
+  const track = page.locator('#segmented-basic .lg-segmented-track');
+  const lens = track.locator('.lg-selection-lens');
+  await restingCentre(lens);
+  const box = (await track.boundingBox())!;
+  const start = centre((await track.getByText('周', { exact: true }).boundingBox())!); // the selected one
+  const end = centre((await track.getByText('月', { exact: true }).boundingBox())!);
+
+  // Every frame, not every step: the defect was one painted frame wide and a step-by-step
+  // assertion walks straight past it.
+  await page.evaluate(() => {
+    const node = document.querySelector('#segmented-basic .lg-segmented-track')!;
+    const pill = node.querySelector('.lg-selection-lens')!;
+    const store = window as unknown as { __pointer: number | null; __trace: TraceFrame[] };
+    store.__pointer = null; store.__trace = [];
+    const tick = () => {
+      if (store.__pointer !== null) {
+        const r = pill.getBoundingClientRect();
+        store.__trace.push({ cx: r.left + r.width / 2, left: r.left, right: r.right, p: store.__pointer });
+      }
+      if (store.__trace.length < 300) requestAnimationFrame(tick);
+    };
+    requestAnimationFrame(tick);
+  });
+
+  await page.mouse.move(...start);
+  await page.mouse.down();
+  for (let i = 1; i <= 24; i++) {
+    const x = start[0] + (end[0] - start[0]) * i / 24;
+    await page.evaluate(value => { (window as unknown as { __pointer: number }).__pointer = value; }, x);
+    await page.mouse.move(x, start[1]);
+    await page.waitForTimeout(20);
+  }
+  await page.mouse.up();
+
+  const trace: TraceFrame[] = await page.evaluate(() => (window as unknown as { __trace: TraceFrame[] }).__trace);
+  expect(trace.length).toBeGreaterThan(15);
+  // The selection moving to a new slot must not move the lens: the finger is still holding it.
+  const adrift = trace.reduce((worst, frame) => Math.abs(frame.cx - frame.p) > Math.abs(worst.cx - worst.p) ? frame : worst);
+  expect(Math.abs(adrift.cx - adrift.p), `lens broke away from the pointer: ${JSON.stringify(adrift)}`).toBeLessThan(12);
+  // And it certainly must not leave the control. The allowance is the press swell, nothing more.
+  const escaped = trace.filter(frame => frame.left < box.x - 6 || frame.right > box.x + box.width + 6);
+  expect(escaped.length, `lens left the track: ${JSON.stringify(escaped[0])}`).toBe(0);
+});
+
 /**
  * The offset is derived from where the lens currently is, so anything that makes the measurement
  * disagree with what was written feeds straight back into the next frame. A still pointer is the
@@ -259,6 +307,38 @@ test('the virtual light source never spins the long way round', async ({ page })
   // A jump of a full turn is transitioned like any other change, so the highlight visibly races
   // around the silhouette — always at the same spot, which reads as a glitch rather than as light.
   for (let i = 1; i < angles.length; i++) expect(Math.abs(angles[i] - angles[i - 1])).toBeLessThan(90);
+});
+
+test('a control on an overlay borrows its surface instead of stacking a second glass', async ({ page }) => {
+  await page.setViewportSize({ width: 1280, height: 900 });
+  await page.goto('/#/components/switch');
+  await page.getByRole('button', { name: /偏好/ }).click();
+  const popover = page.locator('.lg-popover');
+  await expect(popover).toBeVisible();
+
+  const layers = await popover.evaluate(node => {
+    const read = (element: Element) => {
+      const backdrop = element.querySelector(':scope > .lg-decoration > .lg-backdrop');
+      return {
+        name: element.className.replace('lg-root ', ''),
+        renderer: element.getAttribute('data-renderer'),
+        backdrop: backdrop ? getComputedStyle(backdrop).backdropFilter : 'none',
+        background: getComputedStyle(element).backgroundColor,
+      };
+    };
+    return { panel: read(node), inside: [...node.querySelectorAll('.lg-root')].map(read) };
+  });
+
+  // The panel is the glass. Everything on it is a filled control, the way the system draws a
+  // segmented control or a switch inside a sheet.
+  expect(layers.panel.backdrop).toContain('blur');
+  expect(layers.inside.length).toBeGreaterThan(2);
+  for (const control of layers.inside) {
+    expect(control.renderer, `${control.name} kept its own renderer`).toBe('shared');
+    expect(control.backdrop, `${control.name} stacked a second blur`).toBe('none');
+    // …and still reads as a control rather than vanishing into the panel.
+    expect(control.background, `${control.name} has no fill to be seen by`).not.toBe('rgba(0, 0, 0, 0)');
+  }
 });
 
 test('the light page is a step below the cards it carries', async ({ page }) => {

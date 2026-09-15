@@ -1,11 +1,10 @@
 'use client';
-import { createContext, forwardRef, useContext, type HTMLAttributes } from 'react';
+import { forwardRef, type HTMLAttributes } from 'react';
 import { useGlassSurface, type GlassSurfaceOptions } from './material.js';
 import { useFusion } from './fusion.js';
 import { cx, useMergedRef } from './utils.js';
-const SharedContext = createContext(false);
-export const useSharedSurface = () => useContext(SharedContext);
-export const SharedSurface = SharedContext.Provider;
+import { SharedSurface } from './shared.js';
+export { useSharedSurface, SharedSurface } from './shared.js';
 export interface GlassSurfaceProps extends HTMLAttributes<HTMLDivElement>, GlassSurfaceOptions {}
 /**
  * A floating Liquid Glass surface. This belongs to the navigation / control layer — bars,

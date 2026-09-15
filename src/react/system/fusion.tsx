@@ -43,8 +43,11 @@ function paint(node: HTMLElement | null, blob: Blob | null) {
 }
 export function useFusion<T extends HTMLElement>(root: RefObject<T | null>, options: FusionOptions): ReactNode {
   const policy = useGlassPolicy();
-  // Reduced motion, reduced transparency (which already covers forced colours and opaque mode) always win.
-  const enabled = !policy.reduceMotion && !policy.reduceTransparency && !policy.forcedColors;
+  /**
+   * Every preference that hides the goo layer also switches it off. The stylesheet can only stop
+   * it being painted; without this the rAF loop still runs on every press to produce nothing.
+   */
+  const enabled = !policy.reduceMotion && !policy.reduceTransparency && !policy.forcedColors && !policy.increaseContrast;
   const filterId = `lg-fusion-${useId().replace(/[^a-zA-Z0-9_-]/g, '')}`;
   const layer = useRef<HTMLSpanElement>(null);
   const sheen = useRef<HTMLSpanElement>(null);

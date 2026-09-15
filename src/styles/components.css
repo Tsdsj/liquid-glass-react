@@ -52,6 +52,13 @@
 [data-lg-theme="light"].lg-root[data-glass-size="large"] > .lg-decoration .lg-tint { --lg-tint-opacity: .86; }
 [data-lg-theme="dark"].lg-root[data-glass-size="large"] > .lg-decoration .lg-tint { --lg-tint-opacity: .9; }
 .lg-root[data-renderer="shared"] { box-shadow: none; background: transparent; }
+/* A control that has given up its own glass to sit on someone else's surface still has to read as
+   a control. These are the filled forms the system uses inside a sheet or a popover: a tinted
+   track, not a second pane of glass. */
+.lg-segmented[data-renderer="shared"] { background: var(--lg-fill-tertiary); }
+.lg-search-box[data-renderer="shared"] { background: var(--lg-fill-tertiary); }
+.lg-switch-track[data-renderer="shared"] { background: var(--lg-fill); }
+.lg-slider-lens[data-renderer="shared"] { background: #fff; box-shadow: 0 1px 4px rgb(0 0 0 / .2), 0 3px 8px rgb(0 0 0 / .12); }
 .lg-group .lg-button[data-renderer="shared"], .lg-toolbar-group .lg-button[data-renderer="shared"], .lg-popover .lg-button[data-renderer="shared"] { --lg-fg: inherit; --lg-muted: inherit; --lg-focus: inherit; color: inherit; }
 .lg-button[data-renderer="shared"]:is([data-variant="destructive"],[data-variant="destructiveProminent"]) { color: var(--lg-red); }
 .lg-root[data-transparency="opaque"] { background: var(--lg-opaque); }
@@ -87,9 +94,15 @@
 .lg-root[data-pulling="true"] { transition-property: background, box-shadow, color, --lg-scale; }
 .lg-root[data-pulling="true"] > .lg-content { transform: translate(calc(var(--lg-shift-x,0px) * -.25),calc(var(--lg-shift-y,0px) * -.25)) scale(.985); transition: none; }
 .lg-button > .lg-content { display: inline-flex; align-items: center; justify-content: center; gap: 8px; transition: transform var(--lg-duration-spring) var(--lg-spring); }
-.lg-button:not(:disabled):hover { --lg-scale: var(--lg-hover-scale); --lg-shine-alpha: .36; --lg-shine-reach: 78%; }
+/* Hover only where a pointer can actually hover. On a touch screen the last tapped control
+   keeps the hover state until something else is tapped, which reads as a stuck highlight. */
+@media (hover: hover) {
+  .lg-button:not(:disabled):hover { --lg-scale: var(--lg-hover-scale); --lg-shine-alpha: .36; --lg-shine-reach: 78%; }
+}
 /* Hover and press brighten the lit side of the rim; they never add a second edge. */
-.lg-button:not(:disabled):hover > .lg-decoration .lg-rim { --lg-glass-rim-hi: rgb(255 255 255 / .92); }
+@media (hover: hover) {
+  .lg-button:not(:disabled):hover > .lg-decoration .lg-rim { --lg-glass-rim-hi: rgb(255 255 255 / .92); }
+}
 .lg-button:not(:disabled):is(:active,[data-pressed="true"]) { --lg-scale: var(--lg-press-scale); --lg-shine-alpha: .5; --lg-shine-reach: 90%; box-shadow: var(--lg-shadow-lift); transition: transform var(--lg-duration-press) var(--lg-ease-out), --lg-shift-x var(--lg-duration-press) var(--lg-ease-out), --lg-shift-y var(--lg-duration-press) var(--lg-ease-out), --lg-stretch-x var(--lg-duration-press) var(--lg-ease-out), --lg-stretch-y var(--lg-duration-press) var(--lg-ease-out), box-shadow var(--lg-duration-press) var(--lg-ease-out), background var(--lg-duration-press) var(--lg-ease-out); }
 .lg-button:not(:disabled):is(:active,[data-pressed="true"]) > .lg-decoration::after { opacity: 1; transition-duration: var(--lg-duration-press); }
 .lg-button:not(:disabled):is(:active,[data-pressed="true"]) > .lg-decoration .lg-tint { --lg-tint-opacity: .92; }
@@ -97,15 +110,15 @@
 .lg-button[data-material="clear"]:not(:disabled):is(:active,[data-pressed="true"]) > .lg-decoration .lg-tint { --lg-tint-opacity: .2; }
 .lg-button:not(:disabled):is(:active,[data-pressed="true"]) > .lg-content { transform: scale(.985); transition-duration: var(--lg-duration-press); }
 .lg-button[data-renderer="shared"] { box-shadow: none; transition: transform var(--lg-duration-spring) var(--lg-spring-bouncy), --lg-shift-x var(--lg-duration-spring) var(--lg-spring-bouncy), --lg-shift-y var(--lg-duration-spring) var(--lg-spring-bouncy), --lg-stretch-x var(--lg-duration-spring) var(--lg-spring-bouncy), --lg-stretch-y var(--lg-duration-spring) var(--lg-spring-bouncy), background var(--lg-duration-release) var(--lg-ease), box-shadow var(--lg-duration-spring) var(--lg-ease-out); }
-.lg-button[data-renderer="shared"]:not(:disabled):hover { background: var(--lg-hover); }
+@media (hover: hover) {
+  .lg-button[data-renderer="shared"]:not(:disabled):hover { background: var(--lg-hover); }
+}
 .lg-button[data-renderer="shared"]:not(:disabled):is(:active,[data-pressed="true"]) { --lg-scale: var(--lg-press-scale-shared); background: var(--lg-pressed); box-shadow: 0 1px 2px rgb(0 0 0 / .08), 0 10px 26px rgb(0 0 0 / .16), inset 0 1px 0 rgb(255 255 255 / .5); z-index: 2; }
 .lg-button[data-renderer="shared"]:not(:disabled):is(:active,[data-pressed="true"])::before { content: ''; position: absolute; inset: 0; border-radius: inherit; background: radial-gradient(circle at var(--lg-light-x,50%) var(--lg-light-y,50%),rgb(255 255 255 / .38),transparent 70%); pointer-events: none; }
 .lg-button:disabled { cursor: not-allowed; opacity: .48; }
 .lg-button[data-variant="primary"] { --lg-fg: var(--lg-accent-contrast); color: var(--lg-accent-contrast); background: var(--lg-accent); }
 .lg-button[data-variant="primary"] > .lg-decoration .lg-tint { background: var(--lg-accent); opacity: .92; }
 .lg-button[data-variant="primary"]:not(:disabled):is(:active,[data-pressed="true"]) > .lg-decoration .lg-tint { opacity: .78; }
-.lg-button[data-variant="danger"] { --lg-fg: #982b26; }
-.lg-button[data-variant="danger"][data-lg-theme="dark"] { --lg-fg: #ffa5a2; }
 .lg-icon-button { width: var(--lg-control-height,44px); height: var(--lg-control-height,44px); padding: 0; }
 .lg-icon-button svg { width: 19px; height: 19px; flex-shrink: 0; transition: transform var(--lg-duration-spring) var(--lg-spring-bouncy); }
 .lg-icon-button:not(:disabled):is(:active,[data-pressed="true"]) svg { transform: scale(.88); transition-duration: var(--lg-duration-press); }
@@ -137,7 +150,9 @@
 .lg-segment { min-height: calc(var(--lg-control-height,44px) - 8px); padding: 0 16px; position: relative; display: inline-flex; align-items: center; justify-content: center; cursor: pointer; font-size: var(--lg-text-footnote-size); font-weight: var(--lg-weight-semibold); border-radius: inherit; white-space: nowrap; color: var(--lg-label-secondary); transition: color var(--lg-duration-release) var(--lg-ease); }
 .lg-segment > span { position: relative; pointer-events: none; transition: transform var(--lg-duration-spring) var(--lg-spring); }
 .lg-segment:has(input:checked) { color: var(--lg-fg); }
-.lg-segment:not([data-disabled="true"]):hover:not(:has(input:checked)) > span { transform: scale(1.04); }
+@media (hover: hover) {
+  .lg-segment:not([data-disabled="true"]):hover:not(:has(input:checked)) > span { transform: scale(1.04); }
+}
 .lg-segment:not([data-disabled="true"]):has(input:active) > span { transform: scale(.94); transition-duration: var(--lg-duration-press); }
 .lg-segment input { position: absolute; margin: 0; inset: 0; width: 100%; height: 100%; opacity: 0; cursor: inherit; }
 .lg-segment:has(input:focus-visible) { outline: var(--lg-focus-width) solid var(--lg-focus); outline-offset: var(--lg-focus-offset); border-radius: 999px; }
@@ -162,7 +177,9 @@
 .lg-tabs-surface { width: fit-content; padding: 4px; }
 .lg-tab-list { display: flex; gap: 2px; position: relative; touch-action: pan-y; }
 .lg-tab { position: relative; min-height: 36px; padding: 0 16px; color: var(--lg-label-secondary); font: inherit; font-size: var(--lg-text-footnote-size); font-weight: var(--lg-weight-semibold); border: 0; border-radius: 999px; background: transparent; cursor: pointer; z-index: 1; transition: color var(--lg-duration-release) var(--lg-ease), transform var(--lg-duration-spring) var(--lg-spring); }
-.lg-tab:not(:disabled):hover { color: var(--lg-fg); }
+@media (hover: hover) {
+  .lg-tab:not(:disabled):hover { color: var(--lg-fg); }
+}
 .lg-tab:not(:disabled):active { transform: scale(.95); transition-duration: var(--lg-duration-press); }
 .lg-tab[aria-selected="true"] { color: var(--lg-fg); }
 .lg-tab-list:not(:has(.lg-selection-lens)) .lg-tab[aria-selected="true"] { background: var(--lg-selected); box-shadow: 0 1px 3px rgb(0 0 0 / .07); }
@@ -192,7 +209,9 @@
 .lg-slider:not([data-disabled="true"]):has(input:active) .lg-slider-lens > .lg-decoration,
 .lg-slider:not([data-disabled="true"]) .lg-slider-lens[data-pulling="true"] > .lg-decoration,
 .lg-slider:has(input:focus-visible) .lg-slider-lens > .lg-decoration { opacity: 1; }
-.lg-slider:not([data-disabled="true"]):hover .lg-slider-lens { --lg-scale: 1.08; }
+@media (hover: hover) {
+  .lg-slider:not([data-disabled="true"]):hover .lg-slider-lens { --lg-scale: 1.08; }
+}
 .lg-slider:not([data-disabled="true"]):has(input:active) .lg-slider-lens > .lg-decoration .lg-glow { --lg-shine-alpha: .5; --lg-shine-reach: 90%; }
 .lg-slider:not([data-disabled="true"]):has(input:active) .lg-slider-track { transform: scaleY(1.35); }
 /* pan-y keeps vertical page scrolling alive while the browser leaves the horizontal drag to us. */
@@ -217,7 +236,9 @@
 .lg-switch-thumb[data-pulling="true"] { transition: width var(--lg-duration-press) var(--lg-ease-out); }
 .lg-switch-track { translate: calc(var(--lg-shift-x,0px) * .12) 0; transition: background var(--lg-duration-release) var(--lg-ease), transform var(--lg-duration-spring) var(--lg-spring), translate var(--lg-duration-spring) var(--lg-spring); }
 .lg-switch-track[data-pulling="true"] { transition: background var(--lg-duration-release) var(--lg-ease), transform var(--lg-duration-press) var(--lg-ease-out); }
-.lg-switch:not([data-disabled="true"]):hover .lg-switch-track { transform: scale(1.03); }
+@media (hover: hover) {
+  .lg-switch:not([data-disabled="true"]):hover .lg-switch-track { transform: scale(1.03); }
+}
 .lg-switch:not([data-disabled="true"]):has(input:active) .lg-switch-thumb { width: 28px; transition-duration: var(--lg-duration-press); }
 .lg-switch:not([data-disabled="true"]):has(input:active) .lg-switch-track { transform: scale(.97); transition-duration: var(--lg-duration-press); }
 .lg-switch > input:focus-visible + .lg-switch-track { outline: var(--lg-focus-width) solid var(--lg-focus); outline-offset: var(--lg-focus-offset); }
@@ -235,7 +256,9 @@
 .lg-overlay-description { color: var(--lg-glass-fg-secondary); font-size: var(--lg-text-footnote-size); line-height: var(--lg-text-footnote-leading); margin: 0 0 var(--lg-space-5); text-align: start; }
 .lg-menu { width: 244px; padding: 7px; }
 .lg-menu-item { position: relative; width: 100%; border: 0; background: transparent; color: inherit; text-align: start; border-radius: var(--lg-radius-s); display: flex; justify-content: space-between; align-items: center; gap: var(--lg-space-5); font: var(--lg-weight-medium) var(--lg-text-subhead-size)/1.3 var(--lg-font-text); padding: var(--lg-space-2) var(--lg-space-3); cursor: pointer; min-height: var(--lg-hit-min); transition: background var(--lg-duration-press) var(--lg-ease), transform var(--lg-duration-spring) var(--lg-spring), color var(--lg-duration-release) var(--lg-ease); }
-.lg-menu-item:hover, .lg-menu-item:focus { background: var(--lg-hover); }
+@media (hover: hover) {
+  .lg-menu-item:hover, .lg-menu-item:focus { background: var(--lg-hover); }
+}
 .lg-menu-item:not(:disabled):active { background: var(--lg-pressed); transform: scale(.975); transition-duration: var(--lg-duration-press); }
 .lg-menu-item:focus { outline: 2px solid var(--lg-focus); outline-offset: -2px; }
 .lg-menu-item:disabled { opacity: .45; cursor: not-allowed; }
@@ -336,7 +359,9 @@
 .lg-row-hit { display: flex; align-items: center; gap: var(--lg-space-3); width: 100%; min-height: var(--lg-hit-min);
   padding: var(--lg-space-2) var(--lg-space-4); background: transparent; border: 0; color: inherit; font: inherit; text-align: start; text-decoration: none; }
 .lg-list-row[data-interactive="true"] .lg-row-hit { cursor: pointer; transition: background var(--lg-duration-press) var(--lg-ease); }
-.lg-list-row[data-interactive="true"] .lg-row-hit:hover { background: var(--lg-fill-quaternary); }
+@media (hover: hover) {
+  .lg-list-row[data-interactive="true"] .lg-row-hit:hover { background: var(--lg-fill-quaternary); }
+}
 .lg-list-row[data-interactive="true"] .lg-row-hit:active { background: var(--lg-fill-tertiary); }
 .lg-list-row[data-disabled="true"] { opacity: .45; }
 .lg-list-row[data-disabled="true"] .lg-row-hit { cursor: not-allowed; }
@@ -379,17 +404,27 @@
    decoration layer of its own to tint, so the accent has to come from its own background.
    Without this the label is white on nothing, which on a light surface is invisible. */
 .lg-button[data-renderer="shared"][data-variant="glassProminent"] { background: var(--lg-accent); color: var(--lg-accent-contrast); --lg-fg: var(--lg-accent-contrast); box-shadow: 0 1px 2px rgb(0 0 0 / .1); }
-.lg-button[data-renderer="shared"][data-variant="glassProminent"]:not(:disabled):hover { background: color-mix(in srgb, var(--lg-accent) 88%, #000); }
+@media (hover: hover) {
+  .lg-button[data-renderer="shared"][data-variant="glassProminent"]:not(:disabled):hover { background: color-mix(in srgb, var(--lg-accent) 88%, #000); }
+}
 .lg-button[data-renderer="shared"][data-variant="glassProminent"]:not(:disabled):is(:active,[data-pressed="true"]) { background: color-mix(in srgb, var(--lg-accent) 80%, #000); }
 .lg-button[data-renderer="shared"][data-variant="destructiveProminent"] { background: var(--lg-red); color: #fff; --lg-fg: #fff; }
 .lg-button[data-variant="plain"] { color: var(--lg-accent); }
-.lg-button[data-variant="plain"]:not(:disabled):hover { background: var(--lg-fill-quaternary); }
+@media (hover: hover) {
+  .lg-button[data-variant="plain"]:not(:disabled):hover { background: var(--lg-fill-quaternary); }
+}
 .lg-button[data-variant="gray"] { background: var(--lg-fill-secondary); color: var(--lg-label); }
-.lg-button[data-variant="gray"]:not(:disabled):hover { background: var(--lg-fill); }
+@media (hover: hover) {
+  .lg-button[data-variant="gray"]:not(:disabled):hover { background: var(--lg-fill); }
+}
 .lg-button[data-variant="tinted"] { background: color-mix(in srgb, var(--lg-accent) 16%, transparent); color: var(--lg-accent); }
-.lg-button[data-variant="tinted"]:not(:disabled):hover { background: color-mix(in srgb, var(--lg-accent) 24%, transparent); }
+@media (hover: hover) {
+  .lg-button[data-variant="tinted"]:not(:disabled):hover { background: color-mix(in srgb, var(--lg-accent) 24%, transparent); }
+}
 .lg-button[data-variant="destructive"] { color: var(--lg-red); }
-.lg-button[data-variant="destructive"]:not(:disabled):hover { background: color-mix(in srgb, var(--lg-red) 12%, transparent); }
+@media (hover: hover) {
+  .lg-button[data-variant="destructive"]:not(:disabled):hover { background: color-mix(in srgb, var(--lg-red) 12%, transparent); }
+}
 .lg-button[data-variant="destructiveProminent"] { background: var(--lg-red); color: #fff; }
 .lg-button:is([data-variant="plain"],[data-variant="gray"],[data-variant="tinted"],[data-variant="destructive"],[data-variant="destructiveProminent"]) {
   box-shadow: none; transition: background var(--lg-duration-release) var(--lg-ease), transform var(--lg-duration-spring) var(--lg-spring), color var(--lg-duration-release) var(--lg-ease); }
@@ -401,7 +436,9 @@
 .lg-stepper-button { display: inline-flex; align-items: center; justify-content: center; min-width: var(--lg-hit-min); min-height: var(--lg-hit-min);
   border: 0; background: transparent; color: var(--lg-label); border-radius: 999px; cursor: pointer;
   transition: background var(--lg-duration-press) var(--lg-ease), transform var(--lg-duration-spring) var(--lg-spring); }
-.lg-stepper-button:not(:disabled):hover { background: var(--lg-fill); }
+@media (hover: hover) {
+  .lg-stepper-button:not(:disabled):hover { background: var(--lg-fill); }
+}
 .lg-stepper-button:not(:disabled):active { transform: scale(.92); transition-duration: var(--lg-duration-press); }
 .lg-stepper-button:disabled { color: var(--lg-label-tertiary); cursor: not-allowed; }
 .lg-stepper-button:focus-visible { outline: var(--lg-focus-width) solid var(--lg-focus); outline-offset: calc(var(--lg-focus-offset) * -1); }
@@ -443,7 +480,9 @@
   color: var(--lg-glass-fg-secondary); text-decoration: none; font: var(--lg-weight-medium) var(--lg-text-footnote-size)/1.2 var(--lg-font-text);
   transition: color var(--lg-duration-release) var(--lg-ease), transform var(--lg-duration-spring) var(--lg-spring); }
 .lg-tabbar[data-layout="sidebar"] .lg-tab-link { justify-content: flex-start; font-size: var(--lg-text-subhead-size); }
-.lg-tab-link:hover { color: var(--lg-glass-fg); }
+@media (hover: hover) {
+  .lg-tab-link:hover { color: var(--lg-glass-fg); }
+}
 .lg-tab-link:active { transform: scale(.95); transition-duration: var(--lg-duration-press); }
 .lg-tab-link[aria-current="page"] { color: var(--lg-glass-fg); font-weight: var(--lg-weight-semibold); }
 .lg-tab-links:not(:has(.lg-selection-lens)) .lg-tab-link[aria-current="page"] { background: var(--lg-selected); }
@@ -520,7 +559,10 @@
 .lg-search-input::-webkit-search-cancel-button { display: none; }
 .lg-search-clear { display: inline-flex; align-items: center; justify-content: center; min-width: 28px; min-height: 28px;
   border: 0; background: transparent; color: var(--lg-glass-fg-secondary); cursor: pointer; border-radius: 999px; flex-shrink: 0; }
-.lg-search-clear:hover { color: var(--lg-glass-fg); }
+@media (hover: hover) {
+  .lg-search-clear:hover { color: var(--lg-glass-fg); }
+}
+.lg-search-clear:active { color: var(--lg-glass-fg); transform: scale(.9); }
 
 /* ==========================================================================
    Sheet · Alert · Action sheet · Toast
@@ -583,7 +625,10 @@
   width: 100%; min-height: var(--lg-hit-min); border: 0; background: transparent; color: inherit; cursor: pointer;
   border-radius: var(--lg-radius-s); font: var(--lg-weight-regular) var(--lg-text-body-size)/1.2 var(--lg-font-text);
   transition: background var(--lg-duration-press) var(--lg-ease); }
-.lg-action-item:hover, .lg-action-item:focus { background: var(--lg-hover); }
+@media (hover: hover) {
+  .lg-action-item:hover, .lg-action-item:focus { background: var(--lg-hover); }
+}
+.lg-action-item:not(:disabled):active { background: var(--lg-pressed); transform: scale(.985); transition-duration: var(--lg-duration-press); }
 .lg-action-item:focus-visible, .lg-action-cancel:focus-visible { outline: var(--lg-focus-width) solid var(--lg-focus); outline-offset: calc(var(--lg-focus-offset) * -1); }
 .lg-action-item[data-destructive="true"] { color: var(--lg-red); }
 .lg-action-item:disabled { opacity: .45; cursor: not-allowed; }
@@ -608,7 +653,9 @@
 /* ---------- User preferences always win ---------- */
 .lg-root[data-reduced-motion="true"], .lg-root[data-reduced-motion="true"] *, .lg-root[data-reduced-motion="true"] *::before, .lg-root[data-reduced-motion="true"] *::after { transition: none !important; animation: none !important; }
 .lg-root[data-reduced-motion="true"]:is(:active,[data-pressed="true"]) { transform: none; scale: none; }
-.lg-root[data-reduced-motion="true"] .lg-button:hover, .lg-root[data-reduced-motion="true"].lg-button:hover { --lg-scale: 1; }
+@media (hover: hover) {
+  .lg-root[data-reduced-motion="true"] .lg-button:hover, .lg-root[data-reduced-motion="true"].lg-button:hover { --lg-scale: 1; }
+}
 .lg-root[data-reduced-motion="true"] :is(.lg-slider-lens,.lg-switch-track) { scale: none; }
 /* The lens keeps its deformation inside `transform`; the stretch is already neutralised below,
    so only the press swell is left to turn off. */
