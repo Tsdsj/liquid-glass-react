@@ -1,5 +1,26 @@
 # Changelog
 
+## 0.2.0-alpha.6
+
+把审查报告里长期挂账的六项（R1–R6）逐条了结，能关的关掉，关不掉的说清楚为什么。
+
+### 修复
+
+- **媒体场景上的控件对比度不合格**。从合成后的像素上量出来，最差的一块是 4.38:1（Chrome）、4.42:1（Firefox），低于 AA 的 4.5。原因是文档站把那片场景声明成了 `backdropTone="dark"`，而它实测中位亮度 152、亮部 237——是浅色。声明错了，clear 材质就只压暗 6%。改对之后 7.83 / 9.47 / 7.83。
+- **`renderer="svg"` 在 Safari 和 Firefox 上不是退化成磨砂，是退化成一块透明的洞**。`CSS.supports('backdrop-filter','url(#id)')` 三家引擎都返回 true——它检的是语法不是能力，而库拿它当能力开关。现在模糊是 CSS 链里的第一个函数，SVG 滤镜只管位移：哪家引擎丢掉 `url()`，剩下的仍然是真的磨砂。
+- **公开 API 收回内部装配件**。`triggerElement`、`usePopover`、`lockScroll`、`useSelectionLens`、`lensOrigin`、`trackSpan` 不再导出——它们假定了特定的 DOM 结构和样式表里的变换链。公开运行时名字 75 → 69。浮层的 `OpenProps` / `TriggerProps` / `Align` 仍然公开。
+
+### 新增验证
+
+- `tests/browser/contrast.spec.ts`——把字形藏起来、截图、在页面里解码，量玻璃真正合成成了什么，最差一块不得低于 4.5。
+- `tests/browser/touch.spec.ts`——真实 touch 事件：拖动轴的归属、手指 1:1 带动透镜、点完不留 hover、命中区 44。
+- `tests/browser/fallback.spec.ts`——WebKit 与 Firefox 各 8 项，跑没有折射时剩下的那条路。`pnpm test:fallback`，已并入 `pnpm check`。
+- `scripts/measure-contrast.mjs` 与 `scripts/measure-performance.mjs`——两个量测工具，输出是给人读的证据。性能：11 块玻璃在 6× CPU 节流下仍是满帧。
+
+### 仍然没做
+
+屏幕阅读器实机验证（R1）没有替代手段。触摸真机手感、真实低端 GPU 的能耗、Safari 真机上退化后的观感，也都还要人去看一眼。
+
 ## 0.2.0-alpha.5
 
 ### 修复

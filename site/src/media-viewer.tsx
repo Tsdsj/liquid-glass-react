@@ -21,14 +21,16 @@ export function MediaViewer({ compact = false }: { compact?: boolean }) {
     <div className="scene-caption"><span className="eyebrow">A STUDY IN STILLNESS</span><h2>{scene % 2 ? '暮色，留在湖面。' : '山间，有回响。'}</h2><p>原创矢量场景 · 无外部图片依赖</p></div>
     <div className="media-control-wrap">
       <GlassToolbar aria-label="媒体查看器操作" className="media-toolbar">
-        {/* Transport and secondary actions are different jobs, so they get different glass groups. */}
-        <ToolbarGroup material="clear" backdropTone="dark" density={compact ? 'compact' : 'comfortable'}>
+        {/* Transport and secondary actions are different jobs, so they get different glass groups.
+            The tone is a statement about the scene: measured here at 152 median luminance with the
+            bright patches at 237, so it is a light backdrop and the clear glass has to dim it. */}
+        <ToolbarGroup material="clear" backdropTone="light" density={compact ? 'compact' : 'comfortable'}>
           <GlassIconButton aria-label="上一场景" onClick={() => { setScene(x => x + 1); setPlaying(false); }}><Icon name="previous"/></GlassIconButton>
           <GlassIconButton aria-label={playing ? '暂停动态背景' : '播放动态背景'} aria-pressed={playing} onClick={() => setPlaying(!playing)}><Icon name={playing ? 'pause' : 'play'}/></GlassIconButton>
           <GlassIconButton aria-label="下一场景" onClick={() => { setScene(x => x + 1); setPlaying(false); }}><Icon name="next"/></GlassIconButton>
         </ToolbarGroup>
         <ToolbarSpacer/>
-        <ToolbarGroup material="clear" backdropTone="dark" density={compact ? 'compact' : 'comfortable'}>
+        <ToolbarGroup material="clear" backdropTone="light" density={compact ? 'compact' : 'comfortable'}>
         <GlassIconButton aria-label={favorite ? '取消收藏' : '收藏场景'} aria-pressed={favorite} onClick={() => setFavorite(!favorite)}><Icon name="heart" style={favorite ? { fill: 'currentColor' } : undefined}/></GlassIconButton>
         <GlassPopover title="查看设置" description="玻璃承载操作，内容保持清晰。" trigger={<GlassIconButton aria-label="打开查看设置"><Icon name="tune"/></GlassIconButton>}>
           <label className="field-label">显示方式</label><GlassSegmentedControl aria-label="显示方式" value={view} onValueChange={setView} density="compact" items={[{ value: 'fit', label: '适应' }, { value: 'fill', label: '填充' }]}/>

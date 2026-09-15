@@ -17,7 +17,10 @@ export * from './content/divider.js';
 
 /* Controls */
 export * from './controls/button.js';
-export * from './controls/segmented.js';
+/* `useSelectionLens` / `lensOrigin` / `trackSpan` stay internal: they are how the tab bar, the
+   tabs and the segmented control share one lens, not an API. They write to a DOM node you hand
+   them and assume the stylesheet's transform chain. */
+export { GlassSegmentedControl, type GlassChoice, type GlassSegmentedControlProps } from './controls/segmented.js';
 export * from './controls/slider.js';
 export * from './controls/switch.js';
 export * from './controls/stepper.js';
@@ -36,8 +39,11 @@ export * from './navigation/nav-bar.js';
 export * from './navigation/tabs.js';
 export * from './navigation/scroll-edge.js';
 
-/* Overlays */
-export * from './overlays/anchor.js';
+/* Overlays.
+   Only the shared prop shapes are public. `triggerElement`, `usePopover` and `lockScroll` are how
+   the overlays are assembled — anchoring maths, a scroll lock with a reference count, a render
+   prop wired to a specific `aria-haspopup` — and none of them is usable on its own. */
+export type { OpenProps, TriggerProps, Align } from './overlays/anchor.js';
 export * from './overlays/popover.js';
 export * from './overlays/menu.js';
 export * from './overlays/dialog.js';

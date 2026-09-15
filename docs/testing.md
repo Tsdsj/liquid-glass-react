@@ -4,7 +4,7 @@
 
 ```bash
 pnpm install
-pnpm check      # typecheck → build → 单元测试 → SSR → 站点构建 → 真实 Chrome
+pnpm check      # typecheck → build → 单元测试 → SSR → 站点构建 → 真实 Chrome → WebKit/Firefox 退化路径
 ```
 
 拆开看：
@@ -17,6 +17,8 @@ pnpm test:ssr       # 针对 dist/，也就是真正会发出去的那份
 pnpm build:site
 pnpm exec playwright install --with-deps chrome
 pnpm test:chrome
+pnpm exec playwright install webkit firefox
+pnpm test:fallback  # 只跑退化路径那一个文件
 ```
 
 Chrome 项目伺服的是 `site/dist`，所以跑之前站点必须先构建。也可以用 `TEST_URL` 指向一个已经部署好的地址。
@@ -33,7 +35,7 @@ pnpm test:e2e --project=chromium
 
 **SSR（`tests/ssr.test.mjs`，3 项）** —— 服务端导入不需要 DOM，多个渲染根的 id 不冲突，默认打开的对话框在服务端输出安全标记。它导入的是 `dist/`，因此测的是真正发布的产物。
 
-**浏览器（`tests/browser/`，79 项，真实 Google Chrome）**：
+**浏览器（`tests/browser/`，84 项，真实 Google Chrome）**：
 
 | 文件 | 覆盖 |
 | --- | --- |
@@ -46,8 +48,12 @@ pnpm test:e2e --project=chromium
 | `a11y.spec.ts` | 四项系统设置、最大字号回流、从右到左、字号下限、表单错误关联 |
 | `materials.spec.ts` | 大小玻璃的行为差异、内容层不采样背景 |
 | `fusion.spec.ts` | 共享表面上的液滴融合 |
+| `contrast.spec.ts` | 玻璃压在真实场景上，文字对比度从合成后的像素上量，最差的一块不得低于 4.5 |
+| `touch.spec.ts` | 真实 touch 事件：拖动轴的归属、手指 1:1 带动透镜、点完不留 hover、命中区 44 |
 | `visual.spec.ts` | 四个宽度下的布局与截图证据 |
 | `csp.spec.ts` | 限制性 CSP 下无违规、零外部请求 |
+
+**跨引擎（`tests/browser/fallback.spec.ts`，WebKit 与 Firefox 各 8 项）** —— 没有 SVG 折射时剩下的东西还算不算材质：模糊、着色、边线、投影都在；布局、语义、键盘路径都不依赖折射分支；系统偏好照样生效。用 `pnpm test:fallback` 跑。
 
 `visual.spec.ts` 内部还有 6 页面 × 4 宽度的组合。不要把内部组合数和用例数相加，那不是覆盖率。
 
@@ -60,10 +66,10 @@ pnpm test:e2e --project=chromium
 | 浏览器矩阵 | 多个 Chrome 版本、多个操作系统、开关硬件加速 | 只在一台机器上跑过 |
 | 设备 | 集显机器与 Apple 芯片机器各一台 | 未执行 |
 | 显示 | 1x / 2x 像素比，浏览器与系统缩放 100% / 125% / 200% | 只覆盖了 1x 与四个视口宽度 |
-| 输入 | 触摸屏实机 | 只覆盖鼠标与键盘 |
-| 可读性 | 玻璃压在真实照片、视频、密集内容上的实际对比度 | **未测**。把两个色值填进对比度计算器不算数，玻璃的最终颜色取决于背后是什么 |
+| 输入 | 触摸屏实机 | 已有 4 项模拟 touch 用例；**真机未试**——遮挡、甩动惯性、系统手势冲突都不是模拟能答的 |
+| 可读性 | 玻璃压在真实照片、视频、密集内容上的实际对比度 | **已测**（`scripts/measure-contrast.mjs`，三引擎，从合成后的像素上量；最差一块 7.83:1）。密集文字与真实视频背景仍未覆盖 |
 | 辅助技术 | VoiceOver / NVDA 的朗读顺序，语音控制的名称匹配 | **未执行**。自动化只能证明角色和键盘路径是对的 |
 | 生命周期 | Strict Mode、hydration、多根 | 部分覆盖 |
-| 性能 | DevTools 录制、能耗、低端设备 | 未执行 |
+| 性能 | DevTools 录制、能耗、低端设备 | 已有 `scripts/measure-performance.mjs`：11 块玻璃在 6× CPU 节流下仍满帧。**能耗与真实低端 GPU 未测**——节流不动 GPU，而模糊花的就是填充率 |
 
 这些没有因为组件数量增加而放宽。状态同步记录在 `action-items.md`。

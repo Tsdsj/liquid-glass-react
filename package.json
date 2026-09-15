@@ -1,6 +1,6 @@
 {
   "name": "@ttqtt/liquid-glass-react",
-  "version": "0.2.0-alpha.5",
+  "version": "0.2.0-alpha.6",
   "description": "遵循 Apple 设计语言的 React 组件库：Liquid Glass 材质、语义色与文本样式、可拖动的原生控件。",
   "type": "module",
   "license": "MIT",
@@ -68,11 +68,12 @@
     "test:e2e": "playwright test",
     "test:chrome": "playwright test --project=chrome",
     "test:csp": "playwright test tests/browser/csp.spec.ts --project=chrome",
-    "check": "pnpm typecheck && pnpm build && pnpm test && pnpm test:ssr && pnpm build:site && pnpm test:chrome",
+    "check": "pnpm typecheck && pnpm build && pnpm test && pnpm test:ssr && pnpm build:site && pnpm test:chrome && pnpm test:fallback",
     "size": "node scripts/size-report.mjs",
     "registry:build": "node scripts/build-registry.mjs",
     "manifest:build": "node scripts/build-delivery-manifest.mjs",
-    "pretest": "tsc -p tsconfig.core-test.json"
+    "pretest": "tsc -p tsconfig.core-test.json",
+    "test:fallback": "playwright test --project=webkit --project=firefox"
   },
   "devDependencies": {
     "@playwright/test": "^1.57.0",

@@ -177,8 +177,18 @@ export function useGlassSurface<T extends HTMLElement>(options: GlassSurfaceOpti
     '--lg-radius': radius === 'pill' ? '9999px' : `${Math.max(0, Number.isFinite(radius) ? radius : 18)}px`,
     '--lg-control-height': `${densityTokens[density].controlHeight}px`,
     '--lg-blur': `${spec.blur}px`,
+    /**
+     * The blur is a CSS function even on the lensing path, and the SVG filter only displaces.
+     *
+     * `CSS.supports('backdrop-filter', 'url(#x)')` is true in Chromium, WebKit *and* Gecko —
+     * measured, see `scripts/measure-contrast.mjs` — so the capability probe cannot tell an
+     * engine that renders SVG backdrop filters from one that merely parses the declaration.
+     * Leading with a real `blur()` means an engine that ignores the `url()` still frosts the
+     * surface, which is the degradation the documentation promises, instead of leaving a
+     * transparent hole where the glass was.
+     */
     '--lg-backdrop': active
-      ? `url("#${id}") saturate(${spec.saturation}) contrast(var(--lg-glass-contrast,1))`
+      ? `blur(${spec.blur / 2}px) url("#${id}") saturate(${spec.saturation}) contrast(var(--lg-glass-contrast,1))`
       : `blur(${spec.blur}px) saturate(${spec.saturation}) contrast(var(--lg-glass-contrast,1))`,
   } as CSSProperties;
   const attributes = {
@@ -194,7 +204,9 @@ export function useGlassSurface<T extends HTMLElement>(options: GlassSurfaceOpti
   const filter = active && <svg width="0" height="0" className="lg-filter-defs" focusable="false" aria-hidden="true"><defs>
     <filter id={id} x={-80} y={-80} width={texture!.width + 160} height={texture!.height + 160}
       filterUnits="userSpaceOnUse" primitiveUnits="userSpaceOnUse" colorInterpolationFilters="sRGB">
-      <feGaussianBlur in="SourceGraphic" stdDeviation={spec.blur / 2} result="softened" />
+      {/* The softening now happens in the CSS chain before this filter runs, so that an engine
+          which drops the `url()` still gets it. What is left here is the lensing itself. */}
+      <feOffset in="SourceGraphic" dx={0} dy={0} result="softened" />
       <feImage href={texture!.url} x="0" y="0" width={texture!.width} height={texture!.height} preserveAspectRatio="none" result="geometry" />
       {channels.map((spread, index) => <feDisplacementMap key={index}
         ref={node => { displacement.current[index] = node; }}

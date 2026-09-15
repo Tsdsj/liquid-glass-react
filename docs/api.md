@@ -161,11 +161,13 @@ import '@ttqtt/liquid-glass-react/styles.css';
 
 ## Hook 与工具
 
-`useGlassPolicy` `useGlassSurface` `useBackdropTone` `useSharedSurface` `useMediaQuery` `useFusion` `usePull` `useSelectionLens` `usePopover` `useToast`
+`useGlassPolicy` `useGlassSurface` `useBackdropTone` `useSharedSurface` `useMediaQuery` `useFusion` `usePull` `useToast`
 
-`attachPull` `elementAt` `lensOrigin` `triggerElement` `lockScroll`
+`attachPull` `elementAt`
 
-来自 `@liquid-glass-ui/core`：
+浮层的装配件（`triggerElement`、`usePopover`、`lockScroll`）与选中透镜的内部件（`useSelectionLens`、`lensOrigin`、`trackSpan`）不在公开 API 里：它们假定了特定的 DOM 结构和样式表里的变换链，单独拿出来用不了。
+
+几何与弹簧（与组件同源，直接从包根导入）：
 - `concentricRadius(containerRadius, inset, { minimum, maximum })` / `concentricInset` / `capsuleRadius`
 - `createSpring(initial, apply, config)` / `advanceSpring` / `springAtRest` / `defaultSpring`
 - `getGlassDiagnostics()` / `clearGlassCache()`
