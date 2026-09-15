@@ -78,7 +78,7 @@ pnpm exec playwright install --with-deps webkit firefox
 
 0.0.1 必须手工发，因为可信发布者要挂在一个已经存在的包上。发完之后回到上面配好 Trusted Publishing，从 0.0.2 起就是打标签自动走了。
 
-**要等到 2026-09-16 06:04 之后。** 整包 unpublish 之后 npm 封这个名字 24 小时，早了会被拒。
+**要等到 2026-09-16 06:04 UTC（北京时间 14:04）之后。** 整包 unpublish 之后 npm 封这个名字 24 小时，早了会被拒。
 
 ```bash
 npm login                                  # 账号开了 2FA，会要一次验证
@@ -150,7 +150,7 @@ npm view @ttqtt/liquid-glass-react version
 由此留下两条永久约束：
 
 - **0.1.0 和 0.2.0 再也不能用了。** npm 的版本号是一次性的："Once `package@version` has been used, you can never use it again." 下架不会把号还回来。所以 0.0.x 之后下一个次版本号要跳过 0.1.0，直接走 **0.3.0**。
-- **下架后 24 小时内不能以这个名字发任何版本。** 窗口在 2026-09-16 06:04 之后结束。
+- **下架后 24 小时内不能以这个名字发任何版本。** 窗口在 2026-09-16 06:04 UTC（北京时间 14:04）之后结束。
 
 ### 往后
 
