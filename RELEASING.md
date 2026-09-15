@@ -23,11 +23,18 @@ pnpm version 0.0.1 && git push --follow-tags
 | 项 | 取值 |
 | --- | --- |
 | Publisher | GitHub Actions |
-| Repository | `Tsdsj/liquid-glass-react` |
+| Label | 可留空 |
+| Organization or user | `Tsdsj` |
+| Repository | `liquid-glass-react` |
 | Workflow filename | `release.yml` |
-| Environment | `npm` |
+| Environment name | `npm` |
+| **Allow npm publish** | **勾上** |
 
-这四项必须和 `release.yml` 里的完全一致——OIDC 令牌里带着它们，对不上 npm 就拒绝。构建溯源（provenance）随之自动生成，包页上会出现一个可验证的来源徽章。
+前六项必须和 `release.yml` 里的完全一致——OIDC 令牌里带着它们，对不上 npm 就拒绝。**这些字段建好之后改不了**，要改只能删掉重建。
+
+最后那个勾单独说：npm 默认只允许可信发布者做 `npm stage publish`（发到暂存区，再人工提升为正式版），直接 `npm publish` 要单独授权。`release.yml` 跑的是 `npm publish`，所以必须勾上，否则发版那一步会被拒。
+
+构建溯源（provenance）随之自动生成，包页上会出现一个可验证的来源徽章。
 
 > 首次发布一个**全新的包名**时，npm 还不知道有这个包，也就无处登记可信发布者。做法是先用一次性的 Granular Access Token 手工发出 0.0.1，包存在之后再回来配 Trusted Publishing，后续版本就全自动了。本项目的包名已经存在，可以直接配。
 
@@ -121,8 +128,14 @@ registry 上原本有一套 2026 年 7 月发的旧实现：
 ### 作废旧版本
 
 ```bash
-npm deprecate "@ttqtt/liquid-glass-react@<=0.2.0" "旧实现，已被 0.0.1 起的重写版取代：https://tsdsj.github.io/liquid-glass-react/"
+npm deprecate "@ttqtt/liquid-glass-react@<=0.2.0" "旧实现，已被 0.0.1 起的重写版取代：https://tsdsj.github.io/liquid-glass-react/" --otp=<六位码>
 ```
+
+账号对写操作开了双因素，而 `deprecate` 是一次 registry 写入，少了 `--otp` 会拿到
+`E403 … Two-factor authentication or granular access token with bypass 2fa enabled is required`。
+两个版本在同一次调用里写完，不要分两条命令——码会过期。
+
+> CI 发版不受这条影响：OIDC 身份本身就满足 npm 的强验证要求，不需要 OTP。只有本机手工跑写操作才要。
 
 `deprecate` 是能立刻做到的那一种作废：版本还在 registry 上（已经写进别人锁文件的不会解析失败），但 `npm install` 会打印弃用警告，包页上也会标出来。
 
@@ -154,7 +167,7 @@ npm login
 pnpm check
 pnpm build
 RELEASE_TAG=v0.0.1 pnpm verify:package
-pnpm publish --access public
+pnpm publish --access public --otp=<六位码>
 ```
 
 `prepublishOnly` 会再跑一次 `verify:package`，所以下面这些漏不掉：
@@ -164,7 +177,7 @@ pnpm publish --access public
 - `exports` 里每一个入口都真的指向打进包里的文件；
 - 有 `RELEASE_TAG` 时，标签号与 `package.json` 一致。
 
-手工发布拿不到构建溯源（provenance）——那是 CI 用 OIDC 签的，本机签不了。所以只在应急时用。
+手工发布拿不到构建溯源（provenance）——那是 CI 用 OIDC 签的，本机签不了；而且每一步都要现掏 OTP。所以只在应急时用。
 
 ---
 
