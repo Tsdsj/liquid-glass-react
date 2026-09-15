@@ -66,9 +66,11 @@ jobs:
       # so the two cannot describe the same release differently.
       - name: Cut the GitHub Release
         run: |
-          awk -v v="## ${{ steps.tag.outputs.version }}" '$0 == v {found=1; next} found && /^## /{exit} found' CHANGELOG.md > notes.md
-          [ -s notes.md ] || echo "See CHANGELOG.md." > notes.md
-          gh release create "$GITHUB_REF_NAME" --title "$GITHUB_REF_NAME" --notes-file notes.md \
-            ${{ contains(steps.tag.outputs.version, '-') && '--prerelease' || '' }}
+          awk -v v="## $VERSION" '$0 == v {found=1; next} found && /^## /{exit} found' CHANGELOG.md > notes.md
+          [ -s notes.md ] || echo "CHANGELOG.md 里没有 \"## $VERSION\" 这一节。" > notes.md
+          args=()
+          [[ "$VERSION" == *-* ]] && args+=(--prerelease)
+          gh release create "$GITHUB_REF_NAME" --title "$GITHUB_REF_NAME" --notes-file notes.md "${args[@]}"
         env:
           GH_TOKEN: ${{ github.token }}
+          VERSION: ${{ steps.tag.outputs.version }}
