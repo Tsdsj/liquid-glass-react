@@ -5,20 +5,21 @@
 发版动作只有一个：**打标签**。其余全部由标签触发。
 
 ```bash
-pnpm version 0.0.1 && git push --follow-tags
+pnpm version 0.0.2 && git push --follow-tags
 ```
+
+**但第一次不行。** 这个包在 2026-09-15 被整包 `unpublish` 了，registry 上现在什么都没有，而 npm 的可信发布者是挂在**包**上的配置——包不存在，就没有那个设置页。所以 0.0.1 必须先手工发一次，见下面的〈首次发布〉。
 
 ---
 
 ## 一次性配置
 
-这三项配完之后，以后发版不用再碰。
-
 ### 1. npm Trusted Publishing
 
-不用令牌。npm 直接认 GitHub 签发的 OIDC 身份，所以没有密钥可泄漏，也没有到期这回事。
+不用令牌。npm 直接认 GitHub 签发的 OIDC 身份，所以没有密钥可泄漏，没有到期，也不用掏 OTP。
 
-打开 https://www.npmjs.com/package/@ttqtt/liquid-glass-react/access → **Trusted Publisher** → Add：
+**要等 0.0.1 手工发出去之后才能配。** 然后打开
+https://www.npmjs.com/package/@ttqtt/liquid-glass-react/access → **Trusted Publisher** → Add：
 
 | 项 | 取值 |
 | --- | --- |
@@ -35,8 +36,6 @@ pnpm version 0.0.1 && git push --follow-tags
 最后那个勾单独说：npm 默认只允许可信发布者做 `npm stage publish`（发到暂存区，再人工提升为正式版），直接 `npm publish` 要单独授权。`release.yml` 跑的是 `npm publish`，所以必须勾上，否则发版那一步会被拒。
 
 构建溯源（provenance）随之自动生成，包页上会出现一个可验证的来源徽章。
-
-> 首次发布一个**全新的包名**时，npm 还不知道有这个包，也就无处登记可信发布者。做法是先用一次性的 Granular Access Token 手工发出 0.0.1，包存在之后再回来配 Trusted Publishing，后续版本就全自动了。本项目的包名已经存在，可以直接配。
 
 ### 2. 发布环境
 
@@ -75,6 +74,35 @@ pnpm exec playwright install --with-deps webkit firefox
 
 ---
 
+## 首次发布（只做一次）
+
+0.0.1 必须手工发，因为可信发布者要挂在一个已经存在的包上。发完之后回到上面配好 Trusted Publishing，从 0.0.2 起就是打标签自动走了。
+
+**要等到 2026-09-16 06:04 之后。** 整包 unpublish 之后 npm 封这个名字 24 小时，早了会被拒。
+
+```bash
+npm login                                  # 账号开了 2FA，会要一次验证
+pnpm install --frozen-lockfile
+pnpm check                                 # 和 CI 跑的是同一串
+pnpm version 0.0.1 --no-git-tag-version    # 只改 package.json，标签留到最后
+pnpm build
+RELEASE_TAG=v0.0.1 pnpm verify:package
+pnpm publish --access public --otp=<六位码>
+```
+
+然后：
+
+1. 回 npm 包页配 Trusted Publisher（上面那张表）；
+2. 把版本号的改动提交、打标签、推上去——
+
+```bash
+git commit -am "Release 0.0.1" && git tag v0.0.1 && git push --follow-tags
+```
+
+标签会触发 `release.yml`：跑完整套检查，发现 0.0.1 已经在 registry 上就跳过发包那一步，然后建好 GitHub Release。**从此以后不用再手工发。**
+
+---
+
 ## 发一个版本
 
 ### 1. 本机先过一遍
@@ -95,7 +123,7 @@ pnpm check
 ### 3. 打标签
 
 ```bash
-pnpm version 0.0.1        # 改 package.json、建提交、建 v0.0.1 标签
+pnpm version 0.0.2        # 改 package.json、建提交、建 v0.0.2 标签
 git push --follow-tags
 ```
 
@@ -117,44 +145,20 @@ npm view @ttqtt/liquid-glass-react version
 
 ## 版本号
 
-registry 上原本有一套 2026 年 7 月发的旧实现：
+这个包名下曾有一套 2026 年 7 月的旧实现（0.1.0 / 0.2.0），与本项目没有代码继承关系。2026-09-15 整包 `unpublish`，registry 上现在是空的，号从 0.0.1 重开。
 
-```text
-@ttqtt/liquid-glass-react   0.1.0 (2026-07-15)   0.2.0 (2026-07-16)
-```
+由此留下两条永久约束：
 
-本轮是完整重写，与那套没有代码继承关系，所以**号从 0.0.1 重开**，旧的两个版本作废。
-
-### 作废旧版本
-
-```bash
-npm deprecate "@ttqtt/liquid-glass-react@<=0.2.0" "旧实现，已被 0.0.1 起的重写版取代：https://tsdsj.github.io/liquid-glass-react/" --otp=<六位码>
-```
-
-账号对写操作开了双因素，而 `deprecate` 是一次 registry 写入，少了 `--otp` 会拿到
-`E403 … Two-factor authentication or granular access token with bypass 2fa enabled is required`。
-两个版本在同一次调用里写完，不要分两条命令——码会过期。
-
-> CI 发版不受这条影响：OIDC 身份本身就满足 npm 的强验证要求，不需要 OTP。只有本机手工跑写操作才要。
-
-`deprecate` 是能立刻做到的那一种作废：版本还在 registry 上（已经写进别人锁文件的不会解析失败），但 `npm install` 会打印弃用警告，包页上也会标出来。
-
-**彻底删除做不到。** npm 只允许在发布后 **72 小时内** `unpublish`；这两个版本是两个月前发的，早过了窗口。超期后想整包下架必须满足"无人依赖 + 周下载 < 300 + 单一维护者"并**联系 npm 支持**人工处理。而且一旦下架，那两个版本号就被永久占死、不能再发——所以即便办得到，`deprecate` 也是更划算的做法。
-
-### 号会往回走
-
-发 0.0.1 时 `latest` 会从 0.2.0 **退回**到 0.0.1。这是有意的，但要知道两件事：
-
-- 已经装了 0.2.0 的人不会被自动升级，因为 `^0.2.0` 匹配不到 0.0.1，他们会停在旧实现上——弃用警告就是给他们看的；
-- `npm view … version` 从此显示 0.0.1，看着像退步，实际是换了一条线。
+- **0.1.0 和 0.2.0 再也不能用了。** npm 的版本号是一次性的："Once `package@version` has been used, you can never use it again." 下架不会把号还回来。所以 0.0.x 之后下一个次版本号要跳过 0.1.0，直接走 **0.3.0**。
+- **下架后 24 小时内不能以这个名字发任何版本。** 窗口在 2026-09-16 06:04 之后结束。
 
 ### 往后
 
 - **patch**（0.0.2）— 修 bug、补文档，不动 API。
-- **minor**（0.1.0）— 新增组件或属性。0.x 阶段破坏性改动也走 minor，但必须附改名对照表，像 `docs/migration-0.2.md` 那样。
+- **minor**（0.3.0，跳过被占死的 0.1.0 / 0.2.0）— 新增组件或属性。0.x 阶段破坏性改动也走 minor，但必须附改名对照表，像 `docs/migration-0.2.md` 那样。
 - **major**（1.0.0）— 留给 API 稳定、且屏幕阅读器与真机触摸验证都做完之后。现在的 README 自己写着这些没做完，提前发 1.0.0 就是和它打架。
 
-预发布版本（`0.1.0-beta.1`）由 `release.yml` 自动发到 `next` 标签下，不会让人 `pnpm add` 时装上。
+预发布版本（`0.3.0-beta.1`）由 `release.yml` 自动发到 `next` 标签下，不会让人 `pnpm add` 时装上。
 
 ---
 
@@ -166,7 +170,7 @@ npm deprecate "@ttqtt/liquid-glass-react@<=0.2.0" "旧实现，已被 0.0.1 起�
 npm login
 pnpm check
 pnpm build
-RELEASE_TAG=v0.0.1 pnpm verify:package
+RELEASE_TAG=v0.0.2 pnpm verify:package
 pnpm publish --access public --otp=<六位码>
 ```
 
@@ -185,4 +189,4 @@ pnpm publish --access public --otp=<六位码>
 
 - GitHub Release 由流水线自动建好，正文取自 CHANGELOG。
 - 把 `docs/action-items.md` 里这一轮关掉的项更新掉。
-- npm 令牌到期前换新的。
+- 在一个空的 Vite React 项目里从 registry 真装一次。`pnpm pack` 的文件清单证明不了 `exports` 在别人的打包器里解析得开。

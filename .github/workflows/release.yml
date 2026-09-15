@@ -56,10 +56,27 @@ jobs:
           if [[ "$version" == *-* ]]; then echo "dist=next" >> "$GITHUB_OUTPUT"; else echo "dist=latest" >> "$GITHUB_OUTPUT"; fi
           echo "version=$version" >> "$GITHUB_OUTPUT"
 
+      # A version already on the registry is not an error to recover from — it is the answer.
+      # npm refuses to overwrite one anyway, so re-running a release after a half-failed run,
+      # or tagging a version that was published by hand, should carry on and cut the Release
+      # rather than fail the job on a step that has nothing left to do.
+      - name: Is this version already published?
+        id: published
+        run: |
+          if npm view "@ttqtt/liquid-glass-react@$VERSION" version >/dev/null 2>&1; then
+            echo "already=true" >> "$GITHUB_OUTPUT"
+            echo "::notice::$VERSION is already on the registry; skipping the publish step."
+          else
+            echo "already=false" >> "$GITHUB_OUTPUT"
+          fi
+        env:
+          VERSION: ${{ steps.tag.outputs.version }}
+
       # No token: npm mints a short-lived credential from this job's OIDC identity, which is
       # why the repository, this workflow file and the `npm` environment all have to match
       # what is registered as the package's trusted publisher. Provenance comes with it.
       - name: Publish to npm
+        if: steps.published.outputs.already == 'false'
         run: npm publish --access public --tag ${{ steps.tag.outputs.dist }}
 
       # The release notes are the CHANGELOG section for this version — one source of truth,
