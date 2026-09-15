@@ -2,7 +2,7 @@
 
 本版本只承诺交付代码、可运行检查预览与已记录的测试证据。没有逐像素复刻 Apple 的承诺，没有原生私有着色器、真实物理液滴融合，也没有"任意背景自动取色并保证对比度合格"的能力。
 
-只设计 Chrome 路线。0.2 的 60 项 Playwright 用例在**单台机器的正式 Google Chrome** 上通过；这不等于多平台、多版本、不同硬件加速设置的矩阵通过。移动视口截图不代表 Android Chrome、移动 GPU 或触控真机验证。Safari 与 Firefox 没有折射（退化为模糊），其回退观感未做人工复核。
+只设计 Chrome 路线。84 项 Playwright 用例在正式 Google Chrome 上通过，另有 16 项在 WebKit 与 Firefox 上跑退化路径；两套都在 macOS 本机与 CI 的 Ubuntu runner 上各跑过一遍。**两个操作系统不等于矩阵**——Windows、多个 Chrome 版本、关掉硬件加速的情况都没测。移动视口截图不代表 Android Chrome、移动 GPU 或触控真机验证。Safari 与 Firefox 的退化观感有自动用例守着（模糊、着色、边线、投影俱在，布局与键盘不依赖折射分支），但**没有人用眼睛在真机 Safari 上看过**。
 
 **背景色调是声明的，不是采样的。** 小玻璃随背景翻转明暗依赖调用方用 `GlassBackdrop` 声明 tone；没有声明时保持 `mixed`，即保守的应用外观并把 `clear` 降级为 `regular`。本库不做 DOM 截屏或跨源像素读取，因此不存在"自动适配任意背景"这项能力。
 
@@ -10,7 +10,7 @@
 
 **SF 字体与 SF Symbols 都没有捆绑**，因为许可不覆盖网页分发。`-apple-system` 只在 Apple 设备解析为 SF，其他平台落到 Segoe UI / Roboto，字形度量不同；字号用 px 定死并在这些平台复核过行长，但排版观感必然有差异。图标为 24×24 / 1.8 描边自绘。
 
-本地已完成 `pnpm install` 后的 typecheck、Vite 构建、62 项核心测试、3 项 SSR 测试与正式 Chrome 回归。**未完成**：依赖安全审计、CI 上的可重现构建、React 完整 SSR/hydration 流程与开发 Strict Mode 的运行时验证。预览包使用明确单列的 React 19.1.1 运行时，不应当成生产依赖版本已验证的证据。
+typecheck、Vite 构建、65 项核心测试、3 项 SSR 测试与浏览器回归，本机与 CI 上各完整跑过一遍（CI 用锁文件安装，3m42s 全绿）。`pnpm audit` 无已知漏洞。打出来的 tarball 已经装进一个空的 Vite + React 19 项目验证过：关掉 `skipLibCheck` 的类型检查通过，打包通过。**未完成**：React 完整 SSR / hydration 流程与开发 Strict Mode 的运行时验证。依赖版本按 `save-exact` 单列，不应当成"生产依赖矩阵已验证"的证据。
 
 菜单只支持单层动作，Toolbar 的 roving focus 只覆盖按钮型子控件。没有 Combobox、Tree、DatePicker、富文本、数据表格、嵌套子菜单、拖放或完整命令面板。`GlassSheet` 只支持 medium / large 两个停靠高度，不支持自定义比例或自由高度。Popover 的顶层显示走原生 `popover`，不是 React Portal，不能照搬 Portal 容器 API。
 

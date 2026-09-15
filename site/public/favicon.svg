@@ -1,0 +1,27 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="Liquid Glass UI">
+  <!--
+    A glass tile over a coloured field: the tint, the rim and the travelling highlight are the
+    three things the material is actually made of. Drawn, not photographed — no Apple assets.
+  -->
+  <defs>
+    <linearGradient id="field" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#0a84ff"/>
+      <stop offset="1" stop-color="#bf5af2"/>
+    </linearGradient>
+    <linearGradient id="tint" x1=".2" y1="0" x2=".8" y2="1">
+      <stop offset="0" stop-color="#fff" stop-opacity=".55"/>
+      <stop offset="1" stop-color="#fff" stop-opacity=".12"/>
+    </linearGradient>
+    <linearGradient id="rim" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#fff" stop-opacity=".95"/>
+      <stop offset=".5" stop-color="#fff" stop-opacity=".25"/>
+      <stop offset="1" stop-color="#fff" stop-opacity=".7"/>
+    </linearGradient>
+  </defs>
+  <rect width="64" height="64" rx="14" fill="url(#field)"/>
+  <g transform="rotate(-12 32 32)">
+    <rect x="11" y="22" width="42" height="20" rx="10" fill="url(#tint)"/>
+    <rect x="11.75" y="22.75" width="40.5" height="18.5" rx="9.25" fill="none" stroke="url(#rim)" stroke-width="1.5"/>
+    <rect x="17" y="26" width="13" height="5" rx="2.5" fill="#fff" opacity=".5"/>
+  </g>
+</svg>

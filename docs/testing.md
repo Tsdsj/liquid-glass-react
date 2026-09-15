@@ -63,7 +63,7 @@ pnpm test:e2e --project=chromium
 
 | 维度 | 需要什么 | 现状 |
 | --- | --- | --- |
-| 浏览器矩阵 | 多个 Chrome 版本、多个操作系统、开关硬件加速 | 只在一台机器上跑过 |
+| 浏览器矩阵 | 多个 Chrome 版本、多个操作系统、开关硬件加速 | macOS 本机与 CI 的 Ubuntu 各跑过一遍全套；Windows、多版本、关硬件加速未测 |
 | 设备 | 集显机器与 Apple 芯片机器各一台 | 未执行 |
 | 显示 | 1x / 2x 像素比，浏览器与系统缩放 100% / 125% / 200% | 只覆盖了 1x 与四个视口宽度 |
 | 输入 | 触摸屏实机 | 已有 4 项模拟 touch 用例；**真机未试**——遮挡、甩动惯性、系统手势冲突都不是模拟能答的 |
@@ -73,3 +73,9 @@ pnpm test:e2e --project=chromium
 | 性能 | DevTools 录制、能耗、低端设备 | 已有 `scripts/measure-performance.mjs`：11 块玻璃在 6× CPU 节流下仍满帧。**能耗与真实低端 GPU 未测**——节流不动 GPU，而模糊花的就是填充率 |
 
 这些没有因为组件数量增加而放宽。状态同步记录在 `action-items.md`。
+
+## CI 跑的是什么
+
+`.github/workflows/ci.yml` 跑的就是上面这一串，一条不少，用 `--frozen-lockfile` 安装。推 `main`、开 PR、打标签时各跑一次——标签走的是同一个 job（`workflow_call` 复用，不是复制一份），所以发版的检查不可能比 PR 的松。
+
+最后两步是打包前的闸门：`pnpm verify:package` 问打包器"你到底会装哪些文件进去"，核对源码没泄漏、每个 `exports` 入口都落到真实文件、`"use client"` 还在第一行、标签号与 `package.json` 一致。发版流程见 `../RELEASING.md`。

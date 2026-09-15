@@ -17,12 +17,12 @@
 | P1：完整媒体场景 | 完成 | 切换、缩放、收藏、合成本地视频、设置、SVG 导出流程 | — |
 | P1：可访问性与键盘 | 部分完成 | 键盘路径、焦点返回、原生表单、四项系统偏好、Dynamic Type 至 AX5、RTL、11pt 字号下限，共 10 项自动用例（`docs/accessibility.md`） | **真实屏幕阅读器、语音控制、切换控制、200% 缩放未执行**；实际合成背景的对比度已量（见 `../reports/hig-review.md` R2） |
 | P2：动态与组合 | 完成（约定范围） | 三个可拖动控件、液滴融合、选中透镜、sheet 停靠拖拽、ScrollEdge 两种形态；透镜与开关旋钮在自身行程内 1:1 跟手，形变由速度与阻力决定 | 没有物理融合 / 共享 SDF 形变；这不是已实现能力。触摸已有模拟用例，**真机手感仍未验证** |
-| P3：工程骨架与文档 | 完成 | npm workspaces、TS、Vite、分包、CI 配置、源码复制、本地 registry、可再生的交付清单 | CI 配置已经编写，但远端 CI 没有执行 |
-| P3：文档站部署 | 完成 | Vite 构建 + GitHub Pages 工作流；相对资源路径，根路径与子路径都能跑 | 尚未实际推送验证过线上效果 |
-| P3：联网标准构建 | 部分完成 | 本轮已在本机完成 `pnpm install` 后的 typecheck / build / core / SSR / 正式 Chrome 全流程 | 依赖安全审计、锁文件复核、CI 上的可重现构建 |
+| P3：工程骨架与文档 | 完成 | pnpm、TS、Vite、单包构建、三条工作流、本地 registry、可再生的交付清单 | — |
+| P3：文档站部署 | 完成 | 已上线 https://tsdsj.github.io/liquid-glass-react/ ；5 条路由在正式 Chrome 上实测无控制台报错、无横向溢出 | — |
+| P3：联网标准构建 | 完成 | CI 用 `--frozen-lockfile` 在 Ubuntu runner 上跑完整 `check`，3m42s 全绿；`pnpm audit` 无已知漏洞 | — |
 | P3：SSR / hydration / Strict Mode | 部分完成 | 无 DOM 模块初始化、稳定 ID 策略、SSR 示例与 3 项测试 | React 完整 SSR、hydration、开发 Strict Mode 未执行 |
-| P3：正式 Chrome 支持合同 | 部分完成 | 84 项 Playwright 用例在本机**正式 Google Chrome** 上全部通过，另有 16 项在 WebKit 与 Firefox 上跑退化路径；CI 工作流已就位 | Windows / Linux、多版本、硬件加速开关的设备矩阵；单机通过不等于矩阵通过 |
-| P3：分发与包体 | 部分完成 | 单包 `@ttqtt/liquid-glass-react`：ESM 产物、类型声明、合并样式表；`pnpm pack` 内容已核对；公开运行时名字 75 → 69，内部装配件已收回 | 尚未真正发布到 npm；按导入的 tree-shaking 成本未测 |
+| P3：正式 Chrome 支持合同 | 部分完成 | 84 项 Playwright 用例在**正式 Google Chrome** 上通过，16 项在 WebKit 与 Firefox 上跑退化路径；macOS 本机与 CI 的 Ubuntu 上各跑过一遍 | Windows、多个 Chrome 版本、关掉硬件加速；两个操作系统不等于矩阵 |
+| P3：分发与包体 | 部分完成 | 单包 `@ttqtt/liquid-glass-react`：ESM 产物、类型声明、合并样式表；`scripts/verify-package.mjs` 在 `prepublishOnly` 上把关；tarball 已装进空 Vite + React 19 项目验证（`skipLibCheck: false` 下类型检查与打包均通过）；公开运行时名字 75 → 69 | 尚未真正发布到 npm；按导入的 tree-shaking 成本未测 |
 | 产品验证 | 待进行 | 已给出接入任务与记录模板 | 真实目标开发者试用，不用演示观感代替需求验证 |
 
 ## 最近一轮做了什么
@@ -39,7 +39,7 @@
 
 1. **真实屏幕阅读器**——VoiceOver / NVDA 的朗读顺序。这是唯一一项完全没有替代手段的，现在也是最大的未知。
 2. **触摸真机**。模拟用例定死了 `touch-action` 和命中区，但遮挡、甩动惯性、与系统边缘手势的冲突只能上手试。
-3. 在 Windows / Linux 与不同硬件加速设置上重跑 `pnpm test:chrome` 与 `pnpm test:fallback`。
-4. 真正发一次 npm 包，并在一个空项目里装回来验证。
+3. 在 Windows 与关掉硬件加速的情况下重跑 `pnpm test:chrome` 与 `pnpm test:fallback`（Linux 已由 CI 覆盖）。
+4. 真正发一次 npm 包。tarball 已经装进空项目验证过，但从 registry 装回来还有 `exports`、dist-tag、provenance 几件事只有发出去才知道。
 5. 在真实低端设备上录一次 DevTools：`measure-performance.mjs` 只节流了 CPU，而模糊花的是 GPU 填充率。
 6. 用眼睛在真机 Safari 上看一遍退化后的材质——自动化只能证明模糊、着色、边线都还在。

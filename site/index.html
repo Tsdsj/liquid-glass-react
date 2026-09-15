@@ -7,6 +7,9 @@
 <meta name="theme-color" content="#f2f2f7" media="(prefers-color-scheme: light)"/>
 <meta name="theme-color" content="#000000" media="(prefers-color-scheme: dark)"/>
 <meta name="description" content="Liquid Glass UI — 遵循 Apple 设计语言的 React 组件系统与文档站"/>
+<!-- Relative so the same build works from the domain root and from the /liquid-glass-react/
+     sub-path. Without a declared icon the browser asks for /favicon.ico and logs a 404. -->
+<link rel="icon" href="./favicon.svg" type="image/svg+xml"/>
 <title>Liquid Glass UI</title>
 <!-- data-csp-nonce is replaced with a real per-response nonce by scripts/serve-preview.mjs,
      so this inline script runs under `script-src 'self' 'nonce-…'` without weakening the policy. -->
