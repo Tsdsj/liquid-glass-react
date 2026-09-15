@@ -1,84 +1,87 @@
 # 交付验证记录
 
+**版本 0.0.1 · 记录日期 2026-09-15**
+
+上一份记录（0.1.0-alpha.1，跑在一个装不了依赖的离线容器里）已移到 [`archive/2026-09-10-offline/`](archive/2026-09-10-offline/README.md)，那里面的数字不代表现状。
+
 ## 总体结论
 
-这是 **0.1.0-alpha.1 工程预览**：实际组件与场景可运行，当前环境可执行的核心与浏览器检查通过。未完成的标准构建和真实设备门槛仍然是阻塞项，没有因为附带 ZIP 而被标成发布通过。
+可以发 0.0.1。构建、类型、测试、打包、站点部署全部在两台互不相干的机器上跑通，打出来的 tarball 已经装进真实项目验证过。
+
+**没有验证**的是真人与真机那一类：屏幕阅读器、触摸设备、低端 GPU、Windows。这些没有自动化替代品，下面单列。
 
 ## 环境
 
-| 项目 | 实际情况 |
-| --- | --- |
-| 日期 | 2026-09-10 |
-| OS | Debian Linux 容器 |
-| Node | 22.16.0 |
-| TypeScript | 5.8.3 |
-| 测试浏览器 | Chromium 144.0.7559.96，headless |
-| 已运行 React | 19.1.1 production 离线检查运行时 |
-| 源码声明 React | 19.2.7，当前未安装验证 |
-| 物理 GPU / 硬件加速 | 未确认；WebGL renderer 查询为 null |
-| DPR | 1 |
-| 浏览器导航 | 容器管理策略禁止 URL 导航；没有修改策略。用自编 HTML 与编译代码加载 about:blank 做运行检查 |
-| HTTP 检查 | 独立 Node HTTP 客户端验证本地静态服务器，不冒充浏览器 HTTP 导航 |
+| | 本机 | CI |
+| --- | --- | --- |
+| 系统 | macOS（Darwin 27.0.0） | Ubuntu 24.04，GitHub Actions runner 2.337.0 |
+| Node | 24.18.0 | 22（取自 `.nvmrc`） |
+| pnpm | 11.17.0（`packageManager` 字段固定） | 同左 |
+| TypeScript | 5.8.3 | 同左 |
+| Playwright | 1.63.0 | 同左 |
+| 浏览器 | 正式 Google Chrome 153.0.8010.36，有头 | 同渠道，`playwright install chrome` |
+| 依赖安装 | `pnpm install` | `pnpm install --frozen-lockfile` |
+
+两边跑的是同一串命令（`pnpm check`），不是两套各自的脚本。
 
 ## 已执行
 
-| 检查 | 结果 | 证据 |
+| 检查 | 结果 | 怎么跑的 |
 | --- | --- | --- |
-| tokens/core 真实 TypeScript 编译 | 通过 | 随包 core/tokens dist 与 core tests |
-| TypeScript/TSX 语法转译 | 31 个文件，0 语法错误；不是语义类型检查 | syntax-check.json |
-| 核心几何、缓存与无 DOM 导入 | 35/35 通过 | core-tests.tap |
-| 浏览器交互 | 14/14 组通过 | browser-interactions.json |
-| 光学、策略与 ref 清理 | 9/9 组通过 | optics-and-policy.json |
-| 质量场景 | 8/8 组通过 | browser-quality.json |
-| 响应式子矩阵 | 6 页 × 3 宽度（390/768/1440），没有水平溢出 | responsive.json |
-| HTTP 服务器 | 8 项通过：页面/资源、CSP、隐藏路径、父路径、POST、HEAD、404 | preview-server.json |
-| 源码复制 | 已实际复制并校验引用重写和 LICENSE | source-distribution.json |
-| 本地 registry | 已生成版本化文件内容与 hash 清单 | ../registry/registry.json |
-| 文件大小 | 实际文件原始/gzip 统计；非 tree-shaken 单组件导入成本 | size.json |
+| 类型检查 | 通过 | `tsc -p tsconfig.check.json --noEmit`，完整语义检查 |
+| 包构建 | 通过 | Vite library 模式单 ESM 产物 + `tsc --emitDeclarationOnly` + 合并样式表 |
+| 核心单元 | 65/65 | 不碰浏览器：有符号距离场、贴图预算、LRU 字节记账、弹簧积分器、同心圆角，外加 3 项样式表静态检查 |
+| SSR | 3/3 | 导入的是 `dist/`，测的是真正发出去的那份 |
+| 浏览器 | 84/84 | 正式 Google Chrome，伺服 `site/dist` |
+| 跨引擎退化 | 16/16 | WebKit 与 Firefox 各 8 项 |
+| 依赖审计 | 无已知漏洞 | `pnpm audit`，prod 与 dev 各跑一次 |
+| 打包内容 | 55 文件，157.4 KB packed / 584.0 KB unpacked | `scripts/verify-package.mjs`，问打包器它会装哪些进去 |
+| 装回来 | 通过 | tarball 装进空的 Vite + React 19 项目：`skipLibCheck: false` 下类型检查通过，`vite build` 通过 |
+| 文档站上线 | 通过 | https://tsdsj.github.io/liquid-glass-react/ ，5 条路由在正式 Chrome 上无控制台报错、无横向溢出，资源全部 200 |
+| CI 全绿 | 3m42s | GitHub Actions run 34932607077 |
 
-浏览器 31 组是 14 + 9 + 8 的计数。18 个视口/路由组合是其中一组的内部检查，不额外相加成夸大的独立测试总数。没有页面 JavaScript error。UI 截图在 screenshots/，静态截图不是自动批准的黄金基线。
+浏览器那 84 项里有一组是 6 页面 × 4 宽度的内部组合，不额外相加成独立用例数。截图是证据不是自动通过的基线——没有人看过就不算验证过。
 
-交互覆盖实际按钮计数与禁用/loading、工具栏 roving focus、原生 radio/range/checkbox、Tabs、Popover 外部关闭与焦点返回、Menu 箭头/禁用跳过/键入选择、Dialog 模态焦点与滚动锁、ScrollEdge、主题、保守偏好、本地媒体流、路由重复卸载、callback-ref cleanup。顶层弹层在 6 个布局压力夹具中实际打开/关闭；这不代表采样图像都相同。
+## 合成对比度
 
-## 光学对照
+玻璃的最终颜色取决于它背后是什么，所以不能把两个色值填进计算器。做法是把字形藏起来、截下控件、把 PNG 交回页面里解码，量玻璃究竟压成了什么颜色；文字颜色本身不透明且已知，唯一的未知数正是被量出来的那一半。
 
-使用同一张密集细线背景、同一个 360×160 CSS px 表面、同一个 SVG 管线，只改变 scale=0 与 scale=64。结果：
+媒体场景上最差的一块：
 
-| 指标 | 结果 |
-| --- | --- |
-| 边缘区域 RGB 平均绝对差（0–255 单位） | 15.1462 |
-| 中心区域平均绝对差 | 0.0000 |
-| 不透明前景文本区域平均差 | 0.0000 |
-| 前景几何是否改变 | 未改变 |
-| 前景本身的 CSS filter | none |
+| | Chrome | WebKit | Firefox |
+| --- | --- | --- | --- |
+| 修正前 | **4.38:1 不合格** | 5.69:1 | **4.42:1 不合格** |
+| 修正后 | 7.83:1 | 9.47:1 | 7.83:1 |
 
-证据支持“这个场景中实际背景位移发生在边缘，文字没有被送入扭曲滤镜”，不支持“所有背景可读”或“原生还原度百分比”。文件为 optical-zero.png / optical-64.png / optical-grid.png。
+根因不在库里：文档站把一片实测中位亮度 152、亮部 237 的场景声明成了 `backdropTone="dark"`，clear 材质于是只压暗 6%。工具是 `scripts/measure-contrast.mjs`，回归用例是 `tests/browser/contrast.spec.ts`（下限 4.5）。
 
-## 诊断性帧回调记录
+## 帧间隔观测
 
-当前无头环境、1440×1000、DPR1、8 个独立 SVG 表面，完成 180 个 rAF 时间间隔。p50=16.7ms，p95=33.4ms。原始数据在 headless-raf-observation.json。
+11 块玻璃表面，1×、4×、6× CPU 节流下 rAF 间隔中位数均为 16.7ms。
 
-**这不是 GPU 性能基准、实际掉帧统计、INP 或发布预算通过证明。** 没有确认物理 GPU；这一次主线程回调结果不能外推到用户设备。不能因看到约 16.7ms 就宣传“所有设备稳定 60FPS”。
+**这不是 GPU 时间、掉帧率、INP，也不是低端设备的通过证明。** CPU 节流不动 GPU，而模糊花的恰恰是填充率和带宽——所以这组数只能当下限读。原始数据由 `scripts/measure-performance.mjs` 产出。
 
 ## 明确未完成
 
-| 门槛 | 状态 / 原因 |
+| 门槛 | 状态 |
 | --- | --- |
-| npm 依赖安装与 lockfile | 未完成；npm registry 连通请求失败，见 npm-connectivity.json |
-| React 全量语义类型检查 | 已尝试命令，因缺少安装依赖而阻塞，见 standard-typecheck.json |
-| Vite 标准生产构建 | 未执行；不以 preview 转译冒充 npm run build |
-| React SSR / hydration | 测试源码、示例已写，未执行服务端 React 测试 |
-| 开发模式 Strict Mode | 未执行；production React 包裹 StrictMode 不等于开发重复 effect 检查 |
-| 正式 Google Chrome | 配置与测试已写，当前只有 Chromium，没有 Chrome channel 运行证据 |
-| Windows/macOS / 真实 GPU / 能耗 | 未执行 |
-| 辅助技术、200% 缩放、真实动态媒体对比度 | 未完成完整人工与真机矩阵 |
-| rdev / Liqui Design 对照 | 未安装实测；不作优劣排名 |
-| 公共 npm / shadcn registry 发布 | 未执行；只交付 private workspace 和本地源码清单 |
-
-CSP 检查使用 nonce 内联等效夹具，HTTP 响应头另测；正式 HTTP 浏览器用例仍需在正常允许访问本地服务的 Chrome 中运行。导出用例在当前容器截获下载触发以验证 SVG Blob 与命名，实际 Chrome download 事件由正式测试补验。
+| 屏幕阅读器（VoiceOver / NVDA 朗读顺序） | **未执行**。自动化只能证明角色与键盘路径是对的。这是最大的未知 |
+| 触摸真机 | 有 4 项模拟 touch 用例；遮挡、甩动惯性、与系统边缘手势的冲突只能上手试 |
+| 真实低端 GPU 与能耗 | 未执行 |
+| 浏览器矩阵 | macOS + Ubuntu 两个系统；Windows、多个 Chrome 版本、关掉硬件加速都没测 |
+| 真机 Safari 的退化观感 | 自动用例证明模糊、着色、边线、投影都在；**没有人用眼睛看过** |
+| React 完整 SSR / hydration / 开发 Strict Mode | 部分覆盖 |
+| 200% 缩放、语音控制、切换控制 | 未执行 |
+| 按导入的 tree-shaking 成本 | 未测。`size.json` 是整文件大小，不是应用实际引入的成本 |
+| 从 registry 装回来 | 未执行——包还没发出去。`exports` 解析、dist-tag、构建溯源只有发了才知道 |
+| rdev / Liqui Design 同条件对照、目标开发者试用 | 未执行；因此不声称自研路线更优，也不声称定位已被用户验证 |
 
 ## 复现
 
-离线检查预览：`node scripts/serve-preview.mjs`。Node 核心测试：`npm test`。本次浏览器脚本位于 tests/local/，详见 docs/testing.md。
+```bash
+pnpm install
+pnpm exec playwright install --with-deps chrome webkit firefox
+pnpm check
+```
 
-标准工程门槛：`npm install` → `npm run typecheck` → `npm run build` → `npm test` → `npm run test:ssr` → 安装正式 Chrome → `npm run test:chrome`。成功后提交真实 lockfile，再使用 npm ci。执行路径与截图、源代码哈希应一起记录。
+`pnpm check` = 类型检查 → 构建 → 单元 → SSR → 站点构建 → 真实 Chrome → WebKit/Firefox。CI 跑的是同一条链，见 `../docs/testing.md`。
