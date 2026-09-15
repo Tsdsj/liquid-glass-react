@@ -2,6 +2,7 @@
 
 [![CI](https://github.com/Tsdsj/liquid-glass-react/actions/workflows/ci.yml/badge.svg)](https://github.com/Tsdsj/liquid-glass-react/actions/workflows/ci.yml)
 [![npm](https://img.shields.io/npm/v/@ttqtt/liquid-glass-react.svg)](https://www.npmjs.com/package/@ttqtt/liquid-glass-react)
+[![license](https://img.shields.io/npm/l/@ttqtt/liquid-glass-react.svg)](LICENSE)
 
 按 Apple 的设计语言做的一套 React 组件库：会折射背景的玻璃材质、完整的语义色与文字体系、可以拖动的原生控件。
 
@@ -71,7 +72,15 @@ export function App() {
 
 ## 浏览器支持
 
-Chrome 和 Edge 上有完整的边缘折射。Safari 和 Firefox 退化成磨砂玻璃——模糊、提色、高光都在，布局和交互完全一致。
+默认是磨砂——模糊、提色、高光、边线，四个引擎上一样。边缘折射要自己打开：
+
+```tsx
+<GlassProvider enableSvgAuto>
+```
+
+打开之后，Chromium 系（Chrome、Edge）走 SVG 位移拿到真的折射；Safari 和 Firefox 拿不到，退回磨砂。**布局、语义、键盘路径都不依赖这条分支**，有 16 项 WebKit / Firefox 用例守着这一点。
+
+模糊是 CSS 链里的第一个函数，滤镜只管位移——所以哪家引擎丢掉了 `url()`，剩下的仍然是真的磨砂，而不是一块透明的洞。
 
 ## 换主题色
 
@@ -91,7 +100,7 @@ Chrome 和 Edge 上有完整的边缘折射。Safari 和 Firefox 退化成磨砂
 ```bash
 pnpm install
 pnpm dev            # 文档站 http://127.0.0.1:5173
-pnpm check          # 类型检查 → 构建 → 单元测试 → SSR → 站点构建 → 真实 Chrome
+pnpm check          # 类型检查 → 构建 → 单元 → SSR → 站点 → 真实 Chrome → WebKit/Firefox
 ```
 
 ```text
@@ -105,11 +114,22 @@ tests/       core 单元测试、SSR 测试、Playwright 浏览器测试
 docs/        设计系统、API、无障碍、迁移、架构、测试口径
 ```
 
-## 还没做完的
+## 验证到什么程度
 
-- 屏幕阅读器的实机验证还没做完。自动化测试覆盖了角色、键盘路径和四项系统设置，但代替不了真人用 VoiceOver 走一遍。
-- 玻璃在真实合成背景上的对比度还没实测过——玻璃的最终颜色取决于它背后是什么，把两个色值填进计算器不算数。
-- 详细清单见 [`docs/known-limitations.md`](docs/known-limitations.md)。
+```text
+65 单元 · 3 SSR · 84 真实 Google Chrome · 16 WebKit + Firefox
+```
+
+SSR 那三项跑的是 `dist/`，也就是真正发出去的那份。玻璃压在真实场景上的文字对比度是从**合成后的像素**上量的——把两个色值填进计算器不算数，因为玻璃的最终颜色取决于它背后是什么。三个引擎上最差的一块 7.83:1。
+
+**还没做完的：**
+
+- 屏幕阅读器的实机验证。自动化覆盖了角色、键盘路径和四项系统设置，代替不了真人用 VoiceOver 走一遍。这是最大的未知。
+- 触摸真机。已有 4 项模拟 touch 用例，但遮挡、甩动惯性、与系统边缘手势的冲突只有上手才知道。
+- 真实低端 GPU 的能耗。现有数据只节流了 CPU，而模糊花的是填充率。
+- 浏览器矩阵只跑过一台机器——不是多平台、多版本、开关硬件加速都过了。
+
+详细清单见 [`docs/known-limitations.md`](docs/known-limitations.md)。0.x 阶段仍可能有破坏性改动，每次都给改名对照表。
 
 ## 许可
 

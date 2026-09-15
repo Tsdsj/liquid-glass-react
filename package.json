@@ -47,6 +47,7 @@
   "engines": {
     "node": ">=20.19.0"
   },
+  "packageManager": "pnpm@11.17.0",
   "publishConfig": {
     "access": "public"
   },
@@ -73,7 +74,9 @@
     "registry:build": "node scripts/build-registry.mjs",
     "manifest:build": "node scripts/build-delivery-manifest.mjs",
     "pretest": "tsc -p tsconfig.core-test.json",
-    "test:fallback": "playwright test --project=webkit --project=firefox"
+    "test:fallback": "playwright test --project=webkit --project=firefox",
+    "verify:package": "node scripts/verify-package.mjs",
+    "prepublishOnly": "node scripts/verify-package.mjs"
   },
   "devDependencies": {
     "@playwright/test": "^1.57.0",

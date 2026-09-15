@@ -4,6 +4,10 @@ on:
   push:
     branches: [main]
   pull_request:
+  workflow_dispatch:
+  # The release workflow calls this so a tag is verified by exactly the same job that
+  # verifies main, rather than by a second copy that can drift away from it.
+  workflow_call:
 
 concurrency:
   group: ci-${{ github.ref }}
@@ -12,14 +16,16 @@ concurrency:
 jobs:
   verify:
     runs-on: ubuntu-latest
-    timeout-minutes: 20
+    timeout-minutes: 30
     steps:
       - uses: actions/checkout@v4
 
+      # The pnpm version comes from the "packageManager" field, so the runner and a
+      # developer's machine cannot end up on different resolvers.
       - uses: pnpm/action-setup@v4
       - uses: actions/setup-node@v4
         with:
-          node-version: 22
+          node-version-file: .nvmrc
           cache: pnpm
 
       - run: pnpm install --frozen-lockfile
@@ -46,6 +52,19 @@ jobs:
 
       - name: Browser tests
         run: pnpm test:chrome
+
+      # Safari and Firefox have no SVG-backdrop lensing. These check that what is left is
+      # still a material and that nothing else quietly depended on the refraction.
+      - name: Install WebKit and Firefox
+        run: pnpm exec playwright install --with-deps webkit firefox
+
+      - name: Degraded-material tests
+        run: pnpm test:fallback
+
+      # Asks the packer what it would ship. A mistake here is only visible once the
+      # tarball is on the registry, where it cannot be taken back.
+      - name: Verify the tarball
+        run: pnpm verify:package
 
       - name: Size report
         run: pnpm size

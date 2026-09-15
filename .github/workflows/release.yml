@@ -1,0 +1,68 @@
+name: Release
+
+# Publishing is driven by the tag, never by a button. `pnpm version x.y.z && git push --follow-tags`
+# is the whole release action; everything below is what the tag sets off.
+on:
+  push:
+    tags: ['v*']
+
+permissions:
+  contents: write   # to create the GitHub Release
+  id-token: write   # to sign the npm tarball with build provenance
+
+jobs:
+  # The same job that guards main, reused rather than copied, so a tag can never be
+  # verified by a weaker check than a pull request is.
+  verify:
+    uses: ./.github/workflows/ci.yml
+
+  publish:
+    needs: verify
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    environment:
+      name: npm
+      url: https://www.npmjs.com/package/@ttqtt/liquid-glass-react
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+          registry-url: https://registry.npmjs.org
+
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm build
+
+      # Refuses to go on if the tag and the manifest disagree, or if the tarball would
+      # ship source, miss an export, or lose the "use client" banner.
+      - name: Verify the tarball against the tag
+        run: pnpm verify:package
+        env:
+          RELEASE_TAG: ${{ github.ref_name }}
+
+      # A pre-release goes out under `next`, so nobody installing the package gets an
+      # alpha because it happened to be the most recent thing published.
+      - name: Choose the dist-tag
+        id: tag
+        run: |
+          version="${GITHUB_REF_NAME#v}"
+          if [[ "$version" == *-* ]]; then echo "dist=next" >> "$GITHUB_OUTPUT"; else echo "dist=latest" >> "$GITHUB_OUTPUT"; fi
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+
+      - name: Publish to npm
+        run: npm publish --provenance --access public --tag ${{ steps.tag.outputs.dist }}
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+
+      # The release notes are the CHANGELOG section for this version — one source of truth,
+      # so the two cannot describe the same release differently.
+      - name: Cut the GitHub Release
+        run: |
+          awk -v v="## ${{ steps.tag.outputs.version }}" '$0 == v {found=1; next} found && /^## /{exit} found' CHANGELOG.md > notes.md
+          [ -s notes.md ] || echo "See CHANGELOG.md." > notes.md
+          gh release create "$GITHUB_REF_NAME" --title "$GITHUB_REF_NAME" --notes-file notes.md \
+            ${{ contains(steps.tag.outputs.version, '-') && '--prerelease' || '' }}
+        env:
+          GH_TOKEN: ${{ github.token }}
