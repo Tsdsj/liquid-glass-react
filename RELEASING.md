@@ -87,18 +87,21 @@ pnpm check                                 # 和 CI 跑的是同一串
 pnpm version 0.0.1 --no-git-tag-version    # 只改 package.json，标签留到最后
 pnpm build
 RELEASE_TAG=v0.0.1 pnpm verify:package
+git commit -am "Release 0.0.1"             # pnpm 不从脏树上发包
 pnpm publish --access public
 ```
+
+倒数第二条不能省：`pnpm publish` 遇到未提交的改动会直接停下（`ERR_PNPM_GIT_UNCLEAN`）。这是对的——发出去的版本号必须对应一个真实的提交，否则 registry 上有 0.0.1、仓库里却找不到它是从哪来的。
 
 最后一条会停下来问 `This operation requires a one-time password:`，这时候再去验证器 App 或邮箱拿码。**不要用 `--otp=` 预先填**——那个码只活半分钟到几分钟，等包传完多半已经过期了。
 
 然后：
 
 1. 回 npm 包页配 Trusted Publisher（上面那张表）；
-2. 把版本号的改动提交、打标签、推上去——
+2. 打标签推上去——
 
 ```bash
-git commit -am "Release 0.0.1" && git tag v0.0.1 && git push --follow-tags
+git tag v0.0.1 && git push --follow-tags
 ```
 
 标签会触发 `release.yml`：跑完整套检查，发现 0.0.1 已经在 registry 上就跳过发包那一步，然后建好 GitHub Release。**从此以后不用再手工发。**
