@@ -4,6 +4,17 @@
 
 每一条都先写**证据**再写**要做什么**——证据来自代码、测试和上一轮审查，不是想象。标了「待复现」的是疑点，没有复现之前不算缺陷，也不排期修。
 
+## 已定的六件事（2026-09-16 项目所有者拍板）
+
+| 决定 | 取值 | 理由 |
+| --- | --- | --- |
+| 属性面板范围 | **每页一个主示例挂旋钮**，其余示例保持静态 | 读者要的是「这个属性改了长什么样」，不是每个示例都能调 |
+| 代码高亮 | **自写分词器**，零依赖 | 站点被「零外部请求」用例守着；颜色够用就行 |
+| `GlassProvider.accent` | **不加**，维持 CSS 变量方案 | 一个色值不够，`--lg-accent-contrast` 必须配套，而对比度不能自动算。补一篇指南比加一个半吊子属性诚实 |
+| 子菜单 | **macOS 风格：嵌套，悬停 / → 展开** | 这是面向网页的组件库，主要在有指针的设备上用；触屏下退化为点按展开 |
+| Sheet 自定义停靠点 | **显式对象** `{ fraction }` / `{ height }` | 不用猜 0.3 是比例还是像素 |
+| 新组件顺序 | **MenuButton → Tooltip → DisclosureGroup** → PageControl → ContextMenu → Kbd | 动效辨识度、图标按钮对鼠标用户是哑的、设置页刚需 |
+
 ## 起点
 
 ```text
@@ -23,8 +34,8 @@
 | # | 证据 | 要做什么 |
 | --- | --- | --- |
 | D1 | 浮层 7 页只有 7 个示例，输入 2 页 3 个；`DemoEntry` 支持多示例但大半页面只用了一个 | 每页至少 3 个示例，各回答一个决定：**状态**（禁用 / 加载 / 错误）、**尺寸与密度**、**压在媒体上时**。示例数是给读者看的，不是凑数：一个示例只讲一件事 |
-| D2 | `site/site/code-block.tsx` 是裸 `<pre>`，只有复制按钮，没有语法高亮 | 加高亮。两条路：自写一个 ~150 行的 TSX 分词器（零依赖、CSP 不变）；或构建期用 shiki 生成静态 HTML（颜色准、但引入依赖）。**建议前者**——站点自己就是「零外部请求」用例守着的 |
-| D3 | 没有可交互的属性面板；`PropsTable` 是静态表 | 每页选一个「主示例」，右侧挂属性旋钮（`variant` / `controlSize` / `material` / `backdropTone` / `density`），改动即时反映到示例和代码块。数据模型：`DemoEntry.controls?: ControlSpec[]`。这是 antd / MUI 读者的默认预期 |
+| D2 | `site/site/code-block.tsx` 是裸 `<pre>`，只有复制按钮，没有语法高亮 | 自写一个 ~150 行的 TSX 分词器：关键字、字符串、JSX 标签与属性、注释、数字，五类 token 五个 CSS 类，颜色来自 token。不引依赖，`csp.spec.ts` 的「零外部请求」不变。已定 |
+| D3 | 没有可交互的属性面板；`PropsTable` 是静态表 | 每页**一个**主示例挂旋钮（`variant` / `controlSize` / `material` / `backdropTone` / `density` 等，按组件选），改动即时反映到示例和代码块；其余示例保持静态。数据模型：`DemoEntry.controls?: ControlSpec[]`，只有主示例填。已定 |
 | D4 | 右侧目录 `.outline` 只在 ≥1280px 显示（`app.css:237`）；以下宽度没有页内导航 | 窄屏改成吸顶的「本页内容」按钮，点开是 `GlassMenu`——顺便让站点用自己的菜单 |
 | D5 | ⌘K 搜索只索引组件名（`searchDocs`） | 索引扩到示例标题、属性名、基础与指南的章节标题；结果分组显示，命中属性时直接跳到 API 表对应行 |
 | D6 | 每页缺三样常规的东西：`import` 语句、相关组件、「查看源码 / 报告问题」链接 | 页头加 import 片段（可复制）；`ComponentDoc` 加 `related: string[]`；页脚加两个链接指向 GitHub |
@@ -69,9 +80,17 @@
 
 **C. `placement` 有实现没接口。** `anchor.tsx:43` 内部支持 `'below' | 'above' | 'auto'`，`GlassPopover` / `GlassMenu` 只暴露 `align`。暴露出来，默认 `auto` 不变。
 
-**D. 菜单只有一层，分组只有 `separatorBefore`。** 没有分组标题、没有子菜单（known-limitations 已记）。HIG 的菜单有 section header，iOS 14 起也有子菜单。加 `sectionLabel?: string` 与 `items?: GlassMenuItem[]`（子菜单）；子菜单的键盘模型（→ 进入、← 返回、Escape 逐层关）要有用例。
+**D. 菜单只有一层，分组只有 `separatorBefore`。** 没有分组标题、没有子菜单（known-limitations 已记）。加 `sectionLabel?: string` 与 `items?: GlassMenuItem[]`（子菜单）。
 
-**E. `GlassSheet` 只有 `medium` / `large` 两个停靠点。** 加自定义：`detents: Array<'medium' | 'large' | number>`，数字 ≤1 当比例、>1 当像素。停靠动画和拖拽逻辑已经按比例写，扩展成本低。
+子菜单按 **macOS 模型**做（已定）：悬停父项 ~150ms 后向侧边展开，展开的子菜单与父项之间留一个「安全三角」——指针斜着划向子菜单时不因经过相邻项而切换；键盘 → 进入、← 返回、Escape 逐层关、Home / End 在当前层内。触屏（`pointer: coarse`）没有悬停，父项改为点按展开。三条都要有用例：安全三角用一串斜向 `mouse.move` 断言子菜单没被换掉。
+
+**E. `GlassSheet` 只有 `medium` / `large` 两个停靠点。** 加自定义（已定写法）：
+
+```ts
+detents?: Array<'medium' | 'large' | { fraction: number } | { height: number }>
+```
+
+`fraction` 是视口高度的比例，`height` 是 CSS 像素；两者都夹在 `[88px, 94%]` 内。停靠动画和拖拽逻辑已经按比例写，扩展成本低。`SheetDetent` 类型变宽是 0.3.0 的破坏性改动之一。
 
 **F. 工具栏的 roving focus 只覆盖按钮型子控件**（known-limitations）。分段控件、开关放进 `ToolbarGroup` 时方向键走不到。扩到所有可聚焦子项。
 
@@ -85,7 +104,7 @@
 | `TextField` | `multiline`（`<textarea>`）、`controlSize` | 文本视图是独立组件 |
 | `SearchField` | `suggestions`（建议列表，`role=listbox`） | 搜索建议是搜索体验的一部分 |
 | `ToastOptions` | `tone`（成功 / 警告）、`icon` | — |
-| `GlassProvider` | `accent` 属性（见「待拍板」第 3 条） | — |
+| `GlassProvider` | ~~`accent` 属性~~ **不加**（已定）。改为在「换主题色」指南里补一节：怎么为自定义主色配 `--lg-accent-contrast`、怎么用 `measure-contrast.mjs` 验证 | — |
 
 **H. 只有一条开发模式告警。** 再加三条，都是审查里靠人眼查过的规则，改成代码守：一个共享表面里出现两个 `glassProminent`（一屏一个主操作）；小玻璃套小玻璃；`material="clear"` 用在没声明色调的地方（现在静默降级为 `regular`，调用方不知道）。每条只在开发模式、每个节点告警一次。
 
@@ -118,16 +137,18 @@ A、B、C、G 都是纯新增，进 **0.0.2**。D、E、F 改了行为或类型�
 
 每个新组件的验收都一样：HIG 规则写在文档页顶上、层归属写明、键盘模型有用例、四项系统偏好各有断言、命中区 44、颜色只来自 token、hover 有指针门、放在媒体上的示例过对比度用例、发布前过一遍 Apple-Style-Review。
 
-### 第一批（0.3.0）
+### 第一批（0.3.0），按已定顺序
 
-| 组件 | 是什么 | 层 | 为什么现在做 |
-| --- | --- | --- | --- |
-| **`GlassMenuButton`** | 按下弹出菜单的按钮。HIG 分两种：**pull-down**（按钮是动作，菜单是更多动作）和 **pop-up**（按钮显示当前选择，菜单换选择）。一个组件，`kind` 属性区分 | 玻璃 | 现在 `GlassButton` + `GlassMenu` 用 `trigger` 拼得出来，但 iOS 26 的关键动效——**菜单从按钮里长出来**（morph）——拼不出来。这是 Liquid Glass 最有辨识度的动作之一 |
-| **`ContextMenu`** | 右键 / 长按弹出的菜单 | 玻璃 | 复用 `GlassMenu`。新增的是触发模型：触摸端长按 500ms、按住期间内容微缩预览、`contextmenu` 事件在键盘上是 Shift+F10 / Menu 键 |
-| **`DisclosureGroup`** | 可展开的一组内容，箭头旋转 | 内容 | 原生 `<details>` + 动画高度。列表页、设置页到处要 |
-| **`PageControl`** | 一排圆点表示第几页 | 玻璃（iOS 26 是一枚小胶囊） | 轮播、引导页的必需品；可拖动——顺着胶囊拖就翻页，用 `usePull` |
-| **`Tooltip`** | macOS 的 help tag：悬停或聚焦 600ms 后出现的说明 | 玻璃（小） | 现在图标按钮只有 `aria-label`，鼠标用户看不到。指针门必须严：触屏上不出现 |
-| **`Kbd`** | 快捷键提示 ⌘K | 内容 | 菜单的 `shortcut` 字段现在是纯文本；站点搜索按钮也在手画。很小，但到处要 |
+| # | 组件 | 是什么 | 层 | 为什么现在做 |
+| --- | --- | --- | --- | --- |
+| 1 | **`GlassMenuButton`** | 按下弹出菜单的按钮。HIG 分两种：**pull-down**（按钮是动作，菜单是更多动作）和 **pop-up**（按钮显示当前选择，菜单换选择）。一个组件，`kind` 属性区分 | 玻璃 | 现在 `GlassButton` + `GlassMenu` 用 `trigger` 拼得出来，但 iOS 26 的关键动效——**菜单从按钮里长出来**（morph）——拼不出来。这是 Liquid Glass 最有辨识度的动作之一。与 2.1-D 的子菜单同一期做，共用 `GlassMenu` 的新键盘模型 |
+| 2 | **`Tooltip`** | macOS 的 help tag：悬停或聚焦 ~600ms 后出现的说明 | 玻璃（小） | 现在图标按钮只有 `aria-label`，鼠标用户看不到。指针门必须严：`pointer: coarse` 下不出现；`aria-describedby` 关联；Escape 关 |
+| 3 | **`DisclosureGroup`** | 可展开的一组内容，箭头旋转 | 内容 | 原生 `<details>` + 动画高度（`interpolate-size` 可用时用它，否则量高度）。列表页、设置页到处要 |
+| 4 | **`PageControl`** | 一排圆点表示第几页 | 玻璃（iOS 26 是一枚小胶囊） | 轮播、引导页的必需品；可拖动——顺着胶囊拖就翻页，用 `usePull` |
+| 5 | **`ContextMenu`** | 右键 / 长按弹出的菜单 | 玻璃 | 复用 `GlassMenu`。新增的是触发模型：`contextmenu` 事件、触摸端长按 500ms、键盘 Shift+F10 / Menu 键。排在子菜单之后，因为上下文菜单最常见的形态就是带子菜单的 |
+| 6 | **`Kbd`** | 快捷键提示 ⌘K | 内容 | 菜单的 `shortcut` 字段现在是纯文本；站点搜索按钮也在手画。很小，但到处要 |
+
+如果 0.3.0 只装得下三个，就是前三个；4–6 顺延到 0.4.0，第二批往后推。
 
 ### 第二批（0.4.0）
 
@@ -173,11 +194,22 @@ A、B、C、G 都是纯新增，进 **0.0.2**。D、E、F 改了行为或类型�
 
 ---
 
-## 六、需要拍板的
+## 六、0.0.2 的第一周：具体到文件
 
-1. **属性面板的范围**——每页一个主示例挂旋钮（建议），还是每个示例都能调？后者工作量三倍，读者未必需要。
-2. **代码高亮**——自写分词器（零依赖，CSP 不变，颜色够用）还是构建期 shiki（颜色准，多一个依赖）？
-3. **`GlassProvider` 要不要 `accent` 属性**——只写一个色值不够，`--lg-accent-contrast` 也得配套，而对比度是不能自动算的（那是像素决定）。要么接受调用方给一对色值，要么维持现在的 CSS 变量方案不动。
-4. **子菜单**——嵌套（macOS 风格，悬停展开）还是就地展开（iOS 风格，点一下换一屏）？两者键盘模型不同，只做一种。
-5. **Sheet 自定义停靠点的写法**——`detents={['medium', 0.3, 420]}` 这种混合数组，还是 `detents={[{ fraction: .3 }, { height: 420 }]}` 显式对象？前者短，后者不用猜。
-6. **新组件第一批的优先级**——六个里如果只能先做三个，我的顺序是 MenuButton（动效辨识度）→ Tooltip（现在图标按钮对鼠标用户是哑的）→ DisclosureGroup（设置页刚需）。
+排期表说「1–2 周」，这里说第一周动哪些文件，接手就能开工：
+
+| 天 | 做什么 | 触及 |
+| --- | --- | --- |
+| 1–2 | 2.1-A `forwardRef` 全覆盖 + 2.1-B HTML 透传；先写遍历目录挂 `ref` 的用例 | `src/react/{controls,navigation,overlays,content}/*.tsx`、`tests/browser/components.spec.ts`、`docs/api.md` |
+| 3 | 2.1-C 暴露 `placement`；2.1-H 三条开发告警 | `overlays/anchor.tsx`、`popover.tsx`、`menu.tsx`、`system/material.tsx`、`controls/button.tsx` |
+| 4 | D2 分词器 + D6 import 片段与链接 | `site/site/code-block.tsx`（新增 `tokenize.ts`）、`site/pages/component-page.tsx`、`site/catalog/types.ts` |
+| 5 | D9 切页焦点与标题；D4 窄屏目录；D10 更新日志页 | `site/router.ts`、`site/pages/component-page.tsx`、`site/vite.config.ts`（读 CHANGELOG） |
+
+每天结束跑 `pnpm check`；第 5 天跑一遍 Apple-Style-Review 看 D4 那个菜单。
+
+## 七、写给 0.3.0 开工那天
+
+- 先写升级指南的骨架（`docs/migration-0.3.md`），改一处类型就往里记一行——不要等到最后回忆。
+- `GlassMenu` 的子菜单先于 `GlassMenuButton` 落地：后者的 morph 动效要在菜单结构稳定之后再调，否则调两遍。
+- D7 的属性表比对脚本在第一个新组件之前接进 `build:site`——新组件的文档页从第一天起就受它守着。
+- R1 的 VoiceOver 走查排在六个新组件都进目录之后、发布之前，一次走完 33 页。
