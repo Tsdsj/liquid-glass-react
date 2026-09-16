@@ -81,14 +81,16 @@ pnpm exec playwright install --with-deps webkit firefox
 **要等到 2026-09-16 06:04 UTC（北京时间 14:04）之后。** 整包 unpublish 之后 npm 封这个名字 24 小时，早了会被拒。
 
 ```bash
-npm login                                  # 账号开了 2FA，会要一次验证
+npm login                                  # 走浏览器，2FA 在 npmjs.com 那边过
 pnpm install --frozen-lockfile
 pnpm check                                 # 和 CI 跑的是同一串
 pnpm version 0.0.1 --no-git-tag-version    # 只改 package.json，标签留到最后
 pnpm build
 RELEASE_TAG=v0.0.1 pnpm verify:package
-pnpm publish --access public --otp=<六位码>
+pnpm publish --access public
 ```
+
+最后一条会停下来问 `This operation requires a one-time password:`，这时候再去验证器 App 或邮箱拿码。**不要用 `--otp=` 预先填**——那个码只活半分钟到几分钟，等包传完多半已经过期了。
 
 然后：
 
@@ -171,7 +173,7 @@ npm login
 pnpm check
 pnpm build
 RELEASE_TAG=v0.0.2 pnpm verify:package
-pnpm publish --access public --otp=<六位码>
+pnpm publish --access public          # 会停下来问 OTP，那时候再拿码
 ```
 
 `prepublishOnly` 会再跑一次 `verify:package`，所以下面这些漏不掉：
@@ -181,7 +183,7 @@ pnpm publish --access public --otp=<六位码>
 - `exports` 里每一个入口都真的指向打进包里的文件；
 - 有 `RELEASE_TAG` 时，标签号与 `package.json` 一致。
 
-手工发布拿不到构建溯源（provenance）——那是 CI 用 OIDC 签的，本机签不了；而且每一步都要现掏 OTP。所以只在应急时用。
+手工发布拿不到构建溯源（provenance）——那是 CI 用 OIDC 签的，本机签不了；而且每一次写操作都要现掏一次 OTP。所以只在应急时用。
 
 ---
 
