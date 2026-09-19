@@ -120,6 +120,21 @@ code { font-family: var(--lg-font-mono); font-size: .92em; }
 /* Component page: the article, and an outline that follows along on the right. */
 .component-layout { display: block; }
 .outline { display: none; }
+/**
+ * Below 1280 there is no outline column, so the same destinations become a menu that sticks
+ * to the top of the scroll. Above it, the column is there and this would be a second copy.
+ *
+ * It sticks *below* the app bar, not at the top of the viewport: the bar is sticky too, at
+ * z-index var(--lg-z-tabbar), and a control that parks underneath it is invisible from the
+ * moment the page scrolls — which is the only time an outline is wanted at all.
+ */
+/* Replaced with the measured height by the shell; this is only the value before first paint. */
+.app-main { --app-bar-height: calc(var(--lg-hit-min) + var(--lg-space-3) * 2 + env(safe-area-inset-top)); }
+.outline-compact { position: sticky; inset-block-start: var(--app-bar-height); z-index: 2;
+  display: flex; justify-content: flex-end; padding-block-end: var(--lg-space-2); }
+/* Section titles vary in length; the control must not resize on every scroll. */
+.outline-trigger { max-width: min(62vw, 260px); }
+.outline-trigger-label { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 
 /* --------------------------------------------------------------------------
    Live examples
@@ -284,6 +299,7 @@ code { font-family: var(--lg-font-mono); font-size: .92em; }
 @media (min-width: 1280px) {
   .app-content, .app-bar, .app-footer { max-width: 1120px; }
   .component-layout { display: grid; grid-template-columns: minmax(0, 1fr) 180px; gap: var(--lg-space-8); align-items: start; }
+  .outline-compact { display: none; }
   .outline { display: flex; flex-direction: column; gap: 2px; position: sticky; inset-block-start: 88px;
     padding-block: var(--lg-space-6); }
   .outline-title { padding-inline: var(--lg-space-3); padding-block-end: var(--lg-space-2); }

@@ -1,4 +1,4 @@
-import { useEffect, useState, type MouseEvent, type ReactNode } from 'react';
+import { useEffect, useRef, useState, type MouseEvent, type ReactNode } from 'react';
 import { GlassProvider, LibraryIcon, TabBar, Text, ToastProvider, ToolbarGroup } from '@ttqtt/liquid-glass-react';
 import { Icon } from '../icons.js';
 import { PreferencesButton, type SitePreferences } from './preferences.js';
@@ -50,6 +50,20 @@ export function Shell({ path, go, secondaryNav, children }: {
     return () => media.removeEventListener('change', sync);
   }, [preferences.theme]);
 
+  /**
+   * The app bar is sticky at the top, so anything else that sticks has to stop below it rather
+   * than slide underneath. Its height is not a number anyone can write down — it comes from the
+   * toolbar group inside it, which changes with Dynamic Type — so it is measured and published
+   * as a custom property instead of estimated.
+   */
+  const bar = useRef<HTMLElement>(null);
+  useEffect(() => {
+    const node = bar.current; if (!node || typeof ResizeObserver === 'undefined') return;
+    const publish = () => node.parentElement?.style.setProperty('--app-bar-height', `${Math.round(node.offsetHeight)}px`);
+    const observer = new ResizeObserver(publish); observer.observe(node); publish();
+    return () => observer.disconnect();
+  }, []);
+
   const section = sectionOf(path);
   const navigate = (target: string) => (event: MouseEvent<HTMLAnchorElement>) => { event.preventDefault(); go(target); };
 
@@ -77,7 +91,7 @@ export function Shell({ path, go, secondaryNav, children }: {
         }))} />
 
       <div className="app-main">
-        <header className="app-bar">
+        <header className="app-bar" ref={bar}>
           <ToolbarGroup>
             <ComponentSearch onNavigate={go} />
             <PreferencesButton value={preferences} onChange={setPreferences} />

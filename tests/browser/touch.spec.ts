@@ -40,6 +40,10 @@ test('a finger carries the segment lens the same way a pointer does', async ({ p
   await page.waitForTimeout(900);
   const track = page.locator('#segmented-basic .lg-segmented-track');
   const lens = track.locator('.lg-selection-lens');
+  // Touch events carry viewport coordinates, so the control has to actually be in the viewport.
+  // Relying on it happening to sit above the fold makes this test a hostage to page layout.
+  await track.evaluate(node => node.scrollIntoView({ block: 'center' }));
+  await page.waitForTimeout(300);
   const week = (await track.getByText('周', { exact: true }).boundingBox())!;
   const month = (await track.getByText('月', { exact: true }).boundingBox())!;
   const y = week.y + week.height / 2;
@@ -72,6 +76,8 @@ test('nothing is left hovering after a tap', async ({ page }) => {
   // A touch screen reports no hover capability, so the hover rules must be inert.
   expect(await page.evaluate(() => matchMedia('(hover: hover)').matches)).toBe(false);
   const button = page.locator('#button-variants .lg-button').first();
+  await button.evaluate(node => node.scrollIntoView({ block: 'center' }));
+  await page.waitForTimeout(300);
   const scale = () => button.evaluate(node => {
     const matrix = new DOMMatrixReadOnly(getComputedStyle(node).transform);
     return matrix.a;

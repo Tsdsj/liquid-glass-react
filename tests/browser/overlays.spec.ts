@@ -142,5 +142,6 @@ test('the toast region is polite, not assertive', async ({ page }) => {
 test('overlays use large glass, which does not flip with the backdrop', async ({ page }) => {
   await page.goto('/#/components/menu');
   await page.getByRole('button', { name: '打开菜单' }).click();
-  await expect(page.locator('.lg-menu')).toHaveAttribute('data-glass-size', 'large');
+  // Named, not `.lg-menu`: the page's own outline menu is a second one in the document.
+  await expect(page.getByRole('menu', { name: '示例菜单' })).toHaveAttribute('data-glass-size', 'large');
 });

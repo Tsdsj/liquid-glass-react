@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Card, LibraryIcon, Text } from '@ttqtt/liquid-glass-react';
+import { Card, GlassButton, GlassMenu, LibraryIcon, Text } from '@ttqtt/liquid-glass-react';
 import { DemoCard, DemoSettings } from '../site/demo.js';
 import { CodeBlock } from '../site/code-block.js';
 import { PropsTable } from '../site/props-table.js';
@@ -36,11 +36,44 @@ const sourceFile = (doc: ComponentDoc) => ({
 
 export function ComponentPage({ doc }: { doc: ComponentDoc }) {
   const related = relatedDocs(doc);
-  const anchors = [...doc.examples.map(example => example.id), 'api', 'a11y', ...(related.length ? ['related'] : [])];
-  const active = useActiveAnchor(anchors);
   const hasMediaExample = doc.examples.some(example => example.backdrop === 'both');
 
+  /** One list of destinations, used by both the sidebar outline and the compact menu. */
+  const sections = [
+    ...doc.examples.map(example => ({ id: example.id, label: example.title })),
+    { id: 'api', label: 'API' },
+    { id: 'a11y', label: '键盘与辅助功能' },
+    ...(related.length ? [{ id: 'related', label: '相关组件' }] : []),
+  ];
+  const active = useActiveAnchor(sections.map(section => section.id));
+  const jumpTo = (id: string) => document.getElementById(id)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  /**
+   * The compact control names the section you are in, the way a pop-up button names the current
+   * selection, rather than marking it with a checkmark inside the menu. A checkmark renders as
+   * `role="menuitemcheckbox"`, which announces a toggle — and these items are destinations, not
+   * attributes. Naming it in the button also means the visible text is the accessible name, so
+   * Voice Control can say it.
+   */
+  const current = sections.find(section => section.id === active)?.label ?? '本页内容';
+
+
   return <div className="component-layout">
+    {/*
+      Under 1280px there is no room for the outline column, and a long component page then has
+      no way to move around inside itself. The menu is the same destinations in the form that
+      fits — and it is this library's own menu, which is the right way to find out what using it
+      feels like. The current section is the checked item, so the menu also says where you are.
+    */}
+    <div className="outline-compact">
+      <GlassMenu aria-label="本页内容" align="end"
+        trigger={<GlassButton variant="gray" controlSize="small" className="outline-trigger">
+          <span className="outline-trigger-label">{current}</span><LibraryIcon name="chevronDown" size={15} />
+        </GlassButton>}
+        items={sections.map(section => ({
+          key: section.id, label: section.label,
+          onSelect: () => jumpTo(section.id),
+        }))} /></div>
+
     <Page eyebrow={doc.group} title={`${doc.title} ${doc.name}`} lede={doc.summary}>
       {/* The first thing anyone needs from a component page, and the thing it never had. */}
       <div className="doc-import"><CodeBlock code={importLine(doc)} label="复制 import" /></div>
@@ -98,17 +131,11 @@ export function ComponentPage({ doc }: { doc: ComponentDoc }) {
 
     <nav className="outline" aria-label="本页目录">
       <Text variant="caption1" emphasized tone="tertiary" className="outline-title">本页内容</Text>
-      {doc.examples.map(example => <a key={example.id} href={`#${example.id}`}
-        className="outline-link" aria-current={active === example.id ? 'location' : undefined}
-        onClick={event => { event.preventDefault(); document.getElementById(example.id)?.scrollIntoView({ behavior: 'smooth', block: 'start' }); }}>
-        {example.title}
+      {sections.map(section => <a key={section.id} href={`#${section.id}`}
+        className="outline-link" aria-current={active === section.id ? 'location' : undefined}
+        onClick={event => { event.preventDefault(); jumpTo(section.id); }}>
+        {section.label}
       </a>)}
-      <a href="#api" className="outline-link" aria-current={active === 'api' ? 'location' : undefined}
-        onClick={event => { event.preventDefault(); document.getElementById('api')?.scrollIntoView({ behavior: 'smooth', block: 'start' }); }}>API</a>
-      <a href="#a11y" className="outline-link" aria-current={active === 'a11y' ? 'location' : undefined}
-        onClick={event => { event.preventDefault(); document.getElementById('a11y')?.scrollIntoView({ behavior: 'smooth', block: 'start' }); }}>键盘与辅助功能</a>
-      {related.length > 0 && <a href="#related" className="outline-link" aria-current={active === 'related' ? 'location' : undefined}
-        onClick={event => { event.preventDefault(); document.getElementById('related')?.scrollIntoView({ behavior: 'smooth', block: 'start' }); }}>相关组件</a>}
     </nav>
   </div>;
 }
