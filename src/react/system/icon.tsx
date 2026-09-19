@@ -1,5 +1,5 @@
 'use client';
-import type { SVGAttributes } from 'react';
+import type { RefAttributes, SVGAttributes } from 'react';
 /**
  * The handful of glyphs the components themselves need.
  *
@@ -25,13 +25,13 @@ const paths: Record<LibraryIconName, string> = {
   ellipsis: 'M5 12h.01M12 12h.01M19 12h.01',
 };
 
-export interface LibraryIconProps extends Omit<SVGAttributes<SVGSVGElement>, 'name'> {
+export interface LibraryIconProps extends Omit<SVGAttributes<SVGSVGElement>, 'name'>, RefAttributes<SVGSVGElement> {
   name: LibraryIconName;
   size?: number;
 }
 /** Decorative by default: the accessible name belongs on the control, not the glyph. */
-export function LibraryIcon({ name, size = 20, ...props }: LibraryIconProps) {
-  return <svg {...props} width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor"
+export function LibraryIcon({ name, size = 20, ref, ...props }: LibraryIconProps) {
+  return <svg {...props} ref={ref} width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor"
     strokeWidth={name === 'ellipsis' ? 3.4 : 1.8} strokeLinecap="round" strokeLinejoin="round"
     aria-hidden="true" focusable="false"><path d={paths[name]} /></svg>;
 }

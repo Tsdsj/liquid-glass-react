@@ -1,6 +1,7 @@
 'use client';
-import { useId, useRef, type CSSProperties, type ReactNode } from 'react';
+import { useId, useRef, type CSSProperties, type HTMLAttributes, type ReactNode, type RefAttributes } from 'react';
 import { useGlassSurface, type GlassSurfaceOptions } from '../system/material.js';
+import { splitSurface } from '../system/props.js';
 import { cx, useControllable } from '../system/utils.js';
 import { triggerElement, usePopover, type Align, type OpenProps } from './anchor.js';
 
@@ -13,8 +14,10 @@ export interface GlassMenuItem {
   checked?: boolean;
   separatorBefore?: boolean;
 }
-export interface GlassMenuProps extends GlassSurfaceOptions, OpenProps {
-  items: GlassMenuItem[]; 'aria-label': string; className?: string; align?: Align;
+export interface GlassMenuProps extends Omit<HTMLAttributes<HTMLDivElement>, 'children'>, RefAttributes<HTMLDivElement>, GlassSurfaceOptions, OpenProps {
+  items: GlassMenuItem[]; 'aria-label': string; align?: Align;
+  /** Where the menu opens relative to its trigger. `auto` flips up when there is no room below. */
+  placement?: 'below' | 'above' | 'auto';
 }
 
 /**
@@ -24,17 +27,18 @@ export interface GlassMenuProps extends GlassSurfaceOptions, OpenProps {
  * typing jumps to a matching label, Escape closes and returns focus, Tab closes. Keep groups
  * to about seven items and separate them rather than growing one long list.
  */
-export function GlassMenu({ trigger, open: controlled, defaultOpen = false, onOpenChange, items, 'aria-label': label, className, align = 'end', ...surface }: GlassMenuProps) {
-  const id = useId(); const triggerRef = useRef<HTMLButtonElement>(null);
+export function GlassMenu({ trigger, open: controlled, defaultOpen = false, onOpenChange, items, 'aria-label': label, className, style, align = 'end', placement = 'auto', id: providedId, ref, ...rest }: GlassMenuProps) {
+  const [surface, props] = splitSurface(rest);
+  const generated = useId(); const id = providedId ?? generated; const triggerRef = useRef<HTMLButtonElement>(null);
   const [open, setOpen] = useControllable(controlled, defaultOpen, onOpenChange);
-  const glass = useGlassSurface<HTMLDivElement>({ ...surface, material: 'regular', size: 'large' });
+  const glass = useGlassSurface<HTMLDivElement>({ ...surface, material: 'regular', size: 'large' }, ref);
   const search = useRef({ text: '', time: 0 });
-  usePopover(open, setOpen, glass.root, triggerRef, align, true);
+  usePopover(open, setOpen, glass.root, triggerRef, align, true, placement);
   const close = () => { setOpen(false); triggerRef.current?.focus(); };
   return <>
     {triggerElement(trigger, triggerRef, id, open, 'menu', setOpen)}
-    <div id={id} ref={glass.ref} popover="auto" role="menu" tabIndex={-1} aria-label={label} {...glass.attributes}
-      className={cx('lg-root lg-menu', className)} style={glass.style} onKeyDown={event => {
+    <div {...props} id={id} ref={glass.ref} popover="auto" role="menu" tabIndex={-1} aria-label={label} {...glass.attributes}
+      className={cx('lg-root lg-menu', className)} style={{ ...glass.style, ...style }} onKeyDown={event => {
         if (event.key === 'Escape') { event.preventDefault(); close(); return; }
         if (event.key === 'Tab') { close(); return; }
         const enabled = Array.from(glass.root.current?.querySelectorAll<HTMLButtonElement>('[role="menuitem"]:not(:disabled),[role="menuitemcheckbox"]:not(:disabled)') ?? []);

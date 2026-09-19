@@ -1,16 +1,17 @@
 'use client';
-import { useId, useRef, type ReactNode } from 'react';
+import { useId, useRef, type HTMLAttributes, type ReactNode, type RefAttributes } from 'react';
 import { GlassSurface } from '../system/surface.js';
 import { type GlassSurfaceOptions } from '../system/material.js';
+import { splitSurface } from '../system/props.js';
 import { cx, useControllable } from '../system/utils.js';
 import { usePull, elementAt } from '../system/pull.js';
 import { useGlassPolicy } from '../system/provider.js';
 import { useSelectionLens, lensOrigin, trackSpan, type GlassChoice } from '../controls/segmented.js';
 
 export interface GlassTab extends GlassChoice { content: ReactNode }
-export interface GlassTabsProps extends GlassSurfaceOptions {
+export interface GlassTabsProps extends Omit<HTMLAttributes<HTMLDivElement>, 'children' | 'defaultValue' | 'onChange'>, RefAttributes<HTMLDivElement>, GlassSurfaceOptions {
   items: GlassTab[]; value?: string; defaultValue?: string; onValueChange?: (value: string) => void;
-  'aria-label': string; className?: string;
+  'aria-label': string;
 }
 
 /**
@@ -18,7 +19,8 @@ export interface GlassTabsProps extends GlassSurfaceOptions {
  * not the app's tab bar: navigating between sections of the app is a `<nav>` of links
  * (`TabBar`), because a tablist tells assistive technology the content is swapping in place.
  */
-export function GlassTabs({ items, value, defaultValue, onValueChange, 'aria-label': label, className, ...surface }: GlassTabsProps) {
+export function GlassTabs({ items, value, defaultValue, onValueChange, 'aria-label': label, className, ref, ...rest }: GlassTabsProps) {
+  const [surface, props] = splitSurface(rest);
   const id = useId();
   const [selected, setSelected] = useControllable(value, defaultValue ?? items.find(x => !x.disabled)?.value ?? '', onValueChange);
   const refs = useRef<(HTMLButtonElement | null)[]>([]);
@@ -39,7 +41,7 @@ export function GlassTabs({ items, value, defaultValue, onValueChange, 'aria-lab
     const hit = elementAt(event, '.lg-tab') as HTMLButtonElement | null; const index = refs.current.indexOf(hit);
     if (hit && !hit.disabled && index >= 0 && items[index].value !== selected) setSelected(items[index].value);
   }
-  return <div className={cx('lg-tabs', className)}>
+  return <div {...props} ref={ref} className={cx('lg-tabs', className)}>
     <GlassSurface {...surface} className="lg-tabs-surface" radius="pill">
       <div className="lg-tab-list" role="tablist" aria-label={label} ref={list}>
         <span aria-hidden="true" className="lg-selection-lens" ref={lensRef} />

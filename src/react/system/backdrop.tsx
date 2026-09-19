@@ -1,5 +1,5 @@
 'use client';
-import { createContext, useContext, type HTMLAttributes, type ReactNode } from 'react';
+import { createContext, useContext, type HTMLAttributes, type ReactNode, type RefAttributes } from 'react';
 import type { BackdropTone } from '../../tokens/index.js';
 
 /**
@@ -21,13 +21,13 @@ export function BackdropToneProvider({ tone, children }: BackdropToneProviderPro
   return <BackdropToneContext.Provider value={tone}>{children}</BackdropToneContext.Provider>;
 }
 
-export interface GlassBackdropProps extends HTMLAttributes<HTMLDivElement> { tone: BackdropTone }
+export interface GlassBackdropProps extends HTMLAttributes<HTMLDivElement>, RefAttributes<HTMLDivElement> { tone: BackdropTone }
 /**
  * A region whose tone is known — a photo, a video, a dark hero. Glass inside adapts to it
  * without any surface having to be told individually.
  */
-export function GlassBackdrop({ tone, children, ...props }: GlassBackdropProps) {
-  return <div {...props} data-lg-backdrop-tone={tone}>
+export function GlassBackdrop({ tone, children, ref, ...props }: GlassBackdropProps) {
+  return <div {...props} ref={ref} data-lg-backdrop-tone={tone}>
     <BackdropToneContext.Provider value={tone}>{children}</BackdropToneContext.Provider>
   </div>;
 }

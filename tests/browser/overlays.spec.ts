@@ -40,6 +40,46 @@ test('dragging the grabber tracks the pointer and snaps to the nearest detent', 
   await expect(sheet).toHaveAttribute('data-full', 'true');
 });
 
+/**
+ * `placement` existed inside the anchoring code but was never on the props of either overlay,
+ * so a caller had no way to say "open upwards" — the panel always took whichever side had room.
+ * That is right by default and wrong whenever the trigger sits in a toolbar the panel should
+ * clear. Measured rather than asserted from a class: what matters is which side it lands on.
+ */
+test('a popover opens on the side placement asks for', async ({ page }) => {
+  await page.goto('/#/components/popover');
+  const demo = page.locator('#popover-above-demo');
+  await expect(demo).toBeVisible();
+
+  /**
+   * Two things have to be pinned down before the prop is observable at all.
+   *
+   * The demo is centred so both triggers have room above and below: hard against the bottom
+   * edge, a below-placed panel gets clamped back on screen and every placement resolves
+   * upwards. And the click is dispatched in the page rather than through Playwright, which
+   * scrolls each control just far enough to reach it — that left the two buttons at different
+   * heights, where `auto` happened to pick a different side for each and the test passed
+   * whether or not `placement` did anything.
+   */
+  const sideOf = async (label: string) => {
+    await demo.evaluate(node => node.scrollIntoView({ block: 'center' }));
+    await page.waitForTimeout(100);
+    const trigger = demo.getByRole('button', { name: label, exact: true });
+    await trigger.evaluate(node => (node as HTMLElement).click());
+    const panel = page.locator('.lg-popover:popover-open');
+    await expect(panel).toBeVisible();
+    // Anchoring runs in an effect and then a frame; `top` appearing inline means it has landed.
+    await expect(panel).toHaveAttribute('style', /top:\s*\d/);
+    const origin = await panel.evaluate(node => node.style.getPropertyValue('--lg-origin-y'));
+    await page.keyboard.press('Escape');
+    await expect(panel).toBeHidden();
+    return origin === '100%' ? 'above' : 'below';
+  };
+
+  expect(await sideOf('向上')).toBe('above');
+  expect(await sideOf('向下')).toBe('below');
+});
+
 test('an alert focuses the safe action and Escape runs cancel', async ({ page }) => {
   await page.goto('/#/components/alert');
   const trigger = page.getByRole('button', { name: '删除工作区' });

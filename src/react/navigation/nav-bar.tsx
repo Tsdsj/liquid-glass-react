@@ -1,9 +1,14 @@
 'use client';
-import { useEffect, useRef, useState, type ReactNode } from 'react';
+import { useEffect, useRef, useState, type HTMLAttributes, type ReactNode, type RefAttributes } from 'react';
 import { cx } from '../system/utils.js';
 import { Text } from '../content/text.js';
 
-export interface NavigationBarProps {
+/**
+ * `title` is taken back from HTML: here it is the heading the bar displays, not a tooltip.
+ * The ref and the remaining attributes land on the `<header>`; `children` render after it,
+ * below the large title, which is the only place they make sense.
+ */
+export interface NavigationBarProps extends Omit<HTMLAttributes<HTMLElement>, 'title'>, RefAttributes<HTMLElement> {
   title: string;
   /** Controls at the leading edge — a back affordance, a menu. */
   leading?: ReactNode;
@@ -16,8 +21,6 @@ export interface NavigationBarProps {
   largeTitle?: boolean;
   /** Subtitle shown under the large title only; the compact bar stays to one line. */
   subtitle?: ReactNode;
-  'aria-label'?: string;
-  className?: string;
   children?: ReactNode;
 }
 
@@ -29,7 +32,7 @@ export interface NavigationBarProps {
  * carries no background, border or shadow of its own: separation comes from the glass of the
  * control groups inside it and from the scroll edge effect beneath.
  */
-export function NavigationBar({ title, leading, trailing, largeTitle = true, subtitle, 'aria-label': label, className, children }: NavigationBarProps) {
+export function NavigationBar({ title, leading, trailing, largeTitle = true, subtitle, 'aria-label': label, className, children, ref, ...props }: NavigationBarProps) {
   const [compact, setCompact] = useState(!largeTitle);
   const sentinel = useRef<HTMLDivElement>(null);
   useEffect(() => {
@@ -41,7 +44,7 @@ export function NavigationBar({ title, leading, trailing, largeTitle = true, sub
     return () => observer.disconnect();
   }, [largeTitle]);
   return <>
-    <header className={cx('lg-navbar', className)} aria-label={label} data-compact={compact ? 'true' : undefined}>
+    <header {...props} ref={ref} className={cx('lg-navbar', className)} aria-label={label} data-compact={compact ? 'true' : undefined}>
       <div className="lg-navbar-leading">{leading}</div>
       {/* aria-hidden: the large title below is the real heading, so this must not duplicate it. */}
       <div className="lg-navbar-title" aria-hidden="true">{title}</div>

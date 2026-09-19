@@ -12,6 +12,7 @@ import {
   MotionFoundation, TypographyFoundation,
 } from './pages/foundations.js';
 import { InstallGuide, MigrationGuide, RendererGuide, SsrGuide, ThemingGuide } from './pages/guides.js';
+import { RefProbe } from './pages/ref-probe.js';
 
 const FOUNDATIONS = [
   ['materials', '材质'], ['color', '色彩'], ['typography', '文字'],
@@ -77,6 +78,12 @@ function resolve(path: string, go: (path: string) => void) {
 
 export function App() {
   const [path, go] = useRoute();
+  /**
+   * The ref harness renders outside the shell: it mounts every component at once, and the
+   * sidebar and tab bar would be a second copy of several of them in the same document.
+   * Unlinked and unlisted — `tests/browser/refs.spec.ts` is the only thing that visits it.
+   */
+  if (path === '_probe/refs') return <RefProbe />;
   return <Shell path={path} go={go} secondaryNav={<SecondaryNav path={path} go={go} />}>
     {resolve(path, go)}
   </Shell>;

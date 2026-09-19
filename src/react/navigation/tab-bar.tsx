@@ -1,7 +1,8 @@
 'use client';
-import { useEffect, useRef, useState, type MouseEvent, type ReactNode } from 'react';
+import { useEffect, useRef, useState, type HTMLAttributes, type MouseEvent, type ReactNode, type RefAttributes } from 'react';
 import { GlassSurface } from '../system/surface.js';
 import { type GlassSurfaceOptions } from '../system/material.js';
+import { splitSurface } from '../system/props.js';
 import { cx } from '../system/utils.js';
 import { usePull, elementAt } from '../system/pull.js';
 import { useGlassPolicy, useMediaQuery } from '../system/provider.js';
@@ -20,7 +21,8 @@ export interface TabBarItem {
   onSelect?: (event: MouseEvent<HTMLAnchorElement>) => void;
 }
 
-export interface TabBarProps extends GlassSurfaceOptions {
+/** The ref and any HTML attributes land on the `<nav>`, which is the whole bar. */
+export interface TabBarProps extends Omit<HTMLAttributes<HTMLElement>, 'children'>, RefAttributes<HTMLElement>, GlassSurfaceOptions {
   items: TabBarItem[];
   /** `key` of the current section. */
   current?: string;
@@ -41,7 +43,6 @@ export interface TabBarProps extends GlassSurfaceOptions {
   sidebarHeader?: ReactNode;
   /** Persistent accessory (a now-playing strip, a status line). Never screen-specific actions. */
   accessory?: ReactNode;
-  className?: string;
 }
 
 /**
@@ -54,8 +55,9 @@ export interface TabBarProps extends GlassSurfaceOptions {
  */
 export function TabBar({
   items, current, search, 'aria-label': label, minimizeOnScroll = false,
-  sidebarBreakpoint = 1024, sidebarHeader, accessory, className, ...surface
+  sidebarBreakpoint = 1024, sidebarHeader, accessory, className, ref, ...rest
 }: TabBarProps) {
+  const [surface, props] = splitSurface(rest);
   const policy = useGlassPolicy();
   const asSidebar = useMediaQuery(`(min-width: ${sidebarBreakpoint}px)`);
   const [minimized, setMinimized] = useState(false);
@@ -111,7 +113,7 @@ export function TabBar({
     {item.badge !== undefined && <GlassBadge count={item.badge} aria-label={item.badgeLabel} className="lg-tab-badge" />}
   </a>;
 
-  return <nav aria-label={label} className={cx('lg-tabbar', className)}
+  return <nav {...props} ref={ref} aria-label={label} className={cx('lg-tabbar', className)}
     data-layout={asSidebar ? 'sidebar' : 'tabbar'} data-minimized={minimized ? 'true' : undefined}>
     {asSidebar && sidebarHeader && <div className="lg-tabbar-header">{sidebarHeader}</div>}
     <GlassSurface {...surface} size={asSidebar ? 'large' : 'small'} radius={asSidebar ? 26 : 'pill'} className="lg-tabbar-group">

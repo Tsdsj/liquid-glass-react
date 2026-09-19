@@ -1,6 +1,7 @@
 'use client';
-import { useId, useRef, type ReactNode } from 'react';
+import { useId, useRef, type HTMLAttributes, type ReactNode, type RefAttributes } from 'react';
 import { useGlassSurface, type GlassSurfaceOptions } from '../system/material.js';
+import { splitSurface } from '../system/props.js';
 import { useMediaQuery } from '../system/provider.js';
 import { cx, useControllable } from '../system/utils.js';
 import { triggerElement, usePopover, type Align, type OpenProps } from './anchor.js';
@@ -13,7 +14,7 @@ export interface ActionSheetItem {
   disabled?: boolean;
   icon?: ReactNode;
 }
-export interface GlassActionSheetProps extends GlassSurfaceOptions, OpenProps {
+export interface GlassActionSheetProps extends Omit<HTMLAttributes<HTMLDivElement>, 'title' | 'children'>, RefAttributes<HTMLDivElement>, GlassSurfaceOptions, OpenProps {
   /** Optional heading explaining what the choices apply to. */
   title?: string;
   message?: string;
@@ -23,7 +24,6 @@ export interface GlassActionSheetProps extends GlassSurfaceOptions, OpenProps {
   onCancel?: () => void;
   'aria-label': string;
   align?: Align;
-  className?: string;
 }
 
 /**
@@ -37,20 +37,21 @@ export interface GlassActionSheetProps extends GlassSurfaceOptions, OpenProps {
  */
 export function GlassActionSheet({
   trigger, open: controlled, defaultOpen = false, onOpenChange, title, message, actions,
-  cancelLabel = 'Cancel', onCancel, 'aria-label': label, align = 'center', className, ...surface
+  cancelLabel = 'Cancel', onCancel, 'aria-label': label, align = 'center', className, style, id: providedId, ref, ...rest
 }: GlassActionSheetProps) {
-  const id = useId(); const triggerRef = useRef<HTMLButtonElement>(null);
+  const [surface, props] = splitSurface(rest);
+  const generated = useId(); const id = providedId ?? generated; const triggerRef = useRef<HTMLButtonElement>(null);
   const [open, setOpen] = useControllable(controlled, defaultOpen, onOpenChange);
   const wide = useMediaQuery('(min-width: 768px)');
-  const glass = useGlassSurface<HTMLDivElement>({ ...surface, material: 'regular', size: 'large' });
+  const glass = useGlassSurface<HTMLDivElement>({ ...surface, material: 'regular', size: 'large' }, ref);
   usePopover(open, setOpen, glass.root, triggerRef, align, true, wide ? 'auto' : 'above');
   const close = () => { setOpen(false); triggerRef.current?.focus(); };
   // Destructive choices are ordered last so a mis-tap lands on something recoverable.
   const ordered = [...actions].sort((a, b) => Number(!!a.destructive) - Number(!!b.destructive));
   return <>
     {triggerElement(trigger, triggerRef, id, open, 'menu', setOpen)}
-    <div id={id} ref={glass.ref} popover="auto" role="menu" tabIndex={-1} aria-label={label}
-      {...glass.attributes} className={cx('lg-root lg-action-sheet', className)} style={glass.style}
+    <div {...props} id={id} ref={glass.ref} popover="auto" role="menu" tabIndex={-1} aria-label={label}
+      {...glass.attributes} className={cx('lg-root lg-action-sheet', className)} style={{ ...glass.style, ...style }}
       data-anchor={wide ? 'source' : 'bottom'}
       onKeyDown={event => {
         if (event.key === 'Escape') { event.preventDefault(); close(); onCancel?.(); return; }

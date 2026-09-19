@@ -1,8 +1,8 @@
 'use client';
-import type { HTMLAttributes, ReactNode } from 'react';
+import type { HTMLAttributes, ReactNode, RefAttributes } from 'react';
 import { cx } from '../system/utils.js';
 
-export interface GlassBadgeProps extends Omit<HTMLAttributes<HTMLSpanElement>, 'children'> {
+export interface GlassBadgeProps extends Omit<HTMLAttributes<HTMLSpanElement>, 'children'>, RefAttributes<HTMLSpanElement> {
   /** A count, or text for a status badge. Counts above `max` render as "max+". */
   count?: number;
   max?: number;
@@ -21,8 +21,8 @@ export interface GlassBadgeProps extends Omit<HTMLAttributes<HTMLSpanElement>, '
  * Colour alone never carries the meaning here: the badge always contains a number or a
  * label, and the accessible name spells out what it counts.
  */
-export function GlassBadge({ count, max = 99, children, tone = 'notification', dot = false, className, ...props }: GlassBadgeProps) {
+export function GlassBadge({ count, max = 99, children, tone = 'notification', dot = false, className, ref, ...props }: GlassBadgeProps) {
   const text = dot ? null : children ?? (count === undefined ? null : count > max ? `${max}+` : String(count));
   if (!dot && (text === null || text === '')) return null;
-  return <span {...props} className={cx('lg-badge', className)} data-tone={tone} data-dot={dot ? 'true' : undefined}>{text}</span>;
+  return <span {...props} ref={ref} className={cx('lg-badge', className)} data-tone={tone} data-dot={dot ? 'true' : undefined}>{text}</span>;
 }

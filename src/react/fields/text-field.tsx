@@ -1,9 +1,10 @@
 'use client';
-import { forwardRef, useId, type InputHTMLAttributes, type ReactNode } from 'react';
+import { useId, type InputHTMLAttributes, type ReactNode, type RefAttributes } from 'react';
 import { cx } from '../system/utils.js';
 import { Text } from '../content/text.js';
 
-export interface TextFieldProps extends Omit<InputHTMLAttributes<HTMLInputElement>, 'size'> {
+/** The ref, like every other attribute here, lands on the `<input>` — the thing worth holding. */
+export interface TextFieldProps extends Omit<InputHTMLAttributes<HTMLInputElement>, 'size'>, RefAttributes<HTMLInputElement> {
   /** A real, visible label. A placeholder is a hint about the format, never a substitute. */
   label: ReactNode;
   /** Supporting text shown under the field. Announced with the input. */
@@ -27,8 +28,8 @@ export interface TextFieldProps extends Omit<InputHTMLAttributes<HTMLInputElemen
  * the font-size stays at 16px or above so iOS Safari does not zoom on focus, and the focus
  * ring is an `outline` on the container rather than a `box-shadow`.
  */
-export const TextField = forwardRef<HTMLInputElement, TextFieldProps>(function TextField(
-  { label, hint, error, leading, trailing, labelHidden = false, className, id, type = 'text', ...props }, ref,
+export function TextField(
+  { label, hint, error, leading, trailing, labelHidden = false, className, id, type = 'text', ref, ...props }: TextFieldProps,
 ) {
   const generated = useId();
   const fieldId = id ?? `${generated}-field`;
@@ -46,4 +47,4 @@ export const TextField = forwardRef<HTMLInputElement, TextFieldProps>(function T
     {error && <Text id={errorId} variant="footnote" tone="destructive" className="lg-field-message">{error}</Text>}
     {hint && !error && <Text id={hintId} variant="footnote" tone="secondary" className="lg-field-message">{hint}</Text>}
   </div>;
-});
+}

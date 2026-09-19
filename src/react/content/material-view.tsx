@@ -1,9 +1,9 @@
 'use client';
-import { forwardRef, type HTMLAttributes } from 'react';
+import { type HTMLAttributes, type RefAttributes } from 'react';
 import type { StandardMaterial } from '../../tokens/index.js';
 import { cx } from '../system/utils.js';
 
-export interface MaterialViewProps extends HTMLAttributes<HTMLDivElement> {
+export interface MaterialViewProps extends HTMLAttributes<HTMLDivElement>, RefAttributes<HTMLDivElement> {
   /**
    * Thicker materials give text more contrast; thinner ones keep more of the context
    * behind them. Choose by what the surface is for, never by the colour it happens to
@@ -22,9 +22,7 @@ export interface MaterialViewProps extends HTMLAttributes<HTMLDivElement> {
  * Use vibrant label tones on top (`Text tone="secondary"`), and avoid `quaternary` on the
  * thin and ultraThin variants, where it falls below readable contrast.
  */
-export const MaterialView = forwardRef<HTMLDivElement, MaterialViewProps>(function MaterialView(
-  { thickness = 'regular', radius = 20, className, style, children, ...props }, ref,
-) {
+export function MaterialView({ thickness = 'regular', radius = 20, className, style, children, ref, ...props }: MaterialViewProps) {
   return <div {...props} ref={ref} className={cx('lg-material-view', className)} data-thickness={thickness}
     style={{ borderRadius: `${radius}px`, ...style }}>{children}</div>;
-});
+}

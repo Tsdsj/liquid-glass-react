@@ -9,6 +9,26 @@ import '@ttqtt/liquid-glass-react/tokens.css';
 import '@ttqtt/liquid-glass-react/styles.css';
 ```
 
+## 每个组件都接受的东西
+
+**`ref`** 指向组件渲染出来的那个元素——`Card` 是它的 `<div>`，`TabBar` 是整条 `<nav>`，`GlassSheet` 是 `<dialog>`。两个例外是输入类：`TextField` 和 `SearchField` 的 `ref` 落在 `<input>` 上，因为那才是你要聚焦、要读值的东西。
+
+**HTML 属性**（`id` `style` `data-*` `aria-*` `onClick` …）透传到同一个元素上。`style` 是合并不是替换，组件自己的自定义属性不会被顶掉。
+
+`GlassProvider`、`BackdropToneProvider`、`SharedSurface`、`ToastProvider` 例外：它们只提供 context，自己不渲染元素，所以没有 `ref`。
+
+少数几个键被组件收回了，因为同名但不同义：
+
+| 组件 | 收回 | 为什么 |
+| --- | --- | --- |
+| `NavigationBar` `GlassPopover` `GlassSheet` `GlassAlert` `GlassDialog` `GlassActionSheet` | `title` | 这里是标题文字，不是鼠标悬停提示 |
+| `ListRow` | `value` `onSelect` | `<li>` 的 `value` 是有序列表序号，`onSelect` 是文本选中事件 |
+| `GlassSwitch` | `htmlFor` | 它渲染的 `<label>` 自己管着里面的 checkbox |
+| `GlassDialog` `GlassSheet` `GlassAlert` | `open` | 开合由受控状态决定，元素本身用 `showModal()` 打开 |
+| 带 `defaultValue` / `onValueChange` 的控件 | `defaultValue` `onChange` | 指的是内部原生输入框，不是控件本身 |
+
+`id` 不在收回之列：浮层会拿它当内部 `-title` / `-desc` 的前缀，所以你给的 id 会被用上而不是被忽略。
+
 ## 系统
 
 ### `GlassProvider`
@@ -136,10 +156,11 @@ import '@ttqtt/liquid-glass-react/styles.css';
 全部支持 `trigger` / `open` / `defaultOpen` / `onOpenChange`，并自动使用 `size="large"`。
 
 ### `GlassPopover`
-`title`(必填) `description` `align`。非模态，锚定触发器。
+`title`(必填) `description` `align` `placement`。非模态，锚定触发器。
+`placement`: `'below' | 'above' | 'auto'`，默认 `auto`——下方放不下就翻到上方。指定方向时如果会超出屏幕，仍会被拉回可视范围内。
 
 ### `GlassMenu`
-`items: GlassMenuItem[]`（`key` `label` `onSelect` `icon` `checked` `shortcut` `destructive` `disabled` `separatorBefore`）、`aria-label`(必填) `align`。
+`items: GlassMenuItem[]`（`key` `label` `onSelect` `icon` `checked` `shortcut` `destructive` `disabled` `separatorBefore`）、`aria-label`(必填) `align` `placement`（同上）。
 键盘：上下移动、Home/End、键入查找、Escape 关闭回焦、Tab 关闭。
 
 ### `GlassSheet`

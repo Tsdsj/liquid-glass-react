@@ -1,7 +1,8 @@
 'use client';
-import { useId, useRef, type ReactNode, type RefObject } from 'react';
+import { useId, useRef, type HTMLAttributes, type ReactNode, type RefAttributes, type RefObject } from 'react';
 import { GlassSurface } from '../system/surface.js';
 import { type GlassSurfaceOptions } from '../system/material.js';
+import { splitSurface } from '../system/props.js';
 import { cx, useControllable, useMeasureEffect } from '../system/utils.js';
 import { usePull, elementAt } from '../system/pull.js';
 import { useFusion } from '../system/fusion.js';
@@ -107,9 +108,10 @@ export function trackSpan(track: HTMLElement | null, lens: HTMLElement | null, a
   return { x: span(box.left + half - origin.x, box.right - half - origin.x) };
 }
 
-export interface GlassSegmentedControlProps extends GlassSurfaceOptions {
+/** `defaultValue` and `onChange` here would mean the radio inputs the control renders, not the control. */
+export interface GlassSegmentedControlProps extends Omit<HTMLAttributes<HTMLDivElement>, 'children' | 'defaultValue' | 'onChange'>, RefAttributes<HTMLDivElement>, GlassSurfaceOptions {
   items: GlassChoice[]; value?: string; defaultValue?: string; onValueChange?: (value: string) => void;
-  'aria-label': string; name?: string; disabled?: boolean; className?: string;
+  'aria-label': string; name?: string; disabled?: boolean;
 }
 
 /**
@@ -121,7 +123,8 @@ export interface GlassSegmentedControlProps extends GlassSurfaceOptions {
  * crosses each segment, settling on a spring. This is the interaction most often missing
  * from imitations of the system control.
  */
-export function GlassSegmentedControl({ items, value, defaultValue, onValueChange, name, disabled, className, 'aria-label': label, ...surface }: GlassSegmentedControlProps) {
+export function GlassSegmentedControl({ items, value, defaultValue, onValueChange, name, disabled, className, 'aria-label': label, ref, ...rest }: GlassSegmentedControlProps) {
+  const [surface, props] = splitSurface(rest);
   const id = useId();
   const [selected, setSelected] = useControllable(value, defaultValue ?? items.find(x => !x.disabled)?.value ?? '', onValueChange);
   const root = useRef<HTMLDivElement>(null);
@@ -148,7 +151,7 @@ export function GlassSegmentedControl({ items, value, defaultValue, onValueChang
     const hit = elementAt(event, '.lg-segment'); const input = hit?.querySelector<HTMLInputElement>('input');
     if (input && !input.disabled && input.value !== selected && root.current?.contains(input)) setSelected(input.value);
   }
-  return <GlassSurface {...surface} radius={surface.radius ?? 'pill'} className={cx('lg-segmented', className)}>
+  return <GlassSurface {...props} {...surface} ref={ref} radius={surface.radius ?? 'pill'} className={cx('lg-segmented', className)}>
     <div className="lg-segmented-track" ref={root} role="radiogroup" aria-label={label}>
       {fusion}<span aria-hidden="true" className="lg-selection-lens" ref={lensRef} />
       {items.map(item => <label key={item.value} className="lg-segment" data-disabled={disabled || item.disabled ? 'true' : 'false'}>

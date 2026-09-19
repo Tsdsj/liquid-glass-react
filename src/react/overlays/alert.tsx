@@ -1,6 +1,7 @@
 'use client';
-import { useEffect, useId, useRef } from 'react';
+import { useEffect, useId, useRef, type DialogHTMLAttributes, type RefAttributes } from 'react';
 import { useGlassSurface, type GlassSurfaceOptions } from '../system/material.js';
+import { splitSurface } from '../system/props.js';
 import { GlassButton } from '../controls/button.js';
 import { SharedSurface } from '../system/surface.js';
 import { cx, useControllable } from '../system/utils.js';
@@ -17,12 +18,12 @@ export interface AlertAction {
    */
   role?: 'default' | 'cancel' | 'destructive';
 }
-export interface GlassAlertProps extends GlassSurfaceOptions, OpenProps {
+/** `open` is the controlled state, not the `<dialog>` attribute — the element is opened with `showModal`. */
+export interface GlassAlertProps extends Omit<DialogHTMLAttributes<HTMLDialogElement>, 'title' | 'children' | 'open'>, RefAttributes<HTMLDialogElement>, GlassSurfaceOptions, OpenProps {
   title: string;
   /** One or two short sentences saying what happened and what happens next. */
   message?: string;
   actions: AlertAction[];
-  className?: string;
 }
 
 /**
@@ -33,12 +34,13 @@ export interface GlassAlertProps extends GlassSurfaceOptions, OpenProps {
  * (with a red action and Cancel focused) or an immediate Undo; routine information needs
  * neither, and marketing never belongs here.
  */
-export function GlassAlert({ trigger, open: controlled, defaultOpen = false, onOpenChange, title, message, actions, className, ...surface }: GlassAlertProps) {
+export function GlassAlert({ trigger, open: controlled, defaultOpen = false, onOpenChange, title, message, actions, className, style, id: providedId, ref, ...rest }: GlassAlertProps) {
+  const [surface, props] = splitSurface(rest);
   if (actions.length === 0) throw new Error('GlassAlert requires at least one action');
   if (actions.length > 3) throw new RangeError('GlassAlert supports at most three actions; use an action sheet for longer lists');
-  const id = useId(); const triggerRef = useRef<HTMLButtonElement>(null); const restoreRef = useRef<HTMLElement | null>(null);
+  const generated = useId(); const id = providedId ?? generated; const triggerRef = useRef<HTMLButtonElement>(null); const restoreRef = useRef<HTMLElement | null>(null);
   const [open, setOpen] = useControllable(controlled, defaultOpen, onOpenChange);
-  const glass = useGlassSurface<HTMLDialogElement>({ ...surface, material: 'regular', size: 'large', radius: surface.radius ?? 26 });
+  const glass = useGlassSurface<HTMLDialogElement>({ ...surface, material: 'regular', size: 'large', radius: surface.radius ?? 26 }, ref);
   const hasDestructive = actions.some(action => action.role === 'destructive');
   useEffect(() => {
     const node = glass.root.current; if (!node) return;
@@ -55,8 +57,8 @@ export function GlassAlert({ trigger, open: controlled, defaultOpen = false, onO
   const run = (action: AlertAction) => { setOpen(false); action.onSelect?.(); };
   return <>
     {triggerElement(trigger, triggerRef, id, open, 'dialog', setOpen)}
-    <dialog id={id} ref={glass.ref} role="alertdialog" aria-labelledby={`${id}-title`} aria-describedby={message ? `${id}-msg` : undefined}
-      {...glass.attributes} className={cx('lg-root lg-dialog lg-alert', className)} style={glass.style}
+    <dialog {...props} id={id} ref={glass.ref} role="alertdialog" aria-labelledby={`${id}-title`} aria-describedby={message ? `${id}-msg` : undefined}
+      {...glass.attributes} className={cx('lg-root lg-dialog lg-alert', className)} style={{ ...glass.style, ...style }}
       onCancel={event => {
         event.preventDefault();
         // Escape means "get me out", so it runs the cancel action rather than silently closing.

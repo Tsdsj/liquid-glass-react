@@ -1,10 +1,10 @@
 'use client';
-import { forwardRef, useEffect, type HTMLAttributes, type KeyboardEvent } from 'react';
+import { useEffect, type HTMLAttributes, type KeyboardEvent, type RefAttributes } from 'react';
 import { useFusion } from '../system/fusion.js';
 import { GlassSurface, SharedSurface, type GlassSurfaceProps } from '../system/surface.js';
 import { cx, useMergedRef } from '../system/utils.js';
 
-export interface GlassToolbarProps extends HTMLAttributes<HTMLDivElement> {
+export interface GlassToolbarProps extends HTMLAttributes<HTMLDivElement>, RefAttributes<HTMLDivElement> {
   orientation?: 'horizontal' | 'vertical';
   'aria-label': string;
 }
@@ -17,8 +17,8 @@ export interface GlassToolbarProps extends HTMLAttributes<HTMLDivElement> {
  * Roving focus covers the buttons of every group, so the whole bar is one tab stop with
  * arrow-key traversal. Complex input widgets belong outside this primitive.
  */
-export const GlassToolbar = forwardRef<HTMLDivElement, GlassToolbarProps>(function GlassToolbar(
-  { className, children, orientation = 'horizontal', onKeyDown, onFocusCapture, ...props }, ref,
+export function GlassToolbar(
+  { className, children, orientation = 'horizontal', onKeyDown, onFocusCapture, ref, ...props }: GlassToolbarProps,
 ) {
   const [root, merged] = useMergedRef<HTMLDivElement>(ref);
   const items = () => Array.from(root.current?.querySelectorAll<HTMLButtonElement>('button:not(:disabled)') ?? [])
@@ -50,7 +50,7 @@ export const GlassToolbar = forwardRef<HTMLDivElement, GlassToolbarProps>(functi
     onFocusCapture={event => { onFocusCapture?.(event); if ((event.target as HTMLElement).tagName === 'BUTTON') setTabStop(event.target as HTMLElement); }}>
     {children}
   </div>;
-});
+}
 
 export interface ToolbarGroupProps extends GlassSurfaceProps {
   /** Set on the single primary action so it reads as separate from the rest of the bar. */
@@ -64,8 +64,8 @@ export interface ToolbarGroupProps extends GlassSurfaceProps {
  * Do not mix symbols and text in one group; a group of both reads as a single wide button.
  * Text buttons get their own container, and the primary action stands alone.
  */
-export const ToolbarGroup = forwardRef<HTMLDivElement, ToolbarGroupProps>(function ToolbarGroup(
-  { className, children, prominent = false, radius = 'pill', ...props }, ref,
+export function ToolbarGroup(
+  { className, children, prominent = false, radius = 'pill', ref, ...props }: ToolbarGroupProps,
 ) {
   const [root, merged] = useMergedRef<HTMLDivElement>(ref);
   const fusion = useFusion(root, { itemSelector: ':scope > .lg-content > .lg-button' });
@@ -86,14 +86,16 @@ export const ToolbarGroup = forwardRef<HTMLDivElement, ToolbarGroupProps>(functi
     className={cx('lg-toolbar-group', className)}>
     <SharedSurface value={true}>{fusion}{children}</SharedSurface>
   </GlassSurface>;
-});
+}
 
-export interface ToolbarSpacerProps { variant?: 'fixed' | 'flexible' }
+export interface ToolbarSpacerProps extends Omit<HTMLAttributes<HTMLSpanElement>, 'children'>, RefAttributes<HTMLSpanElement> {
+  variant?: 'fixed' | 'flexible';
+}
 /**
  * Separates groups. `fixed` leaves a consistent gap between two related clusters;
  * `flexible` pushes them to opposite ends of the bar. This replaces the drawn divider —
  * the gap between two glass surfaces is the separator.
  */
-export function ToolbarSpacer({ variant = 'fixed' }: ToolbarSpacerProps) {
-  return <span className="lg-toolbar-spacer" data-variant={variant} aria-hidden="true" />;
+export function ToolbarSpacer({ variant = 'fixed', className, ref, ...props }: ToolbarSpacerProps) {
+  return <span {...props} ref={ref} className={cx('lg-toolbar-spacer', className)} data-variant={variant} aria-hidden="true" />;
 }

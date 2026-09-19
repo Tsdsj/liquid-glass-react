@@ -39,11 +39,30 @@ export const overlayDocs: ComponentDoc[] = [
   …
 </GlassPopover>`,
       },
+      {
+        id: 'popover-placement', title: '指定展开方向',
+        description: '默认按剩余空间自动决定。想固定朝上或朝下，用 placement。',
+        height: 260,
+        render: function PopoverPlacement() {
+          return <div id="popover-above-demo" style={{ display: 'flex', gap: 12, paddingBlockStart: 120 }}>
+            <GlassPopover title="朝上展开" placement="above" trigger={<GlassButton>向上</GlassButton>}>
+              <Text variant="subhead">面板在按钮上方。</Text>
+            </GlassPopover>
+            <GlassPopover title="朝下展开" placement="below" trigger={<GlassButton>向下</GlassButton>}>
+              <Text variant="subhead">面板在按钮下方。</Text>
+            </GlassPopover>
+          </div>;
+        },
+        code: `<GlassPopover title="朝上展开" placement="above" trigger={<GlassButton>向上</GlassButton>}>
+  …
+</GlassPopover>`,
+      },
     ],
     props: [
       { name: 'trigger', type: 'ReactElement', description: '你自己的按钮。组件只负责把它和面板关联起来。' },
       { name: 'title', type: 'string', required: true, description: '面板标题。' },
       { name: 'align', type: "'start' | 'center' | 'end'", default: "'end'", description: '相对按钮的对齐方式。' },
+      { name: 'placement', type: "'below' | 'above' | 'auto'", default: "'auto'", description: '朝哪个方向展开。auto 表示下方放不下就翻到上方。' },
       { name: 'open / defaultOpen / onOpenChange', type: 'boolean / (open) => void', description: '自己控制开合，或交给组件。' },
     ],
     notes: [
@@ -94,6 +113,8 @@ export const overlayDocs: ComponentDoc[] = [
       { name: 'checked', type: 'boolean', description: '带勾选状态的项。' },
       { name: 'shortcut', type: 'string', description: '快捷键提示。' },
       { name: 'destructive', type: 'boolean', description: '标红。危险操作仍然需要确认或撤销。' },
+      { name: 'align', type: "'start' | 'center' | 'end'", default: "'end'", description: '相对按钮的对齐方式。' },
+      { name: 'placement', type: "'below' | 'above' | 'auto'", default: "'auto'", description: '朝哪个方向展开。auto 表示下方放不下就翻到上方。' },
     ],
     notes: [
       '菜单项是真正的按钮，键盘可以逐项走过去。',

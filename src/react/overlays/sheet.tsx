@@ -1,7 +1,8 @@
 'use client';
-import { useCallback, useEffect, useId, useRef, useState, type CSSProperties, type ReactNode } from 'react';
+import { useCallback, useEffect, useId, useRef, useState, type CSSProperties, type DialogHTMLAttributes, type ReactNode, type RefAttributes } from 'react';
 import { createSpring } from '../../core/index.js';
 import { useGlassSurface, type GlassSurfaceOptions } from '../system/material.js';
+import { splitSurface } from '../system/props.js';
 import { useGlassPolicy } from '../system/provider.js';
 import { SharedSurface } from '../system/surface.js';
 import { cx, useControllable } from '../system/utils.js';
@@ -13,7 +14,8 @@ const DETENT_FRACTION: Record<SheetDetent, number> = { medium: .5, large: .94 };
 /** At or above this fraction the sheet is effectively full height: opaque, anchored to the edge. */
 const FULL = .9;
 
-export interface GlassSheetProps extends GlassSurfaceOptions, OpenProps {
+/** `open` is the controlled state, not the `<dialog>` attribute — the element is opened with `showModal`. */
+export interface GlassSheetProps extends Omit<DialogHTMLAttributes<HTMLDialogElement>, 'title' | 'children' | 'open'>, RefAttributes<HTMLDialogElement>, GlassSurfaceOptions, OpenProps {
   title: string;
   description?: string;
   children: ReactNode;
@@ -23,7 +25,6 @@ export interface GlassSheetProps extends GlassSurfaceOptions, OpenProps {
   onDetentChange?: (detent: SheetDetent) => void;
   /** The drag handle. Hide it only if the sheet has a single detent and cannot be dragged. */
   grabber?: boolean;
-  className?: string;
 }
 
 /**
@@ -37,14 +38,15 @@ export interface GlassSheetProps extends GlassSurfaceOptions, OpenProps {
  */
 export function GlassSheet({
   trigger, open: controlled, defaultOpen = false, onOpenChange, title, description, children,
-  detents = ['medium', 'large'], defaultDetent, onDetentChange, grabber = true, className, ...surface
+  detents = ['medium', 'large'], defaultDetent, onDetentChange, grabber = true, className, style, id: providedId, ref, ...rest
 }: GlassSheetProps) {
+  const [surface, props] = splitSurface(rest);
   if (detents.length === 0) throw new Error('GlassSheet requires at least one detent');
-  const id = useId(); const triggerRef = useRef<HTMLButtonElement>(null); const restoreRef = useRef<HTMLElement | null>(null);
+  const generated = useId(); const id = providedId ?? generated; const triggerRef = useRef<HTMLButtonElement>(null); const restoreRef = useRef<HTMLElement | null>(null);
   const [open, setOpen] = useControllable(controlled, defaultOpen, onOpenChange);
   const [detent, setDetent] = useControllable(undefined, defaultDetent ?? detents[0], onDetentChange);
   const policy = useGlassPolicy();
-  const glass = useGlassSurface<HTMLDialogElement>({ ...surface, material: 'regular', size: 'large', radius: surface.radius ?? 38 });
+  const glass = useGlassSurface<HTMLDialogElement>({ ...surface, material: 'regular', size: 'large', radius: surface.radius ?? 38 }, ref);
   const fractions = detents.map(name => DETENT_FRACTION[name]);
   const [full, setFull] = useState(DETENT_FRACTION[detent] >= FULL);
   const spring = useRef<ReturnType<typeof createSpring> | null>(null);
@@ -122,9 +124,9 @@ export function GlassSheet({
 
   return <>
     {triggerElement(trigger, triggerRef, id, open, 'dialog', setOpen)}
-    <dialog id={id} ref={glass.ref} aria-labelledby={`${id}-title`} aria-describedby={description ? `${id}-desc` : undefined}
+    <dialog {...props} id={id} ref={glass.ref} aria-labelledby={`${id}-title`} aria-describedby={description ? `${id}-desc` : undefined}
       {...glass.attributes} className={cx('lg-root lg-sheet', className)} data-full={full ? 'true' : undefined}
-      style={{ '--lg-sheet-offset': `${(1 - DETENT_FRACTION[detent]) * 100}%`, ...glass.style } as CSSProperties}
+      style={{ '--lg-sheet-offset': `${(1 - DETENT_FRACTION[detent]) * 100}%`, ...glass.style, ...style } as CSSProperties}
       onCancel={event => { event.preventDefault(); setOpen(false); }}
       onClose={() => { if (!glass.root.current?.open) setOpen(false); }}>
       {glass.decoration}

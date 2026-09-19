@@ -1,9 +1,10 @@
 'use client';
+import type { HTMLAttributes, RefAttributes } from 'react';
 import { cx, useControllable } from '../system/utils.js';
 import { LibraryIcon } from '../system/icon.js';
 import { clamp } from '../../core/index.js';
 
-export interface GlassStepperProps {
+export interface GlassStepperProps extends Omit<HTMLAttributes<HTMLDivElement>, 'children' | 'defaultValue' | 'onChange'>, RefAttributes<HTMLDivElement> {
   value?: number; defaultValue?: number; onValueChange?: (value: number) => void;
   min?: number; max?: number; step?: number; disabled?: boolean;
   'aria-label': string;
@@ -13,7 +14,6 @@ export interface GlassStepperProps {
   showValue?: boolean;
   decrementLabel?: string;
   incrementLabel?: string;
-  className?: string;
 }
 
 /**
@@ -23,7 +23,7 @@ export interface GlassStepperProps {
  */
 export function GlassStepper({
   value, defaultValue = 0, onValueChange, min = -Infinity, max = Infinity, step = 1, disabled,
-  'aria-label': label, formatValue, showValue = true, decrementLabel = 'Decrease', incrementLabel = 'Increase', className,
+  'aria-label': label, formatValue, showValue = true, decrementLabel = 'Decrease', incrementLabel = 'Increase', className, ref, ...props
 }: GlassStepperProps) {
   if (!Number.isFinite(step) || step <= 0) throw new RangeError('GlassStepper requires step > 0');
   if (min >= max) throw new RangeError('GlassStepper requires min < max');
@@ -31,7 +31,7 @@ export function GlassStepper({
   const safe = clamp(Number.isFinite(current) ? current : 0, min, max);
   const shown = formatValue ? formatValue(safe) : String(safe);
   const nudge = (direction: 1 | -1) => setCurrent(clamp(safe + direction * step, min, max));
-  return <div className={cx('lg-stepper', className)} role="group" aria-label={label} data-disabled={disabled ? 'true' : undefined}>
+  return <div {...props} ref={ref} className={cx('lg-stepper', className)} role="group" aria-label={label} data-disabled={disabled ? 'true' : undefined}>
     <button type="button" className="lg-stepper-button" aria-label={decrementLabel} disabled={disabled || safe <= min} onClick={() => nudge(-1)}>
       <LibraryIcon name="minus" size={18} />
     </button>

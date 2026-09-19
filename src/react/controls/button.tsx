@@ -1,5 +1,5 @@
 'use client';
-import { forwardRef, type ButtonHTMLAttributes } from 'react';
+import { type ButtonHTMLAttributes, type RefAttributes } from 'react';
 import { useGlassSurface, type GlassSurfaceOptions } from '../system/material.js';
 import { useSharedSurface } from '../system/surface.js';
 import { cx } from '../system/utils.js';
@@ -16,7 +16,7 @@ export type GlassButtonVariant =
 /** Control heights. `small` keeps a 44pt hit region on touch via padding, not a smaller target. */
 export type ControlSize = 'small' | 'regular' | 'large' | 'extraLarge';
 
-export interface GlassButtonProps extends ButtonHTMLAttributes<HTMLButtonElement>, GlassSurfaceOptions {
+export interface GlassButtonProps extends ButtonHTMLAttributes<HTMLButtonElement>, RefAttributes<HTMLButtonElement>, GlassSurfaceOptions {
   variant?: GlassButtonVariant;
   /** Visual height of the control. Distinct from `size`, which selects the glass thickness. */
   controlSize?: ControlSize;
@@ -27,10 +27,10 @@ export interface GlassButtonProps extends ButtonHTMLAttributes<HTMLButtonElement
 
 const GLASSY = new Set<GlassButtonVariant>(['glass', 'glassProminent']);
 
-export const GlassButton = forwardRef<HTMLButtonElement, GlassButtonProps>(function GlassButton(
+export function GlassButton(
   { material, backdropTone, density, renderer, radius = 'pill', refraction, size, chroma,
     className, style, children, variant = 'glass', controlSize = 'regular', loading = false, disabled,
-    independent = false, type = 'button', ...props }, ref,
+    independent = false, type = 'button', ref, ...props }: GlassButtonProps,
 ) {
   const shared = useSharedSurface();
   // Flat variants never grow their own glass, and inside a shared surface neither does anything
@@ -42,12 +42,12 @@ export const GlassButton = forwardRef<HTMLButtonElement, GlassButtonProps>(funct
     className={cx('lg-root lg-button', className)} style={{ ...glass.style, ...style }}>
     {glass.decoration}<span className="lg-content">{loading && <span className="lg-spinner" aria-hidden="true" />}{children}</span>
   </button>;
-});
+}
 
 export interface GlassIconButtonProps extends GlassButtonProps {
   /** Icon-only controls carry no visible text, so the accessible name is mandatory. */
   'aria-label': string;
 }
-export const GlassIconButton = forwardRef<HTMLButtonElement, GlassIconButtonProps>(function GlassIconButton({ className, ...props }, ref) {
-  return <GlassButton {...props} ref={ref} className={cx('lg-icon-button', className)} />;
-});
+export function GlassIconButton({ className, ...props }: GlassIconButtonProps) {
+  return <GlassButton {...props} className={cx('lg-icon-button', className)} />;
+}

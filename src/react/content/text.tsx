@@ -1,11 +1,11 @@
 'use client';
-import { createElement, type ElementType, type HTMLAttributes } from 'react';
+import { createElement, type ElementType, type HTMLAttributes, type RefAttributes } from 'react';
 import type { TextStyle } from '../../tokens/index.js';
 import { cx } from '../system/utils.js';
 
 export type TextTone = 'primary' | 'secondary' | 'tertiary' | 'quaternary' | 'accent' | 'destructive';
 
-export interface TextProps extends Omit<HTMLAttributes<HTMLElement>, 'color'> {
+export interface TextProps extends Omit<HTMLAttributes<HTMLElement>, 'color'>, RefAttributes<HTMLElement> {
   /**
    * An iOS text style, not a size. Styles carry size, leading and tracking together and
    * scale with Dynamic Type; picking `caption2` and then overriding font-size defeats both.
@@ -23,9 +23,10 @@ export interface TextProps extends Omit<HTMLAttributes<HTMLElement>, 'color'> {
   tabular?: boolean;
 }
 
-export function Text({ variant = 'body', emphasized = false, tone = 'primary', as = 'p', tabular = false, className, ...props }: TextProps) {
+export function Text({ variant = 'body', emphasized = false, tone = 'primary', as = 'p', tabular = false, className, ref, ...props }: TextProps) {
   return createElement(as, {
     ...props,
+    ref,
     'data-variant': variant,
     'data-tone': tone,
     'data-emphasized': emphasized ? 'true' : undefined,

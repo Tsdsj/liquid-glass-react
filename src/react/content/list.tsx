@@ -1,10 +1,10 @@
 'use client';
-import { type HTMLAttributes, type MouseEvent, type ReactNode } from 'react';
+import { type HTMLAttributes, type LiHTMLAttributes, type MouseEvent, type ReactNode, type RefAttributes } from 'react';
 import { cx } from '../system/utils.js';
 import { LibraryIcon } from '../system/icon.js';
 import { Text } from './text.js';
 
-export interface ListProps extends HTMLAttributes<HTMLDivElement> {
+export interface ListProps extends HTMLAttributes<HTMLDivElement>, RefAttributes<HTMLDivElement> {
   /**
    * `insetGrouped` is the settings/forms style: rounded groups inset from the margins.
    * `plain` runs edge to edge for long homogeneous content.
@@ -12,11 +12,11 @@ export interface ListProps extends HTMLAttributes<HTMLDivElement> {
   variant?: 'insetGrouped' | 'plain';
 }
 /** A content-layer list. Rows are solid; the glass belongs to the bars floating above them. */
-export function List({ variant = 'insetGrouped', className, ...props }: ListProps) {
-  return <div {...props} data-variant={variant} className={cx('lg-list', className)} />;
+export function List({ variant = 'insetGrouped', className, ref, ...props }: ListProps) {
+  return <div {...props} ref={ref} data-variant={variant} className={cx('lg-list', className)} />;
 }
 
-export interface ListSectionProps extends Omit<HTMLAttributes<HTMLElement>, 'title'> {
+export interface ListSectionProps extends Omit<HTMLAttributes<HTMLElement>, 'title'>, RefAttributes<HTMLElement> {
   /**
    * Title-style capitalization, not ALL CAPS — the uppercase section header was retired
    * in the iOS 26 design. Pass the words as you want them read.
@@ -25,15 +25,20 @@ export interface ListSectionProps extends Omit<HTMLAttributes<HTMLElement>, 'tit
   footer?: ReactNode;
   children: ReactNode;
 }
-export function ListSection({ header, footer, children, className, ...props }: ListSectionProps) {
-  return <section {...props} className={cx('lg-list-section', className)}>
+export function ListSection({ header, footer, children, className, ref, ...props }: ListSectionProps) {
+  return <section {...props} ref={ref} className={cx('lg-list-section', className)}>
     {header && <Text as="h3" variant="subhead" emphasized tone="secondary" className="lg-list-header">{header}</Text>}
     <ul className="lg-list-group" role="list">{children}</ul>
     {footer && <Text variant="footnote" tone="secondary" className="lg-list-footer">{footer}</Text>}
   </section>;
 }
 
-export interface ListRowProps {
+/**
+ * Two keys are taken back from `<li>`: its `value` is the ordered-list number, and its
+ * `onSelect` is the text-selection event. A row's `value` is the trailing read-out and its
+ * `onSelect` is the row being chosen, which is what a caller means by either word here.
+ */
+export interface ListRowProps extends Omit<LiHTMLAttributes<HTMLLIElement>, 'value' | 'onSelect'>, RefAttributes<HTMLLIElement> {
   label: ReactNode;
   /** A second line under the label, for context that does not belong in the label itself. */
   secondaryLabel?: ReactNode;
@@ -49,14 +54,13 @@ export interface ListRowProps {
   disclosure?: boolean;
   destructive?: boolean;
   disabled?: boolean;
-  className?: string;
 }
 /**
  * One row. Navigating rows render as a real link or button so keyboard and assistive
  * technology get the right affordance — a `div` with an onClick is not a row, it is a trap.
  * Minimum height is the 44pt hit region even when the text is a single short line.
  */
-export function ListRow({ label, secondaryLabel, value, leading, accessory, href, onSelect, disclosure, destructive, disabled, className }: ListRowProps) {
+export function ListRow({ label, secondaryLabel, value, leading, accessory, href, onSelect, disclosure, destructive, disabled, className, ref, ...props }: ListRowProps) {
   const interactive = !!href || !!onSelect;
   const showChevron = disclosure ?? (interactive && !accessory);
   const body = <>
@@ -69,7 +73,7 @@ export function ListRow({ label, secondaryLabel, value, leading, accessory, href
     {accessory && <span className="lg-row-accessory">{accessory}</span>}
     {showChevron && <LibraryIcon name="chevronForward" size={17} className="lg-row-chevron" />}
   </>;
-  return <li className={cx('lg-list-row', className)} data-interactive={interactive ? 'true' : undefined} data-disabled={disabled ? 'true' : undefined}>
+  return <li {...props} ref={ref} className={cx('lg-list-row', className)} data-interactive={interactive ? 'true' : undefined} data-disabled={disabled ? 'true' : undefined}>
     {href
       ? <a className="lg-row-hit" href={href} draggable={false} onClick={onSelect} aria-disabled={disabled || undefined}>{body}</a>
       : onSelect
