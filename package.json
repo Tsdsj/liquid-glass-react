@@ -69,14 +69,15 @@
     "test:e2e": "playwright test",
     "test:chrome": "playwright test --project=chrome",
     "test:csp": "playwright test tests/browser/csp.spec.ts --project=chrome",
-    "check": "pnpm typecheck && pnpm build && pnpm test && pnpm test:ssr && pnpm build:site && pnpm test:chrome && pnpm test:fallback",
+    "check": "pnpm typecheck && pnpm build && pnpm test && pnpm test:ssr && pnpm build:site && pnpm test:chrome && pnpm test:warnings && pnpm test:fallback",
     "size": "node scripts/size-report.mjs",
     "registry:build": "node scripts/build-registry.mjs",
     "manifest:build": "node scripts/build-delivery-manifest.mjs",
     "pretest": "tsc -p tsconfig.core-test.json",
     "test:fallback": "playwright test --project=webkit --project=firefox",
     "verify:package": "node scripts/verify-package.mjs",
-    "prepublishOnly": "node scripts/verify-package.mjs"
+    "prepublishOnly": "node scripts/verify-package.mjs",
+    "test:warnings": "playwright test --project=dev"
   },
   "devDependencies": {
     "@playwright/test": "^1.57.0",

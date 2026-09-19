@@ -2,6 +2,7 @@
 import { useEffect, type HTMLAttributes, type KeyboardEvent, type RefAttributes } from 'react';
 import { useFusion } from '../system/fusion.js';
 import { GlassSurface, SharedSurface, type GlassSurfaceProps } from '../system/surface.js';
+import { inDevelopment, warnOnce } from '../system/warn.js';
 import { cx, useMergedRef } from '../system/utils.js';
 
 export interface GlassToolbarProps extends HTMLAttributes<HTMLDivElement>, RefAttributes<HTMLDivElement> {
@@ -70,16 +71,13 @@ export function ToolbarGroup(
   const [root, merged] = useMergedRef<HTMLDivElement>(ref);
   const fusion = useFusion(root, { itemSelector: ':scope > .lg-content > .lg-button' });
   useEffect(() => {
-    // Reached through globalThis so the library needs no Node typings and still works in a
-    // browser bundle that has no `process` at all.
-    const env = (globalThis as { process?: { env?: Record<string, string | undefined> } }).process?.env;
-    if (env?.NODE_ENV === 'production') return;
+    if (!inDevelopment()) return;
     const node = root.current; if (!node) return;
     const buttons = Array.from(node.querySelectorAll<HTMLElement>(':scope > .lg-content > .lg-button'));
     if (buttons.length < 2) return;
     const icons = buttons.filter(b => b.classList.contains('lg-icon-button')).length;
     if (icons > 0 && icons < buttons.length) {
-      console.warn('[liquid-glass-ui] ToolbarGroup mixes icon-only and text buttons in one shared background; a mixed group reads as a single button. Split them into separate groups.', node);
+      warnOnce(node, 'mixed-group', 'ToolbarGroup mixes icon-only and text buttons in one shared background; a mixed group reads as a single button. Split them into separate groups.');
     }
   }, [root, children]);
   return <GlassSurface {...props} ref={merged} radius={radius} data-prominent={prominent ? 'true' : undefined}

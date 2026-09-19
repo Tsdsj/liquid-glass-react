@@ -6,6 +6,7 @@ import { useGlassPolicy } from './provider.js';
 import { useBackdropTone } from './backdrop.js';
 import { useSharedSurface } from './shared.js';
 import { useMergedRef } from './utils.js';
+import { inDevelopment, warnOnce } from './warn.js';
 import { attachPull } from './pull.js';
 
 export interface GlassSurfaceOptions {
@@ -72,6 +73,31 @@ export function useGlassSurface<T extends HTMLElement>(options: GlassSurfaceOpti
   const appearance = size === 'small' && tone !== 'mixed' ? tone : policy.resolvedTheme;
 
   useEffect(() => { setCapable(supportsSvgBackdrop()); }, []);
+
+  /**
+   * Two rules that used to need a person reading the screen.
+   *
+   * Glass inside glass is the single most common way this material stops looking like itself:
+   * the inner surface has nothing left to refract, so it reads as a grey patch on a grey patch.
+   * A control on a *shared* surface is the intended case and is excluded — that one is already
+   * flat by the time it gets here.
+   *
+   * And `clear` over an undeclared backdrop quietly becomes `regular`, which is the safe
+   * choice but leaves the caller believing they asked for something they did not get.
+   */
+  useEffect(() => {
+    if (!inDevelopment()) return;
+    const node = root.current; if (!node) return;
+    if (requestedMaterial === 'clear' && tone === 'mixed') {
+      warnOnce(node, 'clear-without-tone', 'material="clear" needs a known backdrop, and none was declared here, so it fell back to "regular". Wrap the region in <GlassBackdrop tone="light|dark"> or pass backdropTone.');
+    }
+    if (!shared && size === 'small') {
+      const outer = node.parentElement?.closest<HTMLElement>('.lg-root');
+      if (outer && outer.dataset.glassSize === 'small' && outer.dataset.renderer !== 'shared') {
+        warnOnce(node, 'glass-on-glass', 'small glass inside small glass: the inner surface has nothing left to refract. Put the controls on the outer surface, or give the container size="large".');
+      }
+    }
+  }, [root, requestedMaterial, tone, shared, size]);
 
   useEffect(() => {
     const element = root.current;

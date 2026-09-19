@@ -5,13 +5,19 @@ export default defineConfig({
   reporter: [['list'], ['html', { outputFolder: 'reports/playwright', open: 'never' }]],
   use: { baseURL: process.env.TEST_URL || 'http://127.0.0.1:4173', trace: 'retain-on-failure', screenshot: 'only-on-failure', viewport: { width: 1440, height: 1000 } },
   projects: [
-    { name: 'chrome', use: { ...devices['Desktop Chrome'], channel: 'chrome' }, testIgnore: /fallback\.spec\.ts/ },
-    { name: 'chromium', use: { ...devices['Desktop Chrome'], ...(process.env.CHROMIUM_PATH ? { launchOptions: { executablePath: process.env.CHROMIUM_PATH } } : {}) }, testIgnore: /fallback\.spec\.ts/ },
+    { name: 'chrome', use: { ...devices['Desktop Chrome'], channel: 'chrome' }, testIgnore: /(fallback|warnings)\.spec\.ts/ },
+    { name: 'chromium', use: { ...devices['Desktop Chrome'], ...(process.env.CHROMIUM_PATH ? { launchOptions: { executablePath: process.env.CHROMIUM_PATH } } : {}) }, testIgnore: /(fallback|warnings)\.spec\.ts/ },
+    /* The development-mode warnings only exist before `process.env.NODE_ENV` is replaced, so
+       they have to be read from the dev server rather than from the built site. */
+    { name: 'dev', use: { ...devices['Desktop Chrome'], channel: 'chrome', baseURL: 'http://127.0.0.1:5173' }, testMatch: /warnings\.spec\.ts/ },
     /* Safari and Firefox have no SVG-backdrop lensing. They are not a substitute for the Chrome
        run: these projects check that the fallback is a material rather than a hole, and that
        nothing about the layout, the semantics or the keyboard depends on the refraction path. */
     { name: 'webkit', use: { ...devices['Desktop Safari'] }, testMatch: /fallback\.spec\.ts/ },
     { name: 'firefox', use: { ...devices['Desktop Firefox'] }, testMatch: /fallback\.spec\.ts/ },
   ],
-  webServer: process.env.TEST_URL ? undefined : { command: 'node scripts/serve-preview.mjs --root site/dist', port: 4173, reuseExistingServer: !process.env.CI, timeout: 10_000 },
+  webServer: process.env.TEST_URL ? undefined : [
+    { command: 'node scripts/serve-preview.mjs --root site/dist', port: 4173, reuseExistingServer: !process.env.CI, timeout: 10_000 },
+    { command: 'vite --config site/vite.config.ts', port: 5173, reuseExistingServer: !process.env.CI, timeout: 30_000 },
+  ],
 });
