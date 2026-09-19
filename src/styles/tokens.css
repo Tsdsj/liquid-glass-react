@@ -169,23 +169,42 @@
   --lg-accent: var(--lg-blue);
   --lg-accent-contrast: #fff;
 
-  /* Semantic labels and separators */
+  /**
+   * Semantic labels and separators.
+   *
+   * The secondary and tertiary alphas are a step stronger than the iOS table's. That table is
+   * written for a phone held at arm's length with the display's own contrast; on a desktop
+   * panel — and especially on the grouped background rather than on white — 60% grey body text
+   * reads as washed out, and 30% is the colour of something switched off. The hierarchy is the
+   * point, not the exact number: each step is still clearly quieter than the one above it.
+   */
   --lg-label: rgb(0 0 0);
-  --lg-label-secondary: rgb(60 60 67 / .60);
-  --lg-label-tertiary: rgb(60 60 67 / .30);
-  --lg-label-quaternary: rgb(60 60 67 / .18);
+  /* .74 rather than a rounder number: it is the point at which this grey over the grouped
+     surface measures past 4.5:1, which `appearance.spec.ts` checks from the composited pair
+     rather than from the token. Below it, secondary body text on a card is under AA. */
+  --lg-label-secondary: rgb(60 60 67 / .74);
+  --lg-label-tertiary: rgb(60 60 67 / .46);
+  --lg-label-quaternary: rgb(60 60 67 / .28);
   --lg-placeholder: var(--lg-label-tertiary);
   --lg-separator: rgb(60 60 67 / .29);
   --lg-separator-opaque: rgb(198 198 200);
   --lg-link: var(--lg-blue);
 
-  /* Backgrounds and fills */
-  --lg-bg: rgb(255 255 255);
-  --lg-bg-secondary: rgb(242 242 247);
-  --lg-bg-tertiary: rgb(255 255 255);
-  --lg-bg-grouped: rgb(242 242 247);
-  --lg-bg-grouped-2: rgb(255 255 255);
-  --lg-bg-grouped-3: rgb(242 242 247);
+  /**
+   * Backgrounds and fills.
+   *
+   * Not pure white. A full-brightness `#fff` panel is the single harshest thing a light
+   * interface can put on a screen — on a bright display it is the whole panel glaring back —
+   * and the grouped background above it then has to be darker still to be told apart. Stepping
+   * the top surface down by three points keeps every layer distinguishable and takes the glare
+   * off. It is still the lightest surface in the system, which is all "white" ever meant here.
+   */
+  --lg-bg: rgb(252 252 253);
+  --lg-bg-secondary: rgb(240 240 245);
+  --lg-bg-tertiary: rgb(252 252 253);
+  --lg-bg-grouped: rgb(240 240 245);
+  --lg-bg-grouped-2: rgb(252 252 253);
+  --lg-bg-grouped-3: rgb(240 240 245);
   --lg-fill: rgb(120 120 128 / .20);
   --lg-fill-secondary: rgb(120 120 128 / .16);
   --lg-fill-tertiary: rgb(118 118 128 / .12);
@@ -200,9 +219,47 @@
   /* Liquid Glass. Light is bent, not painted: one hairline rim plus a faint
      inner refraction ring. No body-wide gloss gradient, no second bevel. */
   --lg-glass-fg: rgb(0 0 0 / .88);
-  --lg-glass-fg-secondary: rgb(0 0 0 / .55);
+  --lg-glass-fg-secondary: rgb(0 0 0 / .64);
   --lg-glass-rim-hi: rgb(255 255 255 / .82);
   --lg-glass-rim-lo: rgb(0 0 0 / .17);
+
+  /**
+   * The pointer glow and the press flash.
+   *
+   * Per theme, because they are white light and what white light does depends entirely on what
+   * it lands on. The same 28% that reads as a soft sheen over a light panel is a bright blob
+   * over a dark one — the dark values are roughly a third of these.
+   */
+  --lg-shine-alpha: .26;
+  --lg-shine-strong: .46;
+  --lg-flash-alpha: .5;
+
+  /**
+   * The selection lens: the capsule that marks the chosen segment, tab or sidebar row.
+   *
+   * It has to be legible against the surface it slides on, and that surface is glass — which
+   * in a light appearance is already near-white. A translucent white capsule with a white rim
+   * on a white track is invisible, which is what "I cannot tell which one is selected" means.
+   * So: opaque, with a hairline that is *darker* than the track and a shadow that lifts it.
+   */
+  --lg-lens-bg: rgb(255 255 255);
+  /* The same capsule as an opacity, for the goo layer that draws it mid-drag. Split out so the
+     hand-back cannot step brightness between the blob and the lens it becomes. */
+  --lg-lens-alpha: 1;
+  /**
+   * The well the capsule slides in.
+   *
+   * Without it the capsule is white on a white-tinted glass track: measured, the fill differed
+   * from its surround by 5 parts in 255, which is why "I cannot tell which one is selected" was
+   * the first thing anyone said about it. A shadow alone does not fix that — it buys three more
+   * parts. The track has to be recessed, which is what the system's own segmented control does:
+   * a grey groove with a raised white thumb in it. Darkening rather than greying, so the same
+   * rule reads in both appearances.
+   */
+  --lg-well: rgb(0 0 0 / .06);
+  --lg-lens-border: rgb(0 0 0 / .05);
+  --lg-lens-shadow: 0 1px 2px rgb(0 0 0 / .14), 0 4px 10px rgb(0 0 0 / .10), inset 0 1px 0 rgb(255 255 255 / .9);
+  --lg-lens-shadow-held: 0 2px 5px rgb(0 0 0 / .18), 0 10px 22px rgb(0 0 0 / .16), inset 0 1px 0 rgb(255 255 255 / .95);
   --lg-glass-shadow: 0 3px 8px rgb(0 0 0 / .05), 0 12px 36px rgb(0 0 0 / .10);
   --lg-glass-shadow-lift: 0 6px 14px rgb(0 0 0 / .08), 0 22px 48px rgb(0 0 0 / .15);
   --lg-glass-shadow-large: 0 12px 28px rgb(0 0 0 / .11), 0 32px 64px rgb(0 0 0 / .19);
@@ -225,7 +282,9 @@
   --lg-shadow-lift: var(--lg-glass-shadow-lift);
   /* The material fill, split into colour + opacity so component states can override the
      opacity alone (pressed, selected, large glass) without restating the colour. */
-  --lg-tint-color: 255 255 255;
+  /* Off-white by the same three points as the surfaces above, so a glass panel and a solid
+     one do not read as two different whites sitting next to each other. */
+  --lg-tint-color: 252 252 254;
   --lg-tint-opacity: .7;
 }
 
@@ -269,9 +328,24 @@
   --lg-material-thick: rgb(30 30 30 / .93);
 
   --lg-glass-fg: rgb(255 255 255 / .94);
-  --lg-glass-fg-secondary: rgb(255 255 255 / .62);
+  --lg-glass-fg-secondary: rgb(255 255 255 / .66);
   --lg-glass-rim-hi: rgb(255 255 255 / .28);
   --lg-glass-rim-lo: rgb(0 0 0 / .45);
+
+  /* A third of the light values. White light on a dark panel is the whole panel lighting up;
+     at the light appearance's 26% the pointer drags a visible bright blob around the screen. */
+  --lg-shine-alpha: .09;
+  --lg-shine-strong: .16;
+  --lg-flash-alpha: .18;
+
+  /* The capsule cannot be "white, but more so" here. It is a lift out of the track — a step
+     brighter than the surface it slides on, edged rather than shadowed. */
+  --lg-lens-bg: rgb(255 255 255 / .20);
+  --lg-lens-alpha: .20;
+  --lg-well: rgb(0 0 0 / .22);
+  --lg-lens-border: rgb(255 255 255 / .22);
+  --lg-lens-shadow: 0 1px 2px rgb(0 0 0 / .32), 0 4px 12px rgb(0 0 0 / .28);
+  --lg-lens-shadow-held: 0 2px 6px rgb(0 0 0 / .4), 0 10px 24px rgb(0 0 0 / .36);
   --lg-glass-shadow: 0 3px 8px rgb(0 0 0 / .1), 0 16px 40px rgb(0 0 0 / .24);
   --lg-glass-shadow-lift: 0 8px 18px rgb(0 0 0 / .18), 0 28px 56px rgb(0 0 0 / .34);
   --lg-glass-shadow-large: 0 16px 34px rgb(0 0 0 / .26), 0 40px 76px rgb(0 0 0 / .42);

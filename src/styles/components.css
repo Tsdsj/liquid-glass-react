@@ -20,12 +20,14 @@
   mask: linear-gradient(#000 0 0) padding-box exclude,linear-gradient(#000 0 0);
   transition: --lg-light-angle var(--lg-duration-release) var(--lg-ease), opacity var(--lg-duration-release) var(--lg-ease); }
 /* Pointer glow: enters where the pointer enters, follows it, and fades out in place. --lg-light-* is never reset, so it never jumps. */
-.lg-glow { opacity: 0; background: radial-gradient(circle at var(--lg-light-x,50%) var(--lg-light-y,50%),rgb(255 255 255 / var(--lg-shine-alpha,.28)),rgb(255 255 255 / .06) 42%,transparent var(--lg-shine-reach,70%)); transition: opacity var(--lg-duration-release) var(--lg-ease), --lg-shine-alpha var(--lg-duration-release) var(--lg-ease), --lg-shine-reach var(--lg-duration-release) var(--lg-ease); }
+/* The mid stop is a fixed fraction of the peak rather than its own number, so a theme sets the
+   brightness once and the falloff follows it instead of staying lit after the peak came down. */
+.lg-glow { opacity: 0; background: radial-gradient(circle at var(--lg-light-x,50%) var(--lg-light-y,50%),rgb(255 255 255 / var(--lg-shine-alpha,.26)),rgb(255 255 255 / calc(var(--lg-shine-alpha,.26) * .22)) 42%,transparent var(--lg-shine-reach,70%)); transition: opacity var(--lg-duration-release) var(--lg-ease), --lg-shine-alpha var(--lg-duration-release) var(--lg-ease), --lg-shine-reach var(--lg-duration-release) var(--lg-ease); }
 .lg-root[data-lit="true"] > .lg-decoration .lg-glow, .lg-root:is(:active,[data-pressed="true"]) > .lg-decoration .lg-glow { opacity: 1; }
 /* Press flash: a short-lived pool of light that blooms from the pointer and dissolves as the glass springs back. */
-.lg-decoration::after { content: ''; position: absolute; inset: 0; border-radius: inherit; pointer-events: none; background: radial-gradient(circle at var(--lg-light-x,50%) var(--lg-light-y,50%),rgb(255 255 255 / .55),rgb(255 255 255 / .12) 40%,transparent 72%); opacity: 0; transition: opacity var(--lg-duration-spring) var(--lg-ease-out); }
+.lg-decoration::after { content: ''; position: absolute; inset: 0; border-radius: inherit; pointer-events: none; background: radial-gradient(circle at var(--lg-light-x,50%) var(--lg-light-y,50%),rgb(255 255 255 / var(--lg-flash-alpha,.5)),rgb(255 255 255 / calc(var(--lg-flash-alpha,.5) * .22)) 40%,transparent 72%); opacity: 0; transition: opacity var(--lg-duration-spring) var(--lg-ease-out); }
 @property --lg-light-angle { syntax: '<angle>'; inherits: true; initial-value: 145deg; }
-@property --lg-shine-alpha { syntax: '<number>'; inherits: true; initial-value: .28; }
+@property --lg-shine-alpha { syntax: '<number>'; inherits: true; initial-value: .26; }
 @property --lg-shine-reach { syntax: '<percentage>'; inherits: true; initial-value: 70%; }
 @property --lg-stretch-x { syntax: '<number>'; inherits: false; initial-value: 1; }
 @property --lg-stretch-y { syntax: '<number>'; inherits: false; initial-value: 1; }
@@ -82,8 +84,8 @@
 .lg-fusion-blob { position: absolute; left: 0; top: 0; width: 0; height: 0; background: #fff; transform-origin: 0 0; }
 /* Second, unfiltered pass: the rim, lift and pointer sheen of the pressed pill stay crisp. */
 .lg-fusion-sheen { position: absolute; left: 0; top: 0; width: 0; height: 0; border-radius: 999px; opacity: var(--lg-fusion-fade,0);
-  background: radial-gradient(circle at var(--lg-light-x,50%) var(--lg-light-y,50%),rgb(255 255 255 / .3),transparent 70%);
-  box-shadow: 0 1px 2px rgb(0 0 0 / .08), 0 10px 26px rgb(0 0 0 / .16), inset 0 1px 0 rgb(255 255 255 / .5); }
+  background: radial-gradient(circle at var(--lg-light-x,50%) var(--lg-light-y,50%),rgb(255 255 255 / var(--lg-shine-alpha,.26)),transparent 70%);
+  box-shadow: var(--lg-lens-shadow-held); }
 /* While the fusion layer draws the pill, the button must not draw a second one. */
 .lg-root[data-fusion="true"] .lg-button[data-renderer="shared"]:not(:disabled):is(:active,[data-pressed="true"]) { background: transparent; box-shadow: none; }
 .lg-root[data-fusion="true"] .lg-button[data-renderer="shared"]:not(:disabled):is(:active,[data-pressed="true"])::before { content: none; }
@@ -140,9 +142,12 @@
 
 /* ---------- Segmented control: the lens glides with a spring and swells while held ---------- */
 .lg-segmented { display: inline-block; padding: 4px; }
-.lg-segmented-track { display: flex; position: relative; gap: 0; touch-action: pan-y; }
-.lg-segmented-track .lg-fusion { --lg-fusion-alpha: var(--lg-selected-alpha,.84); }
-.lg-segmented-track .lg-fusion-sheen { border: 1px solid var(--lg-glass-rim-hi); box-shadow: 0 1px 3px rgb(0 0 0 / .08), 0 4px 12px rgb(0 0 0 / .06), inset 0 1px 0 rgb(255 255 255 / .6); }
+/* The groove. A raised thumb needs something to be raised out of; see `--lg-well`. */
+.lg-segmented-track { display: flex; position: relative; gap: 0; touch-action: pan-y;
+  background: var(--lg-well); border-radius: 999px; }
+/* The goo pill has to be the same capsule the lens is, or the hand-back steps brightness. */
+.lg-segmented-track .lg-fusion { --lg-fusion-alpha: var(--lg-lens-alpha,.84); }
+.lg-segmented-track .lg-fusion-sheen { border: 1px solid var(--lg-lens-border); box-shadow: var(--lg-lens-shadow); }
 /* While the goo layer is drawing the pill the lens itself steps back, and the two cross-fade
    rather than swapping in one frame. `--lg-fusion-fade` is written on the track every frame, so
    the lens must not put a transition of its own on top of it or the hand-back arrives late. */
@@ -164,25 +169,28 @@
  * slot is, so that error would feed into the next frame's offset and the control would shake for
  * as long as the pointer was held. Scaling last keeps the three independent.
  */
-.lg-selection-lens { position: absolute; left: 0; top: 0; background: var(--lg-selected); border: 1px solid var(--lg-glass-rim-hi); border-radius: 999px; box-shadow: 0 1px 3px rgb(0 0 0 / .08), 0 4px 12px rgb(0 0 0 / .06), inset 0 1px 0 rgb(255 255 255 / .6); pointer-events: none; opacity: calc(var(--lg-lens-shown,0) * (1 - var(--lg-fusion-fade,0)));
+.lg-selection-lens { position: absolute; left: 0; top: 0; background: var(--lg-lens-bg); border: 1px solid var(--lg-lens-border); border-radius: 999px; box-shadow: var(--lg-lens-shadow); pointer-events: none; opacity: calc(var(--lg-lens-shown,0) * (1 - var(--lg-fusion-fade,0)));
   transform: translate(var(--lg-slot-x,0px), var(--lg-slot-y,0px)) translate(var(--lg-shift-x,0px), var(--lg-shift-y,0px)) scale(calc(var(--lg-stretch-x,1) * var(--lg-lens-swell-x,1)), calc(var(--lg-stretch-y,1) * var(--lg-lens-swell-y,1)));
   transition: transform var(--lg-duration-spring) var(--lg-spring), width var(--lg-duration-spring) var(--lg-spring), height var(--lg-duration-spring) var(--lg-spring), opacity var(--lg-duration-release) var(--lg-ease), box-shadow var(--lg-duration-release) var(--lg-ease); }
 /* Held: the slot may change under the finger, but the finger decides where the lens is drawn —
    so nothing about the transform is transitioned, and the offset cancels the slot move exactly.
    The spring only runs once the gesture ends. */
-.lg-selection-lens[data-pulling="true"] { transition: width var(--lg-duration-spring) var(--lg-spring), box-shadow var(--lg-duration-press) var(--lg-ease); --lg-lens-swell-x: 1.04; --lg-lens-swell-y: 1.06; box-shadow: 0 2px 6px rgb(0 0 0 / .12), 0 10px 24px rgb(0 0 0 / .12), inset 0 1px 0 rgb(255 255 255 / .7); z-index: 1; }
+.lg-selection-lens[data-pulling="true"] { transition: width var(--lg-duration-spring) var(--lg-spring), box-shadow var(--lg-duration-press) var(--lg-ease); --lg-lens-swell-x: 1.04; --lg-lens-swell-y: 1.06; box-shadow: var(--lg-lens-shadow-held); z-index: 1; }
 .lg-segmented-track:has(input:checked:active) .lg-selection-lens:not([data-pulling="true"]) { --lg-lens-swell-x: 1.06; --lg-lens-swell-y: 1.1; transition-duration: var(--lg-duration-press); }
 
 /* ---------- Tabs: shared sliding indicator ---------- */
 .lg-tabs-surface { width: fit-content; padding: 4px; }
-.lg-tab-list { display: flex; gap: 2px; position: relative; touch-action: pan-y; }
+.lg-tab-list { display: flex; gap: 2px; position: relative; touch-action: pan-y;
+  background: var(--lg-well); border-radius: 999px; }
 .lg-tab { position: relative; min-height: 36px; padding: 0 16px; color: var(--lg-label-secondary); font: inherit; font-size: var(--lg-text-footnote-size); font-weight: var(--lg-weight-semibold); border: 0; border-radius: 999px; background: transparent; cursor: pointer; z-index: 1; transition: color var(--lg-duration-release) var(--lg-ease), transform var(--lg-duration-spring) var(--lg-spring); }
 @media (hover: hover) {
   .lg-tab:not(:disabled):hover { color: var(--lg-fg); }
 }
 .lg-tab:not(:disabled):active { transform: scale(.95); transition-duration: var(--lg-duration-press); }
 .lg-tab[aria-selected="true"] { color: var(--lg-fg); }
-.lg-tab-list:not(:has(.lg-selection-lens)) .lg-tab[aria-selected="true"] { background: var(--lg-selected); box-shadow: 0 1px 3px rgb(0 0 0 / .07); }
+/* Before the lens is placed (and if the script never runs) the selected tab still has to look
+   selected, so it borrows the same capsule rather than a fainter one of its own. */
+.lg-tab-list:not(:has(.lg-selection-lens)) .lg-tab[aria-selected="true"] { background: var(--lg-lens-bg); box-shadow: var(--lg-lens-shadow); }
 .lg-tab:disabled { opacity: .45; cursor: not-allowed; }
 .lg-tab-panel { margin-top: 18px; animation: lg-panel-in var(--lg-duration-overlay) var(--lg-ease-out); }
 .lg-tab-panel[hidden] { display: none; }
@@ -212,7 +220,7 @@
 @media (hover: hover) {
   .lg-slider:not([data-disabled="true"]):hover .lg-slider-lens { --lg-scale: 1.08; }
 }
-.lg-slider:not([data-disabled="true"]):has(input:active) .lg-slider-lens > .lg-decoration .lg-glow { --lg-shine-alpha: .5; --lg-shine-reach: 90%; }
+.lg-slider:not([data-disabled="true"]):has(input:active) .lg-slider-lens > .lg-decoration .lg-glow { --lg-shine-alpha: var(--lg-shine-strong, .46); --lg-shine-reach: 90%; }
 .lg-slider:not([data-disabled="true"]):has(input:active) .lg-slider-track { transform: scaleY(1.35); }
 /* pan-y keeps vertical page scrolling alive while the browser leaves the horizontal drag to us. */
 .lg-slider input { appearance: none; -webkit-appearance: none; position: absolute; inset: 0; width: 100%; height: 100%; margin: 0; background: transparent; cursor: pointer; border-radius: 999px; touch-action: pan-y; }
@@ -548,7 +556,7 @@
 }
 .lg-tab-link:active { transform: scale(.95); transition-duration: var(--lg-duration-press); }
 .lg-tab-link[aria-current="page"] { color: var(--lg-glass-fg); font-weight: var(--lg-weight-semibold); }
-.lg-tab-links:not(:has(.lg-selection-lens)) .lg-tab-link[aria-current="page"] { background: var(--lg-selected); }
+.lg-tab-links:not(:has(.lg-selection-lens)) .lg-tab-link[aria-current="page"] { background: var(--lg-lens-bg); box-shadow: var(--lg-lens-shadow); }
 .lg-tab-icon { display: inline-flex; flex-shrink: 0; }
 .lg-tab-badge { margin-inline-start: auto; }
 /* Selection lens inside a group: radius = group radius minus the group's own padding. */
@@ -853,7 +861,26 @@
 .lg-root[data-contrast="more"] .lg-badge, .lg-badge[data-contrast="more"] { border: 1px solid var(--lg-label); }
 
 /* ---------- DisclosureGroup: a row that folds, on a real <details> ---------- */
-.lg-disclosure { border-radius: var(--lg-radius-m); background: var(--lg-bg-grouped-2); overflow: hidden; }
+/**
+ * `interpolate-size` is what makes `auto` an animatable height, and `::details-content` is the
+ * box the browser puts the folded content in — together they are the whole animation, done by
+ * the browser, on the real `<details>` that find-in-page and the accessibility tree already
+ * understand.
+ *
+ * This was measured and published by the component and then never used: the element carried a
+ * `--lg-disclosure-height` that no rule read, the chevron rotated, and the body appeared in one
+ * frame. The custom property is the fallback target — where `interpolate-size` is missing, the
+ * component measures and this animates to a length instead of to `auto`, which is the same
+ * animation by another route. Where `::details-content` itself is missing there is no box to
+ * animate and it opens at once; that is stated rather than pretended away.
+ */
+.lg-disclosure { border-radius: var(--lg-radius-m); background: var(--lg-bg-grouped-2); overflow: hidden;
+  interpolate-size: allow-keywords; }
+.lg-disclosure::details-content {
+  block-size: 0; overflow: clip;
+  transition: block-size var(--lg-duration-layout) var(--lg-ease-out),
+    content-visibility var(--lg-duration-layout) allow-discrete; }
+.lg-disclosure[open]::details-content { block-size: var(--lg-disclosure-height, auto); }
 .lg-disclosure-summary { display: flex; align-items: center; gap: var(--lg-space-3);
   min-height: var(--lg-hit-min); padding: var(--lg-space-2) var(--lg-space-4); cursor: pointer;
   list-style: none; user-select: none; -webkit-user-select: none;

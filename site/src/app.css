@@ -17,8 +17,8 @@
      sits one percent away from the white of a card, so the whole page reads as a single sheet
      at full brightness — glare with nothing to look at. Stepping it down gives the cards
      somewhere to sit, and gives the glass something to actually refract. */
-  --site-canvas: #e8eaef;
-  --site-canvas-top: #eef0f4;
+  --site-canvas: #e6e8ee;
+  --site-canvas-top: #edeff4;
 }
 :root[data-app-theme="dark"] { --site-canvas: #000; --site-canvas-top: #0a0a0d; }
 * { box-sizing: border-box; }
@@ -129,9 +129,29 @@ code { font-family: var(--lg-font-mono); font-size: .92em; }
 .page-enter { animation: page-enter var(--lg-duration-overlay) var(--lg-ease-out) both; }
 @keyframes page-enter { from { opacity: 0; transform: translateY(8px); } }
 
-.hero-actions { display: flex; flex-wrap: wrap; gap: var(--lg-space-3); margin-block-end: var(--lg-space-6); }
+/* --------------------------------------------------------------------------
+   Overview. The one page that opens with a claim rather than with a component,
+   so it gets room at the top and a short set of facts under the two ways in.
+   -------------------------------------------------------------------------- */
+.overview-hero { display: flex; flex-direction: column; align-items: flex-start;
+  gap: var(--lg-space-4); padding-block: var(--lg-space-8) var(--lg-space-6); }
+.overview-title { font-size: clamp(var(--lg-text-title1-size), 5vw, calc(var(--lg-text-largetitle-size) * 1.32));
+  line-height: 1.15; max-width: 18ch; }
+.overview-lede { max-width: var(--lg-readable); font-size: var(--lg-text-body-size); }
+.hero-actions { display: flex; flex-wrap: wrap; gap: var(--lg-space-3); margin-block-start: var(--lg-space-2); }
+/* A short row of numbers, separated by rules rather than by boxes: three cards here would
+   compete with the three principle cards further down for the same kind of attention. */
+.overview-facts { display: flex; flex-wrap: wrap; gap: var(--lg-space-6); margin: var(--lg-space-4) 0 0;
+  padding-block-start: var(--lg-space-5); border-block-start: 1px solid var(--lg-separator);
+  align-self: stretch; }
+.overview-fact { display: flex; flex-direction: column; gap: 2px; }
+.overview-fact dd { margin: 0; }
+
 .principles { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: var(--lg-space-4); }
-.principle { display: flex; flex-direction: column; }
+.principle { display: flex; flex-direction: column; gap: var(--lg-space-2); }
+.principle-icon { display: inline-flex; align-items: center; justify-content: center;
+  width: 40px; height: 40px; border-radius: var(--lg-radius-s); margin-block-end: var(--lg-space-1);
+  background: color-mix(in srgb, var(--lg-accent) 12%, transparent); color: var(--lg-accent); }
 
 /* Component page: the article, and an outline that follows along on the right. */
 .component-layout { display: block; }
@@ -189,7 +209,9 @@ code { font-family: var(--lg-font-mono); font-size: .92em; }
 /* The stage carries the example's anchor, so it is what an outline link scrolls to. */
 .demo-stage { position: relative; display: grid; place-items: center; padding: var(--lg-space-6) var(--lg-space-4); overflow: hidden;
   scroll-margin-block-start: 88px; }
-.demo-stage[data-scheme="light"] { background: var(--lg-gray6); }
+/* The grouped background, not `--lg-gray6`: the stage is the page a demo sits on, and it has
+   to be the same step below the card as every other grouped surface in the library. */
+.demo-stage[data-scheme="light"] { background: var(--lg-bg-grouped); }
 .demo-stage[data-scheme="dark"] { background: #000; }
 .demo-stage[data-surface="media"] { background: #2b3a36; }
 .demo-art { position: absolute; inset: 0; }
@@ -365,8 +387,9 @@ code { font-family: var(--lg-font-mono); font-size: .92em; }
   .page-enter, .scene-art { animation: none !important; transition: none !important; }
 }
 
-/* The overview's refraction switch, above the media viewer it applies to. */
-.refraction-demo { display: grid; gap: var(--lg-space-3); }
-.refraction-switch { display: grid; gap: var(--lg-space-2); justify-items: start;
-  padding: var(--lg-space-3) var(--lg-space-4); border-radius: var(--lg-radius-m);
-  background: var(--lg-bg-grouped-2); }
+/* The overview's refraction switch, above the media viewer it applies to.
+   `flex`, not `grid`: the viewer has an aspect-ratio and a max-height, and as a grid item it
+   sizes its width from that capped height — which is why it stopped filling the column. */
+.refraction-demo { display: flex; flex-direction: column; gap: var(--lg-space-3); }
+.refraction-switch { display: flex; flex-wrap: wrap; align-items: baseline; gap: var(--lg-space-2) var(--lg-space-4); }
+.refraction-note { flex: 1 1 320px; min-width: 0; }

@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Card, GlassButton, GlassProvider, GlassSwitch, LibraryIcon, Text, supportsSvgBackdrop } from '@ttqtt/liquid-glass-react';
-import { Page, Section } from '../site/page.js';
+import { Section } from '../site/page.js';
 import { MediaViewer } from '../media-viewer.js';
 import { componentDocs } from '../catalog/index.js';
 import { Icon } from '../icons.js';
@@ -19,12 +19,19 @@ const PRINCIPLES = [
   {
     icon: 'code' as const,
     title: '控件是可以拖的',
-    body: '分段控件、开关、滑块都跟手，松开会回弹。只能点的实现，是一套界面"差那么一点"最明显的地方。',
+    body: '分段控件、开关、滑块都跟手，松开会回弹。只能点的实现，是一套界面「差那么一点」最明显的地方。',
   },
 ];
 
+/** The numbers worth putting on the first screen, because they are what the reader is sizing up. */
+const FACTS = [
+  { value: String(componentDocs.length), label: '个组件页' },
+  { value: '0', label: '个运行时依赖' },
+  { value: '4', label: '项系统偏好自动生效' },
+];
+
 /**
- * The first screen, with the switch that turns edge refraction on.
+ * The switch that turns edge refraction on.
  *
  * It is off by default here for the same reason it is off by default in the library: it costs
  * a generated displacement map per surface and only Chromium reads the filter at all. The
@@ -42,10 +49,12 @@ function RefractionDemo() {
      `false` on the server, which is right — there is no backdrop filter there either. */
   const [capable] = useState(() => typeof window !== 'undefined' && supportsSvgBackdrop());
   return <div className="refraction-demo">
+    {/* A control bar over the thing it controls, aligned to it — not a filled card of its own
+        width sitting above something narrower, which reads as two unrelated blocks. */}
     <div className="refraction-switch">
       <GlassSwitch aria-label="边缘折射" label="边缘折射" checked={on && capable} disabled={!capable}
         onCheckedChange={setOn} />
-      <Text variant="footnote" tone="secondary">
+      <Text variant="footnote" tone="secondary" className="refraction-note">
         {capable
           ? '打开后，玻璃边缘会把背后的内容折弯，而不只是磨砂。开销大约三倍，所以默认关着。'
           : '这个浏览器不支持折射，所以这个开关是关着的——Safari 和 Firefox 读不了 backdrop-filter 里的 SVG 滤镜，玻璃在这里是磨砂的。'}
@@ -58,14 +67,30 @@ function RefractionDemo() {
 }
 
 export function OverviewPage({ go }: { go: (path: string) => void }) {
-  return <Page title="轻盈有形，清晰如初。"
-    lede="一套 React 组件库。内容和操作分开，材质只用在该用的地方，交互细节做到位。">
-    <div className="hero-actions">
-      <GlassButton variant="glassProminent" controlSize="large" onClick={() => go('components')}>
-        浏览 {componentDocs.length} 个组件<LibraryIcon name="chevronForward" size={17} />
-      </GlassButton>
-      <GlassButton variant="gray" controlSize="large" onClick={() => go('guides/install')}>安装与使用</GlassButton>
-    </div>
+  return <article className="page overview">
+    {/*
+      The hero is its own element rather than the shared `Page` header: this page opens with a
+      claim and two ways in, and the shared header's eyebrow-title-lede stack has no room for
+      either. Everything below it still uses `Section`.
+    */}
+    <header className="overview-hero">
+      <Text as="h1" variant="largeTitle" emphasized className="overview-title">轻盈有形，清晰如初。</Text>
+      <Text variant="callout" tone="secondary" className="overview-lede">
+        一套 React 组件库。内容和操作分开，材质只用在该用的地方，交互细节做到位。
+      </Text>
+      <div className="hero-actions">
+        <GlassButton variant="glassProminent" controlSize="large"
+          trailingIcon={<LibraryIcon name="chevronForward" size={17} />}
+          onClick={() => go('components')}>浏览 {componentDocs.length} 个组件</GlassButton>
+        <GlassButton variant="gray" controlSize="large" onClick={() => go('guides/install')}>安装与使用</GlassButton>
+      </div>
+      <dl className="overview-facts">
+        {FACTS.map(fact => <div key={fact.label} className="overview-fact">
+          <Text as="dt" variant="title2" emphasized tabular>{fact.value}</Text>
+          <Text as="dd" variant="footnote" tone="secondary">{fact.label}</Text>
+        </div>)}
+      </dl>
+    </header>
 
     <Section title="先看一眼" description="玻璃承载操作，照片保持清晰。按住工具栏上的按钮，感受它从玻璃里浮起来再落回去。">
       <RefractionDemo />
@@ -74,9 +99,9 @@ export function OverviewPage({ go }: { go: (path: string) => void }) {
     <Section title="三条原则">
       <div className="principles">
         {PRINCIPLES.map(item => <Card key={item.title} radius={20} padding={20} className="principle">
-          <Icon name={item.icon} size={24} />
-          <Text as="h3" variant="headline" style={{ marginBlockStart: 12 }}>{item.title}</Text>
-          <Text variant="subhead" tone="secondary" style={{ marginBlockStart: 8 }}>{item.body}</Text>
+          <span className="principle-icon" aria-hidden="true"><Icon name={item.icon} size={22} /></span>
+          <Text as="h3" variant="headline">{item.title}</Text>
+          <Text variant="subhead" tone="secondary">{item.body}</Text>
         </Card>)}
       </div>
     </Section>
@@ -91,5 +116,5 @@ export function OverviewPage({ go }: { go: (path: string) => void }) {
         </ul>
       </Card>
     </Section>
-  </Page>;
+  </article>;
 }

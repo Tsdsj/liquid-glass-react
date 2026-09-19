@@ -359,8 +359,12 @@ test('the light page is a step below the cards it carries', async ({ page }) => 
     const read = (node: Element | null) => node ? getComputedStyle(node).backgroundColor : '';
     return { page: read(document.body), card: read(document.querySelector('.demo-card')) };
   });
-  expect(tones.card).toBe('rgb(255, 255, 255)');
   const level = (value: string) => value.match(/\d+/g)!.slice(0, 3).reduce((sum, part) => sum + Number(part), 0) / 3;
+  /* Near-white, deliberately not white: this used to assert `rgb(255, 255, 255)` exactly, which
+     was incidental to what the test is about. Full-brightness white is the glare itself, and
+     `appearance.spec.ts` now keeps the top surface a few points below it. */
+  expect(level(tones.card)).toBeGreaterThan(244);
+  expect(level(tones.card)).toBeLessThan(255);
   // A page at the same brightness as its cards is a single flat sheet of white, which is the
   // glare; the glass also has nothing left to separate itself from.
   expect(level(tones.page)).toBeLessThan(level(tones.card) - 8);
