@@ -95,6 +95,43 @@ test('the keyboard path does not depend on the renderer', async ({ page }) => {
   await expect(group.getByRole('radio', { name: '月', exact: true })).toBeChecked();
 });
 
+/**
+ * The overlays animate in with `@starting-style` and `transition-behavior: allow-discrete`.
+ * Firefox got both in 129, so `docs/roadmap-0.3.md` asked what happens in an older one.
+ *
+ * That question cannot be answered here — Playwright installs Firefox 155, and there is no
+ * way to get 128 out of it — so this asserts the part that matters either way: a browser with
+ * no entry animation must still get a working overlay rather than a broken one. If the support
+ * check below ever reports false, this engine is exercising the degraded path for real and the
+ * note above needs rewriting.
+ */
+test('a sheet opens, is usable and closes, with or without the entry animation', async ({ page, browserName }) => {
+  await page.goto('/#/components/sheet');
+  await page.waitForTimeout(600);
+
+  const supported = await page.evaluate(() => {
+    try {
+      const sheet = new CSSStyleSheet();
+      sheet.replaceSync('@starting-style { .probe { opacity: 0 } }');
+      return sheet.cssRules.length > 0 && CSS.supports('transition-behavior', 'allow-discrete');
+    } catch { return false; }
+  });
+  test.info().annotations.push({ type: 'starting-style', description: `${browserName}: ${supported}` });
+
+  await page.getByRole('button', { name: '打开面板' }).click();
+  const sheet = page.getByRole('dialog', { name: '分享这一刻' });
+  await expect(sheet).toBeVisible();
+
+  // Open means on screen with a real box, not merely present: a discrete transition that never
+  // runs is the failure mode, and it leaves an element that exists and cannot be seen.
+  const box = await sheet.boundingBox();
+  expect(box!.height, 'the sheet has no height').toBeGreaterThan(100);
+  expect(box!.y, 'the sheet is off the bottom of the screen').toBeLessThan(await page.evaluate(() => innerHeight));
+
+  await page.keyboard.press('Escape');
+  await expect(sheet).toBeHidden();
+});
+
 test('user preferences still win when the material is already degraded', async ({ page }) => {
   await page.goto('/#/components/button');
   await page.waitForTimeout(600);

@@ -108,16 +108,24 @@ detents?: Array<'medium' | 'large' | { fraction: number } | { height: number }>
 
 **H. 只有一条开发模式告警。** 再加三条，都是审查里靠人眼查过的规则，改成代码守：一个共享表面里出现两个 `glassProminent`（一屏一个主操作）；小玻璃套小玻璃；`material="clear"` 用在没声明色调的地方（现在静默降级为 `regular`，调用方不知道）。每条只在开发模式、每个节点告警一次。
 
-### 2.2 待复现（是疑点，不是缺陷）
+### 2.2 复现结果（2026-09-19，0.0.2）
 
-| 疑点 | 为什么怀疑 | 怎么复现 |
+三条都去查了。**一条都没复现**——但查的过程本身找出了三个别的缺陷，见下。
+
+| 疑点 | 结论 | 证据 |
 | --- | --- | --- |
-| Strict Mode 下 `usePull` / `useFusion` 的 rAF 循环重复启动 | known-limitations 明说开发 Strict Mode 未跑过 | 站点开发模式套 `<StrictMode>`，按住分段控件，数 `requestAnimationFrame` 调用次数 |
-| `defaultOpen` 对话框的 hydration 不匹配 | SSR 用例只断言服务端输出了安全标记，没跑 hydrate | 用 `react-dom/server` 出 HTML，再 `hydrateRoot`，看控制台 |
-| Firefox < 129 没有 `@starting-style`，Sheet / Dialog 进出动画退化成什么 | fallback 用例只测材质，没测浮层动画 | Playwright Firefox 打开 Sheet，量 `transform` 在 0ms 与 200ms 的差 |
-| Windows Chrome 关闭硬件加速时 `backdrop-filter` 路径 | 从没在 Windows 上跑过 | 需要一台 Windows 机器；排进「需要人做的事」 |
+| Strict Mode 下 `usePull` / `useFusion` 的 rAF 循环重复启动 | **没复现** | `tests/browser/strict-mode.spec.ts`。文档站本来就跑在 `<StrictMode>` 里、dev server 又是 React 开发版，双调用是真的在生效。断言的是「闲置页面不排帧」：拖完松手、离开页面，600ms 内 rAF 调用 ≤2。故意让 `tick` 无条件重排后测到 36–37 帧，用例能抓 |
+| `defaultOpen` 对话框的 hydration 不匹配 | **没复现** | `site/hydration-probe.html` + `tests/browser/hydration.spec.ts`。八个用例（含 dialog / sheet / alert / popover 四个 `defaultOpen`）在页面里 `renderToString` 再 `hydrateRoot`，React 开发版一条 mismatch 都没报。两侧故意用不同 `identifierPrefix` 时能抓到，说明检测有效 |
+| Firefox < 129 没有 `@starting-style` | **无法在这里复现** | Playwright 装的是 Firefox 155，三家引擎实测 `@starting-style` 与 `transition-behavior: allow-discrete` 全部支持。装不到 128。改为守住真正的风险：`fallback.spec.ts` 断言没有入场动画时浮层仍然能开、有实际尺寸、能关 |
+| Windows Chrome 关闭硬件加速时 `backdrop-filter` 路径 | 仍未执行 | 需要一台 Windows 机器；排进「需要人做的事」 |
 
-复现出来的按 alpha.3–6 的流程走：先写一条会失败的 Playwright 用例，修，用例留下。没复现出来的从表里删掉，写一句为什么。
+**顺带查出来的三个真缺陷**（都已修，都有用例）：
+
+- `inDevelopment()` 原来读 `globalThis.process?.env`——打包器只替换字面量 `process.env.NODE_ENV`，所以浏览器产物里 `process` 是 undefined，开发告警在**生产环境里一直开着**。实测旧写法在站点生产构建上吐 6 条告警。
+- `TabBar` 的 `ref` 落在内层 `div` 上而不是 `<nav>`：它混在 `...surface` 里被透传到了第一个 `GlassSurface`。
+- `SearchField` 类型上收 `id`，内部又用生成的覆盖掉，`<label for>` 指不过去。
+
+另外，测试配置本身有个坑：`reuseExistingServer` 会让 Playwright 把别的项目占着 5173 / 4173 的 dev server 当成自己的，整套用例跑在别人的应用上还全绿。已改成独占端口 41730 / 41731 且不复用。
 
 ### 2.3 兼容性
 

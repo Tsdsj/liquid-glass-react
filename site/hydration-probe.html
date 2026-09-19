@@ -1,0 +1,22 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8"/>
+<title>hydration probe</title>
+<!-- Without a declared icon the browser asks for /favicon.ico and logs a 404, which this
+     page's whole job is to distinguish from a real error. -->
+<link rel="icon" href="/favicon.svg" type="image/svg+xml"/>
+<!--
+  A page of its own, and deliberately not part of the site.
+
+  Hydration can only be observed as the page's first and only React work: doing it inside
+  another root's effect produces "received an early update, before anything was able to
+  hydrate", which is a fact about the harness and not about this library.
+
+  Vite's build takes index.html as its single input, so this file is served by the dev server
+  and never ends up in site/dist — which is right, since the warnings it exists to surface
+  only exist in a development build anyway.
+-->
+</head>
+<body><div id="cases"></div><script type="module" src="/src/hydration-probe.tsx"></script></body>
+</html>

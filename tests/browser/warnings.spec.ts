@@ -1,4 +1,5 @@
 import { test, expect } from '@playwright/test';
+import { PREVIEW_PORT } from '../../playwright.config.js';
 
 /**
  * The development-mode rules, checked against a page that breaks each of them on purpose.
@@ -47,7 +48,7 @@ test('the warnings are absent from a production build', async ({ page, baseURL }
    * away and every application using this library ships these messages to its users — which
    * is the bug the previous `globalThis.process?.env` form actually had.
    */
-  const preview = new URL('/#/_probe/warnings', baseURL!.replace(/:\d+/, ':4173')).toString();
+  const preview = new URL('/#/_probe/warnings', baseURL!.replace(/:\d+/, `:${PREVIEW_PORT}`)).toString();
   const lines: string[] = [];
   page.on('console', message => { if (message.type() === 'warning') lines.push(message.text()); });
   await page.goto(preview);
