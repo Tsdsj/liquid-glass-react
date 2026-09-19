@@ -31,18 +31,20 @@
 
 ### 已查实的缺口
 
+> **0.0.2 已完成 D2、D4、D6、D9、D10**（2026-09-19）。下表保留原始证据，完成的一项在末尾标注。
+
 | # | 证据 | 要做什么 |
 | --- | --- | --- |
 | D1 | 浮层 7 页只有 7 个示例，输入 2 页 3 个；`DemoEntry` 支持多示例但大半页面只用了一个 | 每页至少 3 个示例，各回答一个决定：**状态**（禁用 / 加载 / 错误）、**尺寸与密度**、**压在媒体上时**。示例数是给读者看的，不是凑数：一个示例只讲一件事 |
-| D2 | `site/site/code-block.tsx` 是裸 `<pre>`，只有复制按钮，没有语法高亮 | 自写一个 ~150 行的 TSX 分词器：关键字、字符串、JSX 标签与属性、注释、数字，五类 token 五个 CSS 类，颜色来自 token。不引依赖，`csp.spec.ts` 的「零外部请求」不变。已定 |
+| D2 | `site/site/code-block.tsx` 是裸 `<pre>`，只有复制按钮，没有语法高亮 | 自写一个 ~150 行的 TSX 分词器：关键字、字符串、JSX 标签与属性、注释、数字，五类 token 五个 CSS 类，颜色来自 token。不引依赖，`csp.spec.ts` 的「零外部请求」不变。已定<br>**已完成（0.0.2）**：`site/src/site/tokenize.ts`，五类 token，颜色来自语义 token；`tests/core/tokenize.test.mjs` 守住「高亮不改变代码」。 |
 | D3 | 没有可交互的属性面板；`PropsTable` 是静态表 | 每页**一个**主示例挂旋钮（`variant` / `controlSize` / `material` / `backdropTone` / `density` 等，按组件选），改动即时反映到示例和代码块；其余示例保持静态。数据模型：`DemoEntry.controls?: ControlSpec[]`，只有主示例填。已定 |
-| D4 | 右侧目录 `.outline` 只在 ≥1280px 显示（`app.css:237`）；以下宽度没有页内导航 | 窄屏改成吸顶的「本页内容」按钮，点开是 `GlassMenu`——顺便让站点用自己的菜单 |
+| D4 | 右侧目录 `.outline` 只在 ≥1280px 显示（`app.css:237`）；以下宽度没有页内导航 | 窄屏改成吸顶的「本页内容」按钮，点开是 `GlassMenu`——顺便让站点用自己的菜单<br>**已完成（0.0.2）**：吸顶 `GlassMenu`，与目录栏共用同一份目的地。过了 Apple-Style-Review，五条发现修掉四条，剩下一条见下。 |
 | D5 | ⌘K 搜索只索引组件名（`searchDocs`） | 索引扩到示例标题、属性名、基础与指南的章节标题；结果分组显示，命中属性时直接跳到 API 表对应行 |
-| D6 | 每页缺三样常规的东西：`import` 语句、相关组件、「查看源码 / 报告问题」链接 | 页头加 import 片段（可复制）；`ComponentDoc` 加 `related: string[]`；页脚加两个链接指向 GitHub |
+| D6 | 每页缺三样常规的东西：`import` 语句、相关组件、「查看源码 / 报告问题」链接 | 页头加 import 片段（可复制）；`ComponentDoc` 加 `related: string[]`；页脚加两个链接指向 GitHub<br>**已完成（0.0.2）**：import 片段、`related`（slug 会校验）、查看源码 / 报告问题。 |
 | D7 | `PropsTable` 手写，代码里的注释说明了为什么不用运行时反射——但没有任何东西保证它和 TS 接口一致 | 构建期用 TypeScript 编译器 API 把每个 `*Props` 的键读出来，和 `docs.props` 逐项比对，缺一个就让 `pnpm build:site` 失败。仍然不做运行时反射，理由不变 |
 | D8 | 折射默认关（`enableSvgAuto: false`），站点自己没有一个折射面；概览首屏就是普通磨砂 | 首屏加一个开关：「打开折射」。同一块玻璃，一按就看出差别；WebKit / Firefox 下开关旁边说明「这个浏览器没有折射」 |
-| D9 | `router.ts` 切页只 `scrollTo(0)`，不改 `document.title`，不把焦点移到 `main` | 切页时设标题、把焦点放到 `#main`（已有 `tabIndex`）；这是屏幕阅读器用户知道「页换了」的唯一途径，也是 R1 里能靠代码解决的那一小部分 |
-| D10 | 站内没有更新日志页，读者要去仓库翻 `CHANGELOG.md` | 构建期把 CHANGELOG 渲染成 `#/changelog`，版本号已经通过 `__LG_VERSION__` 进站了 |
+| D9 | `router.ts` 切页只 `scrollTo(0)`，不改 `document.title`，不把焦点移到 `main` | 切页时设标题、把焦点放到 `#main`（已有 `tabIndex`）；这是屏幕阅读器用户知道「页换了」的唯一途径，也是 R1 里能靠代码解决的那一小部分<br>**已完成（0.0.2）**：`tests/browser/routing.spec.ts`。 |
+| D10 | 站内没有更新日志页，读者要去仓库翻 `CHANGELOG.md` | 构建期把 CHANGELOG 渲染成 `#/changelog`，版本号已经通过 `__LG_VERSION__` 进站了<br>**已完成（0.0.2）**：`#/changelog`，构建期内联 CHANGELOG.md。 |
 
 ### 指南要补的
 
@@ -65,6 +67,8 @@
 ## 二、已有组件：缺陷与 API
 
 ### 2.1 已查实（来自代码，不需要复现）
+
+> **A、B、C、H 已在 0.0.2 完成。** 实际数量比这里写的多：会渲染元素的组件是 37 个，缺 `ref` 的是 25 个（另有 4 个纯 context 的 Provider 本来就不该有）。守它的是 `site/src/pages/ref-probe.tsx` + `tests/browser/refs.spec.ts`，运行时与类型两层都测——JSX 展开会跳过多余属性检查，所以「能编译」不等于「类型上接受」。
 
 **A. 29 个组件里 21 个不转发 `ref`。**
 
@@ -107,6 +111,14 @@ detents?: Array<'medium' | 'large' | { fraction: number } | { height: number }>
 | `GlassProvider` | ~~`accent` 属性~~ **不加**（已定）。改为在「换主题色」指南里补一节：怎么为自定义主色配 `--lg-accent-contrast`、怎么用 `measure-contrast.mjs` 验证 | — |
 
 **H. 只有一条开发模式告警。** 再加三条，都是审查里靠人眼查过的规则，改成代码守：一个共享表面里出现两个 `glassProminent`（一屏一个主操作）；小玻璃套小玻璃；`material="clear"` 用在没声明色调的地方（现在静默降级为 `regular`，调用方不知道）。每条只在开发模式、每个节点告警一次。
+
+**H 完成（0.0.2）**：`src/react/system/warn.ts`，`tests/browser/warnings.spec.ts` 在 dev server 上读控制台（生产构建里它们被折叠掉了，这正是要的）。同一个原因牵出了守卫本身的缺陷，见 2.2。「两个 `glassProminent`」按表面去重而不是按按钮——一个问题只说一次。
+
+### 2.1-D4 留下的一条未决
+
+Apple-Style-Review 对窄屏目录菜单的第三条发现，修改会波及整站观感，留给项目所有者定：
+
+**站点一个 `ScrollEdge` 都没有。** 文档里 `.lg-scroll-edge` 计数为 0，而 `.app-bar` 是吸顶的、现在 `.outline-compact` 也是，两者都浮在滚动内容之上。HIG（scroll-views）：「只在滚动视图位于浮动界面元素之后时使用滚动边缘效果」——正是这个情形。本库把 `ScrollEdge` 文档成「取代自定义栏背景」的东西，自己却没用。改法是在 `.app-main` 顶部加一个。
 
 ### 2.2 复现结果（2026-09-19，0.0.2）
 
@@ -185,7 +197,7 @@ A、B、C、G 都是纯新增，进 **0.0.2**。D、E、F 改了行为或类型�
 
 | 版本 | 内容 | 兼容性 |
 | --- | --- | --- |
-| **0.0.2**（发布后 1–2 周） | 文档站 D2、D4、D6、D9、D10；组件 A、B、C、H；2.2 的前三条复现 | 纯新增，无破坏 |
+| ~~**0.0.2**~~ **已发布 2026-09-19** | 文档站 D2、D4、D6、D9、D10；组件 A、B、C、H；2.2 前三条已查（均未复现） | 纯新增，无破坏 |
 | **0.3.0**（4–6 周） | 文档站 D1、D3、D5、D7、D8 与四篇指南；组件 D、E、F、G；新组件第一批六个；升级指南 | 有类型变宽与改名，附对照表 |
 | **0.4.0** | 新组件第二批；搜索建议；Windows 矩阵 | 视 0.3.0 反馈定 |
 

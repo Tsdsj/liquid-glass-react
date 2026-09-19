@@ -4,7 +4,7 @@
 
 ```bash
 pnpm install
-pnpm check      # typecheck → build → 单元测试 → SSR → 站点构建 → 真实 Chrome → WebKit/Firefox 退化路径
+pnpm check      # typecheck → build → 单元 → SSR → 站点 → 真实 Chrome → 开发模式 → WebKit/Firefox
 ```
 
 拆开看：
@@ -17,11 +17,14 @@ pnpm test:ssr       # 针对 dist/，也就是真正会发出去的那份
 pnpm build:site
 pnpm exec playwright install --with-deps chrome
 pnpm test:chrome
+pnpm test:warnings  # 开发模式那三个文件，跑在 Vite dev server 上
 pnpm exec playwright install webkit firefox
 pnpm test:fallback  # 只跑退化路径那一个文件
 ```
 
 Chrome 项目伺服的是 `site/dist`，所以跑之前站点必须先构建。也可以用 `TEST_URL` 指向一个已经部署好的地址。
+
+两个测试服务器用的是 **41730（静态）与 41731（dev）**，不是 Vite 默认的 4173 / 5173，而且**不复用已有服务器**。默认端口上很可能坐着另一个项目的 dev server，而 `reuseExistingServer` 会让 Playwright 直接把它当成自己的——整套用例跑在别人的应用上，还全绿。
 
 ```bash
 # 额外的 Chromium 回归。它不能代替正式 Chrome：折射路径依赖后者。
@@ -31,11 +34,11 @@ pnpm test:e2e --project=chromium
 
 ## 各层测什么
 
-**核心（`tests/core/`，65 项）** —— 不碰浏览器的那部分：有符号距离场的方向与中性值、非法输入的拒绝、贴图尺寸预算、LRU 的字节记账、弹簧积分器（收敛、过冲幅度、大 dt 钳制、非有限输入）、同心圆角（含掐角与喇叭口的边界）。另有三项是对样式表本身的静态检查：hover 规则必须带指针门、颜色必须来自 token、不得有 will-change。
+**核心（`tests/core/`，70 项）** —— 不碰浏览器的那部分：有符号距离场的方向与中性值、非法输入的拒绝、贴图尺寸预算、LRU 的字节记账、弹簧积分器（收敛、过冲幅度、大 dt 钳制、非有限输入）、同心圆角（含掐角与喇叭口的边界）。另有三项是对样式表本身的静态检查：hover 规则必须带指针门、颜色必须来自 token、不得有 will-change。
 
 **SSR（`tests/ssr.test.mjs`，3 项）** —— 服务端导入不需要 DOM，多个渲染根的 id 不冲突，默认打开的对话框在服务端输出安全标记。它导入的是 `dist/`，因此测的是真正发布的产物。
 
-**浏览器（`tests/browser/`，84 项，真实 Google Chrome）**：
+**浏览器（`tests/browser/`，103 项，真实 Google Chrome）**：
 
 | 文件 | 覆盖 |
 | --- | --- |
@@ -52,8 +55,14 @@ pnpm test:e2e --project=chromium
 | `touch.spec.ts` | 真实 touch 事件：拖动轴的归属、手指 1:1 带动透镜、点完不留 hover、命中区 44 |
 | `visual.spec.ts` | 四个宽度下的布局与截图证据 |
 | `csp.spec.ts` | 限制性 CSP 下无违规、零外部请求 |
+| `refs.spec.ts` | 每个导出的组件都交还它渲染的那个元素，并透传 `id` / `style` / `data-*`；探针表必须覆盖整个公开面 |
+| `routing.spec.ts` | 切页会设标题、把焦点移进新页面；跳过链接；更新日志页就是仓库里那个文件 |
+| `docs.spec.ts` | 每页都说了该 import 什么、指向了别处、没有死链；代码高亮的颜色来自 token，且显示的和复制的一致 |
+| `outline.spec.ts` | 窄屏目录菜单：滚动后不被工具栏吞掉、是跳转项不是复选框、按钮名就是可见文字 |
 
-**跨引擎（`tests/browser/fallback.spec.ts`，WebKit 与 Firefox 各 8 项）** —— 没有 SVG 折射时剩下的东西还算不算材质：模糊、着色、边线、投影都在；布局、语义、键盘路径都不依赖折射分支；系统偏好照样生效。用 `pnpm test:fallback` 跑。
+**开发模式（`tests/browser/{warnings,strict-mode,hydration}.spec.ts`，10 项）** —— 这三件只存在于开发构建里，所以跑的是 Vite dev server 而不是 `site/dist`：三条设计规则的告警（生产构建里必须一条都没有）、Strict Mode 下闲置页面不排帧、八棵树 `renderToString` 之后 `hydrateRoot` 没有不匹配。用 `pnpm test:warnings` 跑（project 名为 `dev`）。
+
+**跨引擎（`tests/browser/fallback.spec.ts`，WebKit 与 Firefox 各 9 项）** —— 没有 SVG 折射时剩下的东西还算不算材质：模糊、着色、边线、投影都在；布局、语义、键盘路径都不依赖折射分支；浮层没有入场动画也要能开能关；系统偏好照样生效。用 `pnpm test:fallback` 跑。
 
 `visual.spec.ts` 内部还有 6 页面 × 4 宽度的组合。不要把内部组合数和用例数相加，那不是覆盖率。
 

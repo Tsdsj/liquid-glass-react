@@ -42,9 +42,15 @@ test('the changelog page is the file, not a transcription of it', async ({ page 
   await page.goto('/#/changelog');
   await expect(page).toHaveTitle(/更新日志 · Liquid Glass UI/);
 
-  const version = (await page.locator('.app-footer-link').first().innerText()).replace(/^更新日志\s*/, '');
-  const first = await page.locator('.md-h[data-level="2"]').first().textContent();
-  expect(first?.trim(), 'the newest section does not match the version in the footer').toBe(version?.trim());
+  /**
+   * The version the site prints has to be a version the changelog describes. Not "the newest
+   * section", which is wrong for most of a release cycle: the changelog gets its section
+   * before `pnpm version` runs, so the top entry is the one being prepared, not the one
+   * shipped. What must never happen is a shipped version with no release note.
+   */
+  const version = (await page.locator('.app-footer-link').first().innerText()).replace(/^更新日志\s*/, '').trim();
+  const sections = await page.locator('.md-h[data-level="2"]').allInnerTexts();
+  expect(sections.map(text => text.trim()), `no changelog section for ${version}`).toContain(version);
 
   // The subset renderer has to actually render: headings, bullets and code, not a wall of text.
   expect(await page.locator('.md-h[data-level="3"]').count()).toBeGreaterThan(5);
