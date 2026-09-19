@@ -4,7 +4,7 @@
  * `tests/ssr.test.mjs` renders to a string and reads it, which proves the server output is safe
  * but says nothing about what React does when it meets that markup in a browser — and a
  * hydration mismatch is only reported at that moment, in a development build.
- * `docs/roadmap-0.3.md` listed `defaultOpen` overlays as a suspicion for exactly this reason:
+ * The 0.0.2 roadmap listed `defaultOpen` overlays as a suspicion for exactly this reason:
  * the server cannot emit an open `<dialog>`, so the element arrives closed and an effect opens
  * it, and whether React counts that as a mismatch was the open question.
  *

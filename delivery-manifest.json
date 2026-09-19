@@ -1,5 +1,5 @@
 {
-  "version": "0.0.1",
+  "version": "0.0.2",
   "files": [
     {
       "path": ".claude/launch.json",
@@ -113,8 +113,8 @@
     },
     {
       "path": "CHANGELOG.md",
-      "bytes": 23667,
-      "sha256": "44af01832bdcf02209bcee8344a73e50a42ee8a784042de991ef7cc560e1e0e6"
+      "bytes": 23705,
+      "sha256": "b4c740548a8c110a9d592994ba0aebc2288599e9ad39313c11eb99fb11f46bc2"
     },
     {
       "path": "docs/accessibility.md",
@@ -123,8 +123,8 @@
     },
     {
       "path": "docs/action-items.md",
-      "bytes": 8629,
-      "sha256": "d3aa58532c7120c709468a06fbee1e0638458398bd4283ef5d5ea5aa65afe2b3"
+      "bytes": 8791,
+      "sha256": "094577b8b5879d4200616ae011e52eb2f5122563d0da1e54634a1f8f863a3500"
     },
     {
       "path": "docs/adr/0001-native-chrome-primitives.md",
@@ -187,9 +187,29 @@
       "sha256": "9f11a1088147614a969133eb6ce2238ea4cf0bb64172454280e40c3dfe461819"
     },
     {
-      "path": "docs/roadmap-0.3.md",
-      "bytes": 21204,
-      "sha256": "34e9215ec9f378e6fe9bc797b0c37ec8496c1df0c3d9d6bc06d7ed32b0829b75"
+      "path": "docs/roadmap/0.0.2/phase-1-delivered.md",
+      "bytes": 8579,
+      "sha256": "bb1723e1fead8b61390043e11fcddc3c2814817af8b6f46f4927a812af34bdce"
+    },
+    {
+      "path": "docs/roadmap/0.0.2/phase-2-plan.md",
+      "bytes": 20500,
+      "sha256": "7fc3e7783b7a663c3eaccabeb07da584b6fdd680a79d16e3f18e16d091b28da3"
+    },
+    {
+      "path": "docs/roadmap/0.3.0/plan.md",
+      "bytes": 4454,
+      "sha256": "22ff9d73ec7d51a4ee050a48d19c9905de0eaced6fd01a1f75ee5a7fac4f16fa"
+    },
+    {
+      "path": "docs/roadmap/0.4.0/plan.md",
+      "bytes": 2472,
+      "sha256": "ffbbe0ab76cc632f6ae579d73e132ce2627896fee105ee0935a1edee87ffcbcf"
+    },
+    {
+      "path": "docs/roadmap/README.md",
+      "bytes": 3395,
+      "sha256": "bf80f7c2afb53c1e2c2def66a60e1f0849894d8a4059189df4d93882f052b995"
     },
     {
       "path": "docs/SSR.md",
@@ -214,7 +234,7 @@
     {
       "path": "package.json",
       "bytes": 2971,
-      "sha256": "b038a32d7b85671265262e0a32c642ddffaf1a37b1dedfdf39afddf313e5351c"
+      "sha256": "01fc33f3b1e6002ce39c9554e99db4e8e9506bf6d19fd95b5d6e096de62005cd"
     },
     {
       "path": "playwright.config.ts",
@@ -238,8 +258,8 @@
     },
     {
       "path": "registry/registry.json",
-      "bytes": 270242,
-      "sha256": "67c6237e8cce4ac09a663b9bcd4b7b9bd72d43e6458e7118b691d1ca5d7cb933"
+      "bytes": 283164,
+      "sha256": "02b248180c8df1976d6d706ef176738c64d971630b93c2f45e8b3392453bb32f"
     },
     {
       "path": "RELEASING.md",
@@ -388,13 +408,13 @@
     },
     {
       "path": "reports/playwright/index.html",
-      "bytes": 530683,
-      "sha256": "5ad2f1f8f7941033ccd7573371ce3c8691c7a9eb04292272297103257757199c"
+      "bytes": 530675,
+      "sha256": "a016128c22e8a320bd28fcfc3657f66662ee4f6c9044e249a29247a7b5720c96"
     },
     {
       "path": "reports/screenshots/fusion-mid-drag.png",
-      "bytes": 11923,
-      "sha256": "dfd1fff82a07670b475bed940e38163434e03d48cbd8fa2534d3becba678d51e"
+      "bytes": 11918,
+      "sha256": "68a744e94ba0ed0d885af2c0e7987f0c9b99ecc9daf98dab55a4f66c91c7dcce"
     },
     {
       "path": "reports/size.json",
@@ -513,8 +533,8 @@
     },
     {
       "path": "site/src/hydration-probe.tsx",
-      "bytes": 2828,
-      "sha256": "17f713337d22e1ebd379a220fabe5ca6f8fcb8cb46f8753743ec17343fc3c0ee"
+      "bytes": 2824,
+      "sha256": "3704edc7f274d4490f812f4e5ef2663b1b70d52313a23cae281e586927056188"
     },
     {
       "path": "site/src/icons.tsx",
@@ -918,8 +938,8 @@
     },
     {
       "path": "tests/browser/fallback.spec.ts",
-      "bytes": 7265,
-      "sha256": "d032c633e379f1a5e6906ab5cfe7819caa209c0fc4c52ad24fda6ebec682b9de"
+      "bytes": 7261,
+      "sha256": "a1136007db1de6ce0cda5d3dc2805db192b6732bc8c8e7bb57e27880e2851264"
     },
     {
       "path": "tests/browser/fusion.spec.ts",
@@ -963,8 +983,8 @@
     },
     {
       "path": "tests/browser/routing.spec.ts",
-      "bytes": 3734,
-      "sha256": "9160147d1c1af96b03f533da683c301ce3b5846c548771d0a7e37703b16b6fcc"
+      "bytes": 4096,
+      "sha256": "c1467af512450a8452310adcfb8edd6db9566d19f019e458a95f209829f5bdab"
     },
     {
       "path": "tests/browser/scrub.spec.ts",
@@ -973,8 +993,8 @@
     },
     {
       "path": "tests/browser/strict-mode.spec.ts",
-      "bytes": 3330,
-      "sha256": "0ac0c00dcc1c311c6d7cbd922f501fcbf1f0d7ec413737487a339d622a9b0526"
+      "bytes": 3326,
+      "sha256": "f934a35dfa4cc2d259fb51f9c3e30b3fb0defac56ec9f1e070ff5db9dff1f2ad"
     },
     {
       "path": "tests/browser/touch.spec.ts",

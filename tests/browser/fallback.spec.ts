@@ -97,7 +97,7 @@ test('the keyboard path does not depend on the renderer', async ({ page }) => {
 
 /**
  * The overlays animate in with `@starting-style` and `transition-behavior: allow-discrete`.
- * Firefox got both in 129, so `docs/roadmap-0.3.md` asked what happens in an older one.
+ * Firefox got both in 129, so the 0.0.2 roadmap asked what happens in an older one.
  *
  * That question cannot be answered here — Playwright installs Firefox 155, and there is no
  * way to get 128 out of it — so this asserts the part that matters either way: a browser with

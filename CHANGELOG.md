@@ -22,11 +22,11 @@
 - **代码高亮**，自己写的分词器，不引依赖——站点被「零外部请求」守着。颜色来自语义 token，所以跟着浅色 / 深色翻，强制颜色下让位给系统。
 - **切页会设 `document.title`、把焦点移进新页面**。哈希路由不做浏览器为真实跳转做的任何事，而这两件只有看不见屏幕的人会付代价。这是 R1 里代码能解决的那一小部分，不替代其余部分。
 - **更新日志页**（`#/changelog`），构建期内联仓库的 `CHANGELOG.md`。标签上的发布说明本来就是这个文件的对应小节，再手写一份等于给同一个版本两种说法。
-- **1280px 以下的「本页内容」**：没有目录栏时，同一批目的地变成一个吸顶菜单——用的是本库自己的 `GlassMenu`。做完过了一遍 Apple-Style-Review，五条发现修掉四条，详见 `docs/roadmap-0.3.md`。
+- **1280px 以下的「本页内容」**：没有目录栏时，同一批目的地变成一个吸顶菜单——用的是本库自己的 `GlassMenu`。做完过了一遍 Apple-Style-Review，五条发现修掉四条，详见 `docs/roadmap/0.0.2/phase-1-delivered.md`。
 
 ### 查过但没复现
 
-Strict Mode 下的 rAF 循环重复启动、`defaultOpen` 浮层的 hydration 不匹配——两条都去查了，**都没复现**，用例留下当回归守卫。Firefox < 129 那条在这里无法复现（Playwright 装的是 155）。结论与证据见 `docs/roadmap-0.3.md` 第 2.2 节。
+Strict Mode 下的 rAF 循环重复启动、`defaultOpen` 浮层的 hydration 不匹配——两条都去查了，**都没复现**，用例留下当回归守卫。Firefox < 129 那条在这里无法复现（Playwright 装的是 155）。结论与证据见 `docs/roadmap/0.0.2/phase-1-delivered.md` 第三节。
 
 ### 验证
 

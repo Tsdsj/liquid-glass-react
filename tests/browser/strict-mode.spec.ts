@@ -2,7 +2,7 @@ import { test, expect } from '@playwright/test';
 
 /**
  * `docs/known-limitations.md` recorded that development Strict Mode had never been run, and
- * `docs/roadmap-0.3.md` listed the consequence as a suspicion rather than a defect: Strict Mode
+ * the 0.0.2 roadmap listed the consequence as a suspicion rather than a defect: Strict Mode
  * mounts, unmounts and remounts every effect, so an animation loop whose cleanup does not
  * cancel it would end up running twice, forever, with only one copy reachable to stop.
  *

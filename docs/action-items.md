@@ -39,7 +39,7 @@
 
 ## 下一期开发计划
 
-文档站、已有组件的缺陷与 API、新组件三条线的排期在 [`roadmap-0.3.md`](roadmap-0.3.md)，每一条都附证据和验收方式。
+路线图按版本分目录，见 [`roadmap/`](roadmap/)：0.0.2 开发中（[已交付](roadmap/0.0.2/phase-1-delivered.md) / [进行中](roadmap/0.0.2/phase-2-plan.md)），[0.3.0](roadmap/0.3.0/plan.md) 收破坏性改动，[0.4.0](roadmap/0.4.0/plan.md) 收顺延的。每一条都附证据和验收方式。
 
 ## 下一位接手者的第一轮工作
 
