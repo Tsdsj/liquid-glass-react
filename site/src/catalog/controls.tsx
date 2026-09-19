@@ -95,6 +95,8 @@ export const controlDocs: ComponentDoc[] = [
       '在触摸屏上，即使按钮看起来更小，可点范围也会补足到 44×44。',
       '图标按钮的名字是必填的，类型层面就会提醒你。',
     ],
+    related: ['toolbar', 'menu', 'segmented-control'],
+    imports: ['GlassButton', 'GlassIconButton'],
   },
   {
     slug: 'segmented-control', name: 'GlassSegmentedControl', title: '分段控件', group: '控件',
@@ -157,6 +159,7 @@ export const controlDocs: ComponentDoc[] = [
       '横向拖动归控件，纵向滚动仍然归页面，两者不会打架。',
       '用户开启“减少动效”后只保留点击选择。',
     ],
+    related: ['tabs', 'switch', 'tab-bar'],
   },
   {
     slug: 'switch', name: 'GlassSwitch', title: '开关', group: '控件',
@@ -194,6 +197,7 @@ export const controlDocs: ComponentDoc[] = [
       '一次明确的拖动不会再额外触发一次点击，所以不会切换两遍。',
       '打开时是系统绿色，不跟随主题色——这是这个控件的固定含义。',
     ],
+    related: ['list', 'segmented-control'],
   },
   {
     slug: 'slider', name: 'GlassSlider', title: '滑块', group: '控件',
@@ -253,6 +257,7 @@ export const controlDocs: ComponentDoc[] = [
       '底层是浏览器原生的范围输入，方向键、Home、End、翻页键全都可用。',
       '拖动时不会重新计算图形，所以拖多久都不会卡。',
     ],
+    related: ['stepper', 'progress'],
   },
   {
     slug: 'stepper', name: 'GlassStepper', title: '步进器', group: '控件',
@@ -286,6 +291,7 @@ export const controlDocs: ComponentDoc[] = [
       { name: 'decrementLabel / incrementLabel', type: 'string', description: '两个按钮各自的名字。' },
     ],
     notes: ['是两个有名字的按钮，不是一个需要键盘调节的数字框。', '两个按钮各自都满足 44×44 的点击范围。'],
+    related: ['slider', 'list'],
   },
   {
     slug: 'progress', name: 'GlassProgress', title: '进度', group: '控件',
@@ -328,6 +334,7 @@ export const controlDocs: ComponentDoc[] = [
       { name: 'variant', type: "'bar' | 'circular'", default: "'bar'", description: '横条或圆环。' },
     ],
     notes: ['确定状态会把百分比报给读屏。', '用户开启“减少动效”后不确定指示器会停下来，变成一条静止的轨道。'],
+    related: ['toast', 'button'],
   },
   {
     slug: 'badge', name: 'GlassBadge', title: '徽标', group: '控件',
@@ -361,5 +368,6 @@ export const controlDocs: ComponentDoc[] = [
       { name: 'aria-label', type: 'string', description: '说明这个数字在数什么。' },
     ],
     notes: ['没有内容时不会渲染，不会留下一个空的装饰圆。', '颜色不是唯一信息，徽标里始终有数字或文字。'],
+    related: ['tab-bar', 'list'],
   },
 ];

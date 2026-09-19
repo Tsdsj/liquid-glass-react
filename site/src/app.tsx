@@ -1,4 +1,4 @@
-import type { MouseEvent } from 'react';
+import { useEffect, useRef, type MouseEvent } from 'react';
 import { Text } from '@ttqtt/liquid-glass-react';
 import { useRoute, sectionOf } from './router.js';
 import { Shell } from './site/shell.js';
@@ -12,6 +12,7 @@ import {
   MotionFoundation, TypographyFoundation,
 } from './pages/foundations.js';
 import { InstallGuide, MigrationGuide, RendererGuide, SsrGuide, ThemingGuide } from './pages/guides.js';
+import { ChangelogPage } from './pages/changelog.js';
 import { RefProbe } from './pages/ref-probe.js';
 import { WarnProbe } from './pages/warn-probe.js';
 
@@ -62,6 +63,7 @@ function resolve(path: string, go: (path: string) => void) {
     return doc ? <ComponentPage key={doc.slug} doc={doc} /> : <NotFound go={go} />;
   }
   switch (path) {
+    case 'changelog': return <ChangelogPage />;
     case 'foundations/materials': return <MaterialsFoundation />;
     case 'foundations/color': return <ColorFoundation />;
     case 'foundations/typography': return <TypographyFoundation />;
@@ -77,8 +79,39 @@ function resolve(path: string, go: (path: string) => void) {
   }
 }
 
+/** What this route is called, for the window title. */
+function titleOf(path: string): string {
+  if (path === 'overview') return '概览';
+  if (path === 'components') return '组件';
+  if (path === 'changelog') return '更新日志';
+  if (path.startsWith('components/')) {
+    const doc = findDoc(path.slice('components/'.length));
+    return doc ? docLabel(doc) : '没有这一页';
+  }
+  const slug = path.split('/')[1];
+  if (path.startsWith('foundations/')) return FOUNDATIONS.find(([key]) => key === slug)?.[1] ?? '基础';
+  if (path.startsWith('guides/')) return GUIDES.find(([key]) => key === slug)?.[1] ?? '指南';
+  return '没有这一页';
+}
+
 export function App() {
   const [path, go] = useRoute();
+  const first = useRef(true);
+
+  /**
+   * A hash router changes the page without the browser doing any of the things it does for a
+   * real navigation. Two of those matter to someone not looking at the screen: the window
+   * title is how a screen reader and the tab strip say where you are, and focus has to land
+   * in the new page or the next Tab continues from wherever the old one left it.
+   *
+   * Not on first load — focus belongs wherever the browser put it, and moving it there would
+   * skip past the skip link that exists for exactly this.
+   */
+  useEffect(() => {
+    document.title = `${titleOf(path)} · Liquid Glass UI`;
+    if (first.current) { first.current = false; return; }
+    document.getElementById('main')?.focus({ preventScroll: true });
+  }, [path]);
   /**
    * The ref harness renders outside the shell: it mounts every component at once, and the
    * sidebar and tab bar would be a second copy of several of them in the same document.

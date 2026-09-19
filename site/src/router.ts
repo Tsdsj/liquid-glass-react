@@ -3,7 +3,8 @@ import { useEffect, useState } from 'react';
 export interface Route {
   /** Path after the leading `#/`, e.g. `components/button`. */
   path: string;
-  section: 'overview' | 'foundations' | 'components' | 'guides';
+  /** `changelog` belongs to no section, so nothing in the navigation lights up for it. */
+  section: 'overview' | 'foundations' | 'components' | 'guides' | 'changelog';
   title: string;
 }
 
@@ -28,5 +29,6 @@ export const sectionOf = (path: string): Route['section'] => {
   if (path.startsWith('components')) return 'components';
   if (path.startsWith('foundations')) return 'foundations';
   if (path.startsWith('guides')) return 'guides';
+  if (path === 'changelog') return 'changelog';
   return 'overview';
 };

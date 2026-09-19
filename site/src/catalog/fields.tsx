@@ -63,6 +63,7 @@ export const fieldDocs: ComponentDoc[] = [
       '焦点框画在外层容器上，只有用键盘走到时才出现——鼠标点击不会亮。',
       'autocomplete 和 inputmode 由你按字段用途传，这是表单用起来像原生的关键。',
     ],
+    related: ['search-field', 'list'],
   },
   {
     slug: 'search-field', name: 'SearchField', title: '搜索框', group: '输入',
@@ -107,5 +108,6 @@ export const fieldDocs: ComponentDoc[] = [
       '是一个真正的搜索表单，手机键盘上会出现“搜索”键，系统自带的清除手势也能用。',
       '框里有内容时按一次 Escape 会先清空，再按一次才关闭所在的弹层——这是浏览器的行为。',
     ],
+    related: ['text-field', 'tab-bar'],
   },
 ];

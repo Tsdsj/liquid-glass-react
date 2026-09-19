@@ -82,6 +82,8 @@ export const navigationDocs: ComponentDoc[] = [
       '从右到左的语言里左右方向键会自动对调。',
       '开发时如果把图标和文字放进同一组，控制台会提醒一次。',
     ],
+    related: ['button', 'navigation-bar', 'menu'],
+    imports: ['GlassToolbar', 'ToolbarGroup', 'ToolbarSpacer'],
   },
   {
     slug: 'tab-bar', name: 'TabBar', title: '标签栏', group: '导航',
@@ -135,6 +137,7 @@ export const navigationDocs: ComponentDoc[] = [
       '底部会自动避开 iPhone 的home 指示条。',
       '徽标必须带名字，否则读屏只会念出一个数字。',
     ],
+    related: ['sidebar', 'badge', 'scroll-edge'],
   },
   {
     slug: 'sidebar', name: 'Sidebar', title: '侧边栏', group: '导航',
@@ -170,6 +173,7 @@ export const navigationDocs: ComponentDoc[] = [
       { name: 'header / footer', type: 'ReactNode', description: '不随内容滚动的固定区域。' },
     ],
     notes: ['中间区域可以滚动，滚到底不会带着整页一起动。'],
+    related: ['tab-bar', 'navigation-bar'],
   },
   {
     slug: 'tabs', name: 'GlassTabs', title: '标签页', group: '导航',
@@ -203,6 +207,7 @@ export const navigationDocs: ComponentDoc[] = [
       '读屏会把它识别成“会就地换内容”的标签页，和页面导航区分得很清楚。',
       '方向键切换并立刻显示对应内容；内容区可以直接用键盘进入。',
     ],
+    related: ['segmented-control', 'tab-bar'],
   },
   {
     slug: 'navigation-bar', name: 'NavigationBar', title: '导航栏', group: '导航',
@@ -257,6 +262,7 @@ export const navigationDocs: ComponentDoc[] = [
       '紧凑标题对读屏是隐藏的，真正的标题是下面那个——不会被念两遍。',
       '顶部会自动避开刘海和状态栏。',
     ],
+    related: ['toolbar', 'scroll-edge'],
   },
   {
     slug: 'scroll-edge', name: 'ScrollEdge', title: '滚动边缘', group: '导航',
@@ -297,5 +303,6 @@ export const navigationDocs: ComponentDoc[] = [
       { name: 'height', type: 'number', default: '44', description: '渐隐区域的高度。' },
     ],
     notes: ['纯装饰，读屏会跳过。只有内容真的交叠时才出现。', '用户开启“减少透明度”后会变成一条实边。'],
+    related: ['navigation-bar', 'tab-bar'],
   },
 ];

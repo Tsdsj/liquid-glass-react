@@ -60,6 +60,22 @@ code { font-family: var(--lg-font-mono); font-size: .92em; }
   border-block-start: 1px solid var(--lg-separator); margin-block-start: var(--lg-space-10); }
 .app-footer-link { display: inline-flex; align-items: center; gap: var(--lg-space-1);
   min-height: var(--lg-hit-min); color: var(--lg-accent); text-decoration: none; }
+.app-footer-links { display: flex; flex-wrap: wrap; gap: var(--lg-space-5); align-items: center; }
+
+/* The changelog page: the repository's CHANGELOG.md, rendered by site/site/markdown.tsx. */
+.md { display: flex; flex-direction: column; }
+.md-h { margin-block: var(--lg-space-8) var(--lg-space-3); }
+.md-h[data-level="2"] { padding-block-start: var(--lg-space-6); border-block-start: 1px solid var(--lg-separator); }
+.md-h:first-child { margin-block-start: 0; padding-block-start: 0; border-block-start: 0; }
+.md-p { margin-block: 0 var(--lg-space-3); }
+.md-list { margin-block: 0 var(--lg-space-4); padding-inline-start: var(--lg-space-5);
+  display: flex; flex-direction: column; gap: var(--lg-space-2); color: var(--lg-label); }
+.md-code { font-family: var(--lg-font-mono); font-size: .92em;
+  padding: .1em .35em; border-radius: 5px; background: var(--lg-fill-tertiary); }
+.md-pre { margin-block: 0 var(--lg-space-4); padding: var(--lg-space-4);
+  border-radius: var(--lg-radius-s); background: var(--lg-fill-tertiary); overflow-x: auto;
+  font-family: var(--lg-font-mono); font-size: 13px; line-height: 1.6; }
+.md a { color: var(--lg-accent); }
 
 .wordmark { display: flex; align-items: center; gap: var(--lg-space-2); text-decoration: none; min-height: var(--lg-hit-min); }
 .wordmark-mark { position: relative; width: 26px; height: 26px; flex-shrink: 0; }
@@ -156,6 +172,37 @@ code { font-family: var(--lg-font-mono); font-size: .92em; }
   border-radius: var(--lg-radius-m); background: var(--lg-bg-secondary); border: 1px solid var(--lg-separator);
   font: var(--lg-text-footnote-size)/1.8 var(--lg-font-mono); white-space: pre; tab-size: 2; }
 .code-copy { position: absolute; inset-block-start: var(--lg-space-2); inset-inline-end: var(--lg-space-2); }
+
+/**
+ * Syntax colours, from the semantic palette rather than from a borrowed theme — so they flip
+ * with light and dark, and follow Increase Contrast and forced colours like everything else.
+ * Five classes is the whole vocabulary: see site/site/tokenize.ts.
+ */
+.code-keyword { color: var(--lg-purple); }
+.code-string { color: var(--lg-green); }
+.code-number { color: var(--lg-orange); }
+.code-tag { color: var(--lg-blue); }
+.code-attr { color: var(--lg-teal); }
+.code-comment { color: var(--lg-label-tertiary); font-style: italic; }
+/* Under forced colours the system owns every colour; keeping ours would fight it. */
+@media (forced-colors: active) {
+  .code-keyword, .code-string, .code-number, .code-tag, .code-attr, .code-comment { color: inherit; }
+}
+
+/* The import line, the related components and the two repository links — see D6 in the roadmap. */
+.doc-import { margin-block: var(--lg-space-4) var(--lg-space-6); }
+.doc-import .code-block > pre { padding-block: var(--lg-space-4); }
+.doc-related { display: grid; gap: var(--lg-space-3); grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); }
+.doc-related-link { display: flex; flex-direction: column; gap: var(--lg-space-1);
+  padding: var(--lg-space-4); border-radius: var(--lg-radius-m); text-decoration: none;
+  background: var(--lg-bg-secondary); border: 1px solid var(--lg-separator);
+  transition: background var(--lg-duration-release) var(--lg-ease); }
+@media (hover: hover) { .doc-related-link:hover { background: var(--lg-fill-tertiary); } }
+.doc-source { display: flex; flex-wrap: wrap; gap: var(--lg-space-5);
+  margin-block-start: var(--lg-space-10); padding-block-start: var(--lg-space-5);
+  border-block-start: 1px solid var(--lg-separator); }
+.doc-source-link { display: inline-flex; align-items: center; gap: var(--lg-space-1);
+  min-height: var(--lg-hit-min); color: var(--lg-accent); text-decoration: none; }
 
 .props-table-wrap { overflow-x: auto; border: 1px solid var(--lg-separator); border-radius: var(--lg-radius-m); }
 .props-table { border-collapse: collapse; width: 100%; min-width: 560px;

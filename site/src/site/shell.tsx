@@ -88,12 +88,21 @@ export function Shell({ path, go, secondaryNav, children }: {
         </main>
         <footer className="app-footer">
           <Text variant="caption1" tone="tertiary">
-            Liquid Glass UI {__LG_VERSION__} · 独立设计研究，非 Apple 官方产品，不含 Apple 字体、SF Symbols 或壁纸素材。
+            Liquid Glass UI · 独立设计研究，非 Apple 官方产品，不含 Apple 字体、SF Symbols 或壁纸素材。
           </Text>
-          <a className="app-footer-link" href="#/guides/install" onClick={navigate('guides/install')}>
-            <Text as="span" variant="caption1">开始接入</Text>
-            <LibraryIcon name="chevronForward" size={14} />
-          </a>
+          <div className="app-footer-links">
+            {/* The version links to what changed in it — the question anyone reading a version
+                number in a footer is actually asking. A link of its own, not a word inside the
+                sentence: at caption size that word is 26x15, and a touch target is 44. */}
+            <a className="app-footer-link" href="#/changelog" onClick={navigate('changelog')}>
+              <Text as="span" variant="caption1">更新日志 {__LG_VERSION__}</Text>
+              <LibraryIcon name="chevronForward" size={14} />
+            </a>
+            <a className="app-footer-link" href="#/guides/install" onClick={navigate('guides/install')}>
+              <Text as="span" variant="caption1">开始接入</Text>
+              <LibraryIcon name="chevronForward" size={14} />
+            </a>
+          </div>
         </footer>
       </div>
     </div>

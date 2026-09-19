@@ -23,6 +23,23 @@ export const findDoc = (slug: string) => componentDocs.find(doc => doc.slug === 
 /** The label used everywhere: Chinese first, then the export name. */
 export const docLabel = (doc: ComponentDoc) => `${doc.title} ${doc.name}`;
 
+/**
+ * Related components, resolved. A slug that does not exist is dropped here rather than
+ * rendered as a link that goes nowhere — and, in development, said out loud, because a typo
+ * in a cross-reference is otherwise invisible until a reader clicks it.
+ */
+export function relatedDocs(doc: ComponentDoc): ComponentDoc[] {
+  return (doc.related ?? []).map(slug => {
+    const found = findDoc(slug);
+    if (!found && import.meta.env.DEV) console.warn(`[docs] ${doc.slug}.related names "${slug}", which is not a component`);
+    return found;
+  }).filter((entry): entry is ComponentDoc => !!entry);
+}
+
+/** What a reader has to import to use this page's examples. */
+export const importLine = (doc: ComponentDoc) =>
+  `import { ${(doc.imports ?? [doc.name]).join(', ')} } from '@ttqtt/liquid-glass-react';`;
+
 /** Substring match over both names, the summary and the group — enough for a catalogue this size. */
 export function searchDocs(query: string): ComponentDoc[] {
   const needle = query.trim().toLocaleLowerCase();

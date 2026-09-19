@@ -69,6 +69,7 @@ export const contentDocs: ComponentDoc[] = [
       '所有字号跟随右上角的文字大小设置；调到最大时布局要能重新排开，不能截断。',
       '中文、日文、韩文下会自动关掉为拉丁字母设计的紧缩字距。',
     ],
+    related: ['card', 'list'],
   },
   {
     slug: 'card', name: 'Card', title: '卡片', group: '内容',
@@ -123,6 +124,8 @@ export const contentDocs: ComponentDoc[] = [
       { name: 'minimum', type: 'number', default: '0', description: 'Concentric 专用：这个元素单独出现时的兜底圆角。' },
     ],
     notes: ['卡片只是容器，本身没有语义角色，语义由里面的元素承担。'],
+    related: ['material-view', 'list', 'text'],
+    imports: ['Card', 'Concentric'],
   },
   {
     slug: 'list', name: 'List', title: '列表', group: '内容',
@@ -201,6 +204,8 @@ export const contentDocs: ComponentDoc[] = [
       '分隔线从文字开始处内缩，不会从图标下面穿过去。',
       '箭头在从右到左的语言里会自动镜像。',
     ],
+    related: ['card', 'switch', 'divider'],
+    imports: ['List', 'ListSection', 'ListRow'],
   },
   {
     slug: 'material-view', name: 'MaterialView', title: '标准材质', group: '内容',
@@ -234,6 +239,7 @@ export const contentDocs: ComponentDoc[] = [
       '最薄的两档上不要用最淡的那级文字颜色，对比度不够。',
       '用户打开“减少透明度”后会自动变成实色底。',
     ],
+    related: ['card', 'sidebar'],
   },
   {
     slug: 'divider', name: 'Divider', title: '分隔线', group: '内容',
@@ -274,5 +280,6 @@ export const contentDocs: ComponentDoc[] = [
       { name: 'inset', type: 'number', default: '0', description: '起始侧内缩。从右到左的语言里会自动翻转。' },
     ],
     notes: ['读屏会把它识别为分隔符，并知道是横是竖。'],
+    related: ['list', 'toolbar'],
   },
 ];

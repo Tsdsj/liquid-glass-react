@@ -31,4 +31,15 @@ export interface ComponentDoc {
   props: PropRow[];
   /** What keyboard and screen-reader users get. */
   notes: string[];
+  /**
+   * Slugs of components a reader landing here is likely to want next — the one this pairs
+   * with, or the one they should have used instead. Unknown slugs are dropped rather than
+   * rendered as dead links; `catalog/index.ts` checks them.
+   */
+  related?: string[];
+  /**
+   * Everything this component needs imported, when it is more than the component itself.
+   * Defaults to the component's own name.
+   */
+  imports?: string[];
 }

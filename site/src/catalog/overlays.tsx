@@ -70,6 +70,7 @@ export const overlayDocs: ComponentDoc[] = [
       '点外面就关，按 Escape 也关，关掉后焦点回到原来的按钮。',
       '快贴到屏幕边时会自动换一侧，不会被截掉。',
     ],
+    related: ['menu', 'sheet', 'dialog'],
   },
   {
     slug: 'menu', name: 'GlassMenu', title: '菜单', group: '浮层',
@@ -120,6 +121,7 @@ export const overlayDocs: ComponentDoc[] = [
       '菜单项是真正的按钮，键盘可以逐项走过去。',
       '连续打字会跳到匹配的项上，停顿约 0.7 秒后重新开始。',
     ],
+    related: ['popover', 'action-sheet', 'button'],
   },
   {
     slug: 'sheet', name: 'GlassSheet', title: '底部面板', group: '浮层',
@@ -167,6 +169,7 @@ export const overlayDocs: ComponentDoc[] = [
       '横条对键盘用户是一个可调节的控件：上下方向键换高度，在最低档再往下就关闭。',
       '拖动全程跟手，松手后弹回最近的高度；开启“减少动效”后直接切换，不做动画。',
     ],
+    related: ['dialog', 'action-sheet'],
   },
   {
     slug: 'alert', name: 'GlassAlert', title: '警告框', group: '浮层',
@@ -213,6 +216,7 @@ export const overlayDocs: ComponentDoc[] = [
       '按 Escape 等于选择“取消”，而不是悄悄关掉——用户按它就是想要一个明确的退出。',
       '三个选项时会改成竖着排，避免文字被挤成一团。',
     ],
+    related: ['dialog', 'toast', 'action-sheet'],
   },
   {
     slug: 'action-sheet', name: 'GlassActionSheet', title: '操作表', group: '浮层',
@@ -261,6 +265,7 @@ export const overlayDocs: ComponentDoc[] = [
       '窄屏贴在底部，宽屏贴着触发它的按钮。',
       '界面其余部分仍然可以操作——这是一组选项，不是一道必须先过的关。',
     ],
+    related: ['menu', 'alert', 'sheet'],
   },
   {
     slug: 'dialog', name: 'GlassDialog', title: '对话框', group: '浮层',
@@ -302,6 +307,7 @@ export const overlayDocs: ComponentDoc[] = [
       '焦点被限制在对话框内，背后的内容对读屏是隐藏的，这些都由浏览器保证。',
       '打开时锁住页面滚动，关掉后焦点回到原来的按钮。',
     ],
+    related: ['sheet', 'alert', 'popover'],
   },
   {
     slug: 'toast', name: 'ToastProvider', title: '轻提示', group: '浮层',
@@ -350,5 +356,7 @@ toast({
       '读屏会在当前操作的间隙把它念出来，不会打断用户正在做的事。',
       '鼠标悬停或键盘聚焦时暂停倒计时，撤销的机会不会在伸手的路上消失。',
     ],
+    related: ['alert', 'progress'],
+    imports: ['ToastProvider', 'useToast'],
   },
 ];
