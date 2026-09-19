@@ -1,7 +1,7 @@
 import { useRef, useState, type MouseEvent } from 'react';
 import {
-  GlassButton, GlassIconButton, GlassTabs, GlassToolbar, LibraryIcon, List, ListRow, ListSection,
-  NavigationStack, ScrollEdge, Sidebar, useNavigationStack,
+  GlassButton, GlassIconButton, GlassSegmentedControl, GlassTabs, GlassToolbar, LibraryIcon, List, ListRow, ListSection,
+  Inspector, NavigationStack, PageControl, ScrollEdge, Sidebar, SplitView, useNavigationStack,
   TabBar, Text, ToolbarGroup, ToolbarSpacer,
 } from '@ttqtt/liquid-glass-react';
 import { Icon } from '../icons.js';
@@ -51,6 +51,32 @@ export const navigationDocs: ComponentDoc[] = [
   <ToolbarSpacer variant="flexible" />
   <ToolbarGroup prominent>
     <GlassButton variant="glassProminent">完成</GlassButton>
+  </ToolbarGroup>
+</GlassToolbar>`,
+      },
+      {
+        id: 'toolbar-segmented', title: '放一个分段控件进去',
+        description: '分段控件有自己的键盘模型（方向键在选项之间走）。放进工具栏后，工具栏的方向键遍历走到它这里会停——这是已知限制，修复会改变既有键盘行为，排在 0.3.0。',
+        height: 250,
+        render: function ToolbarSegmented() {
+          const [view, setView] = useState('map');
+          return <div id="toolbar-segmented-demo" style={{ display: 'grid', gap: 12, justifyItems: 'center' }}>
+            <GlassToolbar aria-label="视图工具栏">
+              <ToolbarGroup>
+                <GlassSegmentedControl aria-label="视图" density="compact" value={view} onValueChange={setView}
+                  items={[{ value: 'map', label: '地图' }, { value: 'transit', label: '公交' }]} />
+              </ToolbarGroup>
+              <ToolbarSpacer />
+              <ToolbarGroup>
+                <GlassIconButton aria-label="定位"><Icon name="expand" /></GlassIconButton>
+              </ToolbarGroup>
+            </GlassToolbar>
+            <Text variant="caption1" tone="secondary" role="status">当前视图：{view}</Text>
+          </div>;
+        },
+        code: `<GlassToolbar aria-label="视图工具栏">
+  <ToolbarGroup>
+    <GlassSegmentedControl aria-label="视图" density="compact" … />
   </ToolbarGroup>
 </GlassToolbar>`,
       },
@@ -343,6 +369,153 @@ push({ key: 'general', title: '通用', content: <General /> });`,
     imports: ['NavigationStack', 'useNavigationStack'],
   },
   {
+    slug: 'page-control', name: 'PageControl', title: '页码点', group: '导航',
+    summary: '一排小点，表示你在一组**有顺序**的页面里的哪一页。',
+    when: [
+      '一组有先后的页面：引导流程、图片轮播、分步表单。',
+      '**没有顺序就不要用。** 一组并列的目的地是标签栏，用这个等于告诉读者存在一个并不存在的次序。',
+      '超过十个点就数不过来了，那时候改成「3 / 24」这样的文字。开发模式下会告警。',
+      '顺着它拖就能翻页，不只是点——只能点的一排点，和只能点的分段控件是同一种破绽。',
+    ],
+    examples: [
+      {
+        id: 'page-control-basic', title: '基础用法', description: '点一下跳过去，按住横着拖也能翻。方向键、Home/End 都能用。',
+        height: 220,
+        render: function PageControlBasic() {
+          const [page, setPage] = useState(0);
+          const titles = ['欢迎', '权限', '同步', '完成'];
+          return <div id="page-control-demo" style={{ display: 'grid', gap: 16, justifyItems: 'center' }}>
+            <Text variant="title3" emphasized role="status">{titles[page]}</Text>
+            <PageControl aria-label="引导步骤" count={4} page={page} onPageChange={setPage} />
+          </div>;
+        },
+        code: `<PageControl aria-label="引导步骤" count={4} page={page} onPageChange={setPage} />`,
+      },
+      {
+        id: 'page-control-vertical', title: '竖向', description: '贴在侧边时改成竖向，方向键跟着换成上下。',
+        height: 260,
+        render: function PageControlVertical() {
+          const [page, setPage] = useState(1);
+          return <div style={{ display: 'flex', gap: 16, alignItems: 'center' }}>
+            <PageControl aria-label="章节" orientation="vertical" count={5} page={page} onPageChange={setPage} />
+            <Text variant="subhead" tone="secondary" role="status">第 {page + 1} 章</Text>
+          </div>;
+        },
+        code: `<PageControl aria-label="章节" orientation="vertical" count={5} … />`,
+      },
+      {
+        id: 'page-control-media', title: '压在图片上', description: '玻璃浮在内容之上，这正是它该在的那一层。',
+        backdrop: 'media', height: 200,
+        render: function PageControlMedia() {
+          const [page, setPage] = useState(2);
+          return <PageControl aria-label="照片" count={6} page={page} onPageChange={setPage}
+            formatPage={(index, count) => `第 ${index + 1} 张，共 ${count} 张`} />;
+        },
+        code: `<PageControl aria-label="照片" count={6} page={page} onPageChange={setPage}
+  formatPage={(i, n) => \`第 \${i + 1} 张，共 \${n} 张\`} />`,
+      },
+    ],
+    props: [
+      { name: 'count', type: 'number', required: true, description: '一共几页。超过 10 开发模式会告警。' },
+      { name: 'page / defaultPage / onPageChange', type: 'number / (page) => void', description: '当前第几页，从 0 开始。' },
+      { name: 'aria-label', type: 'string', required: true, description: '这些页是什么。一排点自己说不出来。' },
+      { name: 'formatPage', type: '(page, count) => string', description: '每个点自己的名字，默认是「3 / 6」。' },
+      { name: 'orientation', type: "'horizontal' | 'vertical'", default: "'horizontal'", description: '方向，同时决定方向键走哪个轴。' },
+    ],
+    notes: [
+      '是一个 tablist：整体一个 Tab 停靠点，方向键在内部移动，Home/End 跳到两端。',
+      '每个点都是真正的按钮并且有自己的名字（「3 / 6」），所以拖动是键盘路径之外的补充，不是替代。',
+      '点画出来只有 7px，但触摸时命中区是 44——和库里其他小控件一样，用伪元素撑开而不是把图形画大。',
+    ],
+    related: ['tab-bar', 'tabs', 'segmented-control'],
+  },
+  {
+    slug: 'split-view', name: 'SplitView', title: '分栏视图', group: '导航',
+    summary: '并排的两到三栏：选择、内容、细节。窄屏下折叠成页面栈。',
+    when: [
+      '左边选一个，右边看它：邮件、文件、设置。',
+      '**只在宽屏用。** 窄屏塞不下并排的栏，所以组件会折叠成页面栈——这正是 iPhone 上系统的做法。',
+      '整个视图只有一个标题，不是每栏一个。',
+      '第三栏（检查器）放当前选中项的细节，永远在尾侧。',
+    ],
+    examples: [
+      {
+        id: 'split-basic', title: '两栏', description: '中间那条分隔线可以拖，也可以用键盘：聚焦后左右方向键调宽，Shift 走大步，双击复位。',
+        height: 420,
+        render: function SplitBasic() {
+          const items = ['收件箱', '已发送', '草稿', '归档'];
+          const [picked, setPicked] = useState(0);
+          return <div id="split-demo" style={{ width: '100%', height: 320, border: '1px solid var(--lg-separator)', borderRadius: 16, overflow: 'hidden' }}>
+            <SplitView title="邮件" style={{ height: '100%' }}
+              compact={{ title: items[picked], content: <SplitDetail name={items[picked]} /> }}
+              sidebar={<List variant="plain" style={{ padding: 8 }}>
+                <ListSection>
+                  {items.map((item, index) => <ListRow key={item} label={item}
+                    onSelect={() => setPicked(index)} disclosure={false} />)}
+                </ListSection>
+              </List>}>
+              <SplitDetail name={items[picked]} />
+            </SplitView>
+          </div>;
+        },
+        code: `<SplitView
+  title="邮件"
+  sidebar={<List>…目的地…</List>}
+  compact={{ title: current, content: <Detail /> }}
+>
+  <Detail />
+</SplitView>`,
+      },
+      {
+        id: 'split-inspector', title: '三栏（带检查器）', description: '检查器在尾侧，放当前选中项的细节。它是内容层，不是玻璃——它是窗口的一块区域，不是浮在上面的面板。',
+        height: 420,
+        render: function SplitInspector() {
+          const [name, setName] = useState('封面.png');
+          return <div id="split-inspector-demo" style={{ width: '100%', height: 320, border: '1px solid var(--lg-separator)', borderRadius: 16, overflow: 'hidden' }}>
+            <SplitView title="素材" style={{ height: '100%' }} inspectorWidth={220}
+              compact={{ title: name, content: <SplitDetail name={name} /> }}
+              sidebar={<List variant="plain" style={{ padding: 8 }}>
+                <ListSection>
+                  {['封面.png', '背景.jpg', '图标.svg'].map(file => <ListRow key={file} label={file}
+                    onSelect={() => setName(file)} disclosure={false} />)}
+                </ListSection>
+              </List>}
+              inspector={<Inspector title="属性">
+                <Text variant="footnote" tone="secondary">文件名</Text>
+                <Text variant="subhead">{name}</Text>
+                <Text variant="footnote" tone="secondary">尺寸</Text>
+                <Text variant="subhead">1280 × 720</Text>
+                <GlassButton controlSize="small" variant="gray">替换…</GlassButton>
+              </Inspector>}>
+              <SplitDetail name={name} />
+            </SplitView>
+          </div>;
+        },
+        code: `<SplitView title="素材" sidebar={…} inspector={
+  <Inspector title="属性">…</Inspector>
+}>
+  <Detail />
+</SplitView>`,
+      },
+    ],
+    props: [
+      { name: 'sidebar', type: 'ReactNode', required: true, description: '前导栏：一组目的地。' },
+      { name: 'title', type: 'string', required: true, description: '整个视图的标题。只有一个。' },
+      { name: 'inspector', type: 'ReactNode', description: '尾侧栏。用 Inspector 包一下。' },
+      { name: 'compact', type: '{ title, content }', description: '窄屏折叠成栈之后，压在侧栏上面的那一页。不传就只显示侧栏。' },
+      { name: 'sidebarWidth / min / max', type: 'number', default: '260 / 180 / 400', description: '侧栏宽度与拖动范围。' },
+      { name: 'sidebarVisible / inspectorVisible', type: 'boolean', default: 'true', description: '栏的显隐，可受控。' },
+      { name: 'Inspector', type: '{ title?, children }', description: '尾侧栏的容器。内容层，密集控件用圆角矩形而不是胶囊。' },
+    ],
+    notes: [
+      '分隔线是 `role="separator"`，能聚焦：左右方向键调宽（Shift 走 40px），Home/End 到两端，双击复位。只能拖的宽度是键盘用户设不了的宽度。',
+      '低于 768px 折叠成 NavigationStack：侧栏变成根页面，选中一项把详情压上去，返回按钮回到列表——这正是那两栏本来在表达的关系。',
+      '拖动按根容器测量，不按上一次指针位置累加，RTL 下方向镜像。',
+    ],
+    related: ['sidebar', 'navigation-stack', 'tab-bar'],
+    imports: ['SplitView', 'Inspector'],
+  },
+  {
     slug: 'scroll-edge', name: 'ScrollEdge', title: '滚动边缘', group: '导航',
     summary: '内容滚到浮动栏下面时，让它渐渐化开，而不是被一条硬边切断。',
     when: [
@@ -447,5 +620,16 @@ function StackChevronRoot() {
     <GlassButton controlSize="small" onClick={() => push({
       key: 'deep', title: '下一页', content: <StackLeaf text="返回按钮只有一个箭头，但读屏听到的是完整的名字。" />,
     })}>进入下一页</GlassButton>
+  </div>;
+}
+
+
+/** The detail pane for the SplitView demos. */
+function SplitDetail({ name }: { name: string }) {
+  return <div style={{ padding: 16, display: 'grid', gap: 8, alignContent: 'start' }}>
+    <Text variant="title3" emphasized>{name}</Text>
+    <Text variant="subhead" tone="secondary">
+      选中项的内容显示在这里。把窗口拖窄到 768px 以下，两栏会折叠成一摞页面。
+    </Text>
   </div>;
 }

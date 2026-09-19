@@ -24,6 +24,7 @@ const STRINGS = {
   increase: '增加',
   clearSearch: '清除搜索内容',
   back: '返回',
+  resizeSidebar: '调整侧栏宽度',
   sheetHeight: (title: string) => `${title}的高度`,
 };
 

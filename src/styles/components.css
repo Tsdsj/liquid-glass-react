@@ -828,3 +828,94 @@
 @media (prefers-reduced-motion: reduce) {
   .lg-stack-screen { animation: lg-stack-fade var(--lg-duration-release) var(--lg-ease) !important; }
 }
+
+/* The toast's close button. Drawn small — the message is what matters — but the hit region is
+   the shared 44 that `.lg-button::after` gives every button on a coarse pointer. */
+.lg-toast-dismiss { flex: 0 0 auto; margin-inline-start: calc(var(--lg-space-1) * -1); opacity: .6; }
+@media (hover: hover) { .lg-toast-dismiss:hover { opacity: 1; } }
+
+/* A badge is a custom element, and Increase Contrast asks custom elements for a border. White
+   on the notification red measures 4.6:1 and passes AA on its own, so this is consistency:
+   every other surface grows an edge here, and one that does not looks forgotten. */
+@media (prefers-contrast: more) {
+  .lg-badge { border: 1px solid var(--lg-label); }
+}
+.lg-root[data-contrast="more"] .lg-badge, .lg-badge[data-contrast="more"] { border: 1px solid var(--lg-label); }
+
+/* ---------- DisclosureGroup: a row that folds, on a real <details> ---------- */
+.lg-disclosure { border-radius: var(--lg-radius-m); background: var(--lg-bg-grouped-2); overflow: hidden; }
+.lg-disclosure-summary { display: flex; align-items: center; gap: var(--lg-space-3);
+  min-height: var(--lg-hit-min); padding: var(--lg-space-2) var(--lg-space-4); cursor: pointer;
+  list-style: none; user-select: none; -webkit-user-select: none;
+  font-family: var(--lg-font-text); color: var(--lg-label); }
+/* The UA triangle is replaced, not hidden by opacity: two markers is worse than the wrong one. */
+.lg-disclosure-summary::-webkit-details-marker { display: none; }
+.lg-disclosure-summary::marker { content: ''; }
+.lg-disclosure-summary:focus-visible { outline: var(--lg-focus-width) solid var(--lg-focus); outline-offset: calc(var(--lg-focus-offset) * -1); }
+@media (hover: hover) { .lg-disclosure-summary:hover { background: var(--lg-fill-quaternary); } }
+.lg-disclosure-labels { display: flex; flex-direction: column; gap: 1px; flex: 1; min-width: 0; }
+.lg-disclosure-label { font-size: var(--lg-text-body-size); line-height: var(--lg-text-body-leading); }
+.lg-disclosure-secondary { font-size: var(--lg-text-footnote-size); line-height: var(--lg-text-footnote-leading); color: var(--lg-label-secondary); }
+.lg-disclosure-chevron { flex: 0 0 auto; color: var(--lg-label-tertiary); rotate: 90deg;
+  transition: rotate var(--lg-duration-spring) var(--lg-spring); }
+.lg-disclosure[data-open="true"] .lg-disclosure-chevron { rotate: 270deg; }
+.lg-disclosure-body { padding: 0 var(--lg-space-4) var(--lg-space-4); }
+
+/* ---------- PageControl: where you are in an ordered set ---------- */
+.lg-page-control { display: inline-flex; width: fit-content; padding: var(--lg-space-2) var(--lg-space-3); touch-action: none; }
+.lg-page-control > .lg-content { display: flex; align-items: center; gap: var(--lg-space-1); }
+.lg-page-control[data-orientation="vertical"] > .lg-content { flex-direction: column; }
+/* The dot is drawn at 8px and hit at 44, the same way every other small control here works. */
+.lg-page-dot { position: relative; display: grid; place-items: center; width: 18px; height: 18px;
+  border: 0; padding: 0; background: transparent; cursor: pointer; }
+.lg-page-dot > span { width: 7px; height: 7px; border-radius: 999px; background: var(--lg-glass-fg-secondary);
+  opacity: .42; transition: opacity var(--lg-duration-release) var(--lg-ease), scale var(--lg-duration-spring) var(--lg-spring); }
+.lg-page-dot[aria-selected="true"] > span { opacity: 1; scale: 1.15; }
+.lg-page-dot:focus-visible { outline: var(--lg-focus-width) solid var(--lg-focus); outline-offset: -1px; border-radius: 999px; }
+@media (hover: hover) { .lg-page-dot:not([aria-selected="true"]):hover > span { opacity: .7; } }
+/* The touch region grows on the **cross** axis only.
+   Growing it on both, the way a standalone button does, makes each dot's 44px square overlap
+   its neighbours': the dots are 18px apart, so dot 2's region covers dot 1's centre entirely,
+   and being later in the DOM it wins the hit test. Measured: tapping the first dot selected
+   the second. Along the row the dots are adjacent targets and share the axis between them —
+   which is fine, because the row is draggable and nobody has to hit one exactly. */
+@media (pointer: coarse) {
+  .lg-page-dot::after { content: ''; position: absolute; inset-block-start: 50%; inset-inline-start: 50%;
+    translate: -50% -50%; width: 100%; height: var(--lg-hit-min); }
+  .lg-page-control[data-orientation="vertical"] .lg-page-dot::after { width: var(--lg-hit-min); height: 100%; }
+}
+@media (forced-colors: active) {
+  .lg-page-dot > span { background: ButtonText; opacity: 1; }
+  .lg-page-dot[aria-selected="true"] > span { background: Highlight; }
+}
+
+/* ---------- SplitView: columns in a regular environment, a stack in a compact one ---------- */
+.lg-split { display: flex; align-items: stretch; min-width: 0; min-height: 0; }
+.lg-split-column { min-width: 0; min-height: 0; overflow: auto; }
+.lg-split-column[data-column="sidebar"] { flex: 0 0 var(--lg-split-sidebar, 260px); }
+.lg-split-column[data-column="content"] { flex: 1 1 auto; }
+.lg-split-column[data-column="inspector"] { flex: 0 0 var(--lg-split-inspector, 300px); }
+/* "Keep the divider visible": a hairline that is always there, with a grab region around it
+   wider than the line — the line is 1px and a pointer target is not. */
+.lg-split-divider { position: relative; flex: 0 0 1px; background: var(--lg-separator);
+  cursor: col-resize; touch-action: none; }
+.lg-split-divider::before { content: ''; position: absolute; inset-block: 0;
+  inset-inline-start: 50%; translate: -50% 0; width: 11px; }
+.lg-split-divider:focus-visible { outline: var(--lg-focus-width) solid var(--lg-focus); outline-offset: 1px; }
+@media (hover: hover) { .lg-split-divider:hover { background: var(--lg-label-tertiary); } }
+.lg-split[data-dragging="true"] { user-select: none; -webkit-user-select: none; cursor: col-resize; }
+.lg-split[data-dragging="true"] .lg-split-divider { background: var(--lg-accent); }
+@media (pointer: coarse) { .lg-split-divider::before { width: var(--lg-hit-min); } }
+@media (forced-colors: active) { .lg-split-divider { background: ButtonText; } }
+
+/* ---------- Inspector: the trailing column ---------- */
+/* Content layer, not glass: it is a region of the window, and a translucent panel between the
+   reader and the thing they are editing helps nobody. */
+.lg-inspector { display: flex; flex-direction: column; min-width: 0;
+  background: var(--lg-bg-grouped); border-inline-start: 1px solid var(--lg-separator); }
+.lg-inspector-title { padding: var(--lg-space-4) var(--lg-space-4) var(--lg-space-2);
+  font-size: var(--lg-text-subhead-size); font-weight: var(--lg-weight-semibold); color: var(--lg-label); }
+.lg-inspector-body { flex: 1; min-height: 0; overflow: auto; padding: var(--lg-space-2) var(--lg-space-4) var(--lg-space-4);
+  display: flex; flex-direction: column; gap: var(--lg-space-4); }
+/* Dense controls: rounded rectangles rather than capsules, which at this width are mostly gap. */
+.lg-inspector .lg-button { --lg-radius: var(--lg-radius-s); border-radius: var(--lg-radius-s); }

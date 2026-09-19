@@ -58,6 +58,7 @@ import '@ttqtt/liquid-glass-react/styles.css';
 | `decrease` / `increase` | `'Decrease'` / `'Increase'` | `GlassStepper` |
 | `clearSearch` | `'Clear search'` | `SearchField` |
 | `back` | `'Back to'` | `NavigationStack` 的返回按钮 |
+| `resizeSidebar` | `'Resize sidebar'` | `SplitView` 的分隔线 |
 | `sheetHeight` | `` title => `${title} height` `` | `GlassSheet` 的拖动手柄 |
 
 ```tsx
@@ -75,6 +76,26 @@ import '@ttqtt/liquid-glass-react/styles.css';
 `'compact' | 'regular'`，以 768px 为界——HIG 的 layout 页要求「按尺寸类别决定布局，永远不按设备类型或方向」。CSS 侧 `--lg-margin` 在同一个断点上自己从 16px 切到 20px，所以组件和样式表不会各说各的。
 
 服务端和首次客户端渲染返回 `'compact'`，水合后立刻落到真实值；服务端标记不能动的东西请直接用 CSS 媒体查询。
+
+### `SplitView` / `Inspector`
+
+并排的两到三栏，**只在 regular 环境**；低于 768px 折叠成 `NavigationStack`。
+
+| 属性 | 类型 | 默认 | 说明 |
+| --- | --- | --- | --- |
+| `sidebar` | `ReactNode` | — | 前导栏 |
+| `title` | `string` | — | **整个视图**一个标题，不是每栏一个 |
+| `inspector` | `ReactNode` | — | 尾侧栏，用 `Inspector` 包 |
+| `compact` | `{ title, content }` | — | 折叠成栈后压在侧栏上的那一页 |
+| `onCompactBack` | `() => void` | — | 紧凑模式按了返回 |
+| `sidebarWidth` / `min` / `max` | `number` | 260 / 180 / 400 | 宽度与拖动范围 |
+| `sidebarVisible` / `inspectorVisible` | `boolean` | `true` | 栏的显隐 |
+
+分隔线是 `role="separator"` 且可聚焦：← → 调宽（Shift 走 40px），Home/End 到两端，双击复位。**只能拖的宽度是键盘用户设不了的宽度。**
+
+`Inspector`（`title?` + children）是**内容层**，不是玻璃：它是窗口的一块区域，在读者和他正在编辑的东西之间放一层半透明面板帮不了任何人。密集控件用圆角矩形而不是胶囊。
+
+> 紧凑模式下的返回不能只靠 `compact` 驱动。那样按下去调用方的选中态没变，下一帧又把详情放回来——一个什么都不做的按钮。组件自己记住「按过返回」，下一次选中（标题变了）再清掉。
 
 ### `NavigationStack` / `useNavigationStack()`
 
@@ -171,13 +192,23 @@ import '@ttqtt/liquid-glass-react/styles.css';
 底层是原生 `input[type=range]`。旋钮**只在被拖动时**抬升为玻璃。
 
 ### `GlassStepper`
-`value` `min` `max` `step` `showValue` `decrementLabel` `incrementLabel` `aria-label`(必填)。仅用于很小的整数范围。
+`value` `min` `max` `step` `showValue` `decrementLabel` `incrementLabel` `shiftMultiplier`(10) `aria-label`(必填)。仅用于很小的整数范围。
+
+**按住会连续加减**：0.4 秒后每 90ms 一步，松手、指针取消、或到达上下限都会停。**Shift + 点击**走 `shiftMultiplier` 倍。没有这两样，从 1 到 40 只能点 40 次。
 
 ### `GlassProgress`
 `value`（省略即不确定）、`total`、`variant`(`bar`/`circular`)、`aria-label`(必填)。
 
 ### `GlassBadge`
-`count` `max`(99) `tone`(`notification`/`neutral`/`accent`) `dot` `aria-label`。没有内容时不渲染。
+`count` `max`(99) `tone`(`notification`/`neutral`/`accent`) `dot` `aria-label`。没有内容时不渲染。增强对比度下加一圈边框——白字压红色本身已经是 4.6:1 过 AA，这是一致性：其他表面在这个设置下都会长出边线。
+
+### `Kbd`
+见「内容层」一节。
+
+### `DisclosureGroup`
+`label`(必填) `secondaryLabel` `open`/`defaultOpen`/`onOpenChange`。底层是原生 `<details>`：页内查找命中折叠内容会自动展开，摘要对读屏就是带展开状态的按钮，回车空格本来就能用。内容层。
+
+高度动画在支持 `interpolate-size` 的浏览器上交给浏览器，否则量一次内容高度；减少动效下直接显示。
 
 ## 输入
 
@@ -209,6 +240,15 @@ import '@ttqtt/liquid-glass-react/styles.css';
 
 ### `GlassTabs`
 `items: GlassTab[]`（含 `content`）、`value`/`defaultValue`/`onValueChange`、`aria-label`(必填)。**页内**标签页，会换面板。
+
+### `PageControl`
+`count`(必填) `page`/`defaultPage`/`onPageChange` `aria-label`(必填) `formatPage` `orientation`。
+
+表示在一组**有顺序**的页面里的位置。没有顺序的一组目的地是 `TabBar`。是一个 tablist：整体一个 Tab 停靠点，方向键在内部移动，Home/End 跳两端；每个点是真按钮且有自己的名字（「3 / 6」）。**顺着它拖可以翻页**。
+
+超过 10 个点开发模式告警——数不过来的点不再表示位置。
+
+点画出来 7px，触摸时纵向（横排时）撑到 44。**不是四面都撑**：点间距 18px，四面各撑 44 会让相邻点的命中区互相覆盖，后面那个赢——实测「点第一个选中了第二个」。沿着排列方向它们是相邻目标，本来就共享中间那段。
 
 ### `ScrollEdge`
 `targetRef` `edge`(`top`/`bottom`) `variant`(`soft`/`hard`) `height`(44)。一个滚动视图只用一个。
@@ -264,6 +304,11 @@ import '@ttqtt/liquid-glass-react/styles.css';
 可拖动，松手弹簧停在最近停靠点；满高时变不透明并贴住边缘。只动 `transform`。
 
 **整块面板都是把手**，不只是顶部那条横条。判据是滚动位置而不是碰到了哪个元素：内容滚到顶时，往下拖是收起；往上拖只有在还有更高一档可长时才归面板，到了最高一档往上拖就是在读内容。横向拖动不接管。在方向定下来之前不 `preventDefault`、不捕获指针，所以面板里的按钮和输入框照常可用。
+
+### `ToastProvider` / `useToast`
+`ToastOptions`: `message`(必填) `action` `duration`(6000) `dismissLabel`。
+
+有**关闭按钮**，**Escape 关最新一条**。此前只能等六秒或者把指针放在上面悬停暂停，键盘用户两样都没有。Escape 不 `preventDefault`：浮层里的 Escape 属于浮层，浮层会先拦下它。
 
 ### `Tooltip`
 `content`(必填) `children`(必填，一个元素) `delay`(600) `placement`(`above`/`below`)。

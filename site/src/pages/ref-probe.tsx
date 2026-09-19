@@ -12,11 +12,11 @@
 import { Component, useEffect, useRef, useState, type ComponentProps, type ElementType, type ErrorInfo, type ReactNode } from 'react';
 import * as lib from '@ttqtt/liquid-glass-react';
 import {
-  Card, Concentric, Divider, Kbd, List, ListRow, ListSection, MaterialView, Text,
+  Card, Concentric, DisclosureGroup, Divider, Kbd, List, ListRow, ListSection, MaterialView, Text,
   GlassBackdrop, GlassBadge, GlassButton, GlassIconButton, GlassProgress, GlassSegmentedControl,
   GlassSlider, GlassStepper, GlassSwitch, GlassSurface, GlassGroup, LibraryIcon,
   SearchField, TextField,
-  NavigationBar, NavigationStack, Screen, ScrollEdge, Sidebar, TabBar, GlassTabs, GlassToolbar, ToolbarGroup, ToolbarSpacer,
+  Inspector, NavigationBar, NavigationStack, PageControl, Screen, ScrollEdge, Sidebar, SplitView, TabBar, GlassTabs, GlassToolbar, ToolbarGroup, ToolbarSpacer,
   GlassActionSheet, GlassAlert, GlassDialog, GlassMenu, GlassMenuButton, GlassMenuDescription, GlassPopover, GlassSheet, Tooltip,
 } from '@ttqtt/liquid-glass-react';
 
@@ -55,6 +55,7 @@ const entries: Array<[string, (p: Probe) => ReactNode]> = [
   ['MaterialView', p => <MaterialView {...p}>material</MaterialView>],
   ['Text', p => <Text {...p}>text</Text>],
   ['Kbd', p => <Kbd {...p} keys="⌘K" />],
+  ['DisclosureGroup', p => <DisclosureGroup {...p} label="disclosure">body</DisclosureGroup>],
 
   /* Controls */
   ['GlassBadge', p => <GlassBadge {...p} count={3} aria-label="3 unread" />],
@@ -78,6 +79,9 @@ const entries: Array<[string, (p: Probe) => ReactNode]> = [
      Screen would be a 100dvh box in the middle of the table. */
   ['Screen', p => <Screen {...p} scroll="page" top={<span>bar</span>}>content</Screen>],
   ['NavigationStack', p => <NavigationStack {...p} root={{ key: 'r', title: 'root', content: 'content' }} />],
+  ['PageControl', p => <PageControl {...p} aria-label="pages" count={3} />],
+  ['SplitView', p => <SplitView {...p} title="split" sidebar={<span>side</span>}>content</SplitView>],
+  ['Inspector', p => <Inspector {...p} title="inspector">body</Inspector>],
   ['Sidebar', p => <Sidebar {...p} aria-label="sidebar">side</Sidebar>],
   ['TabBar', p => <TabBar {...p} aria-label="tabs" current="a"
     items={[{ key: 'a', href: '#/_probe/refs', label: 'A' }, { key: 'b', href: '#/_probe/refs', label: 'B' }]} />],
@@ -132,6 +136,7 @@ const _contract = {
   MaterialView: null as unknown as Gap<typeof MaterialView>,
   Text: null as unknown as Gap<typeof Text>,
   Kbd: null as unknown as Gap<typeof Kbd>,
+  DisclosureGroup: null as unknown as Gap<typeof DisclosureGroup>,
   GlassBadge: null as unknown as Gap<typeof GlassBadge>,
   GlassButton: null as unknown as Gap<typeof GlassButton>,
   GlassIconButton: null as unknown as Gap<typeof GlassIconButton>,
@@ -146,6 +151,9 @@ const _contract = {
   ScrollEdge: null as unknown as Gap<typeof ScrollEdge>,
   Screen: null as unknown as Gap<typeof Screen>,
   NavigationStack: null as unknown as Gap<typeof NavigationStack>,
+  PageControl: null as unknown as Gap<typeof PageControl>,
+  SplitView: null as unknown as Gap<typeof SplitView>,
+  Inspector: null as unknown as Gap<typeof Inspector>,
   Sidebar: null as unknown as Gap<typeof Sidebar>,
   TabBar: null as unknown as Gap<typeof TabBar>,
   GlassTabs: null as unknown as Gap<typeof GlassTabs>,

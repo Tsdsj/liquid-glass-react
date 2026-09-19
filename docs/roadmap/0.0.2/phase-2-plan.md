@@ -46,9 +46,30 @@
 
 `Tooltip`、`Kbd`、L4 `NavigationStack` 一并落地。做 `NavigationStack` 的文档页时撞出一条既有缺陷：`NavigationBar` 写死 `h1`，所以一页里只能用一次，而两个 `h1` 会破坏读屏靠标题跳转。新增可选的 `headingLevel`。
 
+**已完成（第 4 周）**：P6、P8、P9（`polish.spec.ts`）；1.2 全部查完（`suspicions.spec.ts`）；`DisclosureGroup`、`PageControl`；L2 `SplitView` 与 L3 `Inspector`。
+
+第 4 周途中被自己的用例逮到两条：`PageControl` 的点四面都撑 44 会让相邻点的命中区互相覆盖，后面那个赢——「点第一个选中了第二个」；`SplitView` 紧凑模式的返回是个死按钮，因为栈完全由 `compact` 驱动，按下去调用方的选中态没变、下一帧又把详情放回来。都已修。
+
+矩阵规则也跟着放宽了一次：落在**邻居控件**上不算失手。代价写在用例里——一整排都太小的控件会自己豁免自己，所以这类控件另带自己的量测。
+
 第 2 周途中另发现两条，都已修：单选菜单打开时焦点落在第一项而不是**已选中**那一项（pop-up 按钮在每个 Apple 平台上都是后者）；`usePopover` 的首个可聚焦项只找 `[role="menuitem"]`，一个全是可勾选项的菜单会把焦点留在面板上。
 
-### 1.2 待复现的疑点（不排期，先写用例）
+### 1.2 疑点，已全部查完（2026-09-20，第 4 周）
+
+每条都写成「如果它真的存在，怎么量得出来」，见 `tests/browser/suspicions.spec.ts`。**六条里复现一条。**
+
+| 疑点 | 结论 |
+| --- | --- |
+| `TabBar` 在 1024 边界切换时透镜闪一帧 | **没复现**。逐帧采样 40 帧，透镜没有离开窗口 |
+| `GlassSlider` 在 RTL 下的填充与旋钮 | **没复现**，而且第一版用例自己错了：拿导轨当基准，漏算轨道 13px 内缩，报了个不存在的缺陷。改成「RTL 必须是 LTR 的镜像」——镜像对称不需要算术，也就不会算错 |
+| AX5 下 sheet 标题压到 grabber | **没复现**。标题上沿始终在手柄下沿之下 |
+| 主题切换瞬间玻璃闪白 | **没复现**。30 帧里没有一帧比两端更亮 |
+| 融合层在强制颜色下仍跑 rAF | **没复现**。融合层在强制颜色和增强对比度下都**不渲染**。第一版数的是 `usePull` 的按压形变循环，而那个本来就该跑——强制颜色说的是颜色，不是动效 |
+| 工具栏 roving focus 进不去分段控件 | **复现了**。按 8 次 → 全部落在按钮上，一次都没进去。修复改变既有键盘行为，归 [0.3.0](../0.3.0/plan.md)；用例断言的是**现在**的行为，等修好再反过来 |
+
+> 原表里写「把复现不出来的从表里删并写一句为什么」。没有删——删掉的话，下一个人会从同样的代码里读出同样的六条疑点，再查一遍。
+
+### 1.2 原始疑点表（保留，作为上面那张表的来源）
 
 | 疑点 | 为什么怀疑 | 怎么复现 |
 | --- | --- | --- |
@@ -202,7 +223,7 @@ HIG layout：「按尺寸类别决定布局，永远不按设备类型或方向�
 | **1 ✅** | P1 RTL 对齐、P2 disabled 行、P5 字符串表 | — | `useSizeClass` |
 | **2 ✅** | P3 sheet 整块可拖、P4 popover 箭头 + 手机变 sheet | `GlassMenuButton` | L1 `Screen`，站点改用它（ScrollEdge 那条已关闭） |
 | **3 ✅** | 矩阵用例落地（1.3），第一份 `reports/matrix.json`，抓到的三条已修 | `Tooltip`、`Kbd` | L4 `NavigationStack` |
-| 4 | P6 stepper、P8 toast、P9 badge；1.2 的六个疑点逐一复现 | `DisclosureGroup`、`PageControl` | L2 `SplitView`（含 L3 `Inspector`） |
+| **4 ✅** | P6 stepper、P8 toast、P9 badge；1.2 六个疑点查完（复现 1 条） | `DisclosureGroup`、`PageControl` | L2 `SplitView`（含 L3 `Inspector`） |
 | 5 | 1.5 的小 API；D7 属性表比对进 `build:site` | `ContextMenu` | L5 `Grid`、L6 `Form` |
 | 6 | D1 每页三示例、D3 属性面板、D8 折射开关、D5 搜索；全库 Apple-Style-Review 复审 | 第二批择前三个 | 布局容器的 AX5 / RTL 矩阵 |
 

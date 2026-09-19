@@ -8,17 +8,34 @@ import { readFileSync } from 'node:fs';
  */
 const css = readFileSync(new URL('../../src/styles/components.css', import.meta.url), 'utf8');
 
-/** Top-level rules only: anything already inside an at-rule block is its own context. */
+/**
+ * Top-level rules only: anything already inside an at-rule block is its own context.
+ *
+ * Counted per character rather than per line. The first version counted braces per line and
+ * so decided what was nested from how the file happened to be wrapped — a complete
+ * `@media (hover: hover) { … }` written on one line opened and closed within a line it had
+ * already emitted, and was reported as ungated. That is a false positive about formatting,
+ * which is the worst kind: the rule was right and the checker said it was wrong.
+ */
 function topLevelLines(source) {
-  const lines = source.split('\n');
-  const out = [];
-  let depth = 0;
-  for (const line of lines) {
-    if (depth === 0) out.push(line);
-    depth += (line.match(/\{/g) ?? []).length - (line.match(/\}/g) ?? []).length;
-    if (depth < 0) depth = 0;
+  /* Cut out every at-rule block, braces matched, however it is wrapped. What is left is the
+     top level, and it can then be read a line at a time without formatting mattering. */
+  let out = '';
+  for (let index = 0; index < source.length;) {
+    if (source[index] !== '@') { out += source[index++]; continue; }
+    const open = source.indexOf('{', index);
+    // An at-rule with no block — `@import`, `@charset` — is a statement, not a context.
+    if (open === -1 || source.slice(index, open).includes(';')) { out += source[index++]; continue; }
+    let depth = 0, cursor = open;
+    for (; cursor < source.length; cursor++) {
+      if (source[cursor] === '{') depth++;
+      else if (source[cursor] === '}' && --depth === 0) { cursor++; break; }
+    }
+    // Keep the newlines so reported line numbers still mean something.
+    out += source.slice(index, cursor).replace(/[^\n]/g, '');
+    index = cursor;
   }
-  return out;
+  return out.split('\n');
 }
 
 test('every hover rule is gated on a pointer that can hover', () => {

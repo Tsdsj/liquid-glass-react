@@ -2,7 +2,9 @@
 import { createContext, useCallback, useContext, useEffect, useRef, useState, type ReactNode } from 'react';
 import { useGlassSurface } from '../system/material.js';
 import { SharedSurface } from '../system/surface.js';
-import { GlassButton } from '../controls/button.js';
+import { GlassButton, GlassIconButton } from '../controls/button.js';
+import { LibraryIcon } from '../system/icon.js';
+import { useGlassStrings } from '../system/strings.js';
 import { cx } from '../system/utils.js';
 
 export interface ToastOptions {
@@ -11,10 +13,17 @@ export interface ToastOptions {
   action?: { label: string; onSelect: () => void };
   /** Milliseconds on screen. Undo needs long enough to read and reach — five seconds or more. */
   duration?: number;
+  /**
+   * The close button's name. Defaults to the provider's `close`. Set it to `null` only for a
+   * toast that genuinely must not be dismissed — which is almost never, because a message
+   * that cannot be got rid of is one that sits over the thing it is talking about.
+   */
+  dismissLabel?: string | null;
 }
 interface ToastRecord extends Required<Pick<ToastOptions, 'message' | 'duration'>> {
   id: number;
   action?: ToastOptions['action'];
+  dismissLabel?: string | null;
 }
 
 const ToastContext = createContext<((options: ToastOptions) => void) | null>(null);
@@ -41,8 +50,29 @@ export function ToastProvider({ children, limit = 3 }: ToastProviderProps) {
   const [toasts, setToasts] = useState<ToastRecord[]>([]);
   const nextId = useRef(0);
   const dismiss = useCallback((id: number) => setToasts(list => list.filter(toast => toast.id !== id)), []);
+
+  /**
+   * Escape closes the newest one.
+   *
+   * A toast is not modal and takes no focus, so there is nothing for a key handler to hang
+   * off — it has to listen at the window while any toast is on screen. Newest first, because
+   * that is the one that just appeared over whatever the user was reading.
+   *
+   * It does not `preventDefault`: a toast is the least important thing on screen, and Escape
+   * inside an open dialog belongs to the dialog. The dialog stops the event before it gets
+   * here; if nothing does, this is the only thing Escape had to close anyway.
+   */
+  useEffect(() => {
+    if (!toasts.length) return;
+    const onKey = (event: KeyboardEvent) => {
+      if (event.key !== 'Escape' || event.defaultPrevented) return;
+      setToasts(list => list.slice(0, -1));
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [toasts.length]);
   const show = useCallback((options: ToastOptions) => {
-    const record: ToastRecord = { id: nextId.current++, message: options.message, duration: options.duration ?? 6000, action: options.action };
+    const record: ToastRecord = { id: nextId.current++, message: options.message, duration: options.duration ?? 6000, action: options.action, dismissLabel: options.dismissLabel };
     setToasts(list => [...list, record].slice(-limit));
   }, [limit]);
   return <ToastContext.Provider value={show}>
@@ -55,6 +85,7 @@ export function ToastProvider({ children, limit = 3 }: ToastProviderProps) {
 }
 
 function Toast({ toast, onDismiss }: { toast: ToastRecord; onDismiss: () => void }) {
+  const strings = useGlassStrings();
   const glass = useGlassSurface<HTMLDivElement>({ material: 'regular', size: 'large', radius: 'pill' });
   const [paused, setPaused] = useState(false);
   const dismissRef = useRef(onDismiss); dismissRef.current = onDismiss;
@@ -72,6 +103,12 @@ function Toast({ toast, onDismiss }: { toast: ToastRecord; onDismiss: () => void
       <span className="lg-toast-message">{toast.message}</span>
       {toast.action && <GlassButton className="lg-toast-action" controlSize="small"
         onClick={() => { toast.action!.onSelect(); onDismiss(); }}>{toast.action.label}</GlassButton>}
+      {/* Waiting six seconds is not a way to dismiss something, and hovering to pause it is
+          not available to a keyboard user at all. */}
+      {toast.dismissLabel !== null && <GlassIconButton className="lg-toast-dismiss" variant="plain"
+        controlSize="small" aria-label={toast.dismissLabel ?? strings.close} onClick={onDismiss}>
+        <LibraryIcon name="close" size={15} />
+      </GlassIconButton>}
     </SharedSurface></div>
   </div>;
 }

@@ -281,14 +281,50 @@ export const controlDocs: ComponentDoc[] = [
         code: `<GlassStepper aria-label="份数"
   value={count} onValueChange={setCount} min={1} max={9} />`,
       },
+      {
+        id: 'stepper-wide', title: '范围大的时候', description: '按住不放会连续加减；按住 Shift 点一下走 10 步。范围再大就该换成滑块或输入框了。',
+        height: 190,
+        render: function StepperWide() {
+          const [minutes, setMinutes] = useState(30);
+          return <div style={{ display: 'grid', gap: 12, justifyItems: 'center' }}>
+            <GlassStepper aria-label="时长（分钟）" value={minutes} onValueChange={setMinutes}
+              min={0} max={240} step={1} />
+            <Text variant="caption1" tone="secondary">按住试试；Shift + 点击走 10 分钟</Text>
+          </div>;
+        },
+        code: `<GlassStepper aria-label="时长（分钟）"
+  value={minutes} onValueChange={setMinutes}
+  min={0} max={240} shiftMultiplier={10} />`,
+      },
+      {
+        id: 'stepper-disabled', title: '不可用与不显示值', description: '值已经在旁边显示时，关掉 showValue，别让同一个数出现两次。',
+        height: 190,
+        render: function StepperStates() {
+          const [copies, setCopies] = useState(3);
+          return <div style={{ display: 'grid', gap: 16, justifyItems: 'center' }}>
+            <div style={{ display: 'flex', gap: 12, alignItems: 'center' }}>
+              <Text variant="body">份数 {copies}</Text>
+              <GlassStepper aria-label="份数" value={copies} onValueChange={setCopies} min={1} max={20} showValue={false} />
+            </div>
+            <GlassStepper aria-label="暂不可用" defaultValue={1} min={1} max={5} disabled />
+          </div>;
+        },
+        code: `<GlassStepper aria-label="份数" value={copies} onValueChange={setCopies} showValue={false} />
+<GlassStepper aria-label="暂不可用" disabled />`,
+      },
     ],
     props: [
       { name: 'value / defaultValue', type: 'number', default: '0', description: '当前值。' },
       { name: 'min / max / step', type: 'number', default: '-∞ / ∞ / 1', description: '范围与步长。' },
+      { name: 'shiftMultiplier', type: 'number', default: '10', description: '按住 Shift 时一步走几倍。范围只有几个值时设成 1 关掉。' },
       { name: 'showValue', type: 'boolean', default: 'true', description: '值已经在旁边显示时可以关掉。' },
       { name: 'decrementLabel / incrementLabel', type: 'string', description: '两个按钮各自的名字。不传就用 GlassProvider 的 strings 表。' },
     ],
-    notes: ['是两个有名字的按钮，不是一个需要键盘调节的数字框。', '两个按钮各自都满足 44×44 的点击范围。'],
+    notes: [
+      '是两个有名字的按钮，不是一个需要键盘调节的数字框。',
+      '两个按钮各自都满足 44×44 的点击范围。',
+      '按住 0.4 秒后开始连续加减，松手、指针取消、或者到达上下限都会停——一直撞着上限跑的定时器是没人看得见的浪费。',
+    ],
     related: ['slider', 'list'],
   },
   {

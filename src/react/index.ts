@@ -12,6 +12,7 @@ export { LibraryIcon, type LibraryIconProps, type LibraryIconName } from './syst
 /* Content layer — solid surfaces and standard materials, never Liquid Glass. */
 export * from './content/text.js';
 export * from './content/kbd.js';
+export * from './content/disclosure.js';
 export * from './content/card.js';
 export * from './content/list.js';
 export * from './content/material-view.js';
@@ -40,10 +41,12 @@ export * from './navigation/sidebar.js';
 export * from './navigation/nav-bar.js';
 export * from './navigation/tabs.js';
 export * from './navigation/scroll-edge.js';
+export * from './navigation/page-control.js';
 
 /* Layout containers: the skeleton the bars and the content are arranged in. */
 export * from './layout/screen.js';
 export * from './layout/navigation-stack.js';
+export * from './layout/split-view.js';
 
 /* Overlays.
    Only the shared prop shapes are public. `triggerElement`, `usePopover` and `lockScroll` are how

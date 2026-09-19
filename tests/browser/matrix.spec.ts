@@ -163,12 +163,33 @@ async function audit(page: Page): Promise<Finding[]> {
       const corners = ([[-reach, -reach], [reach, -reach], [-reach, reach], [reach, reach]] as const)
         .map(([dx, dy]) => [x + dx, y + dy] as const)
         .filter(([px, py]) => px >= 0 && py >= 0 && px <= innerWidth && py <= innerHeight);
+      /**
+       * A corner that lands on a **neighbouring control** is not a miss. Controls in a row are
+       * adjacent targets and share the space between them — a page control's dots are 18px
+       * apart, and asking each one to own 44px in every direction would make a four-page
+       * control 176px wide and still not fix anything, because they would overlap each other
+       * instead. If a finger slips onto the next dot it hits the next dot, which is what a row
+       * of things does.
+       *
+       * The failure this is looking for is a control nobody can hit *at all*, because the
+       * space around it belongs to a background, a container, or a bar floating over it.
+       *
+       * The limit, stated rather than pretended away: a **row of controls that are all too
+       * small** excuses itself, because each one's neighbours are interactive. Whether a row
+       * is acceptably dense is a judgement about the control — the system's own page control
+       * has 7px dots 18px apart — and a sweep cannot make it. Controls like that carry their
+       * own measurement instead; `page-control.spec.ts` checks the band each dot owns.
+       * Verified that this still fires: removing `.lg-button::after`, the hit region every
+       * button relies on, produces 34 findings.
+       */
       const misses = corners.filter(([px, py]) => {
         const hit = document.elementFromPoint(px, py);
-        return !hit || !(hit === node || node.contains(hit) || hit.contains(node));
+        if (!hit) return false;
+        if (hit === node || node.contains(hit) || hit.contains(node)) return false;
+        return !hit.closest('button, a[href], input, select, textarea, [role="button"], [role="tab"], [role="switch"], [role="slider"], [role="menuitem"], [role="menuitemradio"], [role="menuitemcheckbox"]');
       });
       if (misses.length) {
-        add('hit-target', `${Math.round(box.width)}×${Math.round(box.height)}, ${misses.length}/${corners.length} corners of a 42px touch miss — ${where(node)}`);
+        add('hit-target', `${Math.round(box.width)}×${Math.round(box.height)}, ${misses.length}/${corners.length} corners of a 42px touch land on nothing interactive — ${where(node)}`);
       }
     }
     for (const node of interactive) {

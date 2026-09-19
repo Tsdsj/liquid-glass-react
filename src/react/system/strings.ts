@@ -32,6 +32,8 @@ export interface GlassStrings {
    * the title alone does not say which way it goes.
    */
   back: string;
+  /** The draggable divider between a split view's sidebar and its content. */
+  resizeSidebar: string;
   /**
    * The sheet's drag handle, which is a slider over the detents. Takes the sheet's own title so
    * the label says which sheet it resizes when more than one has been open.
@@ -46,6 +48,7 @@ export const defaultStrings: GlassStrings = {
   increase: 'Increase',
   clearSearch: 'Clear search',
   back: 'Back to',
+  resizeSidebar: 'Resize sidebar',
   sheetHeight: title => `${title} height`,
 };
 

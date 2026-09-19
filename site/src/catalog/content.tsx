@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import {
-  Card, Concentric, Divider, GlassSwitch, Kbd, LibraryIcon, List, ListRow, ListSection, MaterialView, Text,
+  Card, Concentric, DisclosureGroup, Divider, GlassSwitch, Kbd, LibraryIcon, List, ListRow, ListSection, MaterialView, Text,
 } from '@ttqtt/liquid-glass-react';
 import type { ComponentDoc } from './types.js';
 
@@ -265,6 +265,84 @@ export const contentDocs: ComponentDoc[] = [
       '修饰键顺序由组件决定，不由传入顺序决定。',
     ],
     related: ['text', 'menu'],
+  },
+  {
+    slug: 'disclosure', name: 'DisclosureGroup', title: '折叠区', group: '内容',
+    summary: '一行可以展开的内容。用的是原生 details。',
+    when: [
+      '把不常用的东西收起来：高级选项、详细说明、不影响主流程的设置。',
+      '标签要说清楚**藏的是什么**：「高级选项」，不是「更多」。标签是唯一的判断依据。',
+      '最常用的那一项放在折叠区**外面**、展开着。放进去，等于让所有人都多点一次。',
+      '不要用它做导航。点进去会换页的是列表行，不是折叠区。',
+    ],
+    examples: [
+      {
+        id: 'disclosure-basic', title: '基础用法', description: '标签说明里面是什么；箭头跟着转。浏览器的页内查找命中折叠内容时会自动展开它。',
+        height: 250,
+        render: function DisclosureBasic() {
+          return <div id="disclosure-basic-demo" style={{ display: 'grid', gap: 10, width: 360 }}>
+            <DisclosureGroup label="高级选项" secondaryLabel="代理、缓存与实验性功能">
+              <Text variant="subhead" tone="secondary">这里放平时不需要动的设置。</Text>
+            </DisclosureGroup>
+            <DisclosureGroup label="为什么需要这个权限" defaultOpen>
+              <Text variant="subhead" tone="secondary">默认展开——最需要被读到的那一段不该藏起来。</Text>
+            </DisclosureGroup>
+          </div>;
+        },
+        code: `<DisclosureGroup label="高级选项" secondaryLabel="代理、缓存与实验性功能">
+  <Text variant="subhead">这里放平时不需要动的设置。</Text>
+</DisclosureGroup>`,
+      },
+      {
+        id: 'disclosure-controlled', title: '自己控制开合', description: '传 open 就由你说了算；同一时刻只留一个展开，就是手风琴。',
+        height: 270,
+        render: function DisclosureControlled() {
+          const [open, setOpen] = useState<string | null>('a');
+          const item = (key: string, label: string, body: string) => <DisclosureGroup key={key}
+            label={label} open={open === key} onOpenChange={next => setOpen(next ? key : null)}>
+            <Text variant="subhead" tone="secondary">{body}</Text>
+          </DisclosureGroup>;
+          return <div style={{ display: 'grid', gap: 10, width: 360 }}>
+            {item('a', '第一节', '展开一个就会收起另一个。')}
+            {item('b', '第二节', '这是手风琴，不是组件的一个模式——由你的状态决定。')}
+            {item('c', '第三节', '组件本身不知道彼此存在。')}
+          </div>;
+        },
+        code: `const [open, setOpen] = useState<string | null>('a');
+
+<DisclosureGroup label="第一节"
+  open={open === 'a'}
+  onOpenChange={next => setOpen(next ? 'a' : null)}>…</DisclosureGroup>`,
+      },
+      {
+        id: 'disclosure-in-list', title: '放在设置里', description: '和列表排在一起时，最常用的行在上面，折叠区在下面。',
+        height: 300,
+        render: function DisclosureInList() {
+          return <div style={{ display: 'grid', gap: 16, width: 360 }}>
+            <List>
+              <ListSection header="网络">
+                <ListRow label="自动连接" value="开" onSelect={() => {}} />
+              </ListSection>
+            </List>
+            <DisclosureGroup label="高级网络设置" secondaryLabel="DNS、代理、MTU">
+              <Text variant="subhead" tone="secondary">改这些之前最好知道自己在做什么。</Text>
+            </DisclosureGroup>
+          </div>;
+        },
+        code: `<List>…最常用的行…</List>
+<DisclosureGroup label="高级网络设置">…</DisclosureGroup>`,
+      },
+    ],
+    props: [
+      { name: 'label', type: 'ReactNode', required: true, description: '藏的是什么。要说得出具体内容。' },
+      { name: 'secondaryLabel', type: 'ReactNode', description: '第二行补充。' },
+      { name: 'open / defaultOpen / onOpenChange', type: 'boolean / (open) => void', description: '自己控制，或交给组件。' },
+    ],
+    notes: [
+      '底层是原生 `<details>`：浏览器的页内查找命中里面的文字会自动展开它，摘要本身对读屏就是一个带展开状态的按钮，回车和空格本来就能用。用 div 加 onClick 重做一遍，会把第一条悄悄丢掉。',
+      '高度动画在支持 `interpolate-size` 的浏览器上交给浏览器，否则量一次内容高度。开启「减少动效」后直接显示。',
+    ],
+    related: ['list', 'card', 'text'],
   },
   {
     slug: 'material-view', name: 'MaterialView', title: '标准材质', group: '内容',
