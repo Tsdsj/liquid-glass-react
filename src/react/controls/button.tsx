@@ -1,5 +1,5 @@
 'use client';
-import { useEffect, type ButtonHTMLAttributes, type RefAttributes } from 'react';
+import { useEffect, type ButtonHTMLAttributes, type CSSProperties, type ReactNode, type RefAttributes } from 'react';
 import { useGlassSurface, type GlassSurfaceOptions } from '../system/material.js';
 import { useSharedSurface } from '../system/surface.js';
 import { inDevelopment, warnOnce } from '../system/warn.js';
@@ -24,6 +24,40 @@ export interface GlassButtonProps extends ButtonHTMLAttributes<HTMLButtonElement
   loading?: boolean;
   /** Keep this button's own glass even inside a shared surface. Use sparingly — it is glass on glass. */
   independent?: boolean;
+  /**
+   * Leading glyph. A slot rather than a child, so the gap between the icon and the words is
+   * the same on every button instead of whatever each caller typed between them.
+   */
+  icon?: ReactNode;
+  /** Trailing glyph — a chevron, a disclosure. */
+  trailingIcon?: ReactNode;
+  /**
+   * This button's accent, overriding `--lg-accent` for it alone. One screen can carry
+   * differently-toned actions — a green Confirm beside a blue Continue.
+   *
+   * Any CSS colour. It is not enough on its own: a tint needs a label colour that reads on
+   * it, which cannot be derived, so `tintContrast` is the other half and development mode
+   * measures the pair and complains if it falls under 4.5:1.
+   */
+  tint?: string;
+  /** The label colour on `tint`. White by default, which is right for most saturated tints. */
+  tintContrast?: string;
+}
+
+/** Relative luminance, for the development-mode check on a caller's tint. */
+function luminance(colour: string): number | null {
+  if (typeof document === 'undefined') return null;
+  const probe = document.createElement('span');
+  probe.style.color = colour;
+  document.body.appendChild(probe);
+  const parsed = getComputedStyle(probe).color.match(/[\d.]+/g);
+  probe.remove();
+  if (!parsed || parsed.length < 3) return null;
+  const [r, g, b] = parsed.slice(0, 3).map(Number).map(channel => {
+    const value = channel / 255;
+    return value <= 0.03928 ? value / 12.92 : ((value + 0.055) / 1.055) ** 2.4;
+  });
+  return 0.2126 * r + 0.7152 * g + 0.0722 * b;
 }
 
 const GLASSY = new Set<GlassButtonVariant>(['glass', 'glassProminent']);
@@ -31,7 +65,7 @@ const GLASSY = new Set<GlassButtonVariant>(['glass', 'glassProminent']);
 export function GlassButton(
   { material, backdropTone, density, renderer, radius = 'pill', refraction, size, chroma,
     className, style, children, variant = 'glass', controlSize = 'regular', loading = false, disabled,
-    independent = false, type = 'button', ref, ...props }: GlassButtonProps,
+    independent = false, icon, trailingIcon, tint, tintContrast, type = 'button', ref, ...props }: GlassButtonProps,
 ) {
   const shared = useSharedSurface();
   // Flat variants never grow their own glass, and inside a shared surface neither does anything
@@ -54,10 +88,38 @@ export function GlassButton(
       warnOnce(surface, 'two-prominent', 'two glassProminent buttons share one surface. A view has at most one preferred action; the rest stay regular, or the emphasis stops meaning anything.');
     }
   }, [glass.root, variant, children]);
+
+  /**
+   * A tint the caller chose, checked rather than trusted. The library cannot pick a readable
+   * label colour — that is why there is no global `accent` prop — but it can measure the pair
+   * the caller did pick and say so when the result is unreadable.
+   */
+  useEffect(() => {
+    if (!inDevelopment() || !tint) return;
+    const node = glass.root.current; if (!node) return;
+    const background = luminance(tint), foreground = luminance(tintContrast ?? '#fff');
+    if (background === null || foreground === null) return;
+    const ratio = (Math.max(background, foreground) + 0.05) / (Math.min(background, foreground) + 0.05);
+    if (ratio < 4.5) {
+      warnOnce(node, 'tint-contrast',
+        `tint ${tint} against ${tintContrast ?? '#fff'} measures ${ratio.toFixed(2)}:1, under the 4.5:1 floor. Pass tintContrast, or darken the tint.`);
+    }
+  }, [glass.root, tint, tintContrast]);
+
+  const tinted = tint
+    ? { '--lg-accent': tint, '--lg-accent-contrast': tintContrast ?? '#fff' } as CSSProperties
+    : undefined;
+
   return <button {...props} ref={glass.ref} type={type} disabled={disabled || loading} aria-busy={loading || undefined}
     {...glass.attributes} data-variant={variant} data-control-size={controlSize}
-    className={cx('lg-root lg-button', className)} style={{ ...glass.style, ...style }}>
-    {glass.decoration}<span className="lg-content">{loading && <span className="lg-spinner" aria-hidden="true" />}{children}</span>
+    className={cx('lg-root lg-button', className)} style={{ ...glass.style, ...tinted, ...style }}>
+    {glass.decoration}<span className="lg-content">
+      {loading && <span className="lg-spinner" aria-hidden="true" />}
+      {/* Decoration: an icon beside a label says nothing the label does not already say. */}
+      {icon && <span className="lg-button-icon" aria-hidden="true">{icon}</span>}
+      {children}
+      {trailingIcon && <span className="lg-button-icon" data-edge="trailing" aria-hidden="true">{trailingIcon}</span>}
+    </span>
   </button>;
 }
 

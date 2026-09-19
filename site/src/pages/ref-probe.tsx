@@ -12,12 +12,13 @@
 import { Component, useEffect, useRef, useState, type ComponentProps, type ElementType, type ErrorInfo, type ReactNode } from 'react';
 import * as lib from '@ttqtt/liquid-glass-react';
 import {
-  Card, Concentric, DisclosureGroup, Divider, Kbd, List, ListRow, ListSection, MaterialView, Text,
+  Card, Concentric, DisclosureGroup, Divider, Form, FormRow, FormSection, Grid, Kbd,
+  List, ListRow, ListSection, MaterialView, Text,
   GlassBackdrop, GlassBadge, GlassButton, GlassIconButton, GlassProgress, GlassSegmentedControl,
   GlassSlider, GlassStepper, GlassSwitch, GlassSurface, GlassGroup, LibraryIcon,
   SearchField, TextField,
   Inspector, NavigationBar, NavigationStack, PageControl, Screen, ScrollEdge, Sidebar, SplitView, TabBar, GlassTabs, GlassToolbar, ToolbarGroup, ToolbarSpacer,
-  GlassActionSheet, GlassAlert, GlassDialog, GlassMenu, GlassMenuButton, GlassMenuDescription, GlassPopover, GlassSheet, Tooltip,
+  GlassActionSheet, GlassAlert, GlassDialog, GlassMenu, GlassMenuButton, GlassMenuDescription, GlassPopover, GlassSheet, ContextMenu, Tooltip,
 } from '@ttqtt/liquid-glass-react';
 
 /**
@@ -56,6 +57,10 @@ const entries: Array<[string, (p: Probe) => ReactNode]> = [
   ['Text', p => <Text {...p}>text</Text>],
   ['Kbd', p => <Kbd {...p} keys="⌘K" />],
   ['DisclosureGroup', p => <DisclosureGroup {...p} label="disclosure">body</DisclosureGroup>],
+  ['Grid', p => <Grid {...p}><span>item</span></Grid>],
+  ['Form', p => <Form {...p}><FormSection><FormRow label="row"><input aria-label="row" /></FormRow></FormSection></Form>],
+  ['FormSection', p => <FormSection {...p} header="section"><FormRow label="row"><input aria-label="row" /></FormRow></FormSection>],
+  ['FormRow', p => <FormRow {...p} label="row"><input aria-label="row" /></FormRow>],
 
   /* Controls */
   ['GlassBadge', p => <GlassBadge {...p} count={3} aria-label="3 unread" />],
@@ -103,6 +108,9 @@ const entries: Array<[string, (p: Probe) => ReactNode]> = [
   /* The ref lands on the tooltip panel. Rendered only where there is a hover, so the probe
      reports it as absent on a touch device — which is the component working as documented. */
   ['Tooltip', p => <Tooltip {...p} content="tip"><button type="button">anchor</button></Tooltip>],
+  ['ContextMenu', p => <ContextMenu {...p} aria-label="context" items={[{ key: 'a', label: 'A', onSelect: () => {} }]}>
+    <span>target</span>
+  </ContextMenu>],
   ['GlassSheet', p => <GlassSheet {...p} title="sheet">body</GlassSheet>],
 
   /* System */
@@ -137,6 +145,10 @@ const _contract = {
   Text: null as unknown as Gap<typeof Text>,
   Kbd: null as unknown as Gap<typeof Kbd>,
   DisclosureGroup: null as unknown as Gap<typeof DisclosureGroup>,
+  Grid: null as unknown as Gap<typeof Grid>,
+  Form: null as unknown as Gap<typeof Form>,
+  FormSection: null as unknown as Gap<typeof FormSection>,
+  FormRow: null as unknown as Gap<typeof FormRow>,
   GlassBadge: null as unknown as Gap<typeof GlassBadge>,
   GlassButton: null as unknown as Gap<typeof GlassButton>,
   GlassIconButton: null as unknown as Gap<typeof GlassIconButton>,
@@ -168,6 +180,7 @@ const _contract = {
   GlassMenuDescription: null as unknown as Gap<typeof GlassMenuDescription>,
   GlassPopover: null as unknown as Gap<typeof GlassPopover>,
   Tooltip: null as unknown as Gap<typeof Tooltip>,
+  ContextMenu: null as unknown as Gap<typeof ContextMenu>,
   GlassSheet: null as unknown as Gap<typeof GlassSheet>,
   GlassBackdrop: null as unknown as Gap<typeof GlassBackdrop>,
   GlassSurface: null as unknown as Gap<typeof GlassSurface>,

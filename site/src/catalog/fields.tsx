@@ -50,11 +50,38 @@ export const fieldDocs: ComponentDoc[] = [
 {/* 标签视觉上隐藏，但读屏和语音控制仍然能用 */}
 <TextField label="搜索词" labelHidden placeholder="搜索" />`,
       },
+      {
+        id: 'field-multiline', title: '多行', description: '真正的 textarea：回车换行、浏览器自带的拉伸把手、拼写检查和语音输入都和别处一样。rows="auto" 会跟着内容长。',
+        height: 300,
+        render: function FieldMultiline() {
+          const [note, setNote] = useState('');
+          return <div id="field-multiline-demo" style={{ display: 'grid', gap: 16, width: 340 }}>
+            <TextField multiline label="备注" rows={3} placeholder="想说点什么"
+              value={note} onChange={event => setNote(event.currentTarget.value)} />
+            <TextField multiline rows="auto" label="自动长高" placeholder="多打几行试试" />
+          </div>;
+        },
+        code: `<TextField multiline label="备注" rows={3} value={note} onChange={…} />
+<TextField multiline rows="auto" label="自动长高" />`,
+      },
+      {
+        id: 'field-sizes', title: '尺寸', description: '变矮的是控件，不是文字——低于 16px 会让 iOS Safari 在聚焦时把整页放大。',
+        height: 280,
+        render: () => <div id="field-sizes-demo" style={{ display: 'grid', gap: 12, width: 340 }}>
+          <TextField controlSize="small" label="小" placeholder="36px" />
+          <TextField label="标准" placeholder="44px" />
+          <TextField controlSize="large" label="大" placeholder="52px" />
+        </div>,
+        code: `<TextField controlSize="small" label="小" />`,
+      },
     ],
     props: [
       { name: 'label', type: 'ReactNode', required: true, description: '可见标签，和输入框正式绑定。' },
       { name: 'hint', type: 'ReactNode', description: '下方的补充说明，会随输入框一起被读出来。' },
       { name: 'error', type: 'ReactNode', description: '有值就表示这个字段出错了，同时会告诉读屏。' },
+      { name: 'multiline', type: 'boolean', default: 'false', description: '渲染成 textarea。ref 随之指向 textarea——这是一个可辨识联合，不传时单行那一套完全不变。' },
+      { name: 'rows', type: "number | 'auto'", default: '4', description: 'multiline 专用。auto 跟着内容长。' },
+      { name: 'controlSize', type: "'small' | 'regular' | 'large'", default: "'regular'", description: '控件高度。文字大小不变。' },
       { name: 'labelHidden', type: 'boolean', default: 'false', description: '视觉上隐藏标签，但保留给读屏和语音控制。' },
       { name: 'leading / trailing', type: 'ReactNode', description: '框内前后的附加内容。' },
     ],
@@ -96,12 +123,39 @@ export const fieldDocs: ComponentDoc[] = [
   onSubmitQuery={runSearch}
 />`,
       },
+      {
+        id: 'search-suggestions', title: '搜索建议', description: '传了 suggestions 之后它就是一个 combobox：上下键在列表里走，回车选中，Escape 只关列表不清空输入框。**筛选永远是你的**——只有应用知道自己的数据里「匹配」是什么意思。',
+        height: 300,
+        render: function SearchSuggestions() {
+          const all = ['按钮 GlassButton', '徽标 GlassBadge', '开关 GlassSwitch', '滑块 GlassSlider', '搜索框 SearchField'];
+          const [query, setQuery] = useState('');
+          const [picked, setPicked] = useState('还没选');
+          const matches = query.trim() === '' ? [] : all.filter(item => item.toLowerCase().includes(query.toLowerCase()));
+          return <div id="search-suggestions-demo" style={{ display: 'grid', gap: 12, width: 320 }}>
+            <SearchField aria-label="搜索组件" placeholder="输入 g 试试" value={query} onValueChange={setQuery}
+              suggestions={matches.map(item => ({ value: item }))}
+              onSuggestionSelect={suggestion => setPicked(suggestion.value)} />
+            <Text variant="caption1" tone="secondary" role="status">选了：{picked}</Text>
+          </div>;
+        },
+        code: `const matches = all.filter(item => item.includes(query));
+
+<SearchField
+  aria-label="搜索组件"
+  value={query}
+  onValueChange={setQuery}
+  suggestions={matches.map(value => ({ value }))}
+  onSuggestionSelect={s => go(s.value)}
+/>`,
+      },
     ],
     props: [
       { name: 'value / defaultValue', type: 'string', description: '当前的搜索词。' },
       { name: 'onValueChange', type: '(value: string) => void', description: '每次输入变化。' },
       { name: 'onSubmitQuery', type: '(value: string) => void', description: '按回车时触发。' },
       { name: 'clearLabel', type: 'string', description: '清除按钮的名字。不传就用 GlassProvider 的 strings 表，再没有就是英文 “Clear search”。' },
+      { name: 'suggestions', type: 'SearchSuggestion[]', description: '建议列表（{ value, label?, icon? }）。传了就变成 combobox。筛选是调用方的事。' },
+      { name: 'onSuggestionSelect', type: '(suggestion) => void', description: '选中了某条建议。' },
       { name: 'aria-label', type: 'string', required: true, description: '这个搜索框在搜什么。' },
     ],
     notes: [

@@ -3,12 +3,25 @@ import { createContext, useCallback, useContext, useEffect, useRef, useState, ty
 import { useGlassSurface } from '../system/material.js';
 import { SharedSurface } from '../system/surface.js';
 import { GlassButton, GlassIconButton } from '../controls/button.js';
-import { LibraryIcon } from '../system/icon.js';
+import { LibraryIcon, type LibraryIconName } from '../system/icon.js';
 import { useGlassStrings } from '../system/strings.js';
 import { cx } from '../system/utils.js';
 
+/**
+ * What a toast is reporting. `neutral` is the default and is right for almost everything —
+ * "Deleted", "Copied". A tone is not decoration: use it only where the outcome itself is the
+ * message, and never as the only carrier of it, which is why each tone also has a glyph.
+ */
+export type ToastTone = 'neutral' | 'success' | 'warning' | 'error';
+
 export interface ToastOptions {
   message: string;
+  tone?: ToastTone;
+  /**
+   * A glyph before the message. Defaults to the tone's own, which is what keeps the tone from
+   * being colour alone; pass `null` for none.
+   */
+  icon?: ReactNode | null;
   /** The undo affordance. This is what lets a reversible action skip the confirmation dialog. */
   action?: { label: string; onSelect: () => void };
   /** Milliseconds on screen. Undo needs long enough to read and reach — five seconds or more. */
@@ -24,7 +37,14 @@ interface ToastRecord extends Required<Pick<ToastOptions, 'message' | 'duration'
   id: number;
   action?: ToastOptions['action'];
   dismissLabel?: string | null;
+  tone: ToastTone;
+  icon?: ReactNode | null;
 }
+
+/** The glyph each tone carries, so the tone is never only a colour. */
+const TONE_ICON: Record<ToastTone, LibraryIconName | null> = {
+  neutral: null, success: 'checkmark', warning: 'minus', error: 'close',
+};
 
 const ToastContext = createContext<((options: ToastOptions) => void) | null>(null);
 
@@ -72,7 +92,7 @@ export function ToastProvider({ children, limit = 3 }: ToastProviderProps) {
     return () => window.removeEventListener('keydown', onKey);
   }, [toasts.length]);
   const show = useCallback((options: ToastOptions) => {
-    const record: ToastRecord = { id: nextId.current++, message: options.message, duration: options.duration ?? 6000, action: options.action, dismissLabel: options.dismissLabel };
+    const record: ToastRecord = { id: nextId.current++, message: options.message, duration: options.duration ?? 6000, action: options.action, dismissLabel: options.dismissLabel, tone: options.tone ?? 'neutral', icon: options.icon };
     setToasts(list => [...list, record].slice(-limit));
   }, [limit]);
   return <ToastContext.Provider value={show}>
@@ -94,12 +114,15 @@ function Toast({ toast, onDismiss }: { toast: ToastRecord; onDismiss: () => void
     const timer = setTimeout(() => dismissRef.current(), toast.duration);
     return () => clearTimeout(timer);
   }, [paused, toast.duration]);
-  return <div ref={glass.ref} {...glass.attributes} className={cx('lg-root lg-toast')} style={glass.style}
+  const glyph = toast.icon === null ? null
+    : toast.icon ?? (TONE_ICON[toast.tone] && <LibraryIcon name={TONE_ICON[toast.tone]!} size={16} />);
+  return <div ref={glass.ref} {...glass.attributes} className={cx('lg-root lg-toast')} data-tone={toast.tone} style={glass.style}
     // Hovering or focusing holds the toast so the undo window is not lost while reaching for it.
     onPointerEnter={() => setPaused(true)} onPointerLeave={() => setPaused(false)}
     onFocusCapture={() => setPaused(true)} onBlurCapture={() => setPaused(false)}>
     {glass.decoration}
     <div className="lg-content"><SharedSurface value={true}>
+      {glyph && <span className="lg-toast-icon" aria-hidden="true">{glyph}</span>}
       <span className="lg-toast-message">{toast.message}</span>
       {toast.action && <GlassButton className="lg-toast-action" controlSize="small"
         onClick={() => { toast.action!.onSelect(); onDismiss(); }}>{toast.action.label}</GlassButton>}

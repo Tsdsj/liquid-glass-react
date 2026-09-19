@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import {
-  Card, Concentric, DisclosureGroup, Divider, GlassSwitch, Kbd, LibraryIcon, List, ListRow, ListSection, MaterialView, Text,
+  Card, Concentric, DisclosureGroup, Divider, Form, FormRow, FormSection, GlassButton,
+  GlassStepper, GlassSwitch, Grid, Kbd, LibraryIcon, TextField, List, ListRow, ListSection, MaterialView, Text,
 } from '@ttqtt/liquid-glass-react';
 import type { ComponentDoc } from './types.js';
 
@@ -343,6 +344,137 @@ export const contentDocs: ComponentDoc[] = [
       '高度动画在支持 `interpolate-size` 的浏览器上交给浏览器，否则量一次内容高度。开启「减少动效」后直接显示。',
     ],
     related: ['list', 'card', 'text'],
+  },
+  {
+    slug: 'grid', name: 'Grid', title: '网格', group: '内容',
+    summary: '一组同类的东西，按空间自己排成几列。',
+    when: [
+      '照片、卡片、图标这类同一种东西排在一起的时候。',
+      '给 minItemWidth，不要给断点列表——网格被告知「一项最窄多少」，列数它自己算，所以放进侧栏、放进分栏的中间列、和铺满整宽都对。',
+      '每项周围要留出它自己的选中和焦点效果的余地，否则焦点环会被画到下一项底下——只有用键盘的人看得见。',
+      '**不做虚拟化。** 那是另一个组件、另一组取舍，在这里做半截会让以后做真的那个更难。',
+    ],
+    examples: [
+      {
+        id: 'grid-auto', title: '按空间自动排列', description: '把窗口拉窄，列数自己变。minItemWidth 是一项最窄多少，不是列数。',
+        height: 320,
+        render: () => <Grid id="grid-auto-demo" minItemWidth={140} gap={12} style={{ width: '100%' }}>
+          {['封面', '背景', '图标', '插画', '头像', '横幅'].map(name => <Card key={name} radius={14} padding={16} fill="secondary">
+            <Text variant="subhead">{name}</Text>
+            <Text variant="caption1" tone="secondary">1280 × 720</Text>
+          </Card>)}
+        </Grid>,
+        code: `<Grid minItemWidth={140} gap={12}>
+  {items.map(item => <Card key={item.id}>…</Card>)}
+</Grid>`,
+      },
+      {
+        id: 'grid-fixed', title: '固定列数', description: '只有在「几列」本身就是设计的一部分时才写死。',
+        height: 260,
+        render: () => <Grid id="grid-fixed-demo" columns={3} gap={12} style={{ width: '100%' }}>
+          {[1, 2, 3, 4, 5, 6].map(n => <Card key={n} radius={14} padding={16} fill="secondary">
+            <Text variant="subhead">第 {n} 格</Text>
+          </Card>)}
+        </Grid>,
+        code: `<Grid columns={3} gap={12}>…</Grid>`,
+      },
+      {
+        id: 'grid-focus', title: '焦点留白', description: '每项的焦点环要有地方画，而那个地方就是 gap——所以 gap 有一个 8 的下限。用 Tab 走一遍看看环有没有压到邻居。',
+        height: 260,
+        render: () => <Grid id="grid-focus-demo" minItemWidth={120} gap={20} style={{ width: '100%' }}>
+          {['一', '二', '三', '四'].map(name => <GlassButton key={name} variant="gray">{name}</GlassButton>)}
+        </Grid>,
+        code: `<Grid minItemWidth={120} gap={20}>
+  {items.map(item => <GlassButton key={item}>{item}</GlassButton>)}
+</Grid>`,
+      },
+    ],
+    props: [
+      { name: 'minItemWidth', type: 'number', default: '220', description: '一项最窄多少。列数由它算出来。' },
+      { name: 'columns', type: 'number', description: '写死列数。只在「几列」本身是设计时用。' },
+      { name: 'gap', type: 'number', default: '16', description: '项之间的间距，下限 8——焦点环要有地方画。传更小的值开发模式会告警。' },
+    ],
+    notes: [
+      '用的是 auto-fill + minmax，容器比一项还窄时也不会溢出。',
+      '内容层。网格上的东西是内容；玻璃属于浮在它们上面的那一层。',
+    ],
+    related: ['card', 'list', 'form'],
+  },
+  {
+    slug: 'form', name: 'Form', title: '表单', group: '内容',
+    summary: '设置页那种表单：分组、每行一个带标签的控件。',
+    when: [
+      '一组设置、一份资料、一个需要填的表。',
+      '分区标题用正常大小写，不用全大写——全大写的段标题在 iOS 26 就退休了。',
+      '开关、步进器这类短控件用 inline；文本框用 stacked，因为标签在窄屏下会换行。',
+    ],
+    examples: [
+      {
+        id: 'form-basic', title: '基础用法', description: '行负责排布和分组，命名留在控件自己身上——库里每个控件本来就要求有自己的名字。',
+        height: 380,
+        render: function FormBasic() {
+          const [wifi, setWifi] = useState(true);
+          const [roam, setRoam] = useState(false);
+          const [copies, setCopies] = useState(2);
+          return <Form id="form-basic-demo" style={{ width: 360 }} onSubmit={event => event.preventDefault()}>
+            <FormSection header="网络" footer="这些设置只影响这个演示。">
+              <FormRow label="Wi‑Fi" description="连接到可用的网络">
+                <GlassSwitch aria-label="Wi‑Fi" checked={wifi} onCheckedChange={setWifi} />
+              </FormRow>
+              <FormRow label="数据漫游">
+                <GlassSwitch aria-label="数据漫游" checked={roam} onCheckedChange={setRoam} />
+              </FormRow>
+              <FormRow label="份数">
+                <GlassStepper aria-label="份数" value={copies} onValueChange={setCopies} min={1} max={9} />
+              </FormRow>
+            </FormSection>
+          </Form>;
+        },
+        code: `<Form>
+  <FormSection header="网络" footer="说明文字">
+    <FormRow label="Wi‑Fi" description="连接到可用的网络">
+      <GlassSwitch aria-label="Wi‑Fi" checked={wifi} onCheckedChange={setWifi} />
+    </FormRow>
+  </FormSection>
+</Form>`,
+      },
+      {
+        id: 'form-stacked', title: '文本框用 stacked', description: '控件放到标签下面一行。错误文案挂在 aria-describedby 上，不是只标红。',
+        height: 380,
+        render: function FormStacked() {
+          const [email, setEmail] = useState('not-an-email');
+          const invalid = email !== '' && !email.includes('@');
+          return <Form id="form-stacked-demo" style={{ width: 360 }} onSubmit={event => event.preventDefault()}>
+            <FormSection header="账户">
+              <FormRow layout="stacked" label="电子邮件" error={invalid ? '请填写一个完整的邮箱地址。' : undefined}>
+                <TextField labelHidden label="电子邮件" value={email} inputMode="email" autoComplete="email"
+                  onChange={event => setEmail(event.currentTarget.value)} />
+              </FormRow>
+              <FormRow layout="stacked" label="个人简介">
+                <TextField multiline labelHidden label="个人简介" rows={3} placeholder="两三句话" />
+              </FormRow>
+            </FormSection>
+          </Form>;
+        },
+        code: `<FormRow layout="stacked" label="电子邮件" error={invalid ? '请填写完整的邮箱地址。' : undefined}>
+  <TextField labelHidden label="电子邮件" value={email} onChange={…} />
+</FormRow>`,
+      },
+    ],
+    props: [
+      { name: 'header / footer', type: 'ReactNode', description: 'FormSection：分区标题与下方说明。标题是真正的 heading。' },
+      { name: 'label', type: 'ReactNode', required: true, description: 'FormRow：这个控件是做什么的。' },
+      { name: 'description', type: 'ReactNode', description: 'FormRow：标签下面的第二行。' },
+      { name: 'error', type: 'ReactNode', description: 'FormRow：这一行的错误。挂在 aria-describedby 上。' },
+      { name: 'layout', type: "'inline' | 'stacked'", default: "'inline'", description: '控件和标签同行，还是在下一行。' },
+    ],
+    notes: [
+      '是真正的 `<form>`：回车提交、浏览器能自动填充、提交按钮名副其实。',
+      '行的标题是 span 不是 label。把控件包进 label 让那行字也能点，是想当然的写法——但 GlassSwitch 和 TextField 自己就渲染 label，label 套 label 非法，浏览器的答复是外面那个直接失效。而且库里每个控件本来就带自己的名字，包一层是加第二个名字。想让文字也能点，给控件 labelHidden，让它自己拥有那行字。',
+      '分区标题是真 heading，读屏可以在分区之间跳；分区说明挂在 aria-describedby 上。',
+    ],
+    related: ['list', 'text-field', 'switch'],
+    imports: ['Form', 'FormSection', 'FormRow'],
   },
   {
     slug: 'material-view', name: 'MaterialView', title: '标准材质', group: '内容',

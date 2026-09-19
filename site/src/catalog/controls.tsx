@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import {
   GlassBadge, GlassButton, GlassIconButton, GlassProgress, GlassSegmentedControl,
-  GlassSlider, GlassStepper, GlassSwitch, Text,
+  GlassSlider, GlassStepper, GlassSwitch, LibraryIcon, Text,
 } from '@ttqtt/liquid-glass-react';
 import { Icon } from '../icons.js';
 import type { ComponentDoc } from './types.js';
@@ -80,11 +80,41 @@ export const controlDocs: ComponentDoc[] = [
   <HeartIcon />
 </GlassIconButton>`,
       },
+      {
+        id: 'button-icons', title: '图标插槽', description: 'icon 和 trailingIcon 是插槽，不是 children——图标和文字之间的间距是系统值，不该由每个调用方自己决定。',
+        height: 200,
+        render: () => <div id="button-icons-demo" style={{ display: 'flex', gap: 12, flexWrap: 'wrap', alignItems: 'center' }}>
+          <GlassButton icon={<LibraryIcon name="plus" size={17} />}>新建</GlassButton>
+          <GlassButton trailingIcon={<LibraryIcon name="chevronForward" size={16} />}>继续</GlassButton>
+          <GlassButton variant="gray" icon={<LibraryIcon name="search" size={17} />}
+            trailingIcon={<LibraryIcon name="chevronDown" size={16} />}>筛选</GlassButton>
+        </div>,
+        code: `<GlassButton icon={<PlusIcon />}>新建</GlassButton>
+<GlassButton trailingIcon={<ChevronIcon />}>继续</GlassButton>`,
+      },
+      {
+        id: 'button-tint', title: '单个按钮的色调',
+        description: '一屏仍然只有**一个**主操作——tint 换的是它的颜色，不是让你摆三个。其余的用扁平的 tinted。色调需要配一个能读的文字色，而这一点算不出来，所以开发模式会量这一对的对比度，低于 4.5:1 就告警。',
+        height: 200,
+        render: () => <div id="button-tint-demo" style={{ display: 'flex', gap: 12, flexWrap: 'wrap', alignItems: 'center' }}>
+          <GlassButton variant="glassProminent" tint="#1a7f37">确认</GlassButton>
+          <GlassButton variant="tinted" tint="#8250df">升级</GlassButton>
+          <GlassButton variant="tinted">默认强调色</GlassButton>
+        </div>,
+        code: `{/* 这一屏唯一的主操作 */}
+<GlassButton variant="glassProminent" tint="#1a7f37">确认</GlassButton>
+{/* 其余的是扁平的 */}
+<GlassButton variant="tinted" tint="#8250df">升级</GlassButton>
+{/* 浅色调要自己配文字色 */}
+<GlassButton variant="tinted" tint="#ffd60a" tintContrast="#000">注意</GlassButton>`,
+      },
     ],
     props: [
       { name: 'variant', type: "'glass' | 'glassProminent' | 'plain' | 'gray' | 'tinted' | 'destructive' | 'destructiveProminent'", default: "'glass'", description: '样式。前两种属于浮动层，其余属于内容层。' },
       { name: 'controlSize', type: "'small' | 'regular' | 'large' | 'extraLarge'", default: "'regular'", description: '按钮高度。' },
       { name: 'size', type: "'small' | 'large'", default: "'small'", description: '玻璃的厚薄。大玻璃更厚，而且不会随背景明暗翻转。' },
+      { name: 'icon / trailingIcon', type: 'ReactNode', description: '前后的图标插槽。间距固定。' },
+      { name: 'tint / tintContrast', type: 'string', description: '这一个按钮的色调，以及压在它上面的文字色（默认白）。开发模式会量对比度。' },
       { name: 'loading', type: 'boolean', default: 'false', description: '显示转圈，同时禁用。' },
       { name: 'chroma', type: 'boolean', default: 'false', description: '让边缘像真玻璃一样出现色散。开销大约三倍，只给少数几个元素用。' },
       { name: 'independent', type: 'boolean', default: 'false', description: '在工具栏这类共享背景里仍然保留自己的玻璃。会变成玻璃叠玻璃，慎用。' },
@@ -152,6 +182,7 @@ export const controlDocs: ComponentDoc[] = [
       { name: 'value / defaultValue', type: 'string', description: '受控或非受控的选中值。' },
       { name: 'onValueChange', type: '(value: string) => void', description: '拖动过程中就会触发，不等到松手。' },
       { name: 'name', type: 'string', description: '表单字段名。' },
+      { name: 'disabled', type: 'boolean', default: 'false', description: '整组不可用。' },
       { name: 'aria-label', type: 'string', required: true, description: '这组选项是在选什么。' },
     ],
     notes: [
@@ -190,6 +221,8 @@ export const controlDocs: ComponentDoc[] = [
       { name: 'checked / defaultChecked', type: 'boolean', description: '受控或非受控状态。' },
       { name: 'onCheckedChange', type: '(checked: boolean) => void', description: '点击或拖动松手时触发。' },
       { name: 'label', type: 'string', description: '开关旁边的可见文字。' },
+      { name: 'disabled', type: 'boolean', default: 'false', description: '不可用。' },
+      { name: 'name', type: 'string', description: '提交表单时用的字段名——底层是真正的 checkbox。' },
       { name: 'aria-label', type: 'string', required: true, description: '描述打开之后的状态。' },
     ],
     notes: [
@@ -245,10 +278,32 @@ export const controlDocs: ComponentDoc[] = [
   maxLabel={<SunLarge />}
 />`,
       },
+      {
+        id: 'slider-marks', title: '刻度', description: '刻度表示这个刻度是离散的，所以只在它确实离散时才用。一条音量滑块上画一百个刻度不是信息，是一条网格线——marks={true} 在步数太多时会被拒绝并告警。',
+        height: 220,
+        render: function SliderMarks() {
+          const [quality, setQuality] = useState(2);
+          const [percent, setPercent] = useState(40);
+          return <div id="slider-marks-demo" style={{ display: 'grid', gap: 20, width: 320 }}>
+            <GlassSlider aria-label="画质等级" min={0} max={4} step={1} marks value={quality} onValueChange={setQuality}
+              formatValue={value => `第 ${value + 1} 档，共 5 档`} />
+            <GlassSlider aria-label="不透明度" marks={[0, 25, 50, 75, 100]} value={percent} onValueChange={setPercent}
+              formatValue={value => `${value}%`} />
+          </div>;
+        },
+        code: `{/* 每一步一个刻度 */}
+<GlassSlider aria-label="画质等级" min={0} max={4} step={1} marks … />
+{/* 只在指定位置 */}
+<GlassSlider aria-label="不透明度" marks={[0, 25, 50, 75, 100]} … />`,
+      },
     ],
     props: [
       { name: 'value / defaultValue', type: 'number', default: '50', description: '当前值。' },
       { name: 'min / max / step', type: 'number', default: '0 / 100 / 1', description: '范围与步长。' },
+      { name: 'marks', type: 'boolean | number[]', description: '刻度。true 是每一步一个（步数太多会被拒绝并告警），数组是指定位置。只给眼睛看——读屏听到的值来自 input 和 formatValue。' },
+      { name: 'onValueChange', type: '(value: number) => void', description: '值变化。拖动过程中会连续触发。' },
+      { name: 'disabled', type: 'boolean', default: 'false', description: '不可用。' },
+      { name: 'name', type: 'string', description: '提交表单时用的字段名。' },
       { name: 'formatValue', type: '(value: number) => string', description: '读屏念出来的说法。光念一个数字往往不够。' },
       { name: 'minLabel / maxLabel', type: 'ReactNode', description: '两端的提示图形。' },
       { name: 'aria-label', type: 'string', required: true, description: '这个滑块在调什么。' },
@@ -316,6 +371,10 @@ export const controlDocs: ComponentDoc[] = [
     props: [
       { name: 'value / defaultValue', type: 'number', default: '0', description: '当前值。' },
       { name: 'min / max / step', type: 'number', default: '-∞ / ∞ / 1', description: '范围与步长。' },
+      { name: 'onValueChange', type: '(value: number) => void', description: '值变化。' },
+      { name: 'formatValue', type: '(value: number) => string', description: '显示和朗读的形式。光一个数字往往不够。' },
+      { name: 'disabled', type: 'boolean', default: 'false', description: '不可用。' },
+      { name: 'aria-label', type: 'string', required: true, description: '这个步进器在调什么。' },
       { name: 'shiftMultiplier', type: 'number', default: '10', description: '按住 Shift 时一步走几倍。范围只有几个值时设成 1 关掉。' },
       { name: 'showValue', type: 'boolean', default: 'true', description: '值已经在旁边显示时可以关掉。' },
       { name: 'decrementLabel / incrementLabel', type: 'string', description: '两个按钮各自的名字。不传就用 GlassProvider 的 strings 表。' },
@@ -365,6 +424,7 @@ export const controlDocs: ComponentDoc[] = [
     props: [
       { name: 'value', type: 'number', description: '不传就是不确定状态。一旦能算出进度就应该传。' },
       { name: 'total', type: 'number', default: '100', description: '总量。' },
+      { name: 'aria-label', type: 'string', required: true, description: '这条进度在表示什么。' },
       { name: 'variant', type: "'bar' | 'circular'", default: "'bar'", description: '横条或圆环。' },
     ],
     notes: ['确定状态会把百分比报给读屏。', '用户开启“减少动效”后不确定指示器会停下来，变成一条静止的轨道。'],

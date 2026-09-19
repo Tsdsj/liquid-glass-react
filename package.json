@@ -61,7 +61,7 @@
     "build:lib": "vite build --config vite.lib.config.ts",
     "build:types": "tsc -p tsconfig.build.json",
     "build:css": "node scripts/build-css.mjs",
-    "build:site": "vite build --config site/vite.config.ts",
+    "build:site": "node scripts/check-props.mjs && vite build --config site/vite.config.ts",
     "preview:site": "node scripts/serve-preview.mjs --root site/dist",
     "typecheck": "tsc -p tsconfig.check.json --noEmit",
     "test": "node --test tests/core/*.test.mjs",

@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import {
   GlassActionSheet, GlassAlert, GlassButton, GlassDialog, GlassIconButton, GlassMenu, GlassPopover,
-  GlassMenuButton, GlassSegmentedControl, GlassSheet, GlassSlider, LibraryIcon, List, ListRow, ListSection,
+  Card, ContextMenu, GlassMenuButton, GlassSegmentedControl, GlassSheet, GlassSlider, LibraryIcon, List, ListRow, ListSection,
   Text, TextField, Tooltip, useToast,
 } from '@ttqtt/liquid-glass-react';
 import { Icon } from '../icons.js';
@@ -62,6 +62,7 @@ export const overlayDocs: ComponentDoc[] = [
     props: [
       { name: 'trigger', type: 'ReactElement', description: '你自己的按钮。组件只负责把它和面板关联起来。' },
       { name: 'title', type: 'string', required: true, description: '面板标题。' },
+      { name: 'description', type: 'string', description: '标题下面的一句说明。' },
       { name: 'align', type: "'start' | 'center' | 'end'", default: "'end'", description: '相对按钮的对齐方式。' },
       { name: 'placement', type: "'below' | 'above' | 'auto'", default: "'auto'", description: '朝哪个方向展开。auto 表示下方放不下就翻到上方。' },
       { name: 'open / defaultOpen / onOpenChange', type: 'boolean / (open) => void', description: '自己控制开合，或交给组件。' },
@@ -115,6 +116,8 @@ export const overlayDocs: ComponentDoc[] = [
       { name: 'checked', type: 'boolean', description: '带勾选状态的项。' },
       { name: 'shortcut', type: 'string', description: '快捷键提示。' },
       { name: 'destructive', type: 'boolean', description: '标红。危险操作仍然需要确认或撤销。' },
+      { name: 'aria-label', type: 'string', required: true, description: '这个菜单是做什么的。' },
+      { name: 'selection', type: "'multiple' | 'single'", default: "'multiple'", description: '勾在这里表示什么。single 让带勾的项变成 menuitemradio。' },
       { name: 'align', type: "'start' | 'center' | 'end'", default: "'end'", description: '相对按钮的对齐方式。' },
       { name: 'placement', type: "'below' | 'above' | 'auto'", default: "'auto'", description: '朝哪个方向展开。auto 表示下方放不下就翻到上方。' },
     ],
@@ -214,6 +217,7 @@ export const overlayDocs: ComponentDoc[] = [
       { name: 'value / defaultValue', type: 'string', description: 'popUp 专用：当前值。不传 defaultValue 就用第一项。' },
       { name: 'onValueChange', type: '(value: string) => void', description: 'popUp 专用：选中变化。' },
       { name: 'aria-label', type: 'string', description: 'popUp 上必填：按钮文字是当前值，永远说不出在选什么。' },
+      { name: 'placeholder', type: 'string', description: 'popUp 专用：还没选中任何值时按钮上显示什么。能给一个真正的默认值就别用占位符。' },
       { name: 'variant / controlSize', type: 'GlassButtonVariant / ControlSize', description: '同 GlassButton。' },
       { name: 'align / placement', type: "Align / 'below' | 'above' | 'auto'", description: '菜单相对按钮的位置，同 GlassMenu。' },
     ],
@@ -300,6 +304,58 @@ export const overlayDocs: ComponentDoc[] = [
     imports: ['Tooltip'],
   },
   {
+    slug: 'context-menu', name: 'ContextMenu', title: '右键菜单', group: '浮层',
+    summary: '把菜单开在东西本身上：右键、长按、或者键盘的菜单键。',
+    when: [
+      '**里面的每一条都必须有别的路径能做到。** 右键菜单是给知道它存在的人的快捷方式；只活在右键菜单里的命令，大多数人永远找不到。',
+      '要短。它回答的是「在这儿最可能要做什么」，不是「一共能做什么」。超过十来条开发模式会告警。',
+      '三种触发方式对应三类用户：右键、触摸长按 500ms、键盘 Shift+F10 或菜单键。少一种就有一类人用不了。',
+    ],
+    examples: [
+      {
+        id: 'context-basic', title: '基础用法', description: '在卡片上右键；触摸屏长按；用 Tab 聚焦到里面的按钮后按 Shift+F10。',
+        height: 280,
+        render: function ContextBasic() {
+          const [result, setResult] = useState('还没选');
+          return <div id="context-demo" style={{ display: 'grid', gap: 12, justifyItems: 'center' }}>
+            <ContextMenu aria-label="照片操作" items={[
+              { key: 'open', label: '打开', shortcut: '⌘O', onSelect: () => setResult('打开') },
+              { key: 'rename', label: '重命名', onSelect: () => setResult('重命名') },
+              { key: 'copy', label: '拷贝', shortcut: '⌘C', onSelect: () => setResult('拷贝') },
+              { key: 'delete', label: '删除', destructive: true, separatorBefore: true, onSelect: () => setResult('删除') },
+            ]}>
+              <Card radius={16} padding={20} style={{ width: 240, textAlign: 'center' }}>
+                <Text variant="subhead">在这张卡片上右键</Text>
+                <GlassButton controlSize="small" variant="gray" style={{ marginBlockStart: 12 }}
+                  onClick={() => setResult('主界面按钮')}>打开（主界面也有）</GlassButton>
+              </Card>
+            </ContextMenu>
+            <Text variant="caption1" tone="secondary" role="status">选了：{result}</Text>
+          </div>;
+        },
+        code: `<ContextMenu aria-label="照片操作" items={[
+  { key: 'open', label: '打开', shortcut: '⌘O', onSelect: open },
+  { key: 'delete', label: '删除', destructive: true, separatorBefore: true, onSelect: remove },
+]}>
+  <PhotoCard />
+</ContextMenu>`,
+      },
+    ],
+    props: [
+      { name: 'items', type: 'GlassMenuItem[]', required: true, description: '命令。和 GlassMenu 完全一样的那一套。' },
+      { name: 'aria-label', type: 'string', required: true, description: '这个菜单是做什么的。' },
+      { name: 'longPressDelay', type: 'number', default: '500', description: '触摸按住多久才打开。手指移动超过 10px 就取消——那是在滚动。' },
+    ],
+    notes: [
+      '键盘路径是 Shift+F10 和菜单键，这是平台自己打开右键菜单的方式，也是唯一的一条。没有它整个功能就只有指针能用。',
+      '打开后的键盘模型和 GlassMenu 是同一份代码：上下移动、Home/End、打字跳转、Escape 关闭并还回焦点。',
+      '包裹层是一个真正的盒子而不是 display: contents——后者会把元素从无障碍树里摘掉，而且键盘打开时没有位置可量。',
+      '页面一滚动就关掉：菜单钉在打开时的那个点上，内容滑走了它就指错了地方。',
+    ],
+    related: ['menu', 'menu-button', 'action-sheet'],
+    imports: ['ContextMenu'],
+  },
+  {
     slug: 'sheet', name: 'GlassSheet', title: '底部面板', group: '浮层',
     summary: '从屏幕底部升起的面板，可以拖到不同高度。',
     when: [
@@ -362,6 +418,8 @@ export const overlayDocs: ComponentDoc[] = [
       { name: 'detents', type: "SheetDetent[]", default: "['medium', 'large']", description: '可以停靠的高度，从小到大。' },
       { name: 'defaultDetent', type: 'SheetDetent', description: '打开时停在哪一档。' },
       { name: 'grabber', type: 'boolean', default: 'true', description: '顶部的拖动横条。只有一个高度时才关掉。' },
+      { name: 'description', type: 'string', description: '标题下面的一句说明。' },
+      { name: 'onDetentChange', type: '(detent: SheetDetent) => void', description: '停靠高度变了。' },
       { name: 'title', type: 'string', required: true, description: '面板标题。' },
     ],
     notes: [
@@ -458,6 +516,8 @@ export const overlayDocs: ComponentDoc[] = [
     props: [
       { name: 'actions', type: 'ActionSheetItem[]', required: true, description: '六项以内。' },
       { name: 'title / message', type: 'string', description: '说明这些选择作用在什么上。' },
+      { name: 'align', type: "'start' | 'center' | 'end'", default: "'center'", description: '宽屏下相对触发器的对齐方式。' },
+      { name: 'onCancel', type: '() => void', description: '点了取消，或者按了 Escape。' },
       { name: 'cancelLabel', type: 'string', default: "'Cancel'", description: '取消按钮的文字。' },
       { name: 'aria-label', type: 'string', required: true, description: '这组选择是关于什么的。' },
     ],
@@ -545,10 +605,27 @@ toast({
   action: { label: '撤销', onSelect: restore },
 });`,
       },
+      {
+        id: 'toast-tone', title: '语气', description: '语气不是装饰：只在「结果本身就是要说的那件事」时用，而且永远不能只靠颜色——所以每种语气自带一个图标。',
+        height: 220,
+        render: function ToastTone() {
+          const toast = useToast();
+          return <div id="toast-tone-demo" style={{ display: 'flex', gap: 12, flexWrap: 'wrap', justifyContent: 'center' }}>
+            <GlassButton controlSize="small" onClick={() => toast({ message: '已同步', tone: 'success' })}>成功</GlassButton>
+            <GlassButton controlSize="small" onClick={() => toast({ message: '离线，稍后重试', tone: 'warning' })}>警告</GlassButton>
+            <GlassButton controlSize="small" onClick={() => toast({ message: '上传失败', tone: 'error' })}>错误</GlassButton>
+            <GlassButton controlSize="small" variant="gray" onClick={() => toast({ message: '已复制' })}>中性（默认）</GlassButton>
+          </div>;
+        },
+        code: `toast({ message: '已同步', tone: 'success' });
+toast({ message: '已复制' }); // 默认 neutral`,
+      },
     ],
     props: [
       { name: 'message', type: 'string', required: true, description: '陈述已经发生的事。' },
       { name: 'action', type: '{ label: string; onSelect: () => void }', description: '撤销入口。有了它，可撤销的操作就不必再弹窗确认。' },
+      { name: 'tone', type: "'neutral' | 'success' | 'warning' | 'error'", default: "'neutral'", description: '语气。自带图标，所以不是只靠颜色。' },
+      { name: 'icon', type: 'ReactNode | null', description: '覆盖语气自带的图标；传 null 表示不要图标。' },
       { name: 'duration', type: 'number', default: '6000', description: '停留多少毫秒。要留够读完并伸手过去的时间。' },
       { name: 'limit', type: 'number', default: '3', description: 'ToastProvider：最多同时堆几条。' },
     ],

@@ -34,6 +34,45 @@ export interface GlassMenuProps extends Omit<HTMLAttributes<HTMLDivElement>, 'ch
  * typing jumps to a matching label, Escape closes and returns focus, Tab closes. Keep groups
  * to about seven items and separate them rather than growing one long list.
  */
+/**
+ * The menu keyboard model, shared by every menu panel in the library.
+ *
+ * It is a contract rather than a convenience — Up and Down move, Home and End jump, typing
+ * skips to a matching label, Escape closes and returns focus, Tab closes — so it lives in one
+ * place. `ContextMenu` opens by a different route but is the same thing once it is open, and
+ * two copies of this would drift.
+ */
+export function menuKeyboard(
+  event: React.KeyboardEvent, panel: HTMLElement | null, close: () => void,
+  search: { text: string; time: number } = shared,
+) {
+  if (event.key === 'Escape') { event.preventDefault(); close(); return; }
+  if (event.key === 'Tab') { close(); return; }
+  const enabled = Array.from(panel?.querySelectorAll<HTMLButtonElement>(
+    '[role="menuitem"]:not(:disabled),[role="menuitemcheckbox"]:not(:disabled),[role="menuitemradio"]:not(:disabled)') ?? []);
+  const index = enabled.indexOf(document.activeElement as HTMLButtonElement);
+  if (!enabled.length) return;
+  let next = index;
+  if (event.key === 'ArrowDown') next = (index + 1) % enabled.length;
+  else if (event.key === 'ArrowUp') next = (index - 1 + enabled.length) % enabled.length;
+  else if (event.key === 'Home') next = 0;
+  else if (event.key === 'End') next = enabled.length - 1;
+  else if (event.key.length === 1 && event.key !== ' ' && !event.ctrlKey && !event.metaKey && !event.altKey) {
+    const now = Date.now();
+    search.text = (now - search.time > 700 ? '' : search.text) + event.key.toLocaleLowerCase();
+    search.time = now;
+    const match = [...enabled.slice(index + 1), ...enabled.slice(0, index + 1)]
+      .find(button => button.dataset.label?.toLocaleLowerCase().startsWith(search.text));
+    if (match) { event.preventDefault(); match.focus(); }
+    return;
+  } else return;
+  event.preventDefault();
+  enabled[next]?.focus();
+}
+
+/** Type-ahead state for a caller that does not keep its own. One menu is open at a time. */
+const shared = { text: '', time: 0 };
+
 export function GlassMenu({ trigger, open: controlled, defaultOpen = false, onOpenChange, items, 'aria-label': label, className, style, align = 'end', placement = 'auto', selection = 'multiple', id: providedId, ref, ...rest }: GlassMenuProps) {
   const [surface, props] = splitSurface(rest);
   const generated = useId(); const id = providedId ?? generated; const triggerRef = useRef<HTMLButtonElement>(null);
@@ -45,23 +84,8 @@ export function GlassMenu({ trigger, open: controlled, defaultOpen = false, onOp
   return <>
     {triggerElement(trigger, triggerRef, id, open, 'menu', setOpen)}
     <div {...props} id={id} ref={glass.ref} popover="auto" role="menu" tabIndex={-1} aria-label={label} {...glass.attributes}
-      className={cx('lg-root lg-menu', className)} style={{ ...glass.style, ...style }} onKeyDown={event => {
-        if (event.key === 'Escape') { event.preventDefault(); close(); return; }
-        if (event.key === 'Tab') { close(); return; }
-        const enabled = Array.from(glass.root.current?.querySelectorAll<HTMLButtonElement>('[role="menuitem"]:not(:disabled),[role="menuitemcheckbox"]:not(:disabled),[role="menuitemradio"]:not(:disabled)') ?? []);
-        const index = enabled.indexOf(document.activeElement as HTMLButtonElement); if (!enabled.length) return;
-        let next = index;
-        if (event.key === 'ArrowDown') next = (index + 1) % enabled.length;
-        else if (event.key === 'ArrowUp') next = (index - 1 + enabled.length) % enabled.length;
-        else if (event.key === 'Home') next = 0;
-        else if (event.key === 'End') next = enabled.length - 1;
-        else if (event.key.length === 1 && event.key !== ' ' && !event.ctrlKey && !event.metaKey && !event.altKey) {
-          const now = Date.now(); search.current.text = (now - search.current.time > 700 ? '' : search.current.text) + event.key.toLocaleLowerCase(); search.current.time = now;
-          const match = [...enabled.slice(index + 1), ...enabled.slice(0, index + 1)].find(button => button.dataset.label?.toLocaleLowerCase().startsWith(search.current.text));
-          if (match) { event.preventDefault(); match.focus(); } return;
-        } else return;
-        event.preventDefault(); enabled[next]?.focus();
-      }}>
+      className={cx('lg-root lg-menu', className)} style={{ ...glass.style, ...style }}
+      onKeyDown={event => menuKeyboard(event, glass.root.current, close, search.current)}>
       {glass.decoration}<div className="lg-content">{items.map((item, index) => <div key={item.key} role="none" style={{ '--lg-index': index } as CSSProperties}>
         {item.separatorBefore && <div role="separator" className="lg-menu-separator" />}
         <button type="button" role={item.checked === undefined ? 'menuitem' : selection === 'single' ? 'menuitemradio' : 'menuitemcheckbox'}

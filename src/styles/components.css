@@ -919,3 +919,96 @@
   display: flex; flex-direction: column; gap: var(--lg-space-4); }
 /* Dense controls: rounded rectangles rather than capsules, which at this width are mostly gap. */
 .lg-inspector .lg-button { --lg-radius: var(--lg-radius-s); border-radius: var(--lg-radius-s); }
+
+/* ---------- The small additions of 0.0.2's 1.5 ---------- */
+
+/* Button icon slots. A fixed gap, which is the reason they are slots and not children: the
+   space between a glyph and its words is a system value, not a per-caller decision. */
+.lg-button-icon { display: inline-flex; flex: 0 0 auto; align-items: center; }
+.lg-button .lg-content:has(.lg-button-icon) { gap: var(--lg-space-2); }
+.lg-icon-button .lg-button-icon { margin: 0; }
+
+/* Slider tick marks. Under the fill, so a passed mark reads as passed rather than as a hole
+   punched through the accent. */
+.lg-slider-marks { position: absolute; inset-block-start: calc(50% - 1px); inset-inline: 13px; height: 2px; pointer-events: none; }
+.lg-slider-mark { position: absolute; inset-block-start: 0; inset-inline-start: calc(var(--lg-mark) * 100%);
+  translate: -50% 0; width: 2px; height: 2px; border-radius: 999px;
+  background: var(--lg-label-tertiary); opacity: .9; }
+.lg-slider-mark[data-passed="true"] { background: var(--lg-accent-contrast); opacity: .5; }
+@media (forced-colors: active) { .lg-slider-mark { background: ButtonText; } }
+
+/* Toast tone. The glyph carries it as well as the colour — a tone nobody can see is a tone
+   that is not there. */
+.lg-toast-icon { display: inline-flex; flex: 0 0 auto; align-items: center; }
+.lg-toast[data-tone="success"] .lg-toast-icon { color: var(--lg-green); }
+.lg-toast[data-tone="warning"] .lg-toast-icon { color: var(--lg-orange); }
+.lg-toast[data-tone="error"] .lg-toast-icon { color: var(--lg-red); }
+
+/* Field sizes and the multi-line form. The *control* gets smaller; the text does not, because
+   anything under 16px makes iOS Safari zoom the page on focus. */
+.lg-field[data-control-size="small"] .lg-field-box { min-height: 36px; }
+.lg-field[data-control-size="large"] .lg-field-box { min-height: 52px; }
+.lg-field[data-multiline="true"] .lg-field-box { min-height: 0; align-items: flex-start; padding-block: var(--lg-space-2); }
+.lg-field[data-multiline="true"] textarea.lg-field-input { resize: vertical; min-height: 4lh; line-height: 1.45; }
+.lg-field[data-multiline="true"] textarea.lg-field-input[data-autosize="true"] { resize: none; field-sizing: content; min-height: 2lh; max-height: 12lh; }
+
+/* Search suggestions. A listbox under the field, in the content layer — it belongs to the
+   field rather than floating over the page, and glass here would be glass on glass. */
+.lg-search { position: relative; }
+.lg-search-suggestions { position: absolute; inset-inline: 0; inset-block-start: calc(100% + var(--lg-space-1));
+  z-index: var(--lg-z-popover); margin: 0; padding: var(--lg-space-1); list-style: none;
+  max-height: 44vh; overflow-y: auto; overscroll-behavior: contain;
+  border-radius: var(--lg-radius-m); background: var(--lg-bg-grouped-2);
+  box-shadow: var(--lg-glass-shadow-large); border: 1px solid var(--lg-separator); }
+.lg-search-suggestion { display: flex; align-items: center; gap: var(--lg-space-2);
+  min-height: var(--lg-hit-min); padding: var(--lg-space-1) var(--lg-space-3);
+  border-radius: var(--lg-radius-s); cursor: pointer; color: var(--lg-label);
+  font-size: var(--lg-text-subhead-size); }
+.lg-search-suggestion[aria-selected="true"] { background: var(--lg-fill-tertiary); }
+.lg-search-suggestion-icon { display: inline-flex; flex: 0 0 auto; color: var(--lg-label-secondary); }
+@media (forced-colors: active) {
+  .lg-search-suggestion[aria-selected="true"] { background: Highlight; color: HighlightText; }
+}
+
+/* ---------- ContextMenu ---------- */
+/* A plain wrapper with a real box. `display: contents` would be tidier in the layout and is
+   wrong: it takes the element out of the accessibility tree and leaves nothing to measure when
+   the menu is opened from the keyboard and has no pointer position to open at.
+   `-webkit-touch-callout` stops iOS putting its own long-press sheet over this one. */
+.lg-context-region { min-width: 0; -webkit-touch-callout: none; }
+.lg-context-menu { transform-origin: var(--lg-origin-x, 0%) var(--lg-origin-y, 0%); }
+
+/* ---------- Grid: same-kind items that reflow by the space they have ---------- */
+/* `auto-fill` with a floor rather than a breakpoint list: the grid is told how small an item
+   may get and works the columns out, so it is right inside a sidebar and full width without
+   either being written down. `min()` keeps a single narrow column from overflowing when the
+   container is narrower than one item. */
+.lg-grid { display: grid; gap: var(--lg-grid-gap, 16px);
+  grid-template-columns: repeat(auto-fill, minmax(min(var(--lg-grid-min, 220px), 100%), 1fr)); }
+.lg-grid[data-fixed="true"] { grid-template-columns: repeat(var(--lg-grid-columns), minmax(0, 1fr)); }
+/* Items may be anything, so the grid does not restyle them; it only stops them overflowing.
+   The room a focus ring needs is the gap, which is floored at 8 in the component. */
+.lg-grid > * { min-width: 0; }
+
+/* ---------- Form: grouped, labelled rows ---------- */
+.lg-form { display: flex; flex-direction: column; gap: var(--lg-space-8); font-family: var(--lg-font-text); color: var(--lg-label); }
+.lg-form-section { display: flex; flex-direction: column; gap: var(--lg-space-2); }
+.lg-form-header { padding-inline: var(--lg-space-4); }
+.lg-form-footer { padding-inline: var(--lg-space-4); }
+.lg-form-group { display: flex; flex-direction: column; border-radius: var(--lg-radius-m);
+  background: var(--lg-bg-grouped-2); overflow: hidden; }
+.lg-form-row { position: relative; }
+.lg-form-row + .lg-form-row::before { content: ''; position: absolute; inset-block-start: 0;
+  inset-inline: var(--lg-space-4) 0; height: 1px; background: var(--lg-separator); }
+/* The control lives inside the label, so the words are part of its hit region. */
+.lg-form-row-label { display: flex; align-items: center; gap: var(--lg-space-4);
+  min-height: var(--lg-hit-min); padding: var(--lg-space-2) var(--lg-space-4); cursor: pointer; }
+.lg-form-row[data-layout="stacked"] .lg-form-row-label { flex-direction: column; align-items: stretch; gap: var(--lg-space-2);
+  padding-block: var(--lg-space-3); }
+.lg-form-row-labels { display: flex; flex-direction: column; gap: 1px; flex: 1; min-width: 0; }
+.lg-form-row-control { display: flex; align-items: center; justify-content: flex-end; flex: 0 0 auto; min-width: 0; }
+.lg-form-row[data-layout="stacked"] .lg-form-row-control { justify-content: stretch; flex: 1 1 auto; }
+.lg-form-row[data-layout="stacked"] .lg-form-row-control > * { width: 100%; }
+.lg-form-row-error { padding: 0 var(--lg-space-4) var(--lg-space-3); }
+.lg-form-row:has(:focus-visible) { background: var(--lg-fill-quaternary); }
+@media (hover: hover) { .lg-form-row-label:hover { background: var(--lg-fill-quaternary); } }

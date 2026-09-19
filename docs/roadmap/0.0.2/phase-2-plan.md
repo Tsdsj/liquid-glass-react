@@ -52,6 +52,16 @@
 
 矩阵规则也跟着放宽了一次：落在**邻居控件**上不算失手。代价写在用例里——一整排都太小的控件会自己豁免自己，所以这类控件另带自己的量测。
 
+**已完成（第 5 周）**：1.5 的小 API 全部落地（`small-apis.spec.ts`），**除了 `GlassSlider` 的双滑块**——两个重叠的滑块需要一套「按下时归谁」的仲裁规则，做半截比不做差，顺延 [0.4.0](../0.4.0/plan.md)。D7 落地为 `scripts/check-props.mjs`，挂在 `build:site` 上；第一次跑出 21 页对不上，排掉统一说过一次的（`children`、浮层的 `OpenProps`）之后剩 15 页是真漏了，全部补上。`ContextMenu`、L5 `Grid`、L6 `Form` 一并落地。
+
+第 5 周被自己的用例逮到三条设计问题，都改了实现而不是改断言：
+
+- **`Grid` 的 `itemPadding` 不起作用。** 给每个子元素加 padding 会和子元素自己的 padding 打架并且输掉——实测 `.lg-button` 的 padding 赢了。属性删掉，腾地方改成 `gap` 的下限 8。
+- **`FormRow` 把控件包进 `<label>` 是错的。** `GlassSwitch` 和 `TextField` 自己就渲染 `<label>`，套起来非法，外面那个直接失效——实测点那行字什么也不会发生。而且库里每个控件本来就带自己的名字，包一层是加第二个名字。
+- **`ContextMenu` 用 `popover="auto"` 会被自己的抬手关掉**，延迟一帧不是修复而是竞态（换个窗口高度又坏）。改成 `manual` 自己管关闭。顺带发现「滚动就关」会被右键引起的焦点滚动触发，改成滚动时跟着内容走。
+
+另外站点自己的 tint 示例一开始摆了三个主操作按钮，被既有用例逮到——那正是它要守的规则。那条用例本身也是错的（它把整页的主操作数加起来），一并改成按演示计。
+
 第 2 周途中另发现两条，都已修：单选菜单打开时焦点落在第一项而不是**已选中**那一项（pop-up 按钮在每个 Apple 平台上都是后者）；`usePopover` 的首个可聚焦项只找 `[role="menuitem"]`，一个全是可勾选项的菜单会把焦点留在面板上。
 
 ### 1.2 疑点，已全部查完（2026-09-20，第 4 周）
@@ -224,7 +234,7 @@ HIG layout：「按尺寸类别决定布局，永远不按设备类型或方向�
 | **2 ✅** | P3 sheet 整块可拖、P4 popover 箭头 + 手机变 sheet | `GlassMenuButton` | L1 `Screen`，站点改用它（ScrollEdge 那条已关闭） |
 | **3 ✅** | 矩阵用例落地（1.3），第一份 `reports/matrix.json`，抓到的三条已修 | `Tooltip`、`Kbd` | L4 `NavigationStack` |
 | **4 ✅** | P6 stepper、P8 toast、P9 badge；1.2 六个疑点查完（复现 1 条） | `DisclosureGroup`、`PageControl` | L2 `SplitView`（含 L3 `Inspector`） |
-| 5 | 1.5 的小 API；D7 属性表比对进 `build:site` | `ContextMenu` | L5 `Grid`、L6 `Form` |
+| **5 ✅** | 1.5 的小 API（双滑块顺延）；D7 属性表比对进 `build:site` | `ContextMenu` | L5 `Grid`、L6 `Form` |
 | 6 | D1 每页三示例、D3 属性面板、D8 折射开关、D5 搜索；全库 Apple-Style-Review 复审 | 第二批择前三个 | 布局容器的 AX5 / RTL 矩阵 |
 
 发版前：CHANGELOG 把 `## 0.0.2` 一节补成完整版；`docs/api.md` 新增全部组件与属性；重打 `v0.0.2` 标签；再跑一次 `pnpm pack` 装进空项目。

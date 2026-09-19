@@ -175,6 +175,8 @@ import '@ttqtt/liquid-glass-react/styles.css';
 
 ### `GlassButton` / `GlassIconButton`
 `variant`: `glass` | `glassProminent` | `plain` | `gray` | `tinted` | `destructive` | `destructiveProminent`。
+`icon` / `trailingIcon`：图标插槽。是插槽而不是 children，因为图标和文字之间的间距是系统值。
+`tint` / `tintContrast`：这一个按钮的色调，和压在它上面的文字色（默认白）。**一屏仍然只有一个主操作**——tint 换的是它的颜色，不是让你摆三个。开发模式会量这一对的对比度，低于 4.5:1 告警：库挑不出能读的文字色（所以没有全局 `accent`），但它能验调用方挑的那个。
 `controlSize`: `small`(32) | `regular`(44) | `large`(50) | `extraLarge`(60)——注意与选择玻璃厚度的 `size` 不同。
 `loading` 同时禁用并置 `aria-busy`。`independent` 在共享表面内保留自己的玻璃（玻璃叠玻璃，慎用）。
 `GlassIconButton` 的 `aria-label` 是**必填类型**。
@@ -188,7 +190,9 @@ import '@ttqtt/liquid-glass-react/styles.css';
 底层是 `input[type=checkbox][role=switch]`。**可甩**：拖动方向决定结果。打开态为系统绿。
 
 ### `GlassSlider`
-`value`/`defaultValue`/`onValueChange`、`min`/`max`/`step`、`formatValue`（→ `aria-valuetext`）、`minLabel`/`maxLabel`、`aria-label`(必填)。
+`value`/`defaultValue`/`onValueChange`、`min`/`max`/`step`、`formatValue`（→ `aria-valuetext`）、`minLabel`/`maxLabel`、`marks`、`aria-label`(必填)。
+`marks`：`true` 每步一个刻度（步数超过 20 会被拒绝并告警——那时它是一条网格线不是信息），数组是指定位置。只给眼睛看，读屏听到的值来自 input 和 `formatValue`。
+**双滑块（range）没做**：两个重叠的滑块需要一套「按下时归谁」的仲裁规则，做半截比不做差。顺延到 0.4.0。
 底层是原生 `input[type=range]`。旋钮**只在被拖动时**抬升为玻璃。
 
 ### `GlassStepper`
@@ -213,11 +217,32 @@ import '@ttqtt/liquid-glass-react/styles.css';
 ## 输入
 
 ### `TextField`
-`label`(必填) `hint` `error` `leading` `trailing` `labelHidden`，其余透传给 `<input>`。
+`label`(必填) `hint` `error` `leading` `trailing` `labelHidden` `controlSize` `multiline`，其余透传给 `<input>`。
+
+`multiline` 是一个**可辨识联合**而不是一个布尔开关：`<textarea>` 有 `rows` 没有 `type`，`<input>` 反过来，而且 `ref` 指向的元素不一样。压成一个形状会让单行那一边的 `ref` 也变成联合类型，每个现有调用方都得跟着改。不传 `multiline` 时，单行那一套和以前完全相同。
+
+`rows`（multiline 专用）可以是数字或 `'auto'`；`auto` 用 `field-sizing: content`，不支持的浏览器上就是一个不会自己长高但照常能用的 textarea。`controlSize` 改的是**控件**高度，不是文字——低于 16px 会让 iOS Safari 在聚焦时把整页放大。
 `error` 存在即标记 `aria-invalid` 并接上 `aria-describedby`。字号不低于 16px。
 
 ### `SearchField`
-`value`/`onValueChange`、`onSubmitQuery`、`clearLabel`、`aria-label`(必填)。外层 `role="search"` 的 form，输入框 `type="search"`。
+`value`/`onValueChange`、`onSubmitQuery`、`clearLabel`、`suggestions`、`onSuggestionSelect`、`aria-label`(必填)。外层 `role="search"` 的 form，输入框 `type="search"`。
+
+传了 `suggestions`（`{ value, label?, icon? }[]`）它就是一个 combobox：上下键在列表里走，Home/End 到两端，回车选中，Escape **只关列表不清空输入框**（`type="search"` 的 Escape 本来会清空，而因为建议列表恰好开着就丢掉一个查询是件小灾难）。
+
+高亮靠 `aria-activedescendant`，焦点**不离开输入框**——把真焦点移进列表是这个模式最常见的做法，也是错的：下一次按键就到不了输入框了。
+
+**筛选永远是调用方的。** 只有应用知道自己的数据里「匹配」是什么意思，库猜的话对大多数情况都是错的，而且没法覆盖。
+
+### `ContextMenu`
+`items`(必填) `aria-label`(必填) `longPressDelay`(500)，children 是它作用的那块区域。
+
+三种触发：`contextmenu`（右键）、触摸长按（手指移动超过 10px 就取消——那是在滚动）、**Shift+F10 与菜单键**（平台打开右键菜单的键盘方式，也是唯一的一条；没有它整个功能只有指针能用）。打开后的键盘模型和 `GlassMenu` 共用同一份代码。
+
+用的是 `popover="manual"`，关闭逻辑自己写。`auto` 会在打开它的那次手势的下一个指针事件上自动关掉——右键是 pointerdown → contextmenu → **pointerup**，菜单于是在抬手时把自己关了。延迟一帧看起来修好了其实没有：那一帧和 pointerup 是竞态，换一个窗口高度就又坏了。
+
+滚动时菜单**跟着内容走**而不是关闭：锚点存的是文档坐标。右键会移动焦点，移动焦点会滚动页面——「滚动就关」意味着它会被自己引起的滚动关掉。
+
+> **里面的每一条都必须有别的路径能做到。** 右键菜单是给知道它存在的人的快捷方式；只活在右键菜单里的命令，大多数人永远找不到。这一条代码检查不了，所以写在这里。
 
 ## 导航
 
@@ -240,6 +265,22 @@ import '@ttqtt/liquid-glass-react/styles.css';
 
 ### `GlassTabs`
 `items: GlassTab[]`（含 `content`）、`value`/`defaultValue`/`onValueChange`、`aria-label`(必填)。**页内**标签页，会换面板。
+
+### `Grid`
+`minItemWidth`(220) `columns` `gap`(16)，内容层。
+
+`minItemWidth` 而不是断点列表：网格被告知一项最窄多少，列数它自己算，所以同一个网格放进侧栏、放进分栏的中间列、和铺满整宽都对——而它所在的那个盒子往往不是窗口。
+
+`gap` 下限是 8（HIG 的控件最小间距，也是焦点环需要的地方），传更小的值开发模式会告警。**没有 `itemPadding`**：第一版给每个子元素加 padding 来腾这个地方，结果和子元素自己的 padding 打架并且输了——实测 `.lg-button` 的 padding 赢了，那个设置什么也没做。腾地方是 gap 的事。
+
+**不做虚拟化。** 那是另一个组件、另一组取舍（量高度、滚动锚定、以及一套要在「行还不存在」时也能用的键盘模型），在这里做半截会让以后做真的那个更难。
+
+### `Form` / `FormSection` / `FormRow`
+`Form` 是真正的 `<form>`。`FormSection`：`header`（真 heading，正常大小写）、`footer`（挂 `aria-describedby`）。`FormRow`：`label` `description` `error` `layout`(`inline`/`stacked`)。内容层。
+
+**行的标题是 `<span>` 不是 `<label>`**，这是想清楚之后的选择。显而易见的写法是把控件包进 `<label>`，让那行字也成为命中区——试过，不行，而且两个原因指向同一件事：库里每个控件**本来就带自己的名字**（`GlassSwitch`、`GlassStepper`、`GlassSlider` 都强制要求 `aria-label`，`TextField` 收一个真的 `label`），包一层是加第二个名字而不是加第一个；并且 `GlassSwitch` 和 `TextField` 自己就渲染 `<label>`，而 `<label>` 套 `<label>` 是非法的，浏览器的答复是外面那个直接失效——实测「点那行字什么也不会发生」。
+
+所以行只负责排布和分组，命名留在它本来就在的地方。想让文字也成为命中区，就给控件 `labelHidden`，让它自己拥有那行字。
 
 ### `PageControl`
 `count`(必填) `page`/`defaultPage`/`onPageChange` `aria-label`(必填) `formatPage` `orientation`。

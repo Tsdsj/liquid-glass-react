@@ -47,6 +47,8 @@ export * from './navigation/page-control.js';
 export * from './layout/screen.js';
 export * from './layout/navigation-stack.js';
 export * from './layout/split-view.js';
+export * from './layout/grid.js';
+export * from './layout/form.js';
 
 /* Overlays.
    Only the shared prop shapes are public. `triggerElement`, `usePopover` and `lockScroll` are how
@@ -57,6 +59,7 @@ export * from './overlays/popover.js';
 export * from './overlays/menu.js';
 export * from './overlays/menu-button.js';
 export * from './overlays/tooltip.js';
+export * from './overlays/context-menu.js';
 export * from './overlays/dialog.js';
 export * from './overlays/sheet.js';
 export * from './overlays/alert.js';

@@ -12,10 +12,18 @@ test('buttons carry real semantics for disabled, loading and press state', async
   await expect(page.getByRole('button', { name: '收藏', exact: true })).toBeVisible();
 });
 
+/**
+ * One preferred action per view — and a demo stage is a view. Counted per stage rather than
+ * per page: the page holds a dozen independent examples, and the first version of this summed
+ * them, so it read "1" only while the page happened to have a single prominent button
+ * anywhere on it. Adding a second example that legitimately had one broke it.
+ */
 test('only one action per view is prominent', async ({ page }) => {
   await page.goto('/#/components/button');
-  const stage = page.locator('.demo-stage');
-  await expect(stage.locator('[data-variant="glassProminent"]')).toHaveCount(1);
+  const counts = await page.locator('.demo-stage').evaluateAll(stages =>
+    stages.map(stage => stage.querySelectorAll('[data-variant="glassProminent"]').length));
+  expect(counts.length).toBeGreaterThan(1);
+  expect(Math.max(...counts), `stages hold ${counts.join(', ')} prominent buttons`).toBe(1);
 });
 
 test('segmented control is a native radio group', async ({ page }) => {
