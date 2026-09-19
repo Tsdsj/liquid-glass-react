@@ -33,7 +33,8 @@ test('the breakpoint is one number, not one per component', async ({ page }) => 
   await page.setViewportSize({ width: 767, height: 860 });
   await page.waitForTimeout(150);
   await page.getByRole('button', { name: '更多操作' }).first().click();
-  const sheet = page.locator('.lg-action-sheet[popover]');
+  // Named, because the page now shows three action sheets and only one of them is this one.
+  const sheet = page.locator('.lg-action-sheet[popover][aria-label="照片操作"]');
   await expect(sheet).toBeVisible();
   await expect(sheet).toHaveAttribute('data-anchor', 'bottom');
   await page.keyboard.press('Escape');

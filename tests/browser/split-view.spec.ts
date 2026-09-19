@@ -85,6 +85,37 @@ test('the keyboard resizes it too, and cannot push it out of range', async ({ pa
   expect((await sidebar.boundingBox())!.width, 'Home was not the start').toBe(narrowest);
 });
 
+/**
+ * What is announced is what is drawn.
+ *
+ * The range is declared in pixels, and a view can be narrower than its own maximum. Announcing
+ * 400 while the column renders at 304 tells a screen-reader user a width nobody has; the range
+ * has to be bounded by the room there actually is. Measured in a deliberately narrow view.
+ */
+test('the reported width is the width on screen, even in a view too narrow for the maximum', async ({ page }) => {
+  await page.setViewportSize({ width: 1100, height: 900 });
+  await page.goto(PAGE);
+  const split = page.locator(SPLIT);
+  await split.scrollIntoViewIfNeeded();
+  // Squeeze the view below sidebar-max + content-minimum.
+  await split.evaluate(node => { (node as HTMLElement).style.width = '420px'; });
+  await page.waitForTimeout(200);
+
+  const divider = split.locator('.lg-split-divider');
+  const sidebar = split.locator('.lg-split-column[data-column="sidebar"]');
+  await divider.focus();
+  await page.keyboard.press('End');
+  await page.waitForTimeout(150);
+
+  const drawn = Math.round((await sidebar.boundingBox())!.width);
+  await expect(divider).toHaveAttribute('aria-valuenow', String(drawn));
+  const max = Number(await divider.getAttribute('aria-valuemax'));
+  expect(max, `a 420px view still claims a ${max}px maximum`).toBeLessThan(400);
+  // And the content column still exists, rather than being squeezed out of the view.
+  const content = (await split.locator('.lg-split-column[data-column="content"]').boundingBox())!;
+  expect(content.width).toBeGreaterThan(100);
+});
+
 test('the inspector is the trailing column and is not glass', async ({ page }) => {
   await page.goto(PAGE);
   const split = page.locator('#split-inspector-demo .lg-split');

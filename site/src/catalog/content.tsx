@@ -3,6 +3,7 @@ import {
   Card, Concentric, DisclosureGroup, Divider, Form, FormRow, FormSection, GlassButton,
   GlassStepper, GlassSwitch, Grid, Kbd, LibraryIcon, TextField, List, ListRow, ListSection, MaterialView, Text,
 } from '@ttqtt/liquid-glass-react';
+import { demoLink } from '../site/demo.js';
 import type { ComponentDoc } from './types.js';
 
 export const contentDocs: ComponentDoc[] = [
@@ -33,18 +34,31 @@ export const contentDocs: ComponentDoc[] = [
       },
       {
         id: 'text-tone', title: '强调与色调', description: '同一档字号下，用字重和颜色区分主次。',
-        height: 200,
-        render: () => <div style={{ display: 'grid', gap: 8, textAlign: 'start' }}>
-          <Text variant="body" emphasized>加粗的正文</Text>
-          <Text variant="body">默认正文</Text>
-          <Text variant="body" tone="secondary">次要</Text>
-          <Text variant="body" tone="tertiary">更次要</Text>
-          <Text variant="body" tone="accent">强调色</Text>
-          <Text variant="body" tone="destructive">危险操作</Text>
-        </div>,
-        code: `<Text variant="body" emphasized>加粗的正文</Text>
-<Text variant="body" tone="secondary">次要</Text>
-<Text variant="body" tone="destructive">危险操作</Text>`,
+        height: 230,
+        knobs: [
+          { name: 'variant', label: '样式', type: 'select', value: 'body', options: [
+            { value: 'largeTitle', label: '大标题' }, { value: 'headline', label: '小标题' },
+            { value: 'body', label: '正文' }, { value: 'footnote', label: '脚注' },
+          ] },
+          { name: 'tone', label: '色调', type: 'select', value: 'primary', options: [
+            { value: 'primary', label: '主要' }, { value: 'secondary', label: '次要' },
+            { value: 'accent', label: '强调' }, { value: 'destructive', label: '危险' },
+          ] },
+          { name: 'emphasized', label: '加粗', type: 'boolean', value: false },
+        ],
+        render: function TextTone({ knobs }) {
+          return <div style={{ display: 'grid', gap: 8, textAlign: 'start' }}>
+            <Text variant={knobs.variant as 'body'} tone={knobs.tone as 'primary'} emphasized={knobs.emphasized === true}>
+              调上面的旋钮看这一行
+            </Text>
+            <Text variant="body" tone="secondary">次要</Text>
+            <Text variant="body" tone="tertiary">更次要</Text>
+            <Text variant="body" tone="destructive">危险操作</Text>
+          </div>;
+        },
+        code: knobs => `<Text variant="${knobs.variant}"${knobs.tone === 'primary' ? '' : ` tone="${knobs.tone}"`}${knobs.emphasized ? ' emphasized' : ''}>
+  一行文字
+</Text>`,
       },
       {
         id: 'text-tabular', title: '数字对齐', description: '等宽数字让上下两行的位数对齐，适合金额、时间和计数。',
@@ -83,15 +97,27 @@ export const contentDocs: ComponentDoc[] = [
     examples: [
       {
         id: 'card-basic', title: '基础卡片', description: '三种底色层级，配合是否需要投影。',
-        height: 230,
-        render: () => <div style={{ display: 'grid', gap: 12, width: 280 }}>
-          <Card radius={20} padding={16}><Text variant="subhead">默认（分组背景）</Text></Card>
-          <Card radius={20} padding={16} fill="secondary"><Text variant="subhead">次级背景</Text></Card>
-          <Card radius={20} padding={16} raised><Text variant="subhead">带轻微投影</Text></Card>
-        </div>,
-        code: `<Card radius={20} padding={16}>内容</Card>
-<Card fill="secondary">内容</Card>
-<Card raised>内容</Card>`,
+        height: 260,
+        knobs: [
+          { name: 'fill', label: '底色', type: 'select', value: 'grouped', options: [
+            { value: 'grouped', label: '分组' }, { value: 'plain', label: '纯色' }, { value: 'secondary', label: '次级' },
+          ] },
+          { name: 'radius', label: '圆角', type: 'number', value: 20, min: 0, max: 34, step: 2 },
+          { name: 'padding', label: '内边距', type: 'number', value: 16, min: 0, max: 32, step: 4 },
+          { name: 'raised', label: '投影', type: 'boolean', value: false },
+        ],
+        render: function CardBasic({ knobs }) {
+          return <div style={{ display: 'grid', gap: 12, width: 280 }}>
+            <Card fill={knobs.fill as 'grouped'} radius={Number(knobs.radius)} padding={Number(knobs.padding)}
+              raised={knobs.raised === true}>
+              <Text variant="subhead">调上面的旋钮看这张卡片</Text>
+            </Card>
+            <Card radius={20} padding={16} fill="secondary"><Text variant="subhead">次级背景</Text></Card>
+          </div>;
+        },
+        code: knobs => `<Card${knobs.fill === 'grouped' ? '' : ` fill="${knobs.fill}"`} radius={${knobs.radius}} padding={${knobs.padding}}${knobs.raised ? ' raised' : ''}>
+  内容
+</Card>`,
       },
       {
         id: 'card-concentric', title: '同心圆角', description: '内圆角 = 外圆角 − 内边距。左边是算对的，右边固定成 4px，角看起来就“喇叭口”了。',
@@ -114,6 +140,26 @@ export const contentDocs: ComponentDoc[] = [
   <Concentric minimum={8}>
     <img src="…" alt="" />
   </Concentric>
+</Card>`,
+      },
+      {
+        id: 'card-interactive', title: '整张卡片可点',
+        description: '卡片没有语义角色，所以「可点」必须由里面真正的链接或按钮承担。给卡片绑一个 onClick 做出来的东西，键盘走不进去、读屏也不会说它是什么。',
+        height: 250,
+        render: () => <div id="card-interactive-demo" style={{ display: 'grid', gap: 12, width: 300 }}>
+          <Card radius={20} padding={0} raised>
+            {/* The whole card is the link's box; the card stays a container. */}
+            <a className="card-link" {...demoLink} style={{ display: 'grid', gap: 4, padding: 16 }}>
+              <Text as="span" variant="headline">阿尔卑斯的早晨</Text>
+              <Text as="span" variant="footnote" tone="secondary">12 张照片 · 上周</Text>
+            </a>
+          </Card>
+          <Text variant="caption1" tone="secondary">用 Tab 走一遍：焦点会落在卡片上，因为焦点在那个链接上。</Text>
+        </div>,
+        code: `<Card radius={20} padding={0}>
+  <a href="/albums/alps" style={{ display: 'block', padding: 16 }}>
+    <Text as="span" variant="headline">阿尔卑斯的早晨</Text>
+  </a>
 </Card>`,
       },
     ],
@@ -139,17 +185,26 @@ export const contentDocs: ComponentDoc[] = [
     examples: [
       {
         id: 'list-basic', title: '设置列表', description: '分区标题用正常大小写，不用全大写。行尾的箭头表示点进去还有下一层。',
-        height: 260,
-        render: () => <List style={{ width: 320 }}>
-          <ListSection header="显示与亮度" footer="这些设置只影响这个演示。">
-            <ListRow label="外观" value="浅色" onSelect={() => {}} />
-            <ListRow label="文字大小" secondaryLabel="影响整站排版" value="标准" onSelect={() => {}} />
-          </ListSection>
-        </List>,
-        code: `<List>
-  <ListSection header="显示与亮度" footer="说明文字">
-    <ListRow label="外观" value="浅色" onSelect={open} />
-    <ListRow label="文字大小" secondaryLabel="影响整站排版" value="标准" />
+        height: 290,
+        knobs: [
+          { name: 'variant', label: '样式', type: 'select', value: 'insetGrouped', options: [
+            { value: 'insetGrouped', label: '分组内嵌' }, { value: 'plain', label: '通栏' },
+          ] },
+          { name: 'footer', label: '显示分区说明', type: 'boolean', value: true },
+          { name: 'disclosure', label: '显示箭头', type: 'boolean', value: true },
+        ],
+        render: function ListBasic({ knobs }) {
+          return <List style={{ width: 320 }} variant={knobs.variant as 'plain'}>
+            <ListSection header="显示与亮度" footer={knobs.footer === true ? '这些设置只影响这个演示。' : undefined}>
+              <ListRow label="外观" value="浅色" onSelect={() => {}} disclosure={knobs.disclosure === true} />
+              <ListRow label="文字大小" secondaryLabel="影响整站排版" value="标准" onSelect={() => {}}
+                disclosure={knobs.disclosure === true} />
+            </ListSection>
+          </List>;
+        },
+        code: knobs => `<List${knobs.variant === 'insetGrouped' ? '' : ` variant="${knobs.variant}"`}>
+  <ListSection header="显示与亮度"${knobs.footer ? ' footer="说明文字"' : ''}>
+    <ListRow label="外观" value="浅色" onSelect={open}${knobs.disclosure ? '' : ' disclosure={false}'} />
   </ListSection>
 </List>`,
       },
@@ -220,16 +275,19 @@ export const contentDocs: ComponentDoc[] = [
     ],
     examples: [
       {
-        id: 'kbd-basic', title: '基础用法', description: '写法随意：符号、单词、加号或空格分隔都行。',
-        height: 190,
-        render: () => <div id="kbd-basic-demo" style={{ display: 'flex', gap: 12, flexWrap: 'wrap', alignItems: 'center' }}>
-          <Kbd keys="⌘K" />
-          <Kbd keys="Cmd+Shift+P" />
-          <Kbd keys="ctrl alt delete" />
-          <Kbd keys="esc" />
-          <Kbd keys="up" />
-        </div>,
-        code: `<Kbd keys="⌘K" />
+        id: 'kbd-basic', title: '基础用法', description: '写法随意：符号、单词、加号或空格分隔都行。左边那个自己改改看。',
+        height: 210,
+        knobs: [{ name: 'keys', label: '快捷键', type: 'text', value: '⌘K' }],
+        render: function KbdBasic({ knobs }) {
+          return <div id="kbd-basic-demo" style={{ display: 'flex', gap: 12, flexWrap: 'wrap', alignItems: 'center' }}>
+            <Kbd keys={String(knobs.keys)} />
+            <Kbd keys="Cmd+Shift+P" />
+            <Kbd keys="ctrl alt delete" />
+            <Kbd keys="esc" />
+            <Kbd keys="up" />
+          </div>;
+        },
+        code: knobs => `<Kbd keys="${knobs.keys}" />
 <Kbd keys="Cmd+Shift+P" />
 <Kbd keys="ctrl alt delete" />`,
       },
@@ -279,10 +337,14 @@ export const contentDocs: ComponentDoc[] = [
     examples: [
       {
         id: 'disclosure-basic', title: '基础用法', description: '标签说明里面是什么；箭头跟着转。浏览器的页内查找命中折叠内容时会自动展开它。',
-        height: 250,
-        render: function DisclosureBasic() {
+        height: 270,
+        knobs: [
+          { name: 'label', label: '标签', type: 'text', value: '高级选项' },
+          { name: 'secondaryLabel', label: '第二行', type: 'text', value: '代理、缓存与实验性功能' },
+        ],
+        render: function DisclosureBasic({ knobs }) {
           return <div id="disclosure-basic-demo" style={{ display: 'grid', gap: 10, width: 360 }}>
-            <DisclosureGroup label="高级选项" secondaryLabel="代理、缓存与实验性功能">
+            <DisclosureGroup label={String(knobs.label)} secondaryLabel={String(knobs.secondaryLabel) || undefined}>
               <Text variant="subhead" tone="secondary">这里放平时不需要动的设置。</Text>
             </DisclosureGroup>
             <DisclosureGroup label="为什么需要这个权限" defaultOpen>
@@ -290,7 +352,7 @@ export const contentDocs: ComponentDoc[] = [
             </DisclosureGroup>
           </div>;
         },
-        code: `<DisclosureGroup label="高级选项" secondaryLabel="代理、缓存与实验性功能">
+        code: knobs => `<DisclosureGroup label="${knobs.label}"${knobs.secondaryLabel ? ` secondaryLabel="${knobs.secondaryLabel}"` : ''}>
   <Text variant="subhead">这里放平时不需要动的设置。</Text>
 </DisclosureGroup>`,
       },
@@ -357,14 +419,20 @@ export const contentDocs: ComponentDoc[] = [
     examples: [
       {
         id: 'grid-auto', title: '按空间自动排列', description: '把窗口拉窄，列数自己变。minItemWidth 是一项最窄多少，不是列数。',
-        height: 320,
-        render: () => <Grid id="grid-auto-demo" minItemWidth={140} gap={12} style={{ width: '100%' }}>
-          {['封面', '背景', '图标', '插画', '头像', '横幅'].map(name => <Card key={name} radius={14} padding={16} fill="secondary">
-            <Text variant="subhead">{name}</Text>
-            <Text variant="caption1" tone="secondary">1280 × 720</Text>
-          </Card>)}
-        </Grid>,
-        code: `<Grid minItemWidth={140} gap={12}>
+        height: 340,
+        knobs: [
+          { name: 'minItemWidth', label: '一项最窄', type: 'number', value: 140, min: 80, max: 320, step: 20 },
+          { name: 'gap', label: '间距', type: 'number', value: 12, min: 8, max: 32, step: 4 },
+        ],
+        render: function GridAuto({ knobs }) {
+          return <Grid id="grid-auto-demo" minItemWidth={Number(knobs.minItemWidth)} gap={Number(knobs.gap)} style={{ width: '100%' }}>
+            {['封面', '背景', '图标', '插画', '头像', '横幅'].map(name => <Card key={name} radius={14} padding={16} fill="secondary">
+              <Text variant="subhead">{name}</Text>
+              <Text variant="caption1" tone="secondary">1280 × 720</Text>
+            </Card>)}
+          </Grid>;
+        },
+        code: knobs => `<Grid minItemWidth={${knobs.minItemWidth}} gap={${knobs.gap}}>
   {items.map(item => <Card key={item.id}>…</Card>)}
 </Grid>`,
       },
@@ -411,14 +479,18 @@ export const contentDocs: ComponentDoc[] = [
     examples: [
       {
         id: 'form-basic', title: '基础用法', description: '行负责排布和分组，命名留在控件自己身上——库里每个控件本来就要求有自己的名字。',
-        height: 380,
-        render: function FormBasic() {
+        height: 400,
+        knobs: [
+          { name: 'description', label: '显示第二行', type: 'boolean', value: true },
+          { name: 'footer', label: '显示分区说明', type: 'boolean', value: true },
+        ],
+        render: function FormBasic({ knobs }) {
           const [wifi, setWifi] = useState(true);
           const [roam, setRoam] = useState(false);
           const [copies, setCopies] = useState(2);
           return <Form id="form-basic-demo" style={{ width: 360 }} onSubmit={event => event.preventDefault()}>
-            <FormSection header="网络" footer="这些设置只影响这个演示。">
-              <FormRow label="Wi‑Fi" description="连接到可用的网络">
+            <FormSection header="网络" footer={knobs.footer === true ? '这些设置只影响这个演示。' : undefined}>
+              <FormRow label="Wi‑Fi" description={knobs.description === true ? '连接到可用的网络' : undefined}>
                 <GlassSwitch aria-label="Wi‑Fi" checked={wifi} onCheckedChange={setWifi} />
               </FormRow>
               <FormRow label="数据漫游">
@@ -430,9 +502,9 @@ export const contentDocs: ComponentDoc[] = [
             </FormSection>
           </Form>;
         },
-        code: `<Form>
-  <FormSection header="网络" footer="说明文字">
-    <FormRow label="Wi‑Fi" description="连接到可用的网络">
+        code: knobs => `<Form>
+  <FormSection header="网络"${knobs.footer ? ' footer="说明文字"' : ''}>
+    <FormRow label="Wi‑Fi"${knobs.description ? ' description="连接到可用的网络"' : ''}>
       <GlassSwitch aria-label="Wi‑Fi" checked={wifi} onCheckedChange={setWifi} />
     </FormRow>
   </FormSection>
@@ -459,6 +531,37 @@ export const contentDocs: ComponentDoc[] = [
         code: `<FormRow layout="stacked" label="电子邮件" error={invalid ? '请填写完整的邮箱地址。' : undefined}>
   <TextField labelHidden label="电子邮件" value={email} onChange={…} />
 </FormRow>`,
+      },
+      {
+        id: 'form-submit', title: '提交',
+        description: '是真正的 form：在任何一个输入框里按回车都会提交，浏览器也能自动填充。主操作只有一个，取消是扁平按钮。',
+        height: 400,
+        render: function FormSubmit() {
+          const [name, setName] = useState('');
+          const [sent, setSent] = useState(false);
+          return <Form id="form-submit-demo" style={{ width: 360 }}
+            onSubmit={event => { event.preventDefault(); setSent(true); }}>
+            <FormSection header="新建工作区" footer="名字之后还能改。">
+              <FormRow layout="stacked" label="名称">
+                <TextField labelHidden label="名称" value={name} autoComplete="off"
+                  placeholder="例如「设计」" onChange={event => { setName(event.currentTarget.value); setSent(false); }} />
+              </FormRow>
+            </FormSection>
+            <div style={{ display: 'flex', gap: 10, justifyContent: 'flex-end' }}>
+              <GlassButton variant="plain" type="button" onClick={() => { setName(''); setSent(false); }}>清空</GlassButton>
+              <GlassButton variant="glassProminent" type="submit" disabled={!name}>创建</GlassButton>
+            </div>
+            <Text variant="caption1" tone="secondary" role="status">{sent ? `已创建「${name}」` : '在输入框里按回车也能提交。'}</Text>
+          </Form>;
+        },
+        code: `<Form onSubmit={create}>
+  <FormSection header="新建工作区">
+    <FormRow layout="stacked" label="名称">
+      <TextField labelHidden label="名称" value={name} onChange={…} />
+    </FormRow>
+  </FormSection>
+  <GlassButton variant="glassProminent" type="submit">创建</GlassButton>
+</Form>`,
       },
     ],
     props: [
@@ -499,6 +602,48 @@ export const contentDocs: ComponentDoc[] = [
   <Text variant="body">压在照片上也读得清的说明</Text>
 </MaterialView>`,
       },
+      {
+        id: 'material-caption', title: '照片上的说明',
+        description: '这是标准材质最常见的用处：文字压在图上，底下垫一层，图还看得见，字也读得清。',
+        backdrop: 'media', height: 260,
+        knobs: [
+          { name: 'thickness', label: '厚度', type: 'select', value: 'regular', options: [
+            { value: 'ultraThin', label: '最薄' }, { value: 'thin', label: '薄' },
+            { value: 'regular', label: '标准' }, { value: 'thick', label: '厚' },
+          ] },
+          { name: 'radius', label: '圆角', type: 'number', value: 16, min: 0, max: 26, step: 2 },
+        ],
+        render: function MaterialCaption({ knobs }) {
+          return <MaterialView id="material-caption-demo" thickness={knobs.thickness as 'regular'}
+            radius={Number(knobs.radius)} style={{ padding: 14, width: 280 }}>
+            <Text variant="headline">阿尔卑斯的早晨</Text>
+            <Text variant="footnote" tone="secondary">海拔 2,840 米 · 6:12</Text>
+          </MaterialView>;
+        },
+        code: knobs => `<MaterialView thickness="${knobs.thickness}" radius={${knobs.radius}}>
+  <Text variant="headline">阿尔卑斯的早晨</Text>
+  <Text variant="footnote" tone="secondary">海拔 2,840 米</Text>
+</MaterialView>`,
+      },
+      {
+        id: 'material-not-glass', title: '它不是玻璃',
+        description: '标准材质属于内容层：它待在原地，跟着内容一起滚。玻璃属于浮在内容之上的那一层。把两者调换，页面就会既没有层次、浮起来的东西也不再显眼。',
+        backdrop: 'media', height: 260,
+        render: () => <div id="material-not-glass-demo" style={{ display: 'grid', gap: 12, width: 280 }}>
+          <MaterialView thickness="regular" radius={16} style={{ padding: 12 }}>
+            <Text variant="subhead" emphasized>内容层：标准材质</Text>
+            <Text variant="caption1" tone="secondary">说明、字幕、图注</Text>
+          </MaterialView>
+          <div style={{ display: 'flex', justifyContent: 'center' }}>
+            <GlassButton variant="glassProminent">浮动层：玻璃</GlassButton>
+          </div>
+        </div>,
+        code: `{/* 内容层 */}
+<MaterialView thickness="regular">图注</MaterialView>
+
+{/* 浮动层 */}
+<GlassButton variant="glassProminent">播放</GlassButton>`,
+      },
     ],
     props: [
       { name: 'thickness', type: "'ultraThin' | 'thin' | 'regular' | 'thick'", default: "'regular'", description: '按用途选，不要按它在当前背景上的颜色选。' },
@@ -520,16 +665,19 @@ export const contentDocs: ComponentDoc[] = [
     examples: [
       {
         id: 'divider-basic', title: '横向与内缩', description: '内缩值让线和文字起始位置对齐，而不是贴着容器边。',
-        height: 190,
-        render: () => <div style={{ width: 280 }}>
-          <Text variant="body">上一段</Text>
-          <Divider style={{ marginBlock: 12 }} />
-          <Text variant="body">下一段</Text>
-          <Divider inset={32} style={{ marginBlock: 12 }} />
-          <Text variant="footnote" tone="secondary">这条向起始侧内缩了 32</Text>
-        </div>,
-        code: `<Divider />
-<Divider inset={32} />`,
+        height: 210,
+        knobs: [{ name: 'inset', label: '起始侧内缩', type: 'number', value: 32, min: 0, max: 64, step: 8 }],
+        render: function DividerBasic({ knobs }) {
+          return <div id="divider-basic-demo" style={{ width: 280 }}>
+            <Text variant="body">上一段</Text>
+            <Divider style={{ marginBlock: 12 }} />
+            <Text variant="body">下一段</Text>
+            <Divider inset={Number(knobs.inset)} style={{ marginBlock: 12 }} />
+            <Text variant="footnote" tone="secondary">这条向起始侧内缩了 {String(knobs.inset)}</Text>
+          </div>;
+        },
+        code: knobs => `<Divider />
+<Divider inset={${knobs.inset}} />`,
       },
       {
         id: 'divider-vertical', title: '竖向', description: '用在一行并排的内容之间。',
@@ -542,6 +690,30 @@ export const contentDocs: ComponentDoc[] = [
           <Text variant="body">右</Text>
         </div>,
         code: `<Divider orientation="vertical" />`,
+      },
+      {
+        id: 'divider-when-not', title: '什么时候不该用',
+        description: '列表自己带分隔线，工具栏和导航栏的分隔来自材质本身。在这些地方再加一条，就是把系统已经做过的事又做了一遍，而且做得更重。',
+        height: 260,
+        render: () => <div id="divider-when-not-demo" style={{ display: 'grid', gap: 16, width: 300 }}>
+          <List>
+            <ListSection header="列表自己就有线">
+              <ListRow label="第一行" />
+              <ListRow label="第二行" />
+            </ListSection>
+          </List>
+          <Text variant="footnote" tone="secondary">
+            两行之间那条线是列表画的。再放一个 Divider 只会得到两条。
+          </Text>
+        </div>,
+        code: `{/* 不需要：列表自己有 */}
+<ListRow label="第一行" />
+<ListRow label="第二行" />
+
+{/* 需要：两段松散内容之间 */}
+<section>…</section>
+<Divider />
+<section>…</section>`,
       },
     ],
     props: [

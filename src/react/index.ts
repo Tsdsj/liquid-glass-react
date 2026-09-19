@@ -29,6 +29,8 @@ export * from './controls/switch.js';
 export * from './controls/stepper.js';
 export * from './controls/progress.js';
 export * from './controls/badge.js';
+export * from './controls/picker.js';
+export * from './controls/color-well.js';
 
 /* Fields */
 export * from './fields/text-field.js';
@@ -56,7 +58,10 @@ export * from './layout/form.js';
    prop wired to a specific `aria-haspopup` — and none of them is usable on its own. */
 export type { OpenProps, TriggerProps, Align } from './overlays/anchor.js';
 export * from './overlays/popover.js';
-export * from './overlays/menu.js';
+/* Named rather than `export *`: `menuKeyboard` is how `GlassMenu` and `ContextMenu` share one
+   keyboard model, and it writes to a panel element it assumes the shape of. It belongs with
+   `usePopover` and `lockScroll` — assembly, not API — and an `export *` had been publishing it. */
+export { GlassMenu, type GlassMenuItem, type GlassMenuProps } from './overlays/menu.js';
 export * from './overlays/menu-button.js';
 export * from './overlays/tooltip.js';
 export * from './overlays/context-menu.js';
@@ -65,10 +70,14 @@ export * from './overlays/sheet.js';
 export * from './overlays/alert.js';
 export * from './overlays/action-sheet.js';
 export * from './overlays/toast.js';
+export * from './overlays/banner.js';
 
 export type * from '../tokens/index.js';
 export {
   getGlassDiagnostics, clearGlassCache,
+  /* Syntax detection, so an application can decide whether offering a refraction switch is
+     honest on this browser. It reports what the browser says it understands, not how it looks. */
+  supportsSvgBackdrop,
   concentricRadius, concentricInset, capsuleRadius, type ConcentricOptions,
   createSpring, advanceSpring, springAtRest, defaultSpring,
   type SpringConfig, type SpringState, type SpringHandle,

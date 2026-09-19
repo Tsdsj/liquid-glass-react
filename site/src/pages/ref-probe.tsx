@@ -15,7 +15,7 @@ import {
   Card, Concentric, DisclosureGroup, Divider, Form, FormRow, FormSection, Grid, Kbd,
   List, ListRow, ListSection, MaterialView, Text,
   GlassBackdrop, GlassBadge, GlassButton, GlassIconButton, GlassProgress, GlassSegmentedControl,
-  GlassSlider, GlassStepper, GlassSwitch, GlassSurface, GlassGroup, LibraryIcon,
+  GlassSlider, GlassStepper, GlassSwitch, GlassSurface, GlassGroup, LibraryIcon, Picker, ColorWell, Banner,
   SearchField, TextField,
   Inspector, NavigationBar, NavigationStack, PageControl, Screen, ScrollEdge, Sidebar, SplitView, TabBar, GlassTabs, GlassToolbar, ToolbarGroup, ToolbarSpacer,
   GlassActionSheet, GlassAlert, GlassDialog, GlassMenu, GlassMenuButton, GlassMenuDescription, GlassPopover, GlassSheet, ContextMenu, Tooltip,
@@ -72,6 +72,11 @@ const entries: Array<[string, (p: Probe) => ReactNode]> = [
   ['GlassSlider', p => <GlassSlider {...p} aria-label="slider" defaultValue={40} />],
   ['GlassStepper', p => <GlassStepper {...p} aria-label="stepper" defaultValue={1} />],
   ['GlassSwitch', p => <GlassSwitch {...p} aria-label="switch" />],
+  /* Inline, so the probe measures one shape rather than whichever the window happened to pick. */
+  ['Picker', p => <Picker {...p} label="picker" presentation="inline"
+    options={[{ value: 'a', label: 'A' }, { value: 'b', label: 'B' }]} />],
+  /* The ref lands on the `<input type="color">` — the control, not the shell around it. */
+  ['ColorWell', p => <ColorWell {...p} aria-label="colour" defaultValue="#0a84ff" />],
 
   /* Fields */
   ['SearchField', p => <SearchField {...p} aria-label="search" />],
@@ -112,6 +117,7 @@ const entries: Array<[string, (p: Probe) => ReactNode]> = [
     <span>target</span>
   </ContextMenu>],
   ['GlassSheet', p => <GlassSheet {...p} title="sheet">body</GlassSheet>],
+  ['Banner', p => <Banner {...p} title="banner" message="message" />],
 
   /* System */
   ['GlassBackdrop', p => <GlassBackdrop {...p} tone="light">backdrop</GlassBackdrop>],
@@ -157,6 +163,9 @@ const _contract = {
   GlassSlider: null as unknown as Gap<typeof GlassSlider>,
   GlassStepper: null as unknown as Gap<typeof GlassStepper>,
   GlassSwitch: null as unknown as Gap<typeof GlassSwitch>,
+  Picker: null as unknown as Gap<typeof Picker>,
+  ColorWell: null as unknown as Gap<typeof ColorWell>,
+  Banner: null as unknown as Gap<typeof Banner>,
   SearchField: null as unknown as Gap<typeof SearchField>,
   TextField: null as unknown as Gap<typeof TextField>,
   NavigationBar: null as unknown as Gap<typeof NavigationBar>,

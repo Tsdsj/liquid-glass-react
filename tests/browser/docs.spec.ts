@@ -87,3 +87,147 @@ test('code is highlighted by the site itself, with colours from the token palett
   expect(tag).not.toBe(plain);
   expect(tag).toMatch(/^rgb/);
 });
+
+/**
+ * The documentation site's own promises.
+ *
+ * `scripts/check-props.mjs` already refuses to build a page with fewer than three examples or
+ * with none adjustable — that is the structural half, and it runs before anything is
+ * published. What it cannot see is whether the adjustable example actually *works*: whether
+ * turning a knob changes what is on screen and what the code block says, and whether the
+ * things the search claims to index can actually be found.
+ */
+
+/* ---------- D3: the adjustable example ---------- */
+
+test('a knob changes the example and the code together', async ({ page }) => {
+  await page.goto('/#/components/button');
+  const card = page.locator('.demo-card[data-adjustable="true"]');
+  await card.scrollIntoViewIfNeeded();
+
+  // Open the code so both halves are readable at once.
+  await card.getByRole('button', { name: /显示代码/ }).click();
+  const code = card.locator('.demo-card-code');
+  await expect(code).not.toContainText('controlSize');
+
+  await card.getByRole('radio', { name: '大', exact: true }).click();
+
+  const button = card.locator('.demo-stage').getByRole('button', { name: '可调节的按钮' });
+  await expect(button).toHaveAttribute('data-control-size', 'large');
+  await expect(code, 'the snippet did not follow the knob').toContainText('controlSize="large"');
+});
+
+test('a boolean knob is a real switch with a name', async ({ page }) => {
+  await page.goto('/#/components/button');
+  const panel = page.locator('.knob-panel');
+  await panel.scrollIntoViewIfNeeded();
+  const unnamed = await panel.locator('[role="switch"], button, input').evaluateAll(nodes =>
+    nodes.filter(node => !node.getAttribute('aria-label')
+      && !node.getAttribute('aria-labelledby')
+      && !node.closest('label')
+      && !node.textContent?.trim()).length);
+  expect(unnamed, 'a knob with no name is a control nobody can reach').toBe(0);
+});
+
+/**
+ * The knob panel is apparatus, not part of the example.
+ *
+ * It is built from this library's own controls, so a `Picker` knob really is a second
+ * segmented control and a number knob really is a second stepper. They sit outside the element
+ * the example's anchor names, which is what keeps "the segmented control in this example" from
+ * meaning two different things.
+ */
+test('the knobs are outside the example they adjust', async ({ page }) => {
+  await page.goto('/#/components/segmented-control');
+  const stage = page.locator('#segmented-basic');
+  await expect(stage).toHaveClass(/demo-stage/);
+  await expect(stage.locator('.knob-panel')).toHaveCount(0);
+  await expect(stage.locator('.lg-segmented-track')).toHaveCount(1);
+});
+
+/* ---------- D1: three examples, and they are different questions ---------- */
+
+test('every component page shows at least three examples', async ({ page }) => {
+  await page.goto('/#/components/switch');
+  await expect(page.locator('.demo-card')).toHaveCount(3);
+  // Distinct anchors, so the outline can name each of them.
+  const ids = await page.locator('.demo-stage[id]').evaluateAll(nodes => nodes.map(node => node.id));
+  expect(new Set(ids).size).toBe(ids.length);
+});
+
+/* ---------- D5: search reaches inside the pages ---------- */
+
+const openSearch = async (page: import('@playwright/test').Page) => {
+  await page.keyboard.press('ControlOrMeta+k');
+  const dialog = page.getByRole('dialog', { name: '搜索' });
+  await expect(dialog).toBeVisible();
+  return dialog;
+};
+
+test('searching finds a property name, not only a component name', async ({ page }) => {
+  await page.goto('/#/overview');
+  const dialog = await openSearch(page);
+  await page.getByRole('searchbox', { name: '搜索' }).fill('marks');
+  const row = dialog.getByRole('listitem').filter({ hasText: 'marks' }).first();
+  await expect(row).toBeVisible();
+  await expect(row).toContainText('属性');
+});
+
+test('choosing a property result lands on that page at its API table', async ({ page }) => {
+  await page.goto('/#/overview');
+  await openSearch(page);
+  await page.getByRole('searchbox', { name: '搜索' }).fill('marks');
+  await page.getByRole('listitem').filter({ hasText: 'marks' }).first().getByRole('button').click();
+
+  await expect(page).toHaveURL(/#\/components\/slider/);
+  await page.waitForTimeout(400);
+  const top = await page.locator('#api').evaluate(node => node.getBoundingClientRect().top);
+  expect(top, `the API section is ${top.toFixed(0)}px from the top`).toBeLessThan(300);
+});
+
+test('searching finds an example by its title', async ({ page }) => {
+  await page.goto('/#/overview');
+  const dialog = await openSearch(page);
+  await page.getByRole('searchbox', { name: '搜索' }).fill('刻度');
+  const row = dialog.getByRole('listitem').filter({ hasText: '刻度' }).first();
+  await expect(row).toBeVisible();
+  await expect(row).toContainText('示例');
+});
+
+test('searching finds a section heading', async ({ page }) => {
+  await page.goto('/#/overview');
+  const dialog = await openSearch(page);
+  await page.getByRole('searchbox', { name: '搜索' }).fill('键盘与辅助功能');
+  await expect(dialog.getByRole('listitem').first()).toContainText('章节');
+});
+
+/* ---------- D8: the refraction switch ---------- */
+
+/**
+ * The overview states that refraction is off by default and only Chromium can do it. That
+ * sentence sat on the page for months with no way to see the difference, which reads as an
+ * excuse rather than a boundary. The switch is the demonstration — and where the browser
+ * cannot do it, it says so instead of pretending.
+ */
+test('the refraction switch turns refraction on where the browser can do it', async ({ page, browserName }) => {
+  await page.goto('/#/overview');
+  const toggle = page.getByRole('switch', { name: '边缘折射' });
+  await expect(toggle).toBeVisible();
+
+  const capable = await page.evaluate(() => CSS.supports('backdrop-filter', 'url("#glass-probe")'));
+  if (!capable) {
+    await expect(toggle, `${browserName} cannot refract, so the switch must be disabled`).toBeDisabled();
+    await expect(page.locator('.refraction-switch')).toContainText('不支持折射');
+    return;
+  }
+
+  // Off to begin with: this is the library's default and the page says so.
+  await expect(page.locator('.media-viewer .lg-root[data-renderer="svg"]')).toHaveCount(0);
+  await toggle.click();
+  await page.waitForTimeout(400);
+  await expect(page.locator('.media-viewer .lg-root[data-renderer="svg"]').first()).toBeVisible();
+
+  // And only this demo — the rest of the page keeps the default.
+  await expect(page.locator('.lg-tabbar[data-renderer="svg"]')).toHaveCount(0);
+});
+

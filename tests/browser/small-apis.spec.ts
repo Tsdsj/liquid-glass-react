@@ -170,6 +170,27 @@ test('the keyboard walks the list without leaving the field', async ({ page }) =
   expect(await demo.getByRole('option', { selected: true }).count()).toBe(1);
 });
 
+/**
+ * The highlight has to survive the render the caller causes.
+ *
+ * Filtering belongs to the caller, so `suggestions` is normally built inline and is a new array
+ * on every render. The reset-the-highlight effect was keyed on that array's identity, so it
+ * fired after the render that had just moved the highlight and cleared it again — a race that
+ * passed often enough to look fine. The pause is the whole point: it lets every effect the
+ * keypress caused run before anything is read.
+ */
+test('the highlight is not cleared by the list being rebuilt', async ({ page }) => {
+  await page.goto('/#/components/search-field');
+  const demo = page.locator(SEARCH);
+  await demo.scrollIntoViewIfNeeded();
+  const input = demo.locator('.lg-search-input');
+  await input.fill('g');
+  await page.keyboard.press('ArrowDown');
+  await page.waitForTimeout(250);
+  expect(await input.getAttribute('aria-activedescendant'),
+    'the highlight was cleared by a re-render').toBeTruthy();
+});
+
 test('Enter takes the highlighted suggestion', async ({ page }) => {
   await page.goto('/#/components/search-field');
   const demo = page.locator(SEARCH);

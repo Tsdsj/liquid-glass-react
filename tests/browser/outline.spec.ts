@@ -72,9 +72,32 @@ test('choosing a section moves the page to it', async ({ page }) => {
   await page.goto('/#/components/button');
   await page.locator('.outline-trigger').click();
   await page.locator('.lg-menu:popover-open .lg-menu-item').filter({ hasText: 'API' }).click();
-  await page.waitForTimeout(700);
-  const top = await page.locator('#api').evaluate(node => node.getBoundingClientRect().top);
-  expect(Math.abs(top), `the API section is ${top.toFixed(0)}px from the top`).toBeLessThan(160);
+  // Wait for the smooth scroll to stop rather than for a fixed time: how long it takes is a
+  // function of how far it goes, and the pages have got longer.
+  await page.waitForFunction(() => {
+    const window_ = window as Window & { __lastY?: number; __still?: number };
+    if (window_.__lastY === scrollY) window_.__still = (window_.__still ?? 0) + 1;
+    else { window_.__still = 0; window_.__lastY = scrollY; }
+    return (window_.__still ?? 0) > 5;
+  }, undefined, { polling: 50, timeout: 5000 });
+
+  /**
+   * It lands on the section's own scroll margin — unless the page has run out of room to
+   * scroll, which is a fact about the document rather than a failure of the jump.
+   *
+   * The first version asserted a bare "< 160px from the top", which was the page's remaining
+   * scroll range on the day it was written: adding examples to the page moved the number and
+   * the test failed at 160.5 with nothing wrong. The two honest outcomes are stated instead.
+   */
+  const landed = await page.evaluate(() => {
+    const top = document.getElementById('api')!.getBoundingClientRect().top;
+    const margin = parseFloat(getComputedStyle(document.getElementById('api')!).scrollMarginBlockStart) || 0;
+    const atEnd = Math.abs(scrollY + innerHeight - document.documentElement.scrollHeight) < 2;
+    return { top, margin, atEnd };
+  });
+  expect(landed.top <= landed.margin + 2 || landed.atEnd,
+    `the API section is ${landed.top.toFixed(0)}px from the top, margin ${landed.margin}, page at end: ${landed.atEnd}`).toBe(true);
+  expect(landed.top, 'the section is not even on screen').toBeLessThan(400);
 });
 
 test('the menu fits the screen it opens on', async ({ page }) => {

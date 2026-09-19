@@ -62,6 +62,12 @@
 
 另外站点自己的 tint 示例一开始摆了三个主操作按钮，被既有用例逮到——那正是它要守的规则。那条用例本身也是错的（它把整页的主操作数加起来），一并改成按演示计。
 
+**已完成（第 6 周）**：D1（每页至少 3 个示例，23 页补到位，共新增 36 个）、D3（每页一个可调节示例，旋钮面板用本库自己的 `Form`）、D5（⌘K 扩到示例标题、属性名、章节标题，并带锚点跳转）、D8（概览首屏的折射开关，浏览器做不到时禁用并说明）。D1 与 D3 的规则挂进了 `scripts/check-props.mjs`，和属性表一起在 `build:site` 时把关。第二批做了 `Picker`、`Banner`、`ColorWell`；布局容器的 AX5 / RTL 矩阵落地为 `tests/browser/layout-matrix.spec.ts`（5 个容器 × 4 个宽度 × LTR/RTL × 默认/AX5），进 `pnpm check`。
+
+第 6 周抓到 6 条，全部改了实现（逐条见 [`reports/hig-review.md`](../../../reports/hig-review.md)）：`SplitView` 溢出自身、`SplitView` 报出一个没人拥有的宽度、`TabBar` 在 AX5 下横移整份文档、`NavigationStack` 的压栈位移撑宽自己、`ColorWell` 快捷色间距 4px、以及 `SearchField` 的高亮被调用方的重渲染清掉（依赖数组引用而不是内容，是一场竞态）。
+
+途中还有两件是工具本身的问题，也一并修了：`gesture.spec.ts` 把选中透镜按 `aria-label` 归组，而一页里允许有两个同名控件，于是报了一个从没动过的透镜「动了」；`playwright.config.ts` 里 `matrix\.spec\.ts` 没有锚定，`layout-matrix.spec.ts` 一建出来就被划进慢速报告项目，哪个项目都不跑它。**一个被静默跳过的用例比一个失败的用例更糟。**
+
 第 2 周途中另发现两条，都已修：单选菜单打开时焦点落在第一项而不是**已选中**那一项（pop-up 按钮在每个 Apple 平台上都是后者）；`usePopover` 的首个可聚焦项只找 `[role="menuitem"]`，一个全是可勾选项的菜单会把焦点留在面板上。
 
 ### 1.2 疑点，已全部查完（2026-09-20，第 4 周）
@@ -235,7 +241,7 @@ HIG layout：「按尺寸类别决定布局，永远不按设备类型或方向�
 | **3 ✅** | 矩阵用例落地（1.3），第一份 `reports/matrix.json`，抓到的三条已修 | `Tooltip`、`Kbd` | L4 `NavigationStack` |
 | **4 ✅** | P6 stepper、P8 toast、P9 badge；1.2 六个疑点查完（复现 1 条） | `DisclosureGroup`、`PageControl` | L2 `SplitView`（含 L3 `Inspector`） |
 | **5 ✅** | 1.5 的小 API（双滑块顺延）；D7 属性表比对进 `build:site` | `ContextMenu` | L5 `Grid`、L6 `Form` |
-| 6 | D1 每页三示例、D3 属性面板、D8 折射开关、D5 搜索；全库 Apple-Style-Review 复审 | 第二批择前三个 | 布局容器的 AX5 / RTL 矩阵 |
+| **6 ✅** | D1 每页三示例、D3 属性面板、D8 折射开关、D5 搜索；全库 Apple-Style-Review 复审 | 第二批：`Picker`、`Banner`、`ColorWell` | 布局容器的 AX5 / RTL 矩阵 |
 
 发版前：CHANGELOG 把 `## 0.0.2` 一节补成完整版；`docs/api.md` 新增全部组件与属性；重打 `v0.0.2` 标签；再跑一次 `pnpm pack` 装进空项目。
 

@@ -18,20 +18,28 @@ export default defineConfig({
   reporter: [['list'], ['html', { outputFolder: 'reports/playwright', open: 'never' }]],
   use: { baseURL: process.env.TEST_URL || `http://127.0.0.1:${PREVIEW_PORT}`, trace: 'retain-on-failure', screenshot: 'only-on-failure', viewport: { width: 1440, height: 1000 } },
   projects: [
-    { name: 'chrome', use: { ...devices['Desktop Chrome'], channel: 'chrome' }, testIgnore: /(fallback|warnings|strict-mode|hydration|matrix)\.spec\.ts/ },
-    { name: 'chromium', use: { ...devices['Desktop Chrome'], ...(process.env.CHROMIUM_PATH ? { launchOptions: { executablePath: process.env.CHROMIUM_PATH } } : {}) }, testIgnore: /(fallback|warnings|strict-mode|hydration|matrix)\.spec\.ts/ },
+    /**
+     * Every name here is anchored to a path separator and to the end of the path. Unanchored,
+     * `matrix\.spec\.ts` also matches `layout-matrix.spec.ts`, which quietly moved that file
+     * into the slow reporting project — so it was ignored by every project in `pnpm check` and
+     * ran nowhere. A file that is silently never run is worse than one that fails.
+     */
+    { name: 'chrome', use: { ...devices['Desktop Chrome'], channel: 'chrome' },
+      testIgnore: /[/\\](fallback|warnings|strict-mode|hydration|matrix)\.spec\.ts$/ },
+    { name: 'chromium', use: { ...devices['Desktop Chrome'], ...(process.env.CHROMIUM_PATH ? { launchOptions: { executablePath: process.env.CHROMIUM_PATH } } : {}) },
+      testIgnore: /[/\\](fallback|warnings|strict-mode|hydration|matrix)\.spec\.ts$/ },
     /* The development-mode warnings only exist before `process.env.NODE_ENV` is replaced, so
        they have to be read from the dev server rather than from the built site. */
-    { name: 'dev', use: { ...devices['Desktop Chrome'], channel: 'chrome', baseURL: `http://127.0.0.1:${DEV_PORT}` }, testMatch: /(warnings|strict-mode|hydration)\.spec\.ts/ },
+    { name: 'dev', use: { ...devices['Desktop Chrome'], channel: 'chrome', baseURL: `http://127.0.0.1:${DEV_PORT}` }, testMatch: /[/\\](warnings|strict-mode|hydration)\.spec\.ts$/ },
     /* Safari and Firefox have no SVG-backdrop lensing. They are not a substitute for the Chrome
        run: these projects check that the fallback is a material rather than a hole, and that
        nothing about the layout, the semantics or the keyboard depends on the refraction path. */
-    { name: 'webkit', use: { ...devices['Desktop Safari'] }, testMatch: /fallback\.spec\.ts/ },
-    { name: 'firefox', use: { ...devices['Desktop Firefox'] }, testMatch: /fallback\.spec\.ts/ },
+    { name: 'webkit', use: { ...devices['Desktop Safari'] }, testMatch: /[/\\]fallback\.spec\.ts$/ },
+    { name: 'firefox', use: { ...devices['Desktop Firefox'] }, testMatch: /[/\\]fallback\.spec\.ts$/ },
     /* The audit sweep. Its own project because it is slow and because it reports rather than
        asserts: `pnpm test:matrix` writes reports/matrix.json, and what it finds becomes a
        dedicated test in one of the projects above. */
-    { name: 'matrix', use: { ...devices['Desktop Chrome'], channel: 'chrome' }, testMatch: /matrix\.spec\.ts/, timeout: 20 * 60_000 },
+    { name: 'matrix', use: { ...devices['Desktop Chrome'], channel: 'chrome' }, testMatch: /[/\\]matrix\.spec\.ts$/, timeout: 20 * 60_000 },
   ],
   webServer: process.env.TEST_URL ? undefined : [
     { command: `node scripts/serve-preview.mjs --root site/dist`, port: PREVIEW_PORT, env: { PORT: String(PREVIEW_PORT) }, reuseExistingServer: false, timeout: 10_000 },

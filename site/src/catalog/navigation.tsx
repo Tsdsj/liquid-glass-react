@@ -1,7 +1,7 @@
 import { useRef, useState, type MouseEvent } from 'react';
 import {
   GlassButton, GlassIconButton, GlassSegmentedControl, GlassTabs, GlassToolbar, LibraryIcon, List, ListRow, ListSection,
-  Inspector, NavigationStack, PageControl, ScrollEdge, Sidebar, SplitView, useNavigationStack,
+  Inspector, NavigationBar, NavigationStack, PageControl, ScrollEdge, Sidebar, SplitView, useNavigationStack,
   TabBar, Text, ToolbarGroup, ToolbarSpacer,
 } from '@ttqtt/liquid-glass-react';
 import { Icon } from '../icons.js';
@@ -23,17 +23,23 @@ export const navigationDocs: ComponentDoc[] = [
     examples: [
       {
         id: 'toolbar-groups', title: '分组与主操作', description: '左边是一组图标，右边是单独成组的主操作，中间的空隙就是分隔。',
-        backdrop: 'both', height: 200,
-        render: function ToolbarGroups() {
+        backdrop: 'both', height: 220,
+        knobs: [
+          { name: 'orientation', label: '方向', type: 'select', value: 'horizontal', options: [
+            { value: 'horizontal', label: '横向' }, { value: 'vertical', label: '竖向' },
+          ] },
+          { name: 'spacer', label: '把两组推到两端', type: 'boolean', value: true },
+        ],
+        render: function ToolbarGroups({ knobs }) {
           const [saved, setSaved] = useState(false);
           return <div style={{ display: 'grid', gap: 12, justifyItems: 'center' }}>
-            <GlassToolbar aria-label="编辑工具栏">
+            <GlassToolbar aria-label="编辑工具栏" orientation={knobs.orientation as 'horizontal'}>
               <ToolbarGroup>
                 <GlassIconButton aria-label="网格"><Icon name="grid" /></GlassIconButton>
                 <GlassIconButton aria-label="图层"><Icon name="layer" /></GlassIconButton>
                 <GlassIconButton aria-label="调整"><Icon name="tune" /></GlassIconButton>
               </ToolbarGroup>
-              <ToolbarSpacer />
+              <ToolbarSpacer variant={knobs.spacer === true ? 'flexible' : 'fixed'} />
               <ToolbarGroup prominent>
                 <GlassButton variant="glassProminent" onClick={() => setSaved(true)}>完成</GlassButton>
               </ToolbarGroup>
@@ -43,12 +49,12 @@ export const navigationDocs: ComponentDoc[] = [
             </Text>
           </div>;
         },
-        code: `<GlassToolbar aria-label="编辑工具栏">
+        code: knobs => `<GlassToolbar aria-label="编辑工具栏"${knobs.orientation === 'horizontal' ? '' : ' orientation="vertical"'}
   <ToolbarGroup>
     <GlassIconButton aria-label="网格"><GridIcon /></GlassIconButton>
     <GlassIconButton aria-label="图层"><LayerIcon /></GlassIconButton>
   </ToolbarGroup>
-  <ToolbarSpacer variant="flexible" />
+  <ToolbarSpacer${knobs.spacer ? ' variant="flexible"' : ''} />
   <ToolbarGroup prominent>
     <GlassButton variant="glassProminent">完成</GlassButton>
   </ToolbarGroup>
@@ -123,19 +129,26 @@ export const navigationDocs: ComponentDoc[] = [
     examples: [
       {
         id: 'tabbar-basic', title: '底部标签栏', description: '按住当前项左右拖也能切换。徽标要带一个说明它在数什么的名字。',
-        backdrop: 'both', height: 240,
-        render: function TabBarBasic() {
+        backdrop: 'both', height: 260,
+        knobs: [
+          { name: 'badge', label: '资料库上的徽标', type: 'number', value: 3, min: 0, max: 120, step: 1 },
+          { name: 'search', label: '单独的搜索格', type: 'boolean', value: true },
+        ],
+        render: function TabBarBasic({ knobs }) {
           const [current, setCurrent] = useState('home');
           const pick = (key: string) => (event: MouseEvent<HTMLAnchorElement>) => { event.preventDefault(); setCurrent(key); };
+          const badge = Number(knobs.badge);
           return <div className="demo-tabbar-frame">
             <TabBar aria-label="示例导航" current={current} sidebarBreakpoint={99999}
               items={[
                 { key: 'home', href: '#', label: '首页', icon: <Icon name="grid" size={18} />, onSelect: pick('home') },
-                { key: 'library', href: '#', label: '资料库', icon: <Icon name="layer" size={18} />, badge: 3, badgeLabel: '3 个新项目', onSelect: pick('library') },
+                { key: 'library', href: '#', label: '资料库', icon: <Icon name="layer" size={18} />, badge: badge || undefined, badgeLabel: `${badge} 个新项目`, onSelect: pick('library') },
                 { key: 'settings', href: '#', label: '设置', icon: <Icon name="tune" size={18} />, onSelect: pick('settings') },
               ]}
-              search={{ key: 'search', href: '#', label: '搜索', icon: <LibraryIcon name="search" size={18} />, onSelect: pick('search') }} />
-            <Text variant="caption1" tone="secondary">当前：{current}</Text>
+              search={knobs.search === true
+                ? { key: 'search', href: '#', label: '搜索', icon: <LibraryIcon name="search" size={18} />, onSelect: pick('search') }
+                : undefined} />
+            <Text variant="caption1" tone="secondary" role="status">当前：{current}</Text>
           </div>;
         },
         code: `<TabBar
@@ -149,6 +162,59 @@ export const navigationDocs: ComponentDoc[] = [
   minimizeOnScroll
   sidebarBreakpoint={1024}
 />`,
+      },
+      {
+        id: 'tabbar-sidebar', title: '同一个元素，宽屏变侧边栏',
+        description: '不是两套导航。超过 sidebarBreakpoint 之后，同一个 TabBar 展开成侧边栏，当前项还是那一项——这也是为什么它和尺寸类别的 768 是两条不同的轴。',
+        height: 340,
+        render: function TabBarSidebar() {
+          const [current, setCurrent] = useState('library');
+          const pick = (key: string) => (event: MouseEvent<HTMLAnchorElement>) => { event.preventDefault(); setCurrent(key); };
+          return <div id="tabbar-sidebar-demo" style={{ position: 'relative', width: '100%', height: 280 }}>
+            {/* Breakpoint 0: always the sidebar form, so the two forms can be read side by side. */}
+            <TabBar aria-label="宽屏导航" current={current} sidebarBreakpoint={0}
+              sidebarHeader={<Text variant="subhead" emphasized>资料库</Text>}
+              style={{ position: 'absolute', insetBlock: 0, insetInlineStart: 0 }}
+              items={[
+                { key: 'home', href: '#', label: '首页', icon: <Icon name="grid" size={18} />, onSelect: pick('home') },
+                { key: 'library', href: '#', label: '资料库', icon: <Icon name="layer" size={18} />, onSelect: pick('library') },
+                { key: 'settings', href: '#', label: '设置', icon: <Icon name="tune" size={18} />, onSelect: pick('settings') },
+              ]} />
+            <Text variant="caption1" tone="secondary" role="status"
+              style={{ position: 'absolute', insetInlineEnd: 0, insetBlockStart: 0 }}>当前：{current}</Text>
+          </div>;
+        },
+        code: `{/* 一个元素，两种形态 */}
+<TabBar
+  aria-label="主导航"
+  current={section}
+  items={items}
+  sidebarHeader={<AppName />}
+  sidebarBreakpoint={1024}
+/>`,
+      },
+      {
+        id: 'tabbar-not-actions', title: '这里放的是去哪儿，不是做什么',
+        description: '「新建」「分享」「删除」属于工具栏。放进标签栏，用户会以为按下去是换一个区域。',
+        height: 260,
+        render: function TabBarNotActions() {
+          return <div id="tabbar-not-actions-demo" style={{ display: 'grid', gap: 14, width: 320, justifyItems: 'center' }}>
+            <GlassToolbar aria-label="页面操作">
+              <ToolbarGroup>
+                <GlassIconButton aria-label="新建"><LibraryIcon name="plus" size={18} /></GlassIconButton>
+                <GlassIconButton aria-label="更多"><LibraryIcon name="ellipsis" size={18} /></GlassIconButton>
+              </ToolbarGroup>
+            </GlassToolbar>
+            <Text variant="caption1" tone="secondary">操作在工具栏；标签栏只负责「首页 / 资料库 / 设置」这类目的地。</Text>
+          </div>;
+        },
+        code: `{/* 去哪儿 */}
+<TabBar items={[{ key: 'home', label: '首页' }, …]} />
+
+{/* 做什么 */}
+<GlassToolbar aria-label="页面操作">
+  <ToolbarGroup><GlassIconButton aria-label="新建"><PlusIcon /></GlassIconButton></ToolbarGroup>
+</GlassToolbar>`,
       },
     ],
     props: [
@@ -179,21 +245,58 @@ export const navigationDocs: ComponentDoc[] = [
     examples: [
       {
         id: 'sidebar-basic', title: '基础用法', description: '用的是更厚的一档玻璃，而且不会随背后内容明暗翻转——这么大一块跟着翻会没法读。',
-        backdrop: 'both', height: 320,
-        render: () => <Sidebar aria-label="示例侧栏" style={{ width: 220, position: 'static' }}
-          header={<Text variant="subhead" emphasized>资料库</Text>}
-          footer={<Text variant="caption1" tone="secondary">12 个项目</Text>}>
-          <div style={{ display: 'grid', gap: 4 }}>
-            {['全部', '最近', '收藏', '归档'].map((label, index) =>
-              <a key={label} {...demoLink} onClick={hold} className="demo-sidebar-row"
-                aria-current={index === 1 ? 'page' : undefined}>{label}</a>)}
-          </div>
-        </Sidebar>,
-        code: `<Sidebar aria-label="资料库"
-  header={<Text variant="subhead" emphasized>资料库</Text>}
-  footer={<Text variant="caption1" tone="secondary">12 个项目</Text>}>
+        backdrop: 'both', height: 340,
+        knobs: [
+          { name: 'header', label: '显示头部', type: 'boolean', value: true },
+          { name: 'footer', label: '显示底部', type: 'boolean', value: true },
+          { name: 'width', label: '宽度', type: 'number', value: 220, min: 160, max: 320, step: 20 },
+        ],
+        render: function SidebarBasic({ knobs }) {
+          return <Sidebar aria-label="示例侧栏" style={{ width: Number(knobs.width), position: 'static' }}
+            header={knobs.header === true ? <Text variant="subhead" emphasized>资料库</Text> : undefined}
+            footer={knobs.footer === true ? <Text variant="caption1" tone="secondary">12 个项目</Text> : undefined}>
+            <div style={{ display: 'grid', gap: 4 }}>
+              {['全部', '最近', '收藏', '归档'].map((label, index) =>
+                <a key={label} {...demoLink} onClick={hold} className="demo-sidebar-row"
+                  aria-current={index === 1 ? 'page' : undefined}>{label}</a>)}
+            </div>
+          </Sidebar>;
+        },
+        code: knobs => `<Sidebar aria-label="资料库"${knobs.header ? '\n  header={<Text variant="subhead" emphasized>资料库</Text>}' : ''}${knobs.footer ? '\n  footer={<Text variant="caption1" tone="secondary">12 个项目</Text>}' : ''}>
   <nav>…</nav>
 </Sidebar>`,
+      },
+      {
+        id: 'sidebar-trailing', title: '放在尾侧就是属性面板',
+        description: '放在尾侧的侧栏表示「当前选中项的细节」。真的要做分栏布局时用 SplitView 的 inspector，这里只是说明 side 这个属性。',
+        backdrop: 'both', height: 320,
+        render: () => <Sidebar id="sidebar-trailing-demo" aria-label="属性" side="trailing"
+          style={{ width: 220, position: 'static' }}
+          header={<Text variant="subhead" emphasized>属性</Text>}>
+          <div style={{ display: 'grid', gap: 8 }}>
+            <Text variant="footnote" tone="secondary">尺寸</Text>
+            <Text variant="subhead">1280 × 720</Text>
+            <Text variant="footnote" tone="secondary">格式</Text>
+            <Text variant="subhead">PNG</Text>
+          </div>
+        </Sidebar>,
+        code: `<Sidebar aria-label="属性" side="trailing" header={<Text>属性</Text>}>
+  …
+</Sidebar>`,
+      },
+      {
+        id: 'sidebar-concentric', title: '里面的圆角要和外框同心',
+        description: '侧栏是一块大玻璃，圆角很大。里面的选中高亮如果停在一个固定的小圆角上，两个角就对不上——这是「不像 Apple」里最容易看出来的一种。',
+        backdrop: 'both', height: 320,
+        render: () => <Sidebar id="sidebar-concentric-demo" aria-label="同心演示"
+          style={{ width: 220, position: 'static' }}>
+          <div style={{ display: 'grid', gap: 6 }}>
+            <a {...demoLink} onClick={hold} className="demo-sidebar-row" aria-current="page">算对了的高亮</a>
+            <a {...demoLink} onClick={hold} className="demo-sidebar-row demo-sidebar-row-wrong">固定 4px 的高亮</a>
+          </div>
+        </Sidebar>,
+        code: `/* 高亮的圆角 = 外框圆角 − 内边距 */
+.row { border-radius: calc(var(--lg-glass-radius) - 8px); }`,
       },
     ],
     props: [
@@ -215,16 +318,59 @@ export const navigationDocs: ComponentDoc[] = [
     examples: [
       {
         id: 'tabs-basic', title: '基础用法', description: '方向键切换，按住当前标签拖动也能换。',
-        height: 250,
-        render: () => <GlassTabs aria-label="组件资料" items={[
-          { value: 'design', label: '设计', content: <Text variant="body">有边界的视觉系统，比一堆没有上限的特效参数更有价值。</Text> },
-          { value: 'code', label: '实现', content: <Text variant="body">真实的按钮、真实的表单、真实的键盘路径。</Text> },
-          { value: 'test', label: '测试', content: <Text variant="body">每个组件都有自己的交互与键盘用例。</Text> },
-        ]} />,
+        height: 270,
+        knobs: [{ name: 'count', label: '标签数', type: 'number', value: 3, min: 2, max: 4, step: 1 }],
+        render: function TabsBasic({ knobs }) {
+          const all = [
+            { value: 'design', label: '设计', content: <Text variant="body">有边界的视觉系统，比一堆没有上限的特效参数更有价值。</Text> },
+            { value: 'code', label: '实现', content: <Text variant="body">真实的按钮、真实的表单、真实的键盘路径。</Text> },
+            { value: 'test', label: '测试', content: <Text variant="body">每个组件都有自己的交互与键盘用例。</Text> },
+            { value: 'history', label: '历史', content: <Text variant="body">同一个对象的另一个侧面。切换不会让你离开这一页。</Text> },
+          ];
+          return <GlassTabs aria-label="组件资料" items={all.slice(0, Number(knobs.count))} />;
+        },
         code: `<GlassTabs aria-label="组件资料" items={[
   { value: 'design', label: '设计', content: <DesignNotes /> },
   { value: 'code', label: '实现', content: <CodeNotes /> },
 ]} />`,
+      },
+      {
+        id: 'tabs-controlled', title: '自己控制选中',
+        description: '需要把当前标签同步到别处（比如地址栏）时传 value。不需要的话交给组件自己管就好。',
+        height: 270,
+        render: function TabsControlled() {
+          const [value, setValue] = useState('code');
+          return <div id="tabs-controlled-demo" style={{ display: 'grid', gap: 12, width: 340, justifyItems: 'center' }}>
+            <GlassTabs aria-label="受控标签页" value={value} onValueChange={setValue} items={[
+              { value: 'design', label: '设计', content: <Text variant="body">当前值会同步到下面那行字。</Text> },
+              { value: 'code', label: '实现', content: <Text variant="body">也可以从外面把它改回去。</Text> },
+            ]} />
+            <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
+              <GlassButton controlSize="small" variant="gray" onClick={() => setValue('design')}>跳到「设计」</GlassButton>
+              <Text variant="caption1" tone="secondary" role="status">当前：{value}</Text>
+            </div>
+          </div>;
+        },
+        code: `const [tab, setTab] = useState('code');
+
+<GlassTabs aria-label="详情" value={tab} onValueChange={setTab} items={…} />`,
+      },
+      {
+        id: 'tabs-not-tabbar', title: '它不是标签栏',
+        description: '标签页切的是同一个对象的几个侧面，你还在同一页上。如果切换之后你去了应用的另一个区域，那是标签栏 TabBar——读屏对这两者的播报也完全不同。',
+        height: 250,
+        render: () => <div id="tabs-not-tabbar-demo" style={{ display: 'grid', gap: 12, width: 340 }}>
+          <GlassTabs aria-label="一张照片的几个侧面" items={[
+            { value: 'info', label: '信息', content: <Text variant="body">1280 × 720 · PNG · 2.4 MB</Text> },
+            { value: 'comments', label: '评论', content: <Text variant="body">还没有评论。</Text> },
+          ]} />
+          <Text variant="caption1" tone="secondary">两个标签说的是同一张照片。换区域用标签栏。</Text>
+        </div>,
+        code: `{/* 同一个对象的几个侧面 */}
+<GlassTabs aria-label="照片" items={[{ value: 'info', label: '信息' }, …]} />
+
+{/* 应用的几个区域 */}
+<TabBar aria-label="主导航" items={[{ key: 'home', label: '首页' }, …]} />`,
       },
     ],
     props: [
@@ -281,6 +427,51 @@ export const navigationDocs: ComponentDoc[] = [
   trailing={<ToolbarGroup><GlassIconButton aria-label="更多"><MoreIcon /></GlassIconButton></ToolbarGroup>}
 />`,
       },
+      {
+        id: 'navbar-live', title: '真的一条导航栏',
+        description: '这是组件本身。大标题下面可以带一行副标题；两端放控件。整页只应该有一条，而且它的标题层级是 1——这一页已经有 h1 了，所以这里调到 3。',
+        height: 300,
+        knobs: [
+          { name: 'largeTitle', label: '大标题', type: 'boolean', value: true },
+          { name: 'subtitle', label: '副标题', type: 'text', value: '12 个收藏' },
+        ],
+        render: function NavBarLive({ knobs }) {
+          return <div id="navbar-live-demo" style={{ width: '100%', maxWidth: 380, border: '1px solid var(--lg-separator)', borderRadius: 16, padding: 12 }}>
+            <NavigationBar headingLevel={3} title="地标"
+              largeTitle={knobs.largeTitle === true}
+              subtitle={String(knobs.subtitle) || undefined}
+              leading={<GlassIconButton aria-label="返回" variant="plain" controlSize="small">
+                <LibraryIcon name="chevronForward" size={18} style={{ transform: 'scaleX(-1)' }} />
+              </GlassIconButton>}
+              trailing={<ToolbarGroup>
+                <GlassIconButton aria-label="更多" variant="plain" controlSize="small"><LibraryIcon name="ellipsis" size={18} /></GlassIconButton>
+              </ToolbarGroup>} />
+            <Text variant="subhead" tone="secondary" style={{ marginBlockStart: 8 }}>
+              正文从栏下面穿过去，不被一条硬边切断——那是 ScrollEdge 的活。
+            </Text>
+          </div>;
+        },
+        code: knobs => `<NavigationBar
+  title="地标"${knobs.largeTitle ? '' : '\n  largeTitle={false}'}${knobs.subtitle ? `\n  subtitle="${knobs.subtitle}"` : ''}
+  leading={<GlassIconButton aria-label="返回"><ChevronIcon /></GlassIconButton>}
+  trailing={<ToolbarGroup>…</ToolbarGroup>}
+/>`,
+      },
+      {
+        id: 'navbar-compact-only', title: '次级页面直接用紧凑标题',
+        description: '不是每一页都要来一个大标题。深入一层之后，返回按钮已经在同一行说明了来处，再摆一个大标题只是重复。',
+        height: 240,
+        render: () => <div id="navbar-compact-demo" style={{ width: '100%', maxWidth: 380, border: '1px solid var(--lg-separator)', borderRadius: 16, padding: 12 }}>
+          <NavigationBar headingLevel={3} title="储存空间" largeTitle={false}
+            leading={<GlassButton variant="plain" controlSize="small"
+              icon={<LibraryIcon name="chevronForward" size={16} style={{ transform: 'scaleX(-1)' }} />}>通用</GlassButton>} />
+          <Text variant="subhead" tone="secondary" style={{ marginBlockStart: 8 }}>
+            返回按钮写的是上一页的名字，不是「返回」。
+          </Text>
+        </div>,
+        code: `<NavigationBar title="储存空间" largeTitle={false}
+  leading={<GlassButton variant="plain" icon={<ChevronIcon />}>通用</GlassButton>} />`,
+      },
     ],
     props: [
       { name: 'title', type: 'string', required: true, description: '页面标题，大标题和紧凑标题共用。' },
@@ -307,17 +498,22 @@ export const navigationDocs: ComponentDoc[] = [
     examples: [
       {
         id: 'stack-basic', title: '基础用法', description: '点一行进下一层，返回按钮带着上一层的名字。焦点会跟着移到新页面。',
-        height: 420,
-        render: function StackBasic() {
+        height: 440,
+        knobs: [
+          { name: 'backLabel', label: '返回按钮', type: 'select', value: 'title', options: [
+            { value: 'title', label: '上一页标题' }, { value: 'chevron', label: '只要箭头' },
+          ] },
+        ],
+        render: function StackBasic({ knobs }) {
           return <div id="stack-demo" style={{ width: '100%', maxWidth: 420, border: '1px solid var(--lg-separator)', borderRadius: 20, overflow: 'hidden', padding: 12 }}>
-            <NavigationStack headingLevel={3} root={{
+            <NavigationStack headingLevel={3} backLabel={knobs.backLabel as 'title'} root={{
               key: 'settings',
               title: '设置',
               content: <StackRoot />,
             }} />
           </div>;
         },
-        code: `<NavigationStack root={{ key: 'settings', title: '设置', content: <Settings /> }} />
+        code: knobs => `<NavigationStack${knobs.backLabel === 'title' ? '' : ' backLabel="chevron"'} root={{ key: 'settings', title: '设置', content: <Settings /> }} />
 
 // 任何一层里面：
 const { push, pop, canGoBack } = useNavigationStack();
@@ -385,16 +581,19 @@ push({ key: 'general', title: '通用', content: <General /> });`,
     examples: [
       {
         id: 'page-control-basic', title: '基础用法', description: '点一下跳过去，按住横着拖也能翻。方向键、Home/End 都能用。',
-        height: 220,
-        render: function PageControlBasic() {
+        height: 240,
+        knobs: [{ name: 'count', label: '页数', type: 'number', value: 4, min: 2, max: 10, step: 1 }],
+        render: function PageControlBasic({ knobs }) {
           const [page, setPage] = useState(0);
-          const titles = ['欢迎', '权限', '同步', '完成'];
+          const count = Number(knobs.count);
+          const titles = ['欢迎', '权限', '同步', '完成', '第五页', '第六页', '第七页', '第八页', '第九页', '第十页'];
+          const current = Math.min(page, count - 1);
           return <div id="page-control-demo" style={{ display: 'grid', gap: 16, justifyItems: 'center' }}>
-            <Text variant="title3" emphasized role="status">{titles[page]}</Text>
-            <PageControl aria-label="引导步骤" count={4} page={page} onPageChange={setPage} />
+            <Text variant="title3" emphasized role="status">{titles[current]}</Text>
+            <PageControl aria-label="引导步骤" count={count} page={current} onPageChange={setPage} />
           </div>;
         },
-        code: `<PageControl aria-label="引导步骤" count={4} page={page} onPageChange={setPage} />`,
+        code: knobs => `<PageControl aria-label="引导步骤" count={${knobs.count}} page={page} onPageChange={setPage} />`,
       },
       {
         id: 'page-control-vertical', title: '竖向', description: '贴在侧边时改成竖向，方向键跟着换成上下。',
@@ -446,12 +645,19 @@ push({ key: 'general', title: '通用', content: <General /> });`,
     examples: [
       {
         id: 'split-basic', title: '两栏', description: '中间那条分隔线可以拖，也可以用键盘：聚焦后左右方向键调宽，Shift 走大步，双击复位。',
-        height: 420,
-        render: function SplitBasic() {
+        height: 440,
+        knobs: [
+          /* `sidebarWidth` is a *controlled* prop, so a knob driving it would pin the width and
+             the divider would stop moving. The knobs here are the ones that leave the drag alone. */
+          { name: 'sidebarVisible', label: '显示侧栏', type: 'boolean', value: true },
+          { name: 'maxSidebarWidth', label: '最宽', type: 'number', value: 400, min: 240, max: 480, step: 20 },
+        ],
+        render: function SplitBasic({ knobs }) {
           const items = ['收件箱', '已发送', '草稿', '归档'];
           const [picked, setPicked] = useState(0);
           return <div id="split-demo" style={{ width: '100%', height: 320, border: '1px solid var(--lg-separator)', borderRadius: 16, overflow: 'hidden' }}>
             <SplitView title="邮件" style={{ height: '100%' }}
+              maxSidebarWidth={Number(knobs.maxSidebarWidth)} sidebarVisible={knobs.sidebarVisible === true}
               compact={{ title: items[picked], content: <SplitDetail name={items[picked]} /> }}
               sidebar={<List variant="plain" style={{ padding: 8 }}>
                 <ListSection>
@@ -463,8 +669,8 @@ push({ key: 'general', title: '通用', content: <General /> });`,
             </SplitView>
           </div>;
         },
-        code: `<SplitView
-  title="邮件"
+        code: knobs => `<SplitView
+  title="邮件"${knobs.sidebarVisible ? '' : '\n  sidebarVisible={false}'}${knobs.maxSidebarWidth === 400 ? '' : `\n  maxSidebarWidth={${knobs.maxSidebarWidth}}`}
   sidebar={<List>…目的地…</List>}
   compact={{ title: current, content: <Detail /> }}
 >
@@ -499,6 +705,47 @@ push({ key: 'general', title: '通用', content: <General /> });`,
         code: `<SplitView title="素材" sidebar={…} inspector={
   <Inspector title="属性">…</Inspector>
 }>
+  <Detail />
+</SplitView>`,
+      },
+      {
+        id: 'split-hide', title: '让人能把栏收起来',
+        description: '并且给不止一种恢复方式。只能靠拖动到最窄来隐藏、又没有办法叫回来的栏，是一个能把自己藏掉的功能。',
+        height: 440,
+        render: function SplitHide() {
+          const [sidebar, setSidebar] = useState(true);
+          const [inspector, setInspector] = useState(false);
+          return <div id="split-hide-demo" style={{ display: 'grid', gap: 12, width: '100%' }}>
+            <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
+              <GlassButton controlSize="small" variant="gray" aria-pressed={sidebar}
+                onClick={() => setSidebar(value => !value)}>{sidebar ? '收起侧栏' : '显示侧栏'}</GlassButton>
+              <GlassButton controlSize="small" variant="gray" aria-pressed={inspector}
+                onClick={() => setInspector(value => !value)}>{inspector ? '收起检查器' : '显示检查器'}</GlassButton>
+            </div>
+            <div style={{ width: '100%', height: 300, border: '1px solid var(--lg-separator)', borderRadius: 16, overflow: 'hidden' }}>
+              <SplitView title="项目" style={{ height: '100%' }}
+                sidebarVisible={sidebar} onSidebarVisibleChange={setSidebar}
+                inspectorVisible={inspector} onInspectorVisibleChange={setInspector}
+                compact={{ title: '详情', content: <SplitDetail name="详情" /> }}
+                sidebar={<List variant="plain" style={{ padding: 8 }}>
+                  <ListSection>
+                    {['设计', '开发', '发布'].map(item => <ListRow key={item} label={item} disclosure={false} />)}
+                  </ListSection>
+                </List>}
+                inspector={<Inspector title="属性">
+                  <Text variant="subhead">这一栏可以随时收起来。</Text>
+                </Inspector>}>
+                <SplitDetail name="详情" />
+              </SplitView>
+            </div>
+          </div>;
+        },
+        code: `<SplitView
+  title="项目"
+  sidebarVisible={sidebar} onSidebarVisibleChange={setSidebar}
+  inspectorVisible={inspector} onInspectorVisibleChange={setInspector}
+  sidebar={…} inspector={<Inspector title="属性">…</Inspector>}
+>
   <Detail />
 </SplitView>`,
       },
@@ -537,25 +784,68 @@ push({ key: 'general', title: '通用', content: <General /> });`,
     examples: [
       {
         id: 'edge-soft', title: '渐隐', description: '往下滚，顶部的文字会淡出而不是被切掉。',
-        height: 300,
-        render: function EdgeSoft() {
+        height: 320,
+        knobs: [
+          { name: 'variant', label: '样式', type: 'select', value: 'soft', options: [
+            { value: 'soft', label: '渐隐' }, { value: 'hard', label: '实边' },
+          ] },
+          { name: 'height', label: '高度', type: 'number', value: 44, min: 16, max: 80, step: 4 },
+        ],
+        render: function EdgeSoft({ knobs }) {
           const scroller = useRef<HTMLDivElement>(null);
           return <div className="demo-scroll-fixture">
-            <ScrollEdge targetRef={scroller} variant="soft" />
+            <ScrollEdge targetRef={scroller} variant={knobs.variant as 'soft'} height={Number(knobs.height)} />
             <div className="demo-scroll-body" ref={scroller} tabIndex={0} aria-label="滚动正文演示">
               {Array.from({ length: 8 }, (_, i) =>
                 <Text key={i} variant="body" style={{ marginBlockEnd: 12 }}>
                   第 {i + 1} 段。正文不需要做成半透明。阅读需要的是稳定的底色、合适的行长和清晰的层级。
                 </Text>)}
             </div>
-            <ScrollEdge targetRef={scroller} edge="bottom" variant="soft" />
+            <ScrollEdge targetRef={scroller} edge="bottom" variant={knobs.variant as 'soft'} height={Number(knobs.height)} />
           </div>;
         },
-        code: `const scroller = useRef<HTMLDivElement>(null);
+        code: knobs => `const scroller = useRef<HTMLDivElement>(null);
 
-<ScrollEdge targetRef={scroller} variant="soft" />
+<ScrollEdge targetRef={scroller}${knobs.variant === 'soft' ? '' : ' variant="hard"'}${knobs.height === 44 ? '' : ` height={${knobs.height}}`} />
 <div ref={scroller} className="scroller">…</div>
 <ScrollEdge targetRef={scroller} edge="bottom" />`,
+      },
+      {
+        id: 'edge-page', title: '整页滚动',
+        description: '不传 targetRef 就是看整页的滚动。Screen 会自动放一个，所以大多数情况下你不必自己写——这里是给自己搭布局时用的。',
+        height: 260,
+        render: () => <div id="edge-page-demo" style={{ display: 'grid', gap: 12, width: 340 }}>
+          <Text variant="subhead">整页版本就挂在页面顶部那条栏下面，随页面滚动生效。</Text>
+          <Text variant="caption1" tone="secondary">这一页的顶栏下面就有一条——往下滚看得到。</Text>
+        </div>,
+        code: `{/* 整页 */}
+<ScrollEdge />
+
+{/* 或者交给布局容器 */}
+<Screen top={<NavigationBar title="地标" />}>…</Screen>`,
+      },
+      {
+        id: 'edge-one-per-view', title: '一个滚动区域只用一个',
+        description: '上下各一条算一个整体。同一个滚动区域里叠两条，边缘就会出现两段深浅不同的渐变——那不是层次，那是重影。',
+        height: 300,
+        render: function EdgeOne() {
+          const scroller = useRef<HTMLDivElement>(null);
+          return <div className="demo-scroll-fixture" id="edge-one-demo">
+            <ScrollEdge targetRef={scroller} />
+            <div className="demo-scroll-body" ref={scroller} tabIndex={0} aria-label="只有一条边缘的滚动演示">
+              {Array.from({ length: 6 }, (_, i) =>
+                <Text key={i} variant="body" style={{ marginBlockEnd: 12 }}>
+                  第 {i + 1} 段。顶部只有一条边缘效果。
+                </Text>)}
+            </div>
+          </div>;
+        },
+        code: `{/* 对：一个滚动区域，上下各一条 */}
+<ScrollEdge targetRef={scroller} />
+<div ref={scroller}>…</div>
+<ScrollEdge targetRef={scroller} edge="bottom" />
+
+{/* 错：同一侧叠两条 */}`,
       },
     ],
     props: [

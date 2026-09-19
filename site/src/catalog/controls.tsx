@@ -1,7 +1,8 @@
 import { useState } from 'react';
 import {
-  GlassBadge, GlassButton, GlassIconButton, GlassProgress, GlassSegmentedControl,
-  GlassSlider, GlassStepper, GlassSwitch, LibraryIcon, Text,
+  Card, ColorWell, Form, FormRow, FormSection, GlassBadge, GlassButton, GlassIconButton, GlassProgress,
+  GlassSegmentedControl, GlassSlider, GlassStepper, GlassSwitch, Grid, LibraryIcon, List, ListRow, ListSection,
+  Picker, Text,
 } from '@ttqtt/liquid-glass-react';
 import { Icon } from '../icons.js';
 import type { ComponentDoc } from './types.js';
@@ -42,15 +43,34 @@ export const controlDocs: ComponentDoc[] = [
       },
       {
         id: 'button-size', title: '尺寸', description: '视觉可以更小，但手指能点到的范围不会小于 44×44。',
-        height: 180,
-        render: () => <div style={{ display: 'flex', gap: 10, alignItems: 'center', flexWrap: 'wrap', justifyContent: 'center' }}>
-          <GlassButton controlSize="small">小</GlassButton>
-          <GlassButton>默认</GlassButton>
-          <GlassButton controlSize="large">大</GlassButton>
-          <GlassButton controlSize="extraLarge">超大</GlassButton>
-        </div>,
-        code: `<GlassButton controlSize="small">小</GlassButton>
-<GlassButton controlSize="large">大</GlassButton>`,
+        height: 220,
+        knobs: [
+          { name: 'variant', label: '样式', type: 'select', value: 'glass', options: [
+            { value: 'glass', label: '玻璃' }, { value: 'glassProminent', label: '主操作' },
+            { value: 'gray', label: '灰底' }, { value: 'tinted', label: '淡色' }, { value: 'destructive', label: '危险' },
+          ] },
+          { name: 'controlSize', label: '尺寸', type: 'select', value: 'regular', options: [
+            { value: 'small', label: '小' }, { value: 'regular', label: '默认' },
+            { value: 'large', label: '大' }, { value: 'extraLarge', label: '超大' },
+          ] },
+          { name: 'disabled', label: '不可用', type: 'boolean', value: false },
+          { name: 'loading', label: '处理中', type: 'boolean', value: false },
+        ],
+        render: function ButtonSize({ knobs }) {
+          return <div style={{ display: 'grid', gap: 14, justifyItems: 'center' }}>
+            <GlassButton variant={knobs.variant as 'glass'} controlSize={knobs.controlSize as 'regular'}
+              disabled={knobs.disabled === true} loading={knobs.loading === true}>可调节的按钮</GlassButton>
+            <div style={{ display: 'flex', gap: 10, alignItems: 'center', flexWrap: 'wrap', justifyContent: 'center' }}>
+              <GlassButton controlSize="small">小</GlassButton>
+              <GlassButton>默认</GlassButton>
+              <GlassButton controlSize="large">大</GlassButton>
+              <GlassButton controlSize="extraLarge">超大</GlassButton>
+            </div>
+          </div>;
+        },
+        code: knobs => `<GlassButton${knobs.variant === 'glass' ? '' : `\n  variant="${knobs.variant}"`}${knobs.controlSize === 'regular' ? '' : `\n  controlSize="${knobs.controlSize}"`}${knobs.disabled ? '\n  disabled' : ''}${knobs.loading ? '\n  loading' : ''}>
+  可调节的按钮
+</GlassButton>`,
       },
       {
         id: 'button-state', title: '不可用与处理中', description: '处理中同时不可点，并会告诉读屏“正在忙”。',
@@ -139,23 +159,36 @@ export const controlDocs: ComponentDoc[] = [
     examples: [
       {
         id: 'segmented-basic', title: '基础用法', description: '按住当前选项左右滑动就能换，手指到哪它跟到哪——松手前就已经切好了。',
-        height: 200,
-        render: function SegmentedBasic() {
+        height: 210,
+        knobs: [
+          { name: 'count', label: '选项个数', type: 'number', value: 3, min: 2, max: 5, step: 1 },
+          { name: 'density', label: '密度', type: 'select', value: 'comfortable', options: [
+            { value: 'comfortable', label: '常规' }, { value: 'compact', label: '紧凑' },
+          ] },
+          { name: 'disabled', label: '整组不可用', type: 'boolean', value: false },
+        ],
+        render: function SegmentedBasic({ knobs }) {
           const [value, setValue] = useState('week');
+          const all = [
+            { value: 'day', label: '日' }, { value: 'week', label: '周' }, { value: 'month', label: '月' },
+            { value: 'quarter', label: '季' }, { value: 'year', label: '年' },
+          ];
+          const items = all.slice(0, Number(knobs.count));
           return <div style={{ display: 'grid', gap: 12, justifyItems: 'center' }}>
-            <GlassSegmentedControl aria-label="时间范围" value={value} onValueChange={setValue}
-              items={[{ value: 'day', label: '日' }, { value: 'week', label: '周' }, { value: 'month', label: '月' }]} />
-            <Text variant="caption1" tone="secondary">当前：{value}</Text>
+            <GlassSegmentedControl aria-label="时间范围" density={knobs.density as 'comfortable'}
+              disabled={knobs.disabled === true}
+              value={items.some(item => item.value === value) ? value : items[0].value}
+              onValueChange={setValue} items={items} />
+            <Text variant="caption1" tone="secondary" role="status">当前：{value}</Text>
           </div>;
         },
-        code: `<GlassSegmentedControl
-  aria-label="时间范围"
+        code: knobs => `<GlassSegmentedControl
+  aria-label="时间范围"${knobs.density === 'comfortable' ? '' : `\n  density="${knobs.density}"`}${knobs.disabled ? '\n  disabled' : ''}
   value={range}
   onValueChange={setRange}
   items={[
-    { value: 'day', label: '日' },
-    { value: 'week', label: '周' },
-    { value: 'month', label: '月' },
+${['日', '周', '月', '季', '年'].slice(0, Number(knobs.count)).map((label, index) =>
+            `    { value: '${['day', 'week', 'month', 'quarter', 'year'][index]}', label: '${label}' },`).join('\n')}
   ]}
 />`,
       },
@@ -175,6 +208,34 @@ export const controlDocs: ComponentDoc[] = [
     { value: 'year', label: '年', disabled: true },
   ]}
 />`,
+      },
+      {
+        id: 'segmented-switches-view', title: '它切的是视图，不是执行操作',
+        description: '选中一段应该立刻换掉下面的内容。如果按下去是「做一件事」，那是按钮，不是分段控件。',
+        height: 260,
+        render: function SegmentedView() {
+          const [view, setView] = useState('list');
+          return <div id="segmented-view-demo" style={{ display: 'grid', gap: 14, width: 300, justifyItems: 'center' }}>
+            <GlassSegmentedControl aria-label="显示方式" value={view} onValueChange={setView}
+              items={[{ value: 'list', label: '列表' }, { value: 'grid', label: '网格' }]} />
+            {view === 'list'
+              ? <List style={{ width: '100%' }}>
+                <ListSection>
+                  <ListRow label="封面" value="1280 × 720" />
+                  <ListRow label="背景" value="2560 × 1440" />
+                </ListSection>
+              </List>
+              : <Grid minItemWidth={120} gap={12} style={{ width: '100%' }}>
+                {['封面', '背景'].map(name => <Card key={name} radius={14} padding={14} fill="secondary">
+                  <Text variant="subhead">{name}</Text>
+                </Card>)}
+              </Grid>}
+          </div>;
+        },
+        code: `<GlassSegmentedControl aria-label="显示方式" value={view} onValueChange={setView}
+  items={[{ value: 'list', label: '列表' }, { value: 'grid', label: '网格' }]} />
+
+{view === 'list' ? <List>…</List> : <Grid>…</Grid>}`,
       },
     ],
     props: [
@@ -203,18 +264,65 @@ export const controlDocs: ComponentDoc[] = [
     examples: [
       {
         id: 'switch-basic', title: '基础用法', description: '除了点，还可以按住旋钮往任意一侧甩过去，往哪甩就是哪个结果。',
-        height: 210,
-        render: function SwitchBasic() {
+        height: 230,
+        knobs: [
+          { name: 'label', label: '旁边的文字', type: 'text', value: 'Wi‑Fi' },
+          { name: 'disabled', label: '不可用', type: 'boolean', value: false },
+        ],
+        render: function SwitchBasic({ knobs }) {
           const [wifi, setWifi] = useState(true);
           const [low, setLow] = useState(false);
           return <div style={{ display: 'grid', gap: 14, justifyItems: 'start' }}>
-            <GlassSwitch aria-label="Wi‑Fi" label="Wi‑Fi" checked={wifi} onCheckedChange={setWifi} />
+            <GlassSwitch aria-label={String(knobs.label)} label={String(knobs.label)}
+              disabled={knobs.disabled === true} checked={wifi} onCheckedChange={setWifi} />
             <GlassSwitch aria-label="低数据模式" label="低数据模式" checked={low} onCheckedChange={setLow} />
             <GlassSwitch aria-label="不可用开关" label="暂不可用" disabled />
           </div>;
         },
-        code: `<GlassSwitch aria-label="Wi‑Fi" label="Wi‑Fi"
+        code: knobs => `<GlassSwitch aria-label="${knobs.label}" label="${knobs.label}"${knobs.disabled ? '\n  disabled' : ''}
   checked={enabled} onCheckedChange={setEnabled} />`,
+      },
+      {
+        id: 'switch-naming', title: '标签写状态，不写动作',
+        description: '写「Wi‑Fi」，不要写「启用 Wi‑Fi」——开关自己就表示开和关，标签再说一遍「启用」，关掉的时候就成了「关掉的启用」。',
+        height: 230,
+        render: function SwitchNaming() {
+          const [a, setA] = useState(true);
+          const [b, setB] = useState(true);
+          return <div id="switch-naming-demo" style={{ display: 'grid', gap: 18, justifyItems: 'start' }}>
+            <div style={{ display: 'grid', gap: 6 }}>
+              <GlassSwitch aria-label="蓝牙" label="蓝牙" checked={a} onCheckedChange={setA} />
+              <Text variant="caption1" tone="secondary">读作「蓝牙，开」</Text>
+            </div>
+            <div style={{ display: 'grid', gap: 6 }}>
+              <GlassSwitch aria-label="启用蓝牙" label="启用蓝牙" checked={b} onCheckedChange={setB} />
+              <Text variant="caption1" tone="destructive">读作「启用蓝牙，关」——关掉的启用是什么？</Text>
+            </div>
+          </div>;
+        },
+        code: `{/* 对 */}
+<GlassSwitch aria-label="蓝牙" label="蓝牙" checked={on} onCheckedChange={setOn} />
+
+{/* 错 */}
+<GlassSwitch aria-label="启用蓝牙" label="启用蓝牙" … />`,
+      },
+      {
+        id: 'switch-immediate', title: '改完立刻生效',
+        description: '开关不配「保存」。需要确认才生效的，用复选框加一个提交按钮——不然用户会以为已经改好了。',
+        height: 230,
+        render: function SwitchImmediate() {
+          const [sync, setSync] = useState(false);
+          return <Form id="switch-immediate-demo" style={{ width: 320 }} onSubmit={event => event.preventDefault()}>
+            <FormSection header="iCloud" footer={sync ? '已经在同步了，没有「保存」这一步。' : '关掉之后本机的改动不再上传。'}>
+              <FormRow label="照片同步">
+                <GlassSwitch aria-label="照片同步" checked={sync} onCheckedChange={setSync} />
+              </FormRow>
+            </FormSection>
+          </Form>;
+        },
+        code: `<FormRow label="照片同步">
+  <GlassSwitch aria-label="照片同步" checked={sync} onCheckedChange={setSync} />
+</FormRow>`,
       },
     ],
     props: [
@@ -243,21 +351,29 @@ export const controlDocs: ComponentDoc[] = [
     examples: [
       {
         id: 'slider-basic', title: '基础用法', description: '旋钮平时是安静的，只有被按住拖动时才变成玻璃。',
-        height: 200,
-        render: function SliderBasic() {
+        height: 220,
+        knobs: [
+          /* No `marks` knob: `marks` on a 100-step range is refused with a warning (see 刻度
+             below), so a knob that produced one would be teaching the reader a mistake. */
+          { name: 'step', label: '步长', type: 'number', value: 1, min: 1, max: 25, step: 1 },
+          { name: 'disabled', label: '不可用', type: 'boolean', value: false },
+        ],
+        render: function SliderBasic({ knobs }) {
           const [volume, setVolume] = useState(62);
           return <div style={{ display: 'grid', gap: 14, width: 300 }}>
             <div style={{ display: 'flex', justifyContent: 'space-between' }}>
               <Text variant="subhead">音量</Text>
               <Text variant="subhead" tone="secondary" tabular>{volume}%</Text>
             </div>
-            <GlassSlider aria-label="音量" value={volume} onValueChange={setVolume} formatValue={v => `${v} 百分比`} />
+            <GlassSlider aria-label="音量" value={volume} onValueChange={setVolume}
+              step={Number(knobs.step)} disabled={knobs.disabled === true}
+              formatValue={v => `${v} 百分比`} />
           </div>;
         },
-        code: `<GlassSlider
+        code: knobs => `<GlassSlider
   aria-label="音量"
   value={volume}
-  onValueChange={setVolume}
+  onValueChange={setVolume}${knobs.step === 1 ? '' : `\n  step={${knobs.step}}`}${knobs.disabled ? '\n  disabled' : ''}
   formatValue={v => \`\${v} 百分比\`}
 />`,
       },
@@ -325,16 +441,23 @@ export const controlDocs: ComponentDoc[] = [
     examples: [
       {
         id: 'stepper-basic', title: '基础用法', description: '到达上下限时对应的按钮自动变灰。',
-        height: 180,
-        render: function StepperBasic() {
+        height: 200,
+        knobs: [
+          { name: 'max', label: '上限', type: 'number', value: 9, min: 2, max: 12, step: 1 },
+          { name: 'showValue', label: '显示当前值', type: 'boolean', value: true },
+          { name: 'disabled', label: '不可用', type: 'boolean', value: false },
+        ],
+        render: function StepperBasic({ knobs }) {
           const [count, setCount] = useState(2);
+          const max = Number(knobs.max);
           return <div style={{ display: 'grid', gap: 12, justifyItems: 'center' }}>
-            <GlassStepper aria-label="份数" value={count} onValueChange={setCount} min={1} max={9} />
-            <Text variant="caption1" tone="secondary">范围 1–9，当前 {count}</Text>
+            <GlassStepper aria-label="份数" value={Math.min(count, max)} onValueChange={setCount}
+              min={1} max={max} showValue={knobs.showValue === true} disabled={knobs.disabled === true} />
+            <Text variant="caption1" tone="secondary" role="status">范围 1–{max}，当前 {Math.min(count, max)}</Text>
           </div>;
         },
-        code: `<GlassStepper aria-label="份数"
-  value={count} onValueChange={setCount} min={1} max={9} />`,
+        code: knobs => `<GlassStepper aria-label="份数"
+  value={count} onValueChange={setCount} min={1} max={${knobs.max}}${knobs.showValue ? '' : '\n  showValue={false}'}${knobs.disabled ? '\n  disabled' : ''} />`,
       },
       {
         id: 'stepper-wide', title: '范围大的时候', description: '按住不放会连续加减；按住 Shift 点一下走 10 步。范围再大就该换成滑块或输入框了。',
@@ -397,15 +520,23 @@ export const controlDocs: ComponentDoc[] = [
     examples: [
       {
         id: 'progress-determinate', title: '确定进度', description: '拖下面的滑块可以看到进度条跟着走。',
-        height: 190,
-        render: function ProgressDeterminate() {
+        height: 210,
+        knobs: [
+          { name: 'variant', label: '形状', type: 'select', value: 'bar', options: [
+            { value: 'bar', label: '横条' }, { value: 'circular', label: '圆环' },
+          ] },
+          { name: 'total', label: '总量', type: 'number', value: 100, min: 10, max: 200, step: 10 },
+        ],
+        render: function ProgressDeterminate({ knobs }) {
           const [value, setValue] = useState(38);
-          return <div style={{ display: 'grid', gap: 16, width: 280 }}>
-            <GlassProgress aria-label="导出进度" value={value} />
-            <GlassSlider aria-label="调整演示进度" value={value} onValueChange={setValue} />
+          const total = Number(knobs.total);
+          return <div style={{ display: 'grid', gap: 16, width: 280, justifyItems: 'center' }}>
+            <GlassProgress aria-label="导出进度" value={Math.min(value, total)} total={total}
+              variant={knobs.variant as 'bar'} style={{ width: '100%' }} />
+            <GlassSlider aria-label="调整演示进度" value={value} onValueChange={setValue} max={total} />
           </div>;
         },
-        code: `<GlassProgress aria-label="导出进度" value={done} total={total} />`,
+        code: knobs => `<GlassProgress aria-label="导出进度" value={done} total={${knobs.total}}${knobs.variant === 'bar' ? '' : ` variant="${knobs.variant}"`} />`,
       },
       {
         id: 'progress-indeterminate', title: '不确定进度', description: '只有在真的算不出总量时才用。',
@@ -419,6 +550,33 @@ export const controlDocs: ComponentDoc[] = [
         </div>,
         code: `<GlassProgress aria-label="处理中" />
 <GlassProgress aria-label="载入中" variant="circular" />`,
+      },
+      {
+        id: 'progress-not-blocking', title: '不要因为在加载就锁住界面',
+        description: '能先显示的内容就先显示。把整页换成一个转圈，等于告诉用户「什么都别想干」——而那通常不是真的。',
+        height: 280,
+        render: function ProgressNotBlocking() {
+          const [loading, setLoading] = useState(true);
+          return <div id="progress-not-blocking-demo" style={{ display: 'grid', gap: 12, width: 300 }}>
+            <List>
+              <ListSection header="收件箱">
+                <ListRow label="周会纪要" secondaryLabel="昨天" />
+                <ListRow label="发票" secondaryLabel="上周" />
+                <ListRow label={loading ? '正在收取更多…' : '设计评审'}
+                  accessory={loading ? <GlassProgress aria-label="正在收取更多邮件" variant="circular" /> : undefined}
+                  secondaryLabel={loading ? undefined : '上周'} />
+              </ListSection>
+            </List>
+            <GlassButton controlSize="small" variant="gray" onClick={() => setLoading(value => !value)}>
+              {loading ? '假装加载完成' : '再加载一次'}
+            </GlassButton>
+          </div>;
+        },
+        code: `{/* 已经拿到的先显示 */}
+<ListRow label="周会纪要" />
+{/* 还在路上的那一部分才转圈 */}
+<ListRow label="正在收取更多…"
+  accessory={<GlassProgress aria-label="正在收取更多邮件" variant="circular" />} />`,
       },
     ],
     props: [
@@ -441,17 +599,63 @@ export const controlDocs: ComponentDoc[] = [
     examples: [
       {
         id: 'badge-basic', title: '计数与状态', description: '超过上限会显示成“99+”。',
-        height: 160,
-        render: () => <div style={{ display: 'flex', gap: 16, alignItems: 'center', flexWrap: 'wrap', justifyContent: 'center' }}>
-          <GlassBadge count={3} aria-label="3 条未读消息" />
-          <GlassBadge count={128} max={99} aria-label="128 条未读消息" />
-          <GlassBadge tone="neutral">测试版</GlassBadge>
-          <GlassBadge tone="accent">新</GlassBadge>
-          <GlassBadge dot aria-label="有更新" />
+        height: 200,
+        knobs: [
+          { name: 'count', label: '数量', type: 'number', value: 3, min: 0, max: 200, step: 1 },
+          { name: 'max', label: '折叠阈值', type: 'number', value: 99, min: 9, max: 999, step: 10 },
+          { name: 'tone', label: '色调', type: 'select', value: 'notification', options: [
+            { value: 'notification', label: '通知' }, { value: 'neutral', label: '中性' }, { value: 'accent', label: '强调' },
+          ] },
+        ],
+        render: function BadgeBasic({ knobs }) {
+          const count = Number(knobs.count);
+          return <div style={{ display: 'grid', gap: 16, justifyItems: 'center' }}>
+            <GlassBadge count={count} max={Number(knobs.max)} tone={knobs.tone as 'notification'}
+              aria-label={`${count} 条未读消息`} />
+            <div style={{ display: 'flex', gap: 16, alignItems: 'center', flexWrap: 'wrap', justifyContent: 'center' }}>
+              <GlassBadge count={128} max={99} aria-label="128 条未读消息" />
+              <GlassBadge tone="neutral">测试版</GlassBadge>
+              <GlassBadge tone="accent">新</GlassBadge>
+              <GlassBadge dot aria-label="有更新" />
+            </div>
+            <Text variant="caption1" tone="secondary">数量为 0 时它整个不渲染，不会留下一个空圈。</Text>
+          </div>;
+        },
+        code: knobs => `<GlassBadge count={${knobs.count}}${knobs.max === 99 ? '' : ` max={${knobs.max}}`}${knobs.tone === 'notification' ? '' : ` tone="${knobs.tone}"`}
+  aria-label="${knobs.count} 条未读消息" />`,
+      },
+      {
+        id: 'badge-on-tab', title: '挂在别的东西上',
+        description: '徽标总是属于某个东西——一个标签、一行、一个图标按钮。它不单独出现，因为单独一个数字说不出自己在数什么。',
+        height: 200,
+        render: () => <div id="badge-on-tab-demo" style={{ display: 'grid', gap: 14, width: 300 }}>
+          <List>
+            <ListSection header="邮箱">
+              <ListRow label="收件箱" accessory={<GlassBadge count={12} aria-label="12 封未读" />} onSelect={() => {}} />
+              <ListRow label="已发送" onSelect={() => {}} />
+              <ListRow label="草稿" accessory={<GlassBadge dot aria-label="有未完成的草稿" />} onSelect={() => {}} />
+            </ListSection>
+          </List>
         </div>,
-        code: `<GlassBadge count={3} aria-label="3 条未读消息" />
-<GlassBadge count={128} max={99} aria-label="128 条未读消息" />
-<GlassBadge dot aria-label="有更新" />`,
+        code: `<ListRow label="收件箱"
+  accessory={<GlassBadge count={12} aria-label="12 封未读" />} />`,
+      },
+      {
+        id: 'badge-not-color-only', title: '不要只靠颜色',
+        description: '徽标里始终有数字或文字。没有有意义的数字时用小圆点，并且给它一个名字——一个纯色的点，对读屏和分不清颜色的人来说什么都没说。',
+        height: 190,
+        render: () => <div id="badge-color-demo" style={{ display: 'grid', gap: 14, justifyItems: 'start' }}>
+          <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
+            <GlassBadge dot aria-label="有更新" />
+            <Text variant="subhead">有更新——圆点带名字</Text>
+          </div>
+          <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
+            <GlassBadge tone="accent">新</GlassBadge>
+            <Text variant="subhead">用一个字说清楚，比一个颜色可靠</Text>
+          </div>
+        </div>,
+        code: `<GlassBadge dot aria-label="有更新" />
+<GlassBadge tone="accent">新</GlassBadge>`,
       },
     ],
     props: [
@@ -463,5 +667,191 @@ export const controlDocs: ComponentDoc[] = [
     ],
     notes: ['没有内容时不会渲染，不会留下一个空的装饰圆。', '颜色不是唯一信息，徽标里始终有数字或文字。'],
     related: ['tab-bar', 'list'],
+  },
+  {
+    slug: 'picker', name: 'Picker', title: '选择器', group: '控件',
+    summary: '从一小组值里选一个，形态由空间决定。',
+    when: [
+      '选项互斥、并且都能一句话说清。',
+      '不要自己决定它长什么样：四个以内、宽度够，它就是分段控件；再多或者窄屏，它就变成下拉按钮。',
+      '选项是「命令」而不是「值」时，用下拉按钮 GlassMenuButton 的 pullDown 形态。',
+    ],
+    examples: [
+      {
+        id: 'picker-automatic', title: '自动形态',
+        description: '默认按选项数量和尺寸类别决定：四个以内且宽度够就并排，否则收成下拉。把窗口拉窄到 768 以下可以看到它自己换形态。',
+        height: 200,
+        knobs: [
+          { name: 'presentation', label: '形态', type: 'select', value: 'automatic', options: [
+            { value: 'automatic', label: '自动' }, { value: 'inline', label: '并排' }, { value: 'menu', label: '下拉' },
+          ] },
+          { name: 'labelHidden', label: '隐藏文字标签', type: 'boolean', value: false },
+        ],
+        render: function PickerAutomatic({ knobs }) {
+          const [value, setValue] = useState('week');
+          return <div id="picker-automatic-demo" style={{ display: 'grid', gap: 12, justifyItems: 'center' }}>
+            <Picker label="时间范围" value={value} onValueChange={setValue}
+              presentation={knobs.presentation as 'automatic'} labelHidden={knobs.labelHidden === true}
+              options={[{ value: 'day', label: '日' }, { value: 'week', label: '周' }, { value: 'month', label: '月' }]} />
+            <Text variant="caption1" tone="secondary" role="status">当前：{value}</Text>
+          </div>;
+        },
+        code: knobs => `<Picker
+  label="时间范围"${knobs.labelHidden ? '\n  labelHidden' : ''}${knobs.presentation === 'automatic' ? '' : `\n  presentation="${knobs.presentation}"`}
+  value={range}
+  onValueChange={setRange}
+  options={[
+    { value: 'day', label: '日' },
+    { value: 'week', label: '周' },
+    { value: 'month', label: '月' },
+  ]}
+/>`,
+      },
+      {
+        id: 'picker-many', title: '选项多的时候',
+        description: '超过四个就一定是下拉——五个并排的分段在手机上谁也读不清。按钮上显示的是当前选择，这正是下拉按钮该做的事。',
+        height: 190,
+        render: function PickerMany() {
+          const [city, setCity] = useState('shanghai');
+          return <div id="picker-many-demo">
+            <Picker label="城市" value={city} onValueChange={setCity} options={[
+              { value: 'beijing', label: '北京' }, { value: 'shanghai', label: '上海' },
+              { value: 'guangzhou', label: '广州' }, { value: 'shenzhen', label: '深圳' },
+              { value: 'chengdu', label: '成都' }, { value: 'hangzhou', label: '杭州' },
+            ]} />
+          </div>;
+        },
+        code: `<Picker label="城市" value={city} onValueChange={setCity}
+  options={cities} />`,
+      },
+      {
+        id: 'picker-form', title: '在表单里',
+        description: '表单行只负责排版和分组，名字仍然在控件自己身上，所以这里用 labelHidden 把重复的那一份去掉。',
+        height: 230,
+        render: function PickerForm() {
+          const [quality, setQuality] = useState('high');
+          const [format, setFormat] = useState('mp4');
+          return <Form id="picker-form-demo" style={{ width: 320 }} onSubmit={event => event.preventDefault()}>
+            <FormSection header="导出">
+              <FormRow label="画质">
+                <Picker label="画质" labelHidden value={quality} onValueChange={setQuality}
+                  options={[{ value: 'low', label: '低' }, { value: 'high', label: '高' }]} />
+              </FormRow>
+              <FormRow label="格式">
+                <Picker label="格式" labelHidden value={format} onValueChange={setFormat}
+                  options={[{ value: 'mp4', label: 'MP4' }, { value: 'mov', label: 'MOV' },
+                    { value: 'webm', label: 'WebM' }, { value: 'gif', label: 'GIF' }, { value: 'avi', label: 'AVI' }]} />
+              </FormRow>
+            </FormSection>
+          </Form>;
+        },
+        code: `<FormRow label="画质">
+  <Picker label="画质" labelHidden value={quality} onValueChange={setQuality}
+    options={[{ value: 'low', label: '低' }, { value: 'high', label: '高' }]} />
+</FormRow>`,
+      },
+    ],
+    props: [
+      { name: 'label', type: 'string', required: true, description: '在选什么。既是旁边的可见文字，也是控件的名字。' },
+      { name: 'labelHidden', type: 'boolean', default: 'false', description: '藏起文字但保留名字。放进表单行时用。' },
+      { name: 'options', type: 'PickerOption[]', required: true, description: '可选的值。没有图标插槽——同一个选择器会在两种形态间切换，而分段控件不允许图文混排。' },
+      { name: 'value / defaultValue', type: 'string', description: '受控或非受控的当前值。' },
+      { name: 'onValueChange', type: '(value: string) => void', description: '选择变化。' },
+      { name: 'presentation', type: "'automatic' | 'inline' | 'menu'", default: "'automatic'", description: '形态。自动是按选项数量和尺寸类别决定的，只有在形态本身就是设计的一部分时才写死。' },
+      { name: 'disabled', type: 'boolean', default: 'false', description: '不可用。' },
+      { name: 'name', type: 'string', description: '表单字段名。只有并排形态会真的参与表单提交。' },
+    ],
+    notes: [
+      '并排形态是原生单选按钮组，方向键切换；下拉形态是菜单按钮，方向键在菜单里走。',
+      '可见的那行文字对读屏是隐藏的——控件自己的名字就是同一串字，念两遍没有意义。语音控制念出可见文字仍然能命中控件。',
+      '服务端渲染时按紧凑处理，也就是先渲染下拉形态，到了浏览器再按真实宽度决定。',
+    ],
+    related: ['segmented-control', 'menu-button', 'form'],
+  },
+  {
+    slug: 'color-well', name: 'ColorWell', title: '颜色', group: '控件',
+    summary: '选一个颜色，用系统自己的取色器。',
+    when: [
+      '需要用户挑一个任意颜色时。只有几个固定颜色就用选择器或分段控件。',
+      '颜色旁边始终显示色值——一个只有颜色的控件，看不清颜色的人就读不出它的状态。',
+      '常用色放进 swatches，每一个都要有名字。',
+    ],
+    examples: [
+      {
+        id: 'color-basic', title: '基础用法',
+        description: '底下是真正的 <input type="color">，点开的是操作系统自己的取色器，带吸管和最近使用过的颜色。',
+        height: 190,
+        knobs: [
+          { name: 'showValue', label: '显示色值', type: 'boolean', value: true },
+          { name: 'disabled', label: '不可用', type: 'boolean', value: false },
+        ],
+        render: function ColorBasic({ knobs }) {
+          const [color, setColor] = useState('#0a84ff');
+          return <div id="color-basic-demo" style={{ display: 'grid', gap: 14, justifyItems: 'center' }}>
+            <ColorWell aria-label="强调色" value={color} onValueChange={setColor}
+              showValue={knobs.showValue === true} disabled={knobs.disabled === true} />
+            <Text variant="caption1" tone="secondary" role="status">当前 {color}</Text>
+          </div>;
+        },
+        code: knobs => `<ColorWell
+  aria-label="强调色"
+  value={color}
+  onValueChange={setColor}${knobs.showValue === false ? '\n  showValue={false}' : ''}${knobs.disabled ? '\n  disabled' : ''}
+/>`,
+      },
+      {
+        id: 'color-swatches', title: '常用色',
+        description: '每个快捷色都必须有名字。一排只有颜色的方块，对分不清颜色的人来说是一排一模一样的方块。选中是一圈描边，不是「颜色变深一点」。',
+        height: 190,
+        render: function ColorSwatches() {
+          const [color, setColor] = useState('#30d158');
+          return <div id="color-swatches-demo">
+            <ColorWell aria-label="标签颜色" value={color} onValueChange={setColor} swatches={[
+              { value: '#ff453a', label: '红' }, { value: '#ff9f0a', label: '橙' },
+              { value: '#30d158', label: '绿' }, { value: '#0a84ff', label: '蓝' },
+              { value: '#bf5af2', label: '紫' },
+            ]} />
+          </div>;
+        },
+        code: `<ColorWell aria-label="标签颜色" value={color} onValueChange={setColor}
+  swatches={[
+    { value: '#ff453a', label: '红' },
+    { value: '#30d158', label: '绿' },
+  ]} />`,
+      },
+      {
+        id: 'color-form', title: '在表单行里',
+        description: '表单行里放不下色值时可以关掉它——但只有在旁边已经有别的说法时才关。',
+        height: 200,
+        render: function ColorForm() {
+          const [fill, setFill] = useState('#bf5af2');
+          return <Form id="color-form-demo" style={{ width: 320 }} onSubmit={event => event.preventDefault()}>
+            <FormSection header="外观" footer="颜色会用在这张卡片的标题上。">
+              <FormRow label="填充色" description={fill}>
+                <ColorWell aria-label="填充色" value={fill} onValueChange={setFill} showValue={false} />
+              </FormRow>
+            </FormSection>
+          </Form>;
+        },
+        code: `<FormRow label="填充色" description={fill}>
+  <ColorWell aria-label="填充色" value={fill} onValueChange={setFill} showValue={false} />
+</FormRow>`,
+      },
+    ],
+    props: [
+      { name: 'aria-label', type: 'string', required: true, description: '这个颜色是用来干什么的。一个彩色方块自己说不出来。' },
+      { name: 'value / defaultValue', type: 'string', default: "'#0a84ff'", description: '`#rrggbb`。底层是原生颜色输入，它说的就是这个格式。' },
+      { name: 'onValueChange', type: '(value: string) => void', description: '颜色变化。拖动取色器时会连续触发。' },
+      { name: 'swatches', type: 'ColorSwatch[]', description: '常用色。每一项都要有 label——颜色不能是唯一的信息。' },
+      { name: 'showValue', type: 'boolean', default: 'true', description: '在旁边显示色值。关掉之前先确认别处已经说过了。' },
+      { name: 'disabled', type: 'boolean', default: 'false', description: '不可用。' },
+    ],
+    notes: [
+      '是真正的 <input type="color">，能参与表单提交，Tab 能聚焦，回车打开系统取色器。',
+      '输入框铺满整个 44×44 的外壳并且透明——把它藏起来再用脚本点开，会同时丢掉焦点环、键盘和表单。',
+      '色值用等宽数字显示，方便一眼比对和读出来。',
+      '快捷色的选中态是描边，在强制颜色模式下也看得见。',
+    ],
+    related: ['picker', 'form', 'slider'],
   },
 ];

@@ -106,7 +106,7 @@ for (const file of CATALOG) {
     if (ts.isObjectLiteralExpression(node)) {
       const read = key => node.properties.find(property =>
         ts.isPropertyAssignment(property) && property.name.getText() === key);
-      const slug = read('slug'), name = read('name'), props = read('props');
+      const slug = read('slug'), name = read('name'), props = read('props'), examples = read('examples');
       if (slug && name && props && ts.isArrayLiteralExpression(props.initializer)) {
         const rows = new Set();
         for (const row of props.initializer.elements) {
@@ -121,7 +121,16 @@ for (const file of CATALOG) {
             if (trimmed) rows.add(trimmed);
           }
         }
-        documented.set(name.initializer.text, { slug: slug.initializer.text, rows, file });
+        /* How many examples the page carries, and how many of them are adjustable. Counted from
+           the same tree rather than at runtime, because the point is to fail the build before
+           the page is published, not to notice afterwards. */
+        const entries = examples && ts.isArrayLiteralExpression(examples.initializer)
+          ? examples.initializer.elements.filter(ts.isObjectLiteralExpression) : [];
+        const adjustable = entries.filter(entry => entry.properties.some(property =>
+          ts.isPropertyAssignment(property) && property.name.getText() === 'knobs')).length;
+        documented.set(name.initializer.text, {
+          slug: slug.initializer.text, rows, file, examples: entries.length, adjustable,
+        });
       }
     }
     ts.forEachChild(node, visit);
@@ -133,8 +142,25 @@ for (const file of CATALOG) {
  * 3. Compare.
  * ------------------------------------------------------------------------------------- */
 
+/**
+ * Three examples per page, and exactly one of them adjustable.
+ *
+ * Three because one example answers one question, and a reader arrives with at least three:
+ * what the states are, how it behaves at other sizes or densities, and what it looks like over
+ * something. One adjustable example because a page where everything has knobs is a control
+ * panel with some components in it, and a page where none does cannot answer "what does this
+ * property actually do" without a copy-paste round trip.
+ */
+const MIN_EXAMPLES = 3;
+
 const problems = [];
 for (const [component, page] of documented) {
+  if (page.examples < MIN_EXAMPLES) {
+    problems.push(`${page.slug} has ${page.examples} example${page.examples === 1 ? '' : 's'}; a page needs at least ${MIN_EXAMPLES}`);
+  }
+  if (page.adjustable !== 1) {
+    problems.push(`${page.slug} has ${page.adjustable} example${page.adjustable === 1 ? '' : 's'} with knobs; exactly one should be adjustable`);
+  }
   const own = declared.get(component);
   if (!own) {
     problems.push(`${page.slug}: no ${component}Props is exported, so its table describes nothing`);
@@ -147,7 +173,7 @@ for (const [component, page] of documented) {
 }
 
 if (problems.length) {
-  console.error('\nProperty tables are out of step with the interfaces:\n');
+  console.error('\nThe component pages do not hold up:\n');
   for (const problem of problems) console.error(`  ${problem}`);
   console.error(`\n${problems.length} page${problems.length === 1 ? '' : 's'}. Add the row, or — if the prop is`);
   console.error('deliberately undocumented — say so in the table rather than leaving it silent.\n');
@@ -155,4 +181,4 @@ if (problems.length) {
   process.exit(1);
 }
 
-console.log(`props: ${documented.size} pages agree with their interfaces`);
+console.log(`catalog: ${documented.size} pages agree with their interfaces, each with ${MIN_EXAMPLES}+ examples and one adjustable`);

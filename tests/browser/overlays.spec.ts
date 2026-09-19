@@ -103,7 +103,7 @@ test('an alert focuses the safe action and Escape runs cancel', async ({ page })
 test('an alert title is bold and left aligned, never centred', async ({ page }) => {
   await page.goto('/#/components/alert');
   await page.getByRole('button', { name: '删除工作区' }).click();
-  const title = page.locator('.lg-alert-title');
+  const title = page.locator('#alert-destructive .lg-alert-title');
   const style = await title.evaluate(node => {
     const computed = getComputedStyle(node);
     return { align: computed.textAlign, weight: computed.fontWeight };
@@ -115,10 +115,11 @@ test('an alert title is bold and left aligned, never centred', async ({ page }) 
 test('an action sheet orders destructive choices last and separates cancel', async ({ page }) => {
   await page.goto('/#/components/action-sheet');
   await page.getByRole('button', { name: '更多操作' }).click();
-  const items = page.locator('.lg-action-item');
+  const demo = page.locator('#sheet-actions');
+  const items = demo.locator('.lg-action-item');
   await expect(items).toHaveCount(3);
   await expect(items.last()).toHaveAttribute('data-destructive', 'true');
-  await expect(page.locator('.lg-action-cancel')).toBeVisible();
+  await expect(demo.locator('.lg-action-cancel')).toBeVisible();
   await page.getByRole('menuitem', { name: '分享' }).click();
   await expect(page.locator('#sheet-actions [role="status"]')).toHaveText('分享');
 });

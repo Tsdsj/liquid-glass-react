@@ -2,6 +2,8 @@ import { createContext, useContext, useEffect, useState, type ReactNode } from '
 import { GlassBackdrop, GlassProvider, GlassSegmentedControl, LibraryIcon, Text, useGlassPolicy } from '@ttqtt/liquid-glass-react';
 import { AlpineScene } from '../scene.js';
 import { CodeBlock } from './code-block.js';
+import { KnobPanel, useKnobs } from './knobs.js';
+import type { DemoEntry } from '../catalog/types.js';
 
 export type DemoBackdrop = 'plain' | 'media' | 'both';
 type Scheme = 'light' | 'dark';
@@ -37,14 +39,23 @@ export function DemoSettings({ showSurface, children }: { showSurface: boolean; 
   </DemoSettingsContext.Provider>;
 }
 
-/** The stage a single example is rendered on. */
-export function Demo({ children, backdrop = 'plain', height = 200 }: {
-  children: ReactNode; backdrop?: DemoBackdrop; height?: number;
+/**
+ * The stage a single example is rendered on, and the element the example's anchor points at.
+ *
+ * The `id` is here rather than on the card around it, and that is load-bearing. The adjustable
+ * examples carry a panel of this library's own controls — a `Picker` for a select, a
+ * `GlassStepper` for a number — so a card-level id would put a second segmented control, a
+ * second stepper and a second text field inside `#segmented-basic`. Every test that scoped a
+ * component selector to the example id then matched the apparatus as well as the example.
+ * The example is what is on the stage; the knobs are how you change it.
+ */
+export function Demo({ id, children, backdrop = 'plain', height = 200 }: {
+  id?: string; children: ReactNode; backdrop?: DemoBackdrop; height?: number;
 }) {
   const { scheme, surface: chosen } = useContext(DemoSettingsContext);
   // An example that only makes sense over a photo keeps its photo whatever the page says.
   const surface: Surface = backdrop === 'media' ? 'media' : backdrop === 'both' ? chosen : 'plain';
-  return <div className="demo-stage" data-scheme={scheme} data-surface={surface} style={{ minHeight: height }}>
+  return <div className="demo-stage" id={id} data-scheme={scheme} data-surface={surface} style={{ minHeight: height }}>
     {surface === 'media' && <div className="demo-art" aria-hidden="true"><AlpineScene /></div>}
     <GlassProvider theme={scheme}>
       {/* Telling the glass what is behind it, instead of having it read the screen. */}
@@ -53,25 +64,33 @@ export function Demo({ children, backdrop = 'plain', height = 200 }: {
   </div>;
 }
 
-/** Title, live example, and the code behind it — folded away until you ask for it. */
-export function DemoCard({ id, title, description, code, backdrop, height, children }: {
-  id: string; title: string; description?: string; code: string;
-  backdrop?: DemoBackdrop; height?: number; children: ReactNode;
-}) {
+/**
+ * Title, live example, and the code behind it — folded away until you ask for it.
+ *
+ * A demo that declares `knobs` also gets a panel of its properties, and its code block is
+ * written from the current values rather than fixed: the point of the panel is that you can see
+ * what a property does *and* what to type to get it, and a snippet that did not follow the
+ * knobs would be showing the reader a call that produces something other than what is on
+ * screen.
+ */
+export function DemoCard({ id, title, description, render: Render, code, backdrop, height, knobs }: DemoEntry) {
   const [showCode, setShowCode] = useState(false);
-  return <section className="demo-card" id={id}>
-    <Demo backdrop={backdrop} height={height}>{children}</Demo>
+  const { values, set } = useKnobs(knobs);
+  const snippet = typeof code === 'function' ? code(values) : code;
+  return <section className="demo-card" data-demo={id} data-adjustable={knobs ? 'true' : undefined}>
+    <Demo id={id} backdrop={backdrop} height={height}><Render knobs={values} /></Demo>
     <div className="demo-card-body">
       <Text as="h3" variant="headline">{title}</Text>
       {description && <Text variant="subhead" tone="secondary">{description}</Text>}
     </div>
+    {knobs && <KnobPanel knobs={knobs} values={values} onChange={set} />}
     <button type="button" className="demo-code-toggle" aria-expanded={showCode} aria-controls={`${id}-code`}
       onClick={() => setShowCode(value => !value)}>
       <LibraryIcon name={showCode ? 'chevronDown' : 'chevronForward'} size={15} />
       <Text as="span" variant="footnote">{showCode ? '收起代码' : '显示代码'}</Text>
     </button>
     <div id={`${id}-code`} className="demo-card-code" hidden={!showCode}>
-      <CodeBlock code={code} />
+      <CodeBlock code={snippet} />
     </div>
   </section>;
 }

@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { SearchField, Text, TextField } from '@ttqtt/liquid-glass-react';
+import { List, ListRow, ListSection, SearchField, Text, TextField } from '@ttqtt/liquid-glass-react';
 import type { ComponentDoc } from './types.js';
 
 export const fieldDocs: ComponentDoc[] = [
@@ -66,13 +66,38 @@ export const fieldDocs: ComponentDoc[] = [
       },
       {
         id: 'field-sizes', title: '尺寸', description: '变矮的是控件，不是文字——低于 16px 会让 iOS Safari 在聚焦时把整页放大。',
-        height: 280,
-        render: () => <div id="field-sizes-demo" style={{ display: 'grid', gap: 12, width: 340 }}>
-          <TextField controlSize="small" label="小" placeholder="36px" />
-          <TextField label="标准" placeholder="44px" />
-          <TextField controlSize="large" label="大" placeholder="52px" />
-        </div>,
-        code: `<TextField controlSize="small" label="小" />`,
+        height: 320,
+        knobs: [
+          { name: 'controlSize', label: '高度', type: 'select', value: 'regular', options: [
+            { value: 'small', label: '小' }, { value: 'regular', label: '标准' }, { value: 'large', label: '大' },
+          ] },
+          { name: 'labelHidden', label: '隐藏标签', type: 'boolean', value: false },
+          { name: 'hint', label: '显示提示', type: 'boolean', value: false },
+          { name: 'multiline', label: '多行', type: 'boolean', value: false },
+        ],
+        render: function FieldSizes({ knobs }) {
+          /* Branched rather than `multiline={…}`: the two forms are a discriminated union, which
+             is the point — a `<textarea>` and an `<input>` do not take the same props. */
+          const shared = {
+            label: '可调节的字段',
+            controlSize: knobs.controlSize as 'regular',
+            labelHidden: knobs.labelHidden === true,
+            hint: knobs.hint === true ? '提示会和输入框一起被读出来。' : undefined,
+            placeholder: '在这里打字',
+          };
+          /* The three fixed sizes first: this demo is also where the height comparison is
+             measured, and a fourth field of adjustable height at the top would be the first
+             thing measured. */
+          return <div id="field-sizes-demo" style={{ display: 'grid', gap: 12, width: 340 }}>
+            <TextField controlSize="small" label="小" placeholder="36px" />
+            <TextField label="标准" placeholder="44px" />
+            <TextField controlSize="large" label="大" placeholder="52px" />
+            {knobs.multiline === true ? <TextField multiline rows={3} {...shared} /> : <TextField {...shared} />}
+          </div>;
+        },
+        code: knobs => `<TextField${knobs.multiline ? '\n  multiline' : ''}
+  label="可调节的字段"${knobs.controlSize === 'regular' ? '' : `\n  controlSize="${knobs.controlSize}"`}${knobs.labelHidden ? '\n  labelHidden' : ''}${knobs.hint ? '\n  hint="提示会和输入框一起被读出来。"' : ''}
+/>`,
       },
     ],
     props: [
@@ -103,21 +128,26 @@ export const fieldDocs: ComponentDoc[] = [
     examples: [
       {
         id: 'search-basic', title: '基础用法', description: '输入后右侧出现清除按钮，回车提交。',
-        backdrop: 'both', height: 200,
-        render: function SearchBasic() {
+        backdrop: 'both', height: 220,
+        knobs: [
+          { name: 'placeholder', label: '占位文字', type: 'text', value: '搜索组件…' },
+          { name: 'disabled', label: '不可用', type: 'boolean', value: false },
+        ],
+        render: function SearchBasic({ knobs }) {
           const [query, setQuery] = useState('');
           const [submitted, setSubmitted] = useState('');
           return <div style={{ display: 'grid', gap: 12, width: 320 }}>
-            <SearchField aria-label="搜索组件" placeholder="搜索组件…" value={query}
+            <SearchField aria-label="搜索组件" placeholder={String(knobs.placeholder)} value={query}
+              disabled={knobs.disabled === true}
               onValueChange={setQuery} onSubmitQuery={setSubmitted} />
-            <Text variant="caption1" tone="secondary">
+            <Text variant="caption1" tone="secondary" role="status">
               {submitted ? `已提交：${submitted}` : '输入点什么试试'}
             </Text>
           </div>;
         },
-        code: `<SearchField
+        code: knobs => `<SearchField
   aria-label="搜索组件"
-  placeholder="搜索组件…"
+  placeholder="${knobs.placeholder}"${knobs.disabled ? '\n  disabled' : ''}
   value={query}
   onValueChange={setQuery}
   onSubmitQuery={runSearch}
@@ -147,6 +177,34 @@ export const fieldDocs: ComponentDoc[] = [
   suggestions={matches.map(value => ({ value }))}
   onSuggestionSelect={s => go(s.value)}
 />`,
+      },
+      {
+        id: 'search-live', title: '边打边出结果',
+        description: '不要等回车。搜索框下面的内容应该随着输入一起变——没有匹配时也要说清楚，而不是留一片空白。',
+        height: 320,
+        render: function SearchLive() {
+          const all = ['封面.png', '背景.jpg', '图标集.sketch', '插画草稿.psd', '头像.png'];
+          const [query, setQuery] = useState('');
+          const matches = all.filter(name => name.toLowerCase().includes(query.trim().toLowerCase()));
+          return <div id="search-live-demo" style={{ display: 'grid', gap: 12, width: 320 }}>
+            <SearchField aria-label="搜索文件" placeholder="文件名" value={query} onValueChange={setQuery} />
+            {matches.length > 0
+              ? <List>
+                <ListSection header={`${matches.length} 个文件`}>
+                  {matches.map(name => <ListRow key={name} label={name} />)}
+                </ListSection>
+              </List>
+              : <Text variant="subhead" tone="secondary" role="status">
+                没有匹配「{query}」的文件。试试「png」。
+              </Text>}
+          </div>;
+        },
+        code: `const matches = files.filter(file => file.name.includes(query));
+
+<SearchField aria-label="搜索文件" value={query} onValueChange={setQuery} />
+{matches.length > 0
+  ? <List>…</List>
+  : <Text tone="secondary">没有匹配「{query}」的文件。</Text>}`,
       },
     ],
     props: [

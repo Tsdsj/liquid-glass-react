@@ -1,6 +1,6 @@
 'use client';
 import {
-  useCallback, useId, useRef, useState,
+  useCallback, useEffect, useId, useRef, useState,
   type CSSProperties, type HTMLAttributes, type ReactNode, type RefAttributes,
 } from 'react';
 import { useGlassStrings } from '../system/strings.js';
@@ -50,6 +50,8 @@ export interface SplitViewProps extends Omit<HTMLAttributes<HTMLDivElement>, 'ti
 }
 
 const DEFAULT_SIDEBAR = 260, MIN_SIDEBAR = 180, MAX_SIDEBAR = 400, DEFAULT_INSPECTOR = 300;
+/** The divider's own width, which the columns do not get to use. */
+const DIVIDER = 1;
 
 /**
  * Two or three columns, and the rules that make them a split view rather than three divs.
@@ -86,9 +88,32 @@ export function SplitView({
   const [sidebarOn] = useControllable(controlledSidebar, defaultSidebarVisible, onSidebarVisibleChange);
   const [inspectorOn] = useControllable(controlledInspector, defaultInspectorVisible, onInspectorVisibleChange);
 
+  /**
+   * How wide the view itself is, so the range can be bounded by the room there actually is.
+   *
+   * Without this the sidebar could be set to its declared maximum inside a container too narrow
+   * to give it — `aria-valuenow` said 400 while the column rendered at 304. A width nobody has
+   * is not a width, and a screen reader reading it out is being told something untrue.
+   */
+  const [available, setAvailable] = useState(0);
+  useEffect(() => {
+    const node = root.current;
+    if (!node || typeof ResizeObserver === 'undefined') return;
+    const observer = new ResizeObserver(([entry]) => setAvailable(entry.contentRect.width));
+    observer.observe(node);
+    return () => observer.disconnect();
+  }, [compactEnvironment]);
+
+  /** What the content column must keep whatever the sidebar asks for. */
+  const MIN_CONTENT = 160;
+  const ceiling = available
+    ? Math.max(minSidebarWidth, available - (inspector && inspectorOn ? inspectorWidth : 0) - DIVIDER - MIN_CONTENT)
+    : maxSidebarWidth;
+  const reachableMax = Math.min(maxSidebarWidth, ceiling);
+
   const clamp = useCallback(
-    (value: number) => Math.min(maxSidebarWidth, Math.max(minSidebarWidth, Math.round(value))),
-    [minSidebarWidth, maxSidebarWidth],
+    (value: number) => Math.min(reachableMax, Math.max(minSidebarWidth, Math.round(value))),
+    [minSidebarWidth, reachableMax],
   );
 
   /**
@@ -152,7 +177,9 @@ export function SplitView({
     root.current = node;
     if (typeof ref === 'function') ref(node); else if (ref) ref.current = node;
   }} className={cx('lg-split', className)} data-dragging={dragging ? 'true' : undefined}
-    style={{ '--lg-split-sidebar': `${width}px`, '--lg-split-inspector': `${inspectorWidth}px`, ...style } as CSSProperties}>
+    /* The clamped width, not the requested one: a controlled caller may ask for more than the
+       view can give, and what is drawn and what is announced have to be the same number. */
+    style={{ '--lg-split-sidebar': `${clamp(width)}px`, '--lg-split-inspector': `${inspectorWidth}px`, ...style } as CSSProperties}>
     {sidebarOn && <>
       <div className="lg-split-column" data-column="sidebar">{sidebar}</div>
       {/**
@@ -163,9 +190,10 @@ export function SplitView({
         role="separator"
         aria-orientation="vertical"
         aria-label={strings.resizeSidebar}
-        aria-valuenow={width}
+        aria-valuenow={clamp(width)}
         aria-valuemin={minSidebarWidth}
-        aria-valuemax={maxSidebarWidth}
+        /* The reachable maximum, which in a narrow view is less than the declared one. */
+        aria-valuemax={reachableMax}
         aria-controls={`${generated}-sidebar`}
         tabIndex={0}
         className="lg-split-divider"

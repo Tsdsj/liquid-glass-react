@@ -80,10 +80,13 @@ test('a toolbar is one tab stop with arrow-key traversal across its groups', asy
 
 test('in-page tabs swap panels and expose tab semantics', async ({ page }) => {
   await page.goto('/#/components/tabs');
-  await page.getByRole('tab', { name: '设计', exact: true }).focus();
+  // Scoped to one example: the page shows three independent tab sets, and "one panel visible"
+  // is a statement about a tab set, not about a document that happens to hold one of them.
+  const demo = page.locator('#tabs-basic');
+  await demo.getByRole('tab', { name: '设计', exact: true }).focus();
   await page.keyboard.press('ArrowRight');
-  await expect(page.getByRole('tab', { name: '实现', exact: true })).toHaveAttribute('aria-selected', 'true');
-  await expect(page.getByRole('tabpanel')).toHaveCount(1);
+  await expect(demo.getByRole('tab', { name: '实现', exact: true })).toHaveAttribute('aria-selected', 'true');
+  await expect(demo.getByRole('tabpanel')).toHaveCount(1);
 });
 
 test('popover closes on Escape and on an outside click, returning focus', async ({ page }) => {
@@ -141,8 +144,9 @@ test('the scroll edge effect appears only once content passes under the bar', as
   await page.goto('/#/components/scroll-edge');
   // The demo's own edge, not the one `Screen` gives the whole page — both are correct, and
   // "one per scroll view" is the rule, so a page with an inner scroller legitimately has two.
-  const top = page.locator('.demo-scroll-fixture .lg-scroll-edge[data-edge="top"]');
+  const fixture = page.locator('#edge-soft .demo-scroll-fixture');
+  const top = fixture.locator('.lg-scroll-edge[data-edge="top"]');
   await expect(top).toHaveAttribute('data-active', 'false');
-  await page.locator('.demo-scroll-body').evaluate(node => { node.scrollTop = 150; });
+  await fixture.locator('.demo-scroll-body').evaluate(node => { node.scrollTop = 150; });
   await expect(top).toHaveAttribute('data-active', 'true');
 });

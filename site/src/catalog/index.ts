@@ -40,14 +40,57 @@ export function relatedDocs(doc: ComponentDoc): ComponentDoc[] {
 export const importLine = (doc: ComponentDoc) =>
   `import { ${(doc.imports ?? [doc.name]).join(', ')} } from '@ttqtt/liquid-glass-react';`;
 
-/** Substring match over both names, the summary and the group — enough for a catalogue this size. */
-export function searchDocs(query: string): ComponentDoc[] {
+/** What a search result points at. */
+export interface DocHit {
+  doc: ComponentDoc;
+  kind: 'component' | 'example' | 'prop' | 'section';
+  /** What matched, shown as the result's own line. */
+  label: string;
+  /** Where it is, shown underneath. */
+  detail: string;
+  /** Element id to scroll to after navigating. Absent for a whole-page hit. */
+  anchor?: string;
+}
+
+/** The fixed sections every component page has, so they are findable by name too. */
+const SECTIONS = [
+  { id: 'api', label: 'API' },
+  { id: 'a11y', label: '键盘与辅助功能' },
+] as const;
+
+/**
+ * Substring match over everything a reader might remember.
+ *
+ * Component names alone were not enough: what people actually recall is a property name
+ * (`marks`), an example's title (「刻度」) or a section (「键盘与辅助功能」) — and searching for
+ * any of those used to return nothing, which reads as "this library does not have that".
+ * Ordered by kind so the page itself always outranks something inside it.
+ */
+export function searchDocs(query: string): DocHit[] {
   const needle = query.trim().toLocaleLowerCase();
   if (!needle) return [];
-  return componentDocs.filter(doc =>
-    doc.name.toLocaleLowerCase().includes(needle)
-    || doc.title.includes(needle)
-    || doc.slug.includes(needle)
-    || doc.summary.toLocaleLowerCase().includes(needle)
-    || doc.group.includes(needle));
+  const has = (value: string | undefined) => !!value && value.toLocaleLowerCase().includes(needle);
+
+  const pages: DocHit[] = [], examples: DocHit[] = [], props: DocHit[] = [], sections: DocHit[] = [];
+  for (const doc of componentDocs) {
+    if (has(doc.name) || has(doc.title) || has(doc.slug) || has(doc.summary) || has(doc.group)) {
+      pages.push({ doc, kind: 'component', label: docLabel(doc), detail: doc.summary });
+    }
+    for (const example of doc.examples) {
+      if (has(example.title) || has(example.description)) {
+        examples.push({ doc, kind: 'example', label: example.title, detail: `示例 · ${docLabel(doc)}`, anchor: example.id });
+      }
+    }
+    for (const row of doc.props) {
+      if (has(row.name) || has(row.description)) {
+        props.push({ doc, kind: 'prop', label: row.name, detail: `属性 · ${docLabel(doc)}`, anchor: 'api' });
+      }
+    }
+    for (const section of SECTIONS) {
+      if (has(section.label)) {
+        sections.push({ doc, kind: 'section', label: section.label, detail: docLabel(doc), anchor: section.id });
+      }
+    }
+  }
+  return [...pages, ...examples, ...props, ...sections];
 }

@@ -1,11 +1,21 @@
 import { useState } from 'react';
 import {
-  GlassActionSheet, GlassAlert, GlassButton, GlassDialog, GlassIconButton, GlassMenu, GlassPopover,
+  Banner, Form, GlassActionSheet, GlassAlert, GlassButton, GlassDialog, GlassIconButton, GlassMenu, GlassPopover,
   Card, ContextMenu, GlassMenuButton, GlassSegmentedControl, GlassSheet, GlassSlider, LibraryIcon, List, ListRow, ListSection,
-  Text, TextField, Tooltip, useToast,
+  Text, TextField, Tooltip, useToast, type SheetDetent,
 } from '@ttqtt/liquid-glass-react';
 import { Icon } from '../icons.js';
 import type { ComponentDoc } from './types.js';
+
+/** The same commands the context-menu demo offers, shown where everyone can find them. */
+function GlassToolbarLike({ commands, onPick }: {
+  commands: { key: string; label: string }[]; onPick: (label: string) => void;
+}) {
+  return <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', justifyContent: 'center' }}>
+    {commands.map(command => <GlassButton key={command.key} controlSize="small" variant="gray"
+      onClick={() => onPick(command.label)}>{command.label}</GlassButton>)}
+  </div>;
+}
 
 export const overlayDocs: ComponentDoc[] = [
   {
@@ -19,11 +29,18 @@ export const overlayDocs: ComponentDoc[] = [
     examples: [
       {
         id: 'popover-basic', title: '基础用法', description: '面板从触发它的按钮位置展开，按 Escape 关闭并把焦点还回去。',
-        height: 220,
-        render: function PopoverBasic() {
+        height: 240,
+        knobs: [
+          { name: 'align', label: '对齐', type: 'select', value: 'end', options: [
+            { value: 'start', label: '起始侧' }, { value: 'center', label: '居中' }, { value: 'end', label: '末尾侧' },
+          ] },
+          { name: 'description', label: '显示说明', type: 'boolean', value: true },
+        ],
+        render: function PopoverBasic({ knobs }) {
           const [view, setView] = useState('fit');
           const [volume, setVolume] = useState(65);
-          return <GlassPopover title="查看设置" description="改动会立刻生效。"
+          return <GlassPopover title="查看设置" align={knobs.align as 'end'}
+            description={knobs.description === true ? '改动会立刻生效。' : undefined}
             trigger={<GlassButton>打开面板</GlassButton>}>
             <Text variant="subhead" emphasized style={{ marginBlockEnd: 8 }}>显示方式</Text>
             <GlassSegmentedControl aria-label="显示方式" density="compact" value={view} onValueChange={setView}
@@ -32,9 +49,8 @@ export const overlayDocs: ComponentDoc[] = [
             <GlassSlider aria-label="音量" value={volume} onValueChange={setVolume} />
           </GlassPopover>;
         },
-        code: `<GlassPopover
-  title="查看设置"
-  description="改动会立刻生效。"
+        code: knobs => `<GlassPopover
+  title="查看设置"${knobs.align === 'end' ? '' : `\n  align="${knobs.align}"`}${knobs.description ? '\n  description="改动会立刻生效。"' : ''}
   trigger={<GlassButton>打开面板</GlassButton>}
 >
   …
@@ -55,6 +71,24 @@ export const overlayDocs: ComponentDoc[] = [
           </div>;
         },
         code: `<GlassPopover title="朝上展开" placement="above" trigger={<GlassButton>向上</GlassButton>}>
+  …
+</GlassPopover>`,
+      },
+      {
+        id: 'popover-compact', title: '手机上它不是气泡',
+        description: '低于 768px，同一个组件会从屏幕底部升起，而不是挂在按钮旁边——一个贴在按钮边上的小气泡，在一只手拿着的屏幕上既够不着也看不清。把窗口拉窄到 768 以下试试。',
+        height: 240,
+        render: function PopoverCompact() {
+          return <div id="popover-compact-demo" style={{ display: 'grid', gap: 12, justifyItems: 'center' }}>
+            <GlassPopover title="筛选" description="窄屏下它会从底部升起。"
+              trigger={<GlassButton variant="gray">筛选</GlassButton>}>
+              <Text variant="subhead">同一段代码，两种形态。</Text>
+            </GlassPopover>
+            <Text variant="caption1" tone="secondary">形态由尺寸类别决定，不由设备类型决定。</Text>
+          </div>;
+        },
+        code: `{/* 不用写两套：组件自己按尺寸类别切换 */}
+<GlassPopover title="筛选" trigger={<GlassButton>筛选</GlassButton>}>
   …
 </GlassPopover>`,
       },
@@ -85,12 +119,21 @@ export const overlayDocs: ComponentDoc[] = [
     examples: [
       {
         id: 'menu-basic', title: '基础用法', description: '支持上下键、Home/End、直接打字跳转，Escape 关闭。',
-        height: 200,
-        render: function MenuBasic() {
+        height: 220,
+        knobs: [
+          { name: 'align', label: '对齐', type: 'select', value: 'end', options: [
+            { value: 'start', label: '起始侧' }, { value: 'center', label: '居中' }, { value: 'end', label: '末尾侧' },
+          ] },
+          { name: 'placement', label: '方向', type: 'select', value: 'auto', options: [
+            { value: 'auto', label: '自动' }, { value: 'below', label: '朝下' }, { value: 'above', label: '朝上' },
+          ] },
+        ],
+        render: function MenuBasic({ knobs }) {
           const [status, setStatus] = useState('还没选');
           const [pinned, setPinned] = useState(true);
           return <div style={{ display: 'grid', gap: 12, justifyItems: 'center' }}>
-            <GlassMenu aria-label="示例菜单" trigger={<GlassButton>打开菜单<LibraryIcon name="chevronDown" size={16} /></GlassButton>}
+            <GlassMenu aria-label="示例菜单" align={knobs.align as 'end'} placement={knobs.placement as 'auto'}
+              trigger={<GlassButton>打开菜单<LibraryIcon name="chevronDown" size={16} /></GlassButton>}
               items={[
                 { key: 'open', label: '打开', icon: <LibraryIcon name="chevronForward" size={16} />, shortcut: '⌘O', onSelect: () => setStatus('打开') },
                 { key: 'pin', label: '置顶', checked: pinned, onSelect: () => { setPinned(!pinned); setStatus(pinned ? '取消置顶' : '已置顶'); } },
@@ -100,7 +143,7 @@ export const overlayDocs: ComponentDoc[] = [
             <Text variant="caption1" tone="secondary" role="status">{status}</Text>
           </div>;
         },
-        code: `<GlassMenu aria-label="更多操作"
+        code: knobs => `<GlassMenu aria-label="更多操作"${knobs.align === 'end' ? '' : `\n  align="${knobs.align}"`}${knobs.placement === 'auto' ? '' : `\n  placement="${knobs.placement}"`}
   trigger={<GlassIconButton aria-label="更多"><MoreIcon /></GlassIconButton>}
   items={[
     { key: 'open', label: '打开', shortcut: '⌘O', onSelect: open },
@@ -108,6 +151,62 @@ export const overlayDocs: ComponentDoc[] = [
     { key: 'delete', label: '删除', destructive: true, separatorBefore: true, onSelect: remove },
   ]}
 />`,
+      },
+      {
+        id: 'menu-single', title: '勾选是多选还是单选',
+        description: 'selection="single" 之后，带勾的项变成 menuitemradio，读屏会说「三项之中的第二项，已选中」。默认是多选，每一项各自独立。',
+        height: 240,
+        render: function MenuSelection() {
+          const [sort, setSort] = useState('name');
+          const [shown, setShown] = useState<string[]>(['size']);
+          const toggle = (key: string) => setShown(list => list.includes(key) ? list.filter(item => item !== key) : [...list, key]);
+          return <div id="menu-selection-demo" style={{ display: 'flex', gap: 12, flexWrap: 'wrap', justifyContent: 'center' }}>
+            <GlassMenu aria-label="排序方式" selection="single"
+              trigger={<GlassButton variant="gray">排序<LibraryIcon name="chevronDown" size={16} /></GlassButton>}
+              items={[
+                { key: 'name', label: '按名称', checked: sort === 'name', onSelect: () => setSort('name') },
+                { key: 'date', label: '按日期', checked: sort === 'date', onSelect: () => setSort('date') },
+                { key: 'size', label: '按大小', checked: sort === 'size', onSelect: () => setSort('size') },
+              ]} />
+            <GlassMenu aria-label="显示哪些列"
+              trigger={<GlassButton variant="gray">显示的列<LibraryIcon name="chevronDown" size={16} /></GlassButton>}
+              items={[
+                { key: 'size', label: '大小', checked: shown.includes('size'), onSelect: () => toggle('size') },
+                { key: 'kind', label: '种类', checked: shown.includes('kind'), onSelect: () => toggle('kind') },
+                { key: 'date', label: '修改日期', checked: shown.includes('date'), onSelect: () => toggle('date') },
+              ]} />
+          </div>;
+        },
+        code: `{/* 单选：一组互斥的值 */}
+<GlassMenu aria-label="排序方式" selection="single" items={…} />
+
+{/* 多选（默认）：各自独立的开关 */}
+<GlassMenu aria-label="显示哪些列" items={…} />`,
+      },
+      {
+        id: 'menu-grouping', title: '用分隔线分组，不要拉成长清单',
+        description: '每组七项左右。危险的那一条单独一组排在最后——分隔线在这里不是装饰，是让手滑点不到它的那段距离。',
+        height: 230,
+        render: function MenuGrouping() {
+          const [status, setStatus] = useState('还没选');
+          return <div id="menu-grouping-demo" style={{ display: 'grid', gap: 12, justifyItems: 'center' }}>
+            <GlassMenu aria-label="文件操作"
+              trigger={<GlassButton variant="gray">文件<LibraryIcon name="chevronDown" size={16} /></GlassButton>}
+              items={[
+                { key: 'new', label: '新建', shortcut: '⌘N', onSelect: () => setStatus('新建') },
+                { key: 'open', label: '打开…', shortcut: '⌘O', onSelect: () => setStatus('打开') },
+                { key: 'save', label: '存储', shortcut: '⌘S', separatorBefore: true, onSelect: () => setStatus('存储') },
+                { key: 'export', label: '导出…', onSelect: () => setStatus('导出') },
+                { key: 'delete', label: '移到废纸篓', destructive: true, separatorBefore: true, onSelect: () => setStatus('移到废纸篓') },
+              ]} />
+            <Text variant="caption1" tone="secondary" role="status">{status}</Text>
+          </div>;
+        },
+        code: `items={[
+  { key: 'new', label: '新建', shortcut: '⌘N', onSelect: create },
+  { key: 'save', label: '存储', shortcut: '⌘S', separatorBefore: true, onSelect: save },
+  { key: 'delete', label: '移到废纸篓', destructive: true, separatorBefore: true, onSelect: trash },
+]}`,
       },
     ],
     props: [
@@ -160,11 +259,20 @@ export const overlayDocs: ComponentDoc[] = [
       },
       {
         id: 'popup-demo', title: '弹出式：按钮说现在选的是什么', description: '按钮上写的就是当前值，选完立刻换掉。菜单项是一组单选，不是一排独立的勾选。',
-        height: 210,
-        render: function PopUpDemo() {
+        height: 230,
+        knobs: [
+          { name: 'variant', label: '样式', type: 'select', value: 'glass', options: [
+            { value: 'glass', label: '玻璃' }, { value: 'gray', label: '灰底' }, { value: 'plain', label: '文字' },
+          ] },
+          { name: 'controlSize', label: '尺寸', type: 'select', value: 'regular', options: [
+            { value: 'small', label: '小' }, { value: 'regular', label: '默认' }, { value: 'large', label: '大' },
+          ] },
+        ],
+        render: function PopUpDemo({ knobs }) {
           const [quality, setQuality] = useState('medium');
           return <div id="popup-demo" style={{ display: 'grid', gap: 12, justifyItems: 'center' }}>
             <GlassMenuButton kind="popUp" aria-label="画质" value={quality} onValueChange={setQuality}
+              variant={knobs.variant as 'glass'} controlSize={knobs.controlSize as 'regular'}
               options={[
                 { value: 'low', label: '流畅' },
                 { value: 'medium', label: '中等' },
@@ -174,9 +282,9 @@ export const overlayDocs: ComponentDoc[] = [
             <Text variant="caption1" tone="secondary" role="status">当前画质：{quality}</Text>
           </div>;
         },
-        code: `<GlassMenuButton
+        code: knobs => `<GlassMenuButton
   kind="popUp"
-  aria-label="画质"
+  aria-label="画质"${knobs.variant === 'glass' ? '' : `\n  variant="${knobs.variant}"`}${knobs.controlSize === 'regular' ? '' : `\n  controlSize="${knobs.controlSize}"`}
   value={quality}
   onValueChange={setQuality}
   options={[
@@ -277,14 +385,25 @@ export const overlayDocs: ComponentDoc[] = [
       },
       {
         id: 'tooltip-delay', title: '延迟', description: '默认 600ms。调短了，指针扫过一排按钮会一路弹出来；调长了没人等得到。',
-        height: 200,
-        render: () => <div style={{ display: 'flex', gap: 12, alignItems: 'center' }}>
-          <Tooltip content="等 0.2 秒" delay={200}><GlassButton>200ms</GlassButton></Tooltip>
-          <Tooltip content="等 0.6 秒，默认值"><GlassButton>600ms</GlassButton></Tooltip>
-          <Tooltip content="等 1.2 秒" delay={1200}><GlassButton>1200ms</GlassButton></Tooltip>
-        </div>,
-        code: `<Tooltip content="等 0.2 秒" delay={200}>
-  <GlassButton>200ms</GlassButton>
+        height: 230,
+        knobs: [
+          { name: 'delay', label: '延迟（毫秒）', type: 'number', value: 600, min: 0, max: 1500, step: 100 },
+          { name: 'placement', label: '方向', type: 'select', value: 'above', options: [
+            { value: 'above', label: '朝上' }, { value: 'below', label: '朝下' },
+          ] },
+          { name: 'content', label: '文案', type: 'text', value: '恢复默认设置' },
+        ],
+        render: function TooltipDelay({ knobs }) {
+          return <div id="tooltip-delay-demo" style={{ display: 'flex', gap: 12, alignItems: 'center', flexWrap: 'wrap', justifyContent: 'center' }}>
+            <Tooltip content={String(knobs.content)} delay={Number(knobs.delay)} placement={knobs.placement as 'above'}>
+              <GlassButton>可调节的那个</GlassButton>
+            </Tooltip>
+            <Tooltip content="等 0.2 秒" delay={200}><GlassButton variant="gray">200ms</GlassButton></Tooltip>
+            <Tooltip content="等 1.2 秒" delay={1200}><GlassButton variant="gray">1200ms</GlassButton></Tooltip>
+          </div>;
+        },
+        code: knobs => `<Tooltip content="${knobs.content}"${knobs.delay === 600 ? '' : ` delay={${knobs.delay}}`}${knobs.placement === 'above' ? '' : ' placement="below"'}>
+  <GlassButton>按钮</GlassButton>
 </Tooltip>`,
       },
     ],
@@ -340,6 +459,63 @@ export const overlayDocs: ComponentDoc[] = [
   <PhotoCard />
 </ContextMenu>`,
       },
+      {
+        id: 'context-longpress', title: '触摸是长按',
+        description: '按住 500ms 打开；手指移动超过 10px 就取消，因为那是在滚动。把延迟调太短，每一次滑动列表都会弹出菜单。',
+        height: 260,
+        knobs: [{ name: 'longPressDelay', label: '长按时长（毫秒）', type: 'number', value: 500, min: 200, max: 1000, step: 100 }],
+        render: function ContextLongPress({ knobs }) {
+          const [result, setResult] = useState('还没选');
+          return <div id="context-longpress-demo" style={{ display: 'grid', gap: 12, justifyItems: 'center' }}>
+            <ContextMenu aria-label="行操作" longPressDelay={Number(knobs.longPressDelay)} items={[
+              { key: 'pin', label: '置顶', onSelect: () => setResult('置顶') },
+              { key: 'mark', label: '标为已读', onSelect: () => setResult('标为已读') },
+              { key: 'archive', label: '归档', onSelect: () => setResult('归档') },
+            ]}>
+              <List style={{ width: 280 }}>
+                <ListSection>
+                  <ListRow label="周会纪要" secondaryLabel="长按或右键" />
+                  <ListRow label="发票" secondaryLabel="长按或右键" />
+                </ListSection>
+              </List>
+            </ContextMenu>
+            <Text variant="caption1" tone="secondary" role="status">选了：{result}</Text>
+          </div>;
+        },
+        code: knobs => `<ContextMenu aria-label="行操作"${knobs.longPressDelay === 500 ? '' : ` longPressDelay={${knobs.longPressDelay}}`} items={…}>
+  <List>…</List>
+</ContextMenu>`,
+      },
+      {
+        id: 'context-also-elsewhere', title: '每一条都要有别的路',
+        description: '右键菜单是给已经知道它存在的人的快捷方式。只活在右键里的命令，大多数人一辈子也找不到——所以这里同一组命令在工具栏里也有一份。',
+        height: 300,
+        render: function ContextElsewhere() {
+          const [result, setResult] = useState('还没选');
+          const commands = [
+            { key: 'copy', label: '拷贝', shortcut: '⌘C' },
+            { key: 'rename', label: '重命名' },
+            { key: 'share', label: '分享' },
+          ];
+          return <div id="context-elsewhere-demo" style={{ display: 'grid', gap: 12, justifyItems: 'center' }}>
+            <GlassToolbarLike commands={commands} onPick={setResult} />
+            <ContextMenu aria-label="同样的三条命令"
+              items={commands.map(command => ({ ...command, onSelect: () => setResult(command.label) }))}>
+              <Card radius={16} padding={20} style={{ width: 240, textAlign: 'center' }}>
+                <Text variant="subhead">右键这里，得到的是同一组命令</Text>
+              </Card>
+            </ContextMenu>
+            <Text variant="caption1" tone="secondary" role="status">选了：{result}</Text>
+          </div>;
+        },
+        code: `const commands = [{ key: 'copy', label: '拷贝', onSelect: copy }, …];
+
+{/* 主界面里 */}
+<GlassToolbar aria-label="操作">…同一组…</GlassToolbar>
+
+{/* 以及快捷方式 */}
+<ContextMenu aria-label="操作" items={commands}>…</ContextMenu>`,
+      },
     ],
     props: [
       { name: 'items', type: 'GlassMenuItem[]', required: true, description: '命令。和 GlassMenu 完全一样的那一套。' },
@@ -366,12 +542,21 @@ export const overlayDocs: ComponentDoc[] = [
     examples: [
       {
         id: 'sheet-basic', title: '基础用法', description: '按住顶部的横条上下拖动，松手会停在最近的高度。往下拖到底就是关闭。',
-        height: 200,
-        render: function SheetBasic() {
+        height: 220,
+        knobs: [
+          { name: 'detents', label: '停靠高度', type: 'select', value: 'medium,large', options: [
+            { value: 'medium,large', label: '一半与整屏' },
+            { value: 'medium', label: '只有一半' },
+            { value: 'large', label: '只有整屏' },
+          ] },
+          { name: 'grabber', label: '顶部横条', type: 'boolean', value: true },
+        ],
+        render: function SheetBasic({ knobs }) {
           const [open, setOpen] = useState(false);
+          const detents = String(knobs.detents).split(',') as SheetDetent[];
           return <div style={{ display: 'grid', gap: 12, justifyItems: 'center' }}>
             <GlassSheet title="分享这一刻" description="按住顶部的横条上下拖动，试试两个高度。"
-              open={open} onOpenChange={setOpen} detents={['medium', 'large']}
+              open={open} onOpenChange={setOpen} detents={detents} grabber={knobs.grabber === true}
               trigger={<GlassButton>打开面板</GlassButton>}>
               <div style={{ display: 'grid', gap: 12, marginBlockStart: 12 }}>
                 <TextField label="备注" placeholder="想说点什么" />
@@ -381,9 +566,9 @@ export const overlayDocs: ComponentDoc[] = [
             <Text variant="caption1" tone="secondary">横条也支持键盘：上下方向键换高度</Text>
           </div>;
         },
-        code: `<GlassSheet
+        code: knobs => `<GlassSheet
   title="分享这一刻"
-  detents={['medium', 'large']}
+  detents={[${String(knobs.detents).split(',').map(name => `'${name}'`).join(', ')}]}${knobs.grabber ? '' : '\n  grabber={false}'}
   trigger={<GlassButton>分享</GlassButton>}
 >
   …
@@ -413,6 +598,28 @@ export const overlayDocs: ComponentDoc[] = [
   <List>…很长的列表…</List>
 </GlassSheet>`,
       },
+      {
+        id: 'sheet-one-detent', title: '只有一个高度时关掉横条',
+        description: '横条表示「这个还能拖到别的高度」。只有一档却留着它，是承诺了一件做不到的事——而且它对键盘用户是一个调不动的滑块。',
+        height: 220,
+        render: function SheetOneDetent() {
+          const [open, setOpen] = useState(false);
+          return <div id="sheet-one-detent-demo" style={{ display: 'grid', gap: 12, justifyItems: 'center' }}>
+            <GlassSheet title="重命名" description="改完按完成。" grabber={false} detents={['medium']}
+              open={open} onOpenChange={setOpen}
+              trigger={<GlassButton variant="gray">重命名</GlassButton>}>
+              <div style={{ display: 'grid', gap: 12, marginBlockStart: 12 }}>
+                <TextField label="名称" defaultValue="封面.png" />
+                <GlassButton variant="glassProminent" onClick={() => setOpen(false)}>完成</GlassButton>
+              </div>
+            </GlassSheet>
+            <Text variant="caption1" tone="secondary">一档高度，没有横条。</Text>
+          </div>;
+        },
+        code: `<GlassSheet title="重命名" detents={['medium']} grabber={false} trigger={…}>
+  …
+</GlassSheet>`,
+      },
     ],
     props: [
       { name: 'detents', type: "SheetDetent[]", default: "['medium', 'large']", description: '可以停靠的高度，从小到大。' },
@@ -440,15 +647,20 @@ export const overlayDocs: ComponentDoc[] = [
     examples: [
       {
         id: 'alert-destructive', title: '危险操作', description: '有危险选项时，焦点一开始就落在“取消”上。按 Escape 等于取消。',
-        height: 190,
-        render: function AlertDestructive() {
+        height: 210,
+        knobs: [
+          { name: 'message', label: '说明', type: 'text', value: '里面的 12 个项目会一起被删除，这个操作没法撤销。' },
+          { name: 'third', label: '加第三个选项', type: 'boolean', value: false },
+        ],
+        render: function AlertDestructive({ knobs }) {
           const [result, setResult] = useState('还没决定');
           return <div style={{ display: 'grid', gap: 12, justifyItems: 'center' }}>
-            <GlassAlert title="删除这个工作区？" message="里面的 12 个项目会一起被删除，这个操作没法撤销。"
+            <GlassAlert title="删除这个工作区？" message={String(knobs.message) || undefined}
               trigger={<GlassButton variant="destructive">删除工作区</GlassButton>}
               actions={[
-                { key: 'cancel', label: '取消', role: 'cancel', onSelect: () => setResult('已取消') },
-                { key: 'delete', label: '删除', role: 'destructive', onSelect: () => setResult('已删除（只是演示）') },
+                { key: 'cancel', label: '取消', role: 'cancel' as const, onSelect: () => setResult('已取消') },
+                ...(knobs.third === true ? [{ key: 'archive', label: '改为归档', onSelect: () => setResult('已归档') }] : []),
+                { key: 'delete', label: '删除', role: 'destructive' as const, onSelect: () => setResult('已删除（只是演示）') },
               ]} />
             <Text variant="caption1" tone="secondary" role="status">{result}</Text>
           </div>;
@@ -462,6 +674,61 @@ export const overlayDocs: ComponentDoc[] = [
     { key: 'delete', label: '删除', role: 'destructive', onSelect: remove },
   ]}
 />`,
+      },
+      {
+        id: 'alert-reversible', title: '可撤销的就别问',
+        description: '同一件事，两种做法。右边直接做完再给一个撤销——不可逆的才值得打断，可逆的打断只是多一次点击。',
+        height: 230,
+        render: function AlertReversible() {
+          const toast = useToast();
+          const [items, setItems] = useState(['草稿 A', '草稿 B']);
+          const remove = () => {
+            const removed = items.at(-1);
+            if (!removed) return;
+            setItems(list => list.slice(0, -1));
+            toast({ message: `已删除「${removed}」`, action: { label: '撤销', onSelect: () => setItems(list => [...list, removed]) } });
+          };
+          return <div id="alert-reversible-demo" style={{ display: 'grid', gap: 14, justifyItems: 'center' }}>
+            <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap', justifyContent: 'center' }}>
+              <GlassAlert title="退出而不保存？" message="这次编辑的内容会丢失。"
+                trigger={<GlassButton variant="destructive">不可逆：退出</GlassButton>}
+                actions={[
+                  { key: 'cancel', label: '取消', role: 'cancel' },
+                  { key: 'discard', label: '不保存', role: 'destructive' },
+                ]} />
+              <GlassButton variant="gray" onClick={remove} disabled={items.length === 0}>可逆：删除草稿</GlassButton>
+            </div>
+            <Text variant="caption1" tone="secondary" role="status">剩余：{items.join('、') || '（空）'}</Text>
+          </div>;
+        },
+        code: `{/* 不可逆：先问 */}
+<GlassAlert title="退出而不保存？" actions={[…]} />
+
+{/* 可逆：直接做，给一个撤销 */}
+toast({ message: '已删除', action: { label: '撤销', onSelect: restore } });`,
+      },
+      {
+        id: 'alert-three', title: '三个选项会竖排',
+        description: '两个选项并排，三个就竖着排——挤在一行的三个按钮，文字会被压成谁也读不出来的样子。超过三个应该是操作表。',
+        height: 210,
+        render: function AlertThree() {
+          const [result, setResult] = useState('还没决定');
+          return <div id="alert-three-demo" style={{ display: 'grid', gap: 12, justifyItems: 'center' }}>
+            <GlassAlert title="这份文稿有未保存的改动" message="离开之前要怎么处理？"
+              trigger={<GlassButton>打开三选项的警告框</GlassButton>}
+              actions={[
+                { key: 'cancel', label: '取消', role: 'cancel', onSelect: () => setResult('取消') },
+                { key: 'save', label: '保存并离开', onSelect: () => setResult('保存并离开') },
+                { key: 'discard', label: '不保存', role: 'destructive', onSelect: () => setResult('不保存') },
+              ]} />
+            <Text variant="caption1" tone="secondary" role="status">{result}</Text>
+          </div>;
+        },
+        code: `<GlassAlert title="这份文稿有未保存的改动" actions={[
+  { key: 'cancel', label: '取消', role: 'cancel' },
+  { key: 'save', label: '保存并离开', onSelect: save },
+  { key: 'discard', label: '不保存', role: 'destructive', onSelect: discard },
+]} />`,
       },
     ],
     props: [
@@ -487,11 +754,18 @@ export const overlayDocs: ComponentDoc[] = [
     examples: [
       {
         id: 'sheet-actions', title: '基础用法', description: '危险项会被自动排到最后，不管你传进来的顺序是什么。',
-        height: 190,
-        render: function ActionSheetBasic() {
+        height: 210,
+        knobs: [
+          { name: 'align', label: '宽屏下的对齐', type: 'select', value: 'center', options: [
+            { value: 'start', label: '起始侧' }, { value: 'center', label: '居中' }, { value: 'end', label: '末尾侧' },
+          ] },
+          { name: 'message', label: '说明', type: 'text', value: '选择要做的事。' },
+        ],
+        render: function ActionSheetBasic({ knobs }) {
           const [result, setResult] = useState('还没选');
           return <div style={{ display: 'grid', gap: 12, justifyItems: 'center' }}>
-            <GlassActionSheet aria-label="照片操作" title="这一张照片" message="选择要做的事。"
+            <GlassActionSheet aria-label="照片操作" title="这一张照片"
+              align={knobs.align as 'center'} message={String(knobs.message) || undefined}
               trigger={<GlassIconButton aria-label="更多操作"><Icon name="more" /></GlassIconButton>}
               actions={[
                 { key: 'delete', label: '删除照片', destructive: true, onSelect: () => setResult('删除') },
@@ -511,6 +785,64 @@ export const overlayDocs: ComponentDoc[] = [
   ]}
   onCancel={dismiss}
 />`,
+      },
+      {
+        id: 'action-sheet-limit', title: '六项以内',
+        description: '再多就不是「挑一件事做」了。那时候应该是菜单，或者干脆是一整页——一屏滚动的选项，谁也记不住前面有什么。',
+        height: 220,
+        render: function ActionSheetLimit() {
+          const [result, setResult] = useState('还没选');
+          return <div id="action-sheet-limit-demo" style={{ display: 'flex', gap: 12, flexWrap: 'wrap', justifyContent: 'center', alignItems: 'center' }}>
+            <GlassActionSheet aria-label="文档操作" title="这份文稿"
+              trigger={<GlassButton variant="gray">六项（上限）</GlassButton>}
+              actions={[
+                { key: 'share', label: '分享', onSelect: () => setResult('分享') },
+                { key: 'duplicate', label: '创建副本', onSelect: () => setResult('创建副本') },
+                { key: 'rename', label: '重命名', onSelect: () => setResult('重命名') },
+                { key: 'move', label: '移动到…', onSelect: () => setResult('移动') },
+                { key: 'export', label: '导出 PDF', onSelect: () => setResult('导出') },
+                { key: 'delete', label: '删除', destructive: true, onSelect: () => setResult('删除') },
+              ]}
+              onCancel={() => setResult('已取消')} />
+            <Text variant="caption1" tone="secondary" role="status">{result}</Text>
+          </div>;
+        },
+        code: `{/* 六项以内 */}
+<GlassActionSheet aria-label="文档操作" actions={sixOrFewer} onCancel={dismiss} />
+
+{/* 更多：菜单，或者一整页 */}
+<GlassMenu aria-label="文档操作" items={many} />`,
+      },
+      {
+        id: 'action-sheet-vs-alert', title: '它不是警告框',
+        description: '操作表是一组选项，界面其余部分仍然能操作；警告框是一道必须先过的关。要不要打断用户，是这两者唯一真正的区别。',
+        height: 230,
+        render: function ActionSheetVsAlert() {
+          const [result, setResult] = useState('还没决定');
+          return <div id="action-sheet-vs-alert-demo" style={{ display: 'grid', gap: 12, justifyItems: 'center' }}>
+            <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap', justifyContent: 'center' }}>
+              <GlassActionSheet aria-label="分享方式" title="分享到哪里"
+                trigger={<GlassButton variant="gray">一组选项</GlassButton>}
+                actions={[
+                  { key: 'link', label: '拷贝链接', onSelect: () => setResult('拷贝链接') },
+                  { key: 'mail', label: '邮件', onSelect: () => setResult('邮件') },
+                ]}
+                onCancel={() => setResult('已取消')} />
+              <GlassAlert title="确定要退出登录？" message="下次需要重新输入密码。"
+                trigger={<GlassButton variant="destructive">一道关</GlassButton>}
+                actions={[
+                  { key: 'cancel', label: '取消', role: 'cancel', onSelect: () => setResult('取消') },
+                  { key: 'out', label: '退出登录', role: 'destructive', onSelect: () => setResult('退出登录') },
+                ]} />
+            </div>
+            <Text variant="caption1" tone="secondary" role="status">{result}</Text>
+          </div>;
+        },
+        code: `{/* 挑一件事做：操作表 */}
+<GlassActionSheet aria-label="分享方式" actions={…} onCancel={dismiss} />
+
+{/* 必须先回答：警告框 */}
+<GlassAlert title="确定要退出登录？" actions={…} />`,
       },
     ],
     props: [
@@ -538,10 +870,15 @@ export const overlayDocs: ComponentDoc[] = [
     examples: [
       {
         id: 'dialog-form', title: '表单对话框', description: 'Tab 只会在框内循环，Escape 关闭并把焦点还给原来的按钮。',
-        height: 190,
-        render: function DialogForm() {
+        height: 210,
+        knobs: [
+          { name: 'description', label: '说明', type: 'text', value: '这个示例不会提交到任何地方。' },
+          { name: 'dismissOnBackdrop', label: '点外面关闭', type: 'boolean', value: true },
+        ],
+        render: function DialogForm({ knobs }) {
           const [name, setName] = useState('我的灵感空间');
-          return <GlassDialog title="创建一个工作区" description="这个示例不会提交到任何地方。"
+          return <GlassDialog title="创建一个工作区" description={String(knobs.description)}
+            dismissOnBackdrop={knobs.dismissOnBackdrop === true}
             trigger={<GlassButton>打开对话框</GlassButton>}>
             <div style={{ display: 'grid', gap: 16 }}>
               <TextField label="工作区名称" value={name} onChange={event => setName(event.target.value)} />
@@ -549,13 +886,58 @@ export const overlayDocs: ComponentDoc[] = [
             </div>
           </GlassDialog>;
         },
-        code: `<GlassDialog
+        code: knobs => `<GlassDialog
   title="创建一个工作区"
-  description="…"
+  description="${knobs.description}"${knobs.dismissOnBackdrop ? '' : '\n  dismissOnBackdrop={false}'}
   trigger={<GlassButton>新建</GlassButton>}
 >
   <form>…</form>
 </GlassDialog>`,
+      },
+      {
+        id: 'dialog-confirm', title: '里面放一个真的表单',
+        description: '对话框只是容器。回车提交、主操作在末尾、取消在它旁边——这些都是 Form 和 GlassButton 的事，对话框不替它们做。',
+        height: 210,
+        render: function DialogConfirm() {
+          const [open, setOpen] = useState(false);
+          const [name, setName] = useState('');
+          const [created, setCreated] = useState('还没创建');
+          return <div id="dialog-confirm-demo" style={{ display: 'grid', gap: 12, justifyItems: 'center' }}>
+            <GlassDialog title="新建文件夹" description="给它起个名字。" open={open} onOpenChange={setOpen}
+              trigger={<GlassButton variant="gray">新建文件夹</GlassButton>}>
+              <Form onSubmit={event => { event.preventDefault(); setCreated(name); setOpen(false); }}>
+                <TextField label="名称" value={name} autoComplete="off"
+                  onChange={event => setName(event.currentTarget.value)} />
+                <div style={{ display: 'flex', gap: 10, justifyContent: 'flex-end', marginBlockStart: 16 }}>
+                  <GlassButton variant="plain" type="button" onClick={() => setOpen(false)}>取消</GlassButton>
+                  <GlassButton variant="glassProminent" type="submit" disabled={!name}>创建</GlassButton>
+                </div>
+              </Form>
+            </GlassDialog>
+            <Text variant="caption1" tone="secondary" role="status">{created}</Text>
+          </div>;
+        },
+        code: `<GlassDialog title="新建文件夹" open={open} onOpenChange={setOpen} trigger={…}>
+  <Form onSubmit={create}>
+    <TextField label="名称" value={name} onChange={…} />
+    <GlassButton variant="glassProminent" type="submit">创建</GlassButton>
+  </Form>
+</GlassDialog>`,
+      },
+      {
+        id: 'dialog-too-long', title: '任务长了就该是一整页',
+        description: '对话框越长越高，最后变成一个在小窗口里滚动的页面——那时候它已经不是「一个专注的小任务」了。',
+        height: 200,
+        render: () => <div id="dialog-too-long-demo" style={{ display: 'grid', gap: 10, width: 320 }}>
+          <Text variant="subhead">判断标准很简单：</Text>
+          <Text variant="subhead" tone="secondary">框里需要滚动 → 换成一整页或页面栈。</Text>
+          <Text variant="subhead" tone="secondary">只要一个是非判断 → 换成更轻的警告框。</Text>
+        </div>,
+        code: `{/* 一个小而完整的任务 */}
+<GlassDialog title="重命名">…</GlassDialog>
+
+{/* 更长的流程 */}
+<NavigationStack root={{ key: 'setup', title: '设置', content: <Setup /> }} />`,
       },
     ],
     props: [
@@ -607,18 +989,51 @@ toast({
       },
       {
         id: 'toast-tone', title: '语气', description: '语气不是装饰：只在「结果本身就是要说的那件事」时用，而且永远不能只靠颜色——所以每种语气自带一个图标。',
-        height: 220,
-        render: function ToastTone() {
+        height: 250,
+        knobs: [
+          { name: 'tone', label: '语气', type: 'select', value: 'success', options: [
+            { value: 'neutral', label: '中性' }, { value: 'success', label: '成功' },
+            { value: 'warning', label: '警告' }, { value: 'error', label: '错误' },
+          ] },
+          { name: 'message', label: '文案', type: 'text', value: '已同步' },
+          { name: 'duration', label: '停留（毫秒）', type: 'number', value: 6000, min: 2000, max: 12000, step: 1000 },
+        ],
+        render: function ToastTone({ knobs }) {
           const toast = useToast();
-          return <div id="toast-tone-demo" style={{ display: 'flex', gap: 12, flexWrap: 'wrap', justifyContent: 'center' }}>
-            <GlassButton controlSize="small" onClick={() => toast({ message: '已同步', tone: 'success' })}>成功</GlassButton>
-            <GlassButton controlSize="small" onClick={() => toast({ message: '离线，稍后重试', tone: 'warning' })}>警告</GlassButton>
-            <GlassButton controlSize="small" onClick={() => toast({ message: '上传失败', tone: 'error' })}>错误</GlassButton>
-            <GlassButton controlSize="small" variant="gray" onClick={() => toast({ message: '已复制' })}>中性（默认）</GlassButton>
+          return <div id="toast-tone-demo" style={{ display: 'grid', gap: 12, justifyItems: 'center' }}>
+            <GlassButton onClick={() => toast({
+              message: String(knobs.message), tone: knobs.tone as 'success', duration: Number(knobs.duration),
+            })}>按上面的设置弹一条</GlassButton>
+            <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap', justifyContent: 'center' }}>
+              <GlassButton controlSize="small" variant="gray" onClick={() => toast({ message: '已同步', tone: 'success' })}>成功</GlassButton>
+              <GlassButton controlSize="small" variant="gray" onClick={() => toast({ message: '离线，稍后重试', tone: 'warning' })}>警告</GlassButton>
+              <GlassButton controlSize="small" variant="gray" onClick={() => toast({ message: '上传失败', tone: 'error' })}>错误</GlassButton>
+              <GlassButton controlSize="small" variant="gray" onClick={() => toast({ message: '已复制' })}>中性（默认）</GlassButton>
+            </div>
           </div>;
         },
-        code: `toast({ message: '已同步', tone: 'success' });
-toast({ message: '已复制' }); // 默认 neutral`,
+        code: knobs => `toast({
+  message: '${knobs.message}',${knobs.tone === 'neutral' ? '' : `\n  tone: '${knobs.tone}',`}${knobs.duration === 6000 ? '' : `\n  duration: ${knobs.duration},`}
+});`,
+      },
+      {
+        id: 'toast-dismiss', title: '总要有办法把它关掉',
+        description: '等六秒不是一种关闭方式，悬停暂停对键盘用户根本不存在。所以每条都有一个 44×44 的关闭按钮，Escape 关掉最新的那一条。',
+        height: 220,
+        render: function ToastDismiss() {
+          const toast = useToast();
+          return <div id="toast-dismiss-demo" style={{ display: 'grid', gap: 12, justifyItems: 'center' }}>
+            <GlassButton variant="gray" onClick={() => toast({
+              message: '这一条不会自己消失', duration: Infinity, dismissLabel: '关闭这条提示',
+            })}>弹一条不会自己消失的</GlassButton>
+            <Text variant="caption1" tone="secondary">用右边的 ✕ 关掉，或者按 Escape。</Text>
+          </div>;
+        },
+        code: `toast({
+  message: '这一条不会自己消失',
+  duration: Infinity,
+  dismissLabel: '关闭这条提示',
+});`,
       },
     ],
     props: [
@@ -633,7 +1048,105 @@ toast({ message: '已复制' }); // 默认 neutral`,
       '读屏会在当前操作的间隙把它念出来，不会打断用户正在做的事。',
       '鼠标悬停或键盘聚焦时暂停倒计时，撤销的机会不会在伸手的路上消失。',
     ],
-    related: ['alert', 'progress'],
+    related: ['alert', 'progress', 'banner'],
     imports: ['ToastProvider', 'useToast'],
+  },
+  {
+    slug: 'banner', name: 'Banner', title: '横幅', group: '浮层',
+    summary: '一条留在顶部的通知：发生了什么，以及要不要管它。',
+    when: [
+      '事情发生在别处——同步失败了、有新版本、网络断了——而不是用户刚做完的那一下。',
+      '它会一直留着，直到被关掉或者情况变了。用户刚做完的事、几秒后就该消失的，用轻提示 ToastProvider。',
+      '必须先回答才能继续的，两个都不对，那是警告框 GlassAlert。',
+      '最多一个操作按钮。三个按钮的横幅是一个忘了自己是模态的对话框。',
+    ],
+    examples: [
+      {
+        id: 'banner-tones', title: '四种语气',
+        description: '语气自带图标，所以从来不是只靠颜色。标题一行说清发生了什么，第二行说它意味着什么。',
+        height: 260,
+        knobs: [
+          { name: 'tone', label: '语气', type: 'select', value: 'error', options: [
+            { value: 'info', label: '消息' }, { value: 'success', label: '成功' },
+            { value: 'warning', label: '警告' }, { value: 'error', label: '错误' },
+          ] },
+          { name: 'title', label: '标题', type: 'text', value: '同步失败' },
+          { name: 'message', label: '第二行', type: 'text', value: '上次同步在 3 小时前。检查网络后会自动重试。' },
+          { name: 'dismissible', label: '可关闭', type: 'boolean', value: true },
+        ],
+        render: function BannerTones({ knobs }) {
+          const [gone, setGone] = useState(false);
+          return <div id="banner-tones-demo" style={{ display: 'grid', gap: 12, width: '100%', maxWidth: 460, justifyItems: 'center' }}>
+            {gone
+              ? <GlassButton controlSize="small" onClick={() => setGone(false)}>再放一条</GlassButton>
+              : <Banner style={{ width: '100%' }} tone={knobs.tone as 'info'}
+                title={String(knobs.title)} message={String(knobs.message)}
+                onDismiss={knobs.dismissible === true ? () => setGone(true) : undefined}
+                dismissLabel="关闭这条通知" />}
+            <Text variant="caption1" tone="secondary">可关闭时，也可以用手指把它往上一甩。</Text>
+          </div>;
+        },
+        code: knobs => `<Banner
+  tone="${knobs.tone}"
+  title="${knobs.title}"
+  message="${knobs.message}"${knobs.dismissible ? '\n  onDismiss={() => setShown(false)}\n  dismissLabel="关闭这条通知"' : ''}
+/>`,
+      },
+      {
+        id: 'banner-action', title: '带一个操作',
+        description: '操作只放一个，并且是这条通知本身最可能要做的那件事。',
+        height: 200,
+        render: function BannerAction() {
+          const [updated, setUpdated] = useState(false);
+          return <div id="banner-action-demo" style={{ width: '100%', maxWidth: 460 }}>
+            <Banner tone={updated ? 'success' : 'info'}
+              title={updated ? '已经是最新版本' : '有新版本 2.4'}
+              message={updated ? undefined : '包含若干修复。现在更新大约需要 20 秒。'}
+              action={updated ? undefined : { label: '更新', onSelect: () => setUpdated(true) }} />
+          </div>;
+        },
+        code: `<Banner
+  title="有新版本 2.4"
+  message="包含若干修复。"
+  action={{ label: '更新', onSelect: update }}
+/>`,
+      },
+      {
+        id: 'banner-placement', title: '放在哪里',
+        description: '默认在你放它的地方——通常是内容顶部，或者 Screen 的 top 插槽里。placement="top" 才会把它钉到窗口顶部；默认不这样做，是因为一个自己决定位置的组件没法被组合，而布局本来就知道自己的顶在哪。',
+        height: 240,
+        render: function BannerPlacement() {
+          return <div id="banner-placement-demo" style={{ width: '100%', maxWidth: 420, display: 'grid', gap: 10 }}>
+            <Banner tone="warning" title="离线" message="改动会先存在本机，恢复连接后上传。" />
+            <Card fill="secondary" radius={16} padding={16}>
+              <Text variant="subhead">下面是页面内容。横幅在它上面，不盖住它。</Text>
+            </Card>
+          </div>;
+        },
+        code: `<Screen top={<Banner tone="warning" title="离线" />}>
+  …
+</Screen>
+
+{/* 或者钉在窗口顶部 */}
+<Banner placement="top" tone="error" title="连接中断" />`,
+      },
+    ],
+    props: [
+      { name: 'title', type: 'string', required: true, description: '一行，发生了什么。' },
+      { name: 'message', type: 'ReactNode', description: '第二行，它意味着什么或者该做什么。' },
+      { name: 'tone', type: "'info' | 'success' | 'warning' | 'error'", default: "'info'", description: '语气。自带图标，和轻提示的那一套是同一组，所以同一件事不会在两个地方长得不一样。' },
+      { name: 'icon', type: 'ReactNode | null', description: '覆盖语气自带的图标；传 null 表示不要。' },
+      { name: 'action', type: '{ label: string; onSelect: () => void }', description: '最多一个操作。' },
+      { name: 'onDismiss', type: '() => void', description: '关掉它。传了才有关闭按钮，也才可以上滑关闭。' },
+      { name: 'dismissLabel', type: 'string', description: '关闭按钮的名字。不传就用 GlassProvider 的 strings 表。' },
+      { name: 'placement', type: "'inline' | 'top'", default: "'inline'", description: '在流里（默认），还是钉在窗口顶部。' },
+    ],
+    notes: [
+      '用 role="status" 客气地播报：横幅是来汇报的，不是来打断的。必须当场回答的用警告框。',
+      '上滑关闭只是关闭按钮之外的一条路，不是替代——没有可见入口的手势，对键盘用户等于不存在。',
+      '用户开启「减少动效」后不再跟手形变，手势本身仍然可用。',
+      '关闭按钮有 44×44 的点击范围。',
+    ],
+    related: ['toast', 'alert', 'screen'],
   },
 ];

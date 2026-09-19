@@ -218,10 +218,22 @@ test('nothing springs into place on load', async ({ page }) => {
   await page.addInitScript(() => {
     const frames: string[] = [];
     (window as Window & { __lens?: string[] }).__lens = frames;
+    /**
+     * One key per lens *element*, not per label.
+     *
+     * Keying on the nearest `aria-label` looked tidier and was wrong: two different controls on
+     * a page may legitimately be named the same thing — the segmented-control page has a 密度
+     * example and the knob panel underneath has a 密度 knob — and merging their positions
+     * reported a lens that had never moved as having moved.
+     */
+    let next = 0;
     const tick = () => {
       for (const node of document.querySelectorAll<HTMLElement>('.lg-selection-lens')) {
         const style = getComputedStyle(node);
-        if (parseFloat(style.opacity) > .01) frames.push(`${node.closest('[aria-label]')?.getAttribute('aria-label') ?? '?'}|${style.transform}`);
+        if (!node.dataset.lensKey) {
+          node.dataset.lensKey = `${node.closest('[aria-label]')?.getAttribute('aria-label') ?? '?'}#${next++}`;
+        }
+        if (parseFloat(style.opacity) > .01) frames.push(`${node.dataset.lensKey}|${style.transform}`);
       }
       if (frames.length < 120) requestAnimationFrame(tick);
     };

@@ -119,8 +119,12 @@ code { font-family: var(--lg-font-mono); font-size: .92em; }
 .rule-note { border-inline-start: 3px solid var(--lg-accent); padding-inline-start: var(--lg-space-4);
   padding-block: var(--lg-space-1); margin-block: var(--lg-space-4); max-width: var(--lg-readable); }
 .when-card { max-width: var(--lg-readable); }
+/* Same reason as the sidebar labels above, found at 390px/AX5 by the layout sweep: these
+   sentences quote export names and attribute values — `NavigationStack`, `role="separator"` —
+   and a Latin token that long has nowhere to break inside Chinese prose. At AX5 on a phone one
+   of them was 423px wide in a 390px window and pushed the whole document sideways. */
 .doc-a11y, .plain-list { margin: 0; padding-inline-start: var(--lg-space-5);
-  display: flex; flex-direction: column; gap: var(--lg-space-2); }
+  display: flex; flex-direction: column; gap: var(--lg-space-2); overflow-wrap: anywhere; }
 .doc-a11y li::marker, .plain-list li::marker { color: var(--lg-label-tertiary); }
 .page-enter { animation: page-enter var(--lg-duration-overlay) var(--lg-ease-out) both; }
 @keyframes page-enter { from { opacity: 0; transform: translateY(8px); } }
@@ -168,7 +172,23 @@ code { font-family: var(--lg-font-mono); font-size: .92em; }
 .demo-card-code { border-block-start: 1px solid var(--lg-separator); }
 .demo-card-code .code-block > pre { border: 0; border-radius: 0; }
 
-.demo-stage { position: relative; display: grid; place-items: center; padding: var(--lg-space-6) var(--lg-space-4); overflow: hidden; }
+/* The page's adjustable example takes the full width: it carries a panel of controls under it,
+   and half a column is not enough for a row of labelled controls to stay on one line. */
+.demo-card[data-adjustable="true"] { grid-column: 1 / -1; }
+.knob-panel { padding: 0 var(--lg-space-4) var(--lg-space-4); gap: var(--lg-space-4); }
+.knob-panel .lg-form-group { background: var(--lg-bg-grouped-3, var(--lg-fill-quaternary)); }
+.knob-slider { width: min(220px, 40vw); }
+
+/* A card whose whole box is one link. The focus ring is on the link, which fills the card. */
+.card-link { color: inherit; text-decoration: none; border-radius: inherit;
+  outline: var(--lg-focus-width) solid transparent; outline-offset: -2px;
+  transition: background var(--lg-duration-press) var(--lg-ease), outline-color var(--lg-duration-press) var(--lg-ease); }
+.card-link:focus-visible { outline-color: var(--lg-focus); }
+@media (hover: hover) { .card-link:hover { background: var(--lg-fill-quaternary); } }
+
+/* The stage carries the example's anchor, so it is what an outline link scrolls to. */
+.demo-stage { position: relative; display: grid; place-items: center; padding: var(--lg-space-6) var(--lg-space-4); overflow: hidden;
+  scroll-margin-block-start: 88px; }
 .demo-stage[data-scheme="light"] { background: var(--lg-gray6); }
 .demo-stage[data-scheme="dark"] { background: #000; }
 .demo-stage[data-surface="media"] { background: #2b3a36; }
@@ -179,9 +199,14 @@ code { font-family: var(--lg-font-mono); font-size: .92em; }
 /* Fixtures a few examples need. */
 .demo-tabbar-frame { position: relative; display: grid; gap: var(--lg-space-4); justify-items: center; width: 100%; }
 .demo-tabbar-frame .lg-tabbar { position: static; padding: 0; }
+/* Concentric with the sidebar, not a fixed small radius: the surface publishes its own radius
+   as --lg-radius, and the sidebar's padding is --lg-space-4, so the row's radius is the
+   difference. A row left on a fixed 4px inside a 26px panel is the flared-corner tell. */
 .demo-sidebar-row { display: flex; align-items: center; min-height: var(--lg-hit-min); padding-inline: var(--lg-space-3);
-  border-radius: var(--lg-radius-s); text-decoration: none; color: var(--lg-glass-fg-secondary);
+  border-radius: max(6px, calc(var(--lg-radius, 20px) - var(--lg-space-4)));
+  text-decoration: none; color: var(--lg-glass-fg-secondary);
   font-size: var(--lg-text-subhead-size); }
+.demo-sidebar-row-wrong { border-radius: 4px; background: var(--lg-fill-tertiary); }
 .demo-sidebar-row[aria-current="page"] { background: var(--lg-selected); color: var(--lg-glass-fg); font-weight: var(--lg-weight-semibold); }
 .demo-navbar-frame { display: grid; gap: var(--lg-space-5); width: 100%; max-width: 340px; }
 .demo-navbar-row { display: grid; gap: var(--lg-space-2); }
@@ -339,3 +364,9 @@ code { font-family: var(--lg-font-mono); font-size: .92em; }
 @media (prefers-reduced-motion: reduce) {
   .page-enter, .scene-art { animation: none !important; transition: none !important; }
 }
+
+/* The overview's refraction switch, above the media viewer it applies to. */
+.refraction-demo { display: grid; gap: var(--lg-space-3); }
+.refraction-switch { display: grid; gap: var(--lg-space-2); justify-items: start;
+  padding: var(--lg-space-3) var(--lg-space-4); border-radius: var(--lg-radius-m);
+  background: var(--lg-bg-grouped-2); }

@@ -1,6 +1,6 @@
 # API
 
-`@ttqtt/liquid-glass-react` 共 65 个导出：41 个组件与 Provider、10 个 Hook、14 个纯函数与诊断工具。所有组件都是 `'use client'`。
+`@ttqtt/liquid-glass-react` 共 92 个导出：58 个组件与 Provider、11 个 Hook、23 个常量表、纯函数与诊断工具。所有组件都是 `'use client'`。
 
 样式必须引入一次，顺序不能颠倒：
 
@@ -96,6 +96,10 @@ import '@ttqtt/liquid-glass-react/styles.css';
 `Inspector`（`title?` + children）是**内容层**，不是玻璃：它是窗口的一块区域，在读者和他正在编辑的东西之间放一层半透明面板帮不了任何人。密集控件用圆角矩形而不是胶囊。
 
 > 紧凑模式下的返回不能只靠 `compact` 驱动。那样按下去调用方的选中态没变，下一帧又把详情放回来——一个什么都不做的按钮。组件自己记住「按过返回」，下一次选中（标题变了）再清掉。
+
+**`max` 会被「实际有多少地方」二次收紧。** 范围是按像素声明的，而视图本身可能比它自己的最大值还窄：一个 420px 的分栏视图如果照样报出 400px 的上限，`aria-valuenow` 会说出一个没有人拥有的宽度。组件量自己的宽度，减掉检查器、分隔线和内容栏必须保住的 160px，取这个和 `maxSidebarWidth` 中较小的那个——`aria-valuemax`、`aria-valuenow` 和画出来的宽度始终是同一个数。
+
+栏的 flex 基准是 `0 1`（可收缩）而不是 `0 0`：容器比「侧栏 + 检查器」还窄时，一个刚性基准会让分栏视图**溢出它自己的盒子**——实测在 320px 的容器里溢出 161px，而它的父级根本不知道这些栏存在。内容栏的基准是 `0`，所以它先让，侧栏只在真的没地方时才变窄。
 
 ### `NavigationStack` / `useNavigationStack()`
 
@@ -205,6 +209,24 @@ import '@ttqtt/liquid-glass-react/styles.css';
 
 ### `GlassBadge`
 `count` `max`(99) `tone`(`notification`/`neutral`/`accent`) `dot` `aria-label`。没有内容时不渲染。增强对比度下加一圈边框——白字压红色本身已经是 4.6:1 过 AA，这是一致性：其他表面在这个设置下都会长出边线。
+
+### `Picker`
+`label`(必填) `labelHidden` `options: PickerOption[]`（`value` `label` `disabled`）、`value`/`defaultValue`/`onValueChange` `presentation` `disabled` `name`。
+
+**形态是结论，不是参数。** `presentation="automatic"`（默认）按选项数量和尺寸类别决定：四个以内且处在 regular 尺寸类别就并排成分段控件，再多或者到了 compact 就收成弹出式菜单按钮。这正是 layout 那一页反复说的那条——按尺寸类别决定布局，永远不按设备类型。写死 `inline` 或 `menu` 只在形态本身就是设计的一部分时用。
+
+`PickerOption` **没有图标插槽**：同一个选择器会在两种形态之间切换，而分段控件不允许一组里图文混排。
+
+可见的那行文字带 `aria-hidden`，控件自己拿同一串字作为名字——念两遍没有意义，而语音控制匹配的是控件的名字，和可见文字逐字相同，所以照样能命中。
+
+服务端渲染时 `useSizeClass()` 按 compact 处理，也就是先渲染菜单形态，到浏览器再按真实宽度决定。
+
+### `ColorWell`
+`aria-label`(必填) `value`/`defaultValue`(`#0a84ff`)/`onValueChange` `swatches: ColorSwatch[]`（`value` + **必填的** `label`）、`showValue`(true) `disabled`。内容层。
+
+底下是真正的 `<input type="color">`，铺满整个 44×44 的外壳并且透明——**把它藏起来再用脚本点开，会同时丢掉焦点环、键盘和表单**。点开的是操作系统自己的取色器，带吸管和最近用过的颜色。
+
+`showValue` 默认开：一个控件的全部状态如果就是一种颜色，分不清颜色的人读不出它，想把它念给别人听的人也说不出口。快捷色的选中态是一圈描边而不是「颜色深一点」，强制颜色模式下另有一条 `outline`。
 
 ### `Kbd`
 见「内容层」一节。
@@ -351,6 +373,17 @@ import '@ttqtt/liquid-glass-react/styles.css';
 
 有**关闭按钮**，**Escape 关最新一条**。此前只能等六秒或者把指针放在上面悬停暂停，键盘用户两样都没有。Escape 不 `preventDefault`：浮层里的 Escape 属于浮层，浮层会先拦下它。
 
+### `Banner`
+`title`(必填) `message` `tone`(`info`/`success`/`warning`/`error`) `icon` `action` `onDismiss` `dismissLabel` `placement`(`inline`/`top`)。大玻璃。
+
+**和轻提示的分工是「这件事发生在哪」。** 轻提示报告用户刚做完的那一下，几秒后自己走；横幅报告别处发生的事——同步失败了、有新版本——一直留到被处理掉，所以它有标题、有一整句话的余地、有关掉它的办法。必须先回答才能继续的，两个都不对，那是 `GlassAlert`。
+
+`placement` 默认 `inline`：**一个自己决定位置的组件没法被组合**，而布局本来就知道自己的顶在哪（放进 `Screen` 的 `top` 插槽即可）。要钉在窗口顶部就传 `top`。
+
+`onDismiss` 是「可关闭」的开关：传了才有关闭按钮，也才可以往上一甩关掉。上滑只是关闭按钮之外的一条路，不是替代——没有可见入口的手势，对键盘用户等于不存在。`role="status"` + `aria-live="polite"`：它是来汇报的，不是来打断的。
+
+语气自带的图标和 `ToastTone` 用同一套，同一件事不会在两个地方长得不一样。
+
 ### `Tooltip`
 `content`(必填) `children`(必填，一个元素) `delay`(600) `placement`(`above`/`below`)。
 
@@ -385,6 +418,7 @@ import '@ttqtt/liquid-glass-react/styles.css';
 - `concentricRadius(containerRadius, inset, { minimum, maximum })` / `concentricInset` / `capsuleRadius`
 - `createSpring(initial, apply, config)` / `advanceSpring` / `springAtRest` / `defaultSpring`
 - `getGlassDiagnostics()` / `clearGlassCache()`
+- `supportsSvgBackdrop()` — 这个浏览器认不认 `backdrop-filter: url(#…)`。只是语法检测，不代表效果正确，也不是任何认证；用来决定要不要给用户一个「打开折射」的开关，因为一个按下去什么也不会变的开关比没有这个开关更糟。
 
 ## 类型
 

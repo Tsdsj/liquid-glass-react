@@ -31,9 +31,9 @@ test('search is its own destination at the trailing end', async ({ page }) => {
 test('command-K opens component search and Escape restores focus', async ({ page }) => {
   await page.goto('/#/overview');
   await page.keyboard.press('ControlOrMeta+k');
-  const dialog = page.getByRole('dialog', { name: '搜索组件' });
+  const dialog = page.getByRole('dialog', { name: '搜索' });
   await expect(dialog).toBeVisible();
-  const field = page.getByRole('searchbox', { name: '搜索组件' });
+  const field = page.getByRole('searchbox', { name: '搜索' });
   await field.fill('sheet');
   await expect(dialog.getByText('GlassSheet')).toBeVisible();
   // Escape in a non-empty search field is claimed by the browser to clear it; the second

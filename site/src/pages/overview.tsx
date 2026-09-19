@@ -1,4 +1,5 @@
-import { Card, GlassButton, LibraryIcon, Text } from '@ttqtt/liquid-glass-react';
+import { useState } from 'react';
+import { Card, GlassButton, GlassProvider, GlassSwitch, LibraryIcon, Text, supportsSvgBackdrop } from '@ttqtt/liquid-glass-react';
 import { Page, Section } from '../site/page.js';
 import { MediaViewer } from '../media-viewer.js';
 import { componentDocs } from '../catalog/index.js';
@@ -22,6 +23,40 @@ const PRINCIPLES = [
   },
 ];
 
+/**
+ * The first screen, with the switch that turns edge refraction on.
+ *
+ * It is off by default here for the same reason it is off by default in the library: it costs
+ * a generated displacement map per surface and only Chromium reads the filter at all. The
+ * switch exists because "默认是磨砂玻璃，折射要自己打开" was written on this page for months
+ * with no way to see the difference — a boundary you state but cannot demonstrate reads as an
+ * excuse.
+ *
+ * Where the browser cannot do it, the switch is disabled and says so. Offering a control that
+ * changes nothing is worse than not offering one.
+ */
+function RefractionDemo() {
+  const [on, setOn] = useState(false);
+  /* Read once, in a lazy initialiser: it is a static capability, and calling `CSS.supports`
+     during render on every keystroke elsewhere on the page would be work for no answer.
+     `false` on the server, which is right — there is no backdrop filter there either. */
+  const [capable] = useState(() => typeof window !== 'undefined' && supportsSvgBackdrop());
+  return <div className="refraction-demo">
+    <div className="refraction-switch">
+      <GlassSwitch aria-label="边缘折射" label="边缘折射" checked={on && capable} disabled={!capable}
+        onCheckedChange={setOn} />
+      <Text variant="footnote" tone="secondary">
+        {capable
+          ? '打开后，玻璃边缘会把背后的内容折弯，而不只是磨砂。开销大约三倍，所以默认关着。'
+          : '这个浏览器不支持折射，所以这个开关是关着的——Safari 和 Firefox 读不了 backdrop-filter 里的 SVG 滤镜，玻璃在这里是磨砂的。'}
+      </Text>
+    </div>
+    {/* Only this demo, not the whole site: the switch is about what refraction looks like, and
+        turning it on for every surface on the page would be a different claim. */}
+    <GlassProvider renderer={on && capable ? 'svg' : 'css'}><MediaViewer /></GlassProvider>
+  </div>;
+}
+
 export function OverviewPage({ go }: { go: (path: string) => void }) {
   return <Page title="轻盈有形，清晰如初。"
     lede="一套 React 组件库。内容和操作分开，材质只用在该用的地方，交互细节做到位。">
@@ -33,7 +68,7 @@ export function OverviewPage({ go }: { go: (path: string) => void }) {
     </div>
 
     <Section title="先看一眼" description="玻璃承载操作，照片保持清晰。按住工具栏上的按钮，感受它从玻璃里浮起来再落回去。">
-      <MediaViewer />
+      <RefractionDemo />
     </Section>
 
     <Section title="三条原则">
@@ -51,7 +86,7 @@ export function OverviewPage({ go }: { go: (path: string) => void }) {
         <ul className="plain-list">
           <li><Text as="span" variant="subhead">这是一个独立项目，不是 Apple 官方产品，也不包含 Apple 的字体和图标素材。所有图标都是自己画的。</Text></li>
           <li><Text as="span" variant="subhead">玻璃需要你告诉它背后是深是浅，它不会去截屏猜测——这样行为可预期，也不碰用户的画面内容。</Text></li>
-          <li><Text as="span" variant="subhead">默认是磨砂玻璃，所有浏览器一致。边缘折射要自己打开，而且只有 Chrome 和 Edge 能跑。</Text></li>
+          <li><Text as="span" variant="subhead">默认是磨砂玻璃，所有浏览器一致。边缘折射要自己打开，而且只有 Chrome 和 Edge 能跑——上面那个开关就是它，在别的浏览器里会告诉你为什么按不了。</Text></li>
           <li><Text as="span" variant="subhead">屏幕阅读器的实机验证还没做完，这一条写在这里，不藏着。</Text></li>
         </ul>
       </Card>

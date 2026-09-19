@@ -530,8 +530,13 @@
   padding: var(--lg-space-5) var(--lg-space-4) calc(var(--lg-space-5) + env(safe-area-inset-bottom)); overflow-y: auto; overscroll-behavior: contain; }
 .lg-tabbar-header { padding: var(--lg-space-2) var(--lg-space-3) var(--lg-space-4); }
 .lg-tabbar-group { padding: 6px; }
-/* pan-y: scrolling the page (or the sidebar) always beats dragging the lens on a touch screen. */
-.lg-tab-links { position: relative; display: flex; gap: 2px; touch-action: pan-y; }
+/* pan-y: scrolling the page (or the sidebar) always beats dragging the lens on a touch screen.
+   `wrap` is what the largest text sizes need: at AX5 on a 390px screen four tab labels are
+   400px of text inside a bar that is `inset-inline: 0`, so the bar — and with it the whole
+   document — ran 69px off the side. Wrapping is the reflow Dynamic Type asks for, and the
+   selection lens already tracks both axes, so it follows a tab onto the second row. */
+.lg-tab-links { position: relative; display: flex; flex-wrap: wrap; justify-content: center; gap: 2px; touch-action: pan-y; }
+.lg-tabbar[data-layout="tabbar"] .lg-tabbar-group { max-width: 100%; min-width: 0; }
 .lg-tabbar[data-layout="sidebar"] .lg-tab-links { flex-direction: column; }
 .lg-tab-link { position: relative; z-index: 1; display: inline-flex; align-items: center; justify-content: center; gap: var(--lg-space-2);
   min-height: var(--lg-hit-min); min-width: var(--lg-hit-min); padding-inline: var(--lg-space-4); border-radius: 999px;
@@ -805,7 +810,12 @@
 .lg-tooltip::backdrop { background: transparent; }
 
 /* ---------- NavigationStack: one bar that follows a stack of screens ---------- */
-.lg-stack { display: flex; flex-direction: column; min-width: 0; }
+/* `overflow-x: clip` contains the push/pop slide. The incoming screen starts 16px to one side,
+   so without this the stack is 16px wider than itself for the length of the transition — and a
+   stack that fills the window gives the page a horizontal scrollbar that flashes on every
+   navigation. `clip` rather than `hidden`: it does not create a scroll container, so sticky
+   bars inside the stack keep working. */
+.lg-stack { display: flex; flex-direction: column; min-width: 0; overflow-x: clip; }
 .lg-stack-screen { min-width: 0; outline: none; }
 /* The back button reads as a destination, not a control: no glass, no fill, just the chevron
    and the previous screen's name. The chevron points backwards, which is the leading edge and
@@ -892,9 +902,19 @@
 /* ---------- SplitView: columns in a regular environment, a stack in a compact one ---------- */
 .lg-split { display: flex; align-items: stretch; min-width: 0; min-height: 0; }
 .lg-split-column { min-width: 0; min-height: 0; overflow: auto; }
-.lg-split-column[data-column="sidebar"] { flex: 0 0 var(--lg-split-sidebar, 260px); }
-.lg-split-column[data-column="content"] { flex: 1 1 auto; }
-.lg-split-column[data-column="inspector"] { flex: 0 0 var(--lg-split-inspector, 300px); }
+/* `0 1`, not `0 0`: the columns keep their widths until there is nothing left to give, and
+   then they give. With a rigid basis a split view narrower than sidebar + inspector overflowed
+   its own box — measured at 161px inside a 320px container — which is the one thing a layout
+   container must never do, because its parent has no idea the columns exist. The content column
+   shrinks first (it has the flexible basis), so the sidebar only narrows once it has to. */
+.lg-split-column[data-column="sidebar"] { flex: 0 1 var(--lg-split-sidebar, 260px); }
+/* Basis `0`, not `auto`: with `auto` the content column's hypothetical size is its text's
+   max-content width, which over-constrains the line even in a wide view — and the shrink was
+   then shared with the sidebar, so a 260px sidebar rendered at 231 with 200px of room to
+   spare. At zero the content column absorbs the whole difference and the sidebar keeps the
+   width it was given until there is genuinely nothing left. */
+.lg-split-column[data-column="content"] { flex: 1 1 0%; }
+.lg-split-column[data-column="inspector"] { flex: 0 1 var(--lg-split-inspector, 300px); }
 /* "Keep the divider visible": a hairline that is always there, with a grab region around it
    wider than the line — the line is 1px and a pointer target is not. */
 .lg-split-divider { position: relative; flex: 0 0 1px; background: var(--lg-separator);
@@ -1012,3 +1032,68 @@
 .lg-form-row-error { padding: 0 var(--lg-space-4) var(--lg-space-3); }
 .lg-form-row:has(:focus-visible) { background: var(--lg-fill-quaternary); }
 @media (hover: hover) { .lg-form-row-label:hover { background: var(--lg-fill-quaternary); } }
+
+/* ---------- Picker: the same choice, in whichever form the room allows ---------- */
+.lg-picker { display: flex; align-items: center; gap: var(--lg-space-3); min-width: 0;
+  font-family: var(--lg-font-text); }
+.lg-picker-label { color: var(--lg-label); font: var(--lg-weight-regular) var(--lg-text-body-size)/var(--lg-text-body-leading) var(--lg-font-text); }
+/* The control takes the room that is left; the words do not stretch. */
+.lg-picker[data-presentation="menu"] > .lg-menu-button { margin-inline-start: auto; }
+
+/* ---------- Banner: something happened elsewhere, and it stays until it is dealt with ---------- */
+.lg-banner { padding: var(--lg-space-3) var(--lg-space-3) var(--lg-space-3) var(--lg-space-4);
+  border-radius: var(--lg-radius-l); translate: 0 var(--lg-shift-y, 0);
+  /* Springs back when a flick did not go far enough. While the finger is down
+     `.lg-root[data-pulling="true"]` drops `translate` from the transition list, which is what
+     keeps the banner under the finger instead of chasing it. */
+  transition: translate var(--lg-duration-spring) var(--lg-spring); }
+.lg-banner[data-placement="top"] { position: fixed; z-index: var(--lg-z-toast);
+  inset-block-start: calc(env(safe-area-inset-top, 0px) + var(--lg-space-2));
+  inset-inline: var(--lg-space-4); margin-inline: auto; max-width: 520px; }
+.lg-banner > .lg-content { display: flex; align-items: flex-start; gap: var(--lg-space-3); }
+.lg-banner-icon { display: inline-flex; flex: 0 0 auto; padding-block-start: 1px; }
+.lg-banner-text { display: flex; flex-direction: column; gap: 2px; flex: 1; min-width: 0; }
+.lg-banner-title { font: var(--lg-weight-semibold) var(--lg-text-subhead-size)/1.3 var(--lg-font-text); color: var(--lg-glass-fg); }
+.lg-banner-message { font: var(--lg-weight-regular) var(--lg-text-footnote-size)/1.35 var(--lg-font-text); color: var(--lg-glass-fg-secondary); }
+.lg-banner-action, .lg-banner-dismiss { flex: 0 0 auto; align-self: center; }
+.lg-banner-dismiss { opacity: .6; }
+.lg-banner[data-tone="success"] .lg-banner-icon { color: var(--lg-green); }
+.lg-banner[data-tone="warning"] .lg-banner-icon { color: var(--lg-orange); }
+.lg-banner[data-tone="error"] .lg-banner-icon { color: var(--lg-red); }
+@media (hover: hover) { .lg-banner-dismiss:hover { opacity: 1; } }
+
+/* ---------- ColorWell: the system's own picker, in this library's shape ---------- */
+/* The input is laid over the swatch at full size and made transparent, rather than hidden and
+   clicked from script: hiding it is what loses the focus ring, the keyboard and the form. */
+.lg-color-well { display: inline-flex; align-items: center; gap: var(--lg-space-3); font-family: var(--lg-font-text); }
+.lg-color-well-box { position: relative; display: inline-flex; min-width: var(--lg-hit-min); min-height: var(--lg-hit-min);
+  align-items: center; justify-content: center; border-radius: var(--lg-radius-s);
+  outline: var(--lg-focus-width) solid transparent; outline-offset: var(--lg-focus-offset);
+  transition: outline-color var(--lg-duration-press) var(--lg-ease); }
+.lg-color-well-box:has(:focus-visible) { outline-color: var(--lg-focus); }
+.lg-color-well-input { position: absolute; inset: 0; width: 100%; height: 100%; margin: 0; padding: 0;
+  border: 0; background: transparent; opacity: 0; cursor: pointer; }
+.lg-color-well-swatch { width: 32px; height: 32px; border-radius: var(--lg-radius-xs);
+  box-shadow: inset 0 0 0 1px var(--lg-separator); }
+.lg-color-well-value { color: var(--lg-label-secondary); font-variant-numeric: tabular-nums;
+  font: var(--lg-weight-regular) var(--lg-text-footnote-size)/1.2 var(--lg-font-mono); }
+/* 8, not 4: the HIG's minimum between controls, and the room two focus rings need in order
+   not to sit on top of each other. The dots are drawn 20px inside 44px targets, so the visible
+   spacing is generous either way — the number that matters is the one between the targets. */
+.lg-color-well-swatches { display: inline-flex; gap: var(--lg-space-2); }
+.lg-color-well-quick { display: inline-flex; align-items: center; justify-content: center;
+  min-width: var(--lg-hit-min); min-height: var(--lg-hit-min); padding: 0; border: 0; background: transparent;
+  cursor: pointer; border-radius: var(--lg-radius-xs);
+  outline: var(--lg-focus-width) solid transparent; outline-offset: var(--lg-focus-offset);
+  transition: outline-color var(--lg-duration-press) var(--lg-ease); }
+.lg-color-well-quick:focus-visible { outline-color: var(--lg-focus); }
+.lg-color-well-quick > span { width: 20px; height: 20px; border-radius: var(--lg-radius-xs);
+  box-shadow: inset 0 0 0 1px var(--lg-separator); transition: transform var(--lg-duration-press) var(--lg-ease); }
+/* Selected is a ring, not just a colour — the state of a colour control must not itself be a colour. */
+.lg-color-well-quick[aria-pressed="true"] > span { box-shadow: inset 0 0 0 1px var(--lg-separator), 0 0 0 2px var(--lg-label); }
+.lg-color-well[data-disabled] { opacity: .4; }
+.lg-color-well[data-disabled] .lg-color-well-input, .lg-color-well-quick:disabled { cursor: default; }
+@media (hover: hover) { .lg-color-well-quick:hover > span { transform: scale(1.1); } }
+@media (forced-colors: active) {
+  .lg-color-well-quick[aria-pressed="true"] > span { outline: 2px solid ButtonText; outline-offset: 2px; }
+}

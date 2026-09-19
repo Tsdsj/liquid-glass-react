@@ -88,14 +88,7 @@ export function ComponentPage({ doc }: { doc: ComponentDoc }) {
       <Section title="代码演示">
         <DemoSettings showSurface={hasMediaExample}>
           <div className="demo-grid">
-            {doc.examples.map(example => {
-              const Render = example.render;
-              return <DemoCard key={example.id} id={example.id} title={example.title}
-                description={example.description} code={example.code}
-                backdrop={example.backdrop} height={example.height}>
-                <Render />
-              </DemoCard>;
-            })}
+            {doc.examples.map(example => <DemoCard key={example.id} {...example} />)}
           </div>
         </DemoSettings>
       </Section>
