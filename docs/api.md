@@ -182,23 +182,59 @@ import '@ttqtt/liquid-glass-react/styles.css';
 `items: GlassTab[]`（含 `content`）、`value`/`defaultValue`/`onValueChange`、`aria-label`(必填)。**页内**标签页，会换面板。
 
 ### `ScrollEdge`
-`targetRef`(必填) `edge`(`top`/`bottom`) `variant`(`soft`/`hard`) `height`(44)。一个滚动视图只用一个。
+`targetRef` `edge`(`top`/`bottom`) `variant`(`soft`/`hard`) `height`(44)。一个滚动视图只用一个。
+
+`targetRef` 省略时监听**页面本身**。这一种写不成 ref：页面的 scroll 事件派发在 `document` 上，永远到不了 `documentElement`。
+
+## 布局
+
+### `Screen`
+
+把「内容延伸到栏下面、安全区打在栏上、一个视图一个边缘效果」做成默认行为，而不是每个应用各自重推一遍。
+
+| 属性 | 类型 | 默认 | 说明 |
+| --- | --- | --- | --- |
+| `top` / `bottom` | `ReactNode` | — | 浮在上/下的导航栏、工具栏、标签栏 |
+| `scroll` | `'container' \| 'page'` | `'container'` | 自己成为一个 100dvh 的滚动视图，还是让文档滚动、只把栏钉在视口上 |
+| `edge` | `'soft' \| 'hard' \| 'none'` | `'soft'` | 栏下的滚动边缘效果 |
+| `edgeHeight` | `number` | `44` | 溶解高度。分栏的各栏要一致 |
+| `inset` | `number` | `12` | 栏与内容之间额外留白，加在量到的栏高之上 |
+
+内容预留的是**量出来的**栏高，不是写死的数字——栏有多高取决于它自己的内容，而内容会随文字大小变。安全区的内边距打在栏上而不是内容上：打在内容上会在一条本来就已经避开刘海的栏上方再留一道空白。
+
+文档站自己用的是 `scroll="page"`。`--lg-screen-top` / `--lg-screen-bottom` 会发布到 `.lg-screen` 上，页内其他要吸顶的东西可以读它。
 
 ## 浮层
 
 全部支持 `trigger` / `open` / `defaultOpen` / `onOpenChange`，并自动使用 `size="large"`。
 
 ### `GlassPopover`
-`title`(必填) `description` `align` `placement`。非模态，锚定触发器。
-`placement`: `'below' | 'above' | 'auto'`，默认 `auto`——下方放不下就翻到上方。指定方向时如果会超出屏幕，仍会被拉回可视范围内。
+`title`(必填) `description` `align` `placement`。非模态，锚定触发器，**带一个指向触发器的箭头**。
+`placement`: `'below' | 'above' | 'auto'`，默认 `auto`——下方放不下就翻到上方。指定方向时如果会超出屏幕，仍会被拉回可视范围内。落在哪一侧会写成 `data-placement`，箭头据此贴在朝向触发器的那条边上。
+
+**紧凑尺寸（< 768px）下换成底部面板**：通栏、贴底、没有箭头——面板钉在屏幕底部之后，箭头已经没有东西可指了。内容、角色和键盘路径不变，只换形状。
+
+### `GlassMenuButton`
+自带菜单的按钮，菜单从按钮里长出来。
+
+`kind="pullDown"`（默认）：`label` + `items: GlassMenuItem[]`。按钮说自己做什么，标签不随选择变化。
+`kind="popUp"`：`options: GlassMenuOption[]`（`value` `label` `icon` `disabled` `separatorBefore`）+ `value`/`defaultValue`/`onValueChange` + `aria-label`(必填)。按钮上显示的就是当前选中项；菜单项是 `menuitemradio`，打开时焦点直接落在**已选中**的那一项上。
+
+其余同 `GlassButton`（`variant` `controlSize` 及全部 HTML 属性，`ref` 指向按钮）与 `GlassMenu`（`align` `placement`）。收回 `value` 与 `type`。
+
+少于三项时开发模式给一条告警：菜单要先打开才看得到，三项以下它露出的比它替掉的那几个按钮还少。
 
 ### `GlassMenu`
-`items: GlassMenuItem[]`（`key` `label` `onSelect` `icon` `checked` `shortcut` `destructive` `disabled` `separatorBefore`）、`aria-label`(必填) `align` `placement`（同上）。
+`items: GlassMenuItem[]`（`key` `label` `onSelect` `icon` `checked` `shortcut` `destructive` `disabled` `separatorBefore`）、`aria-label`(必填) `align` `placement`（同上）、`selection`。
 键盘：上下移动、Home/End、键入查找、Escape 关闭回焦、Tab 关闭。
+
+`selection`：勾在这个菜单里表示什么。`multiple`（默认）是一组互相独立的开关，项是 `menuitemcheckbox`；`single` 是一组里选一个，项变成 `menuitemradio`——这才告诉读屏「选了这个就会取消别的」。
 
 ### `GlassSheet`
 `title`(必填) `description` `detents`(`['medium','large']`) `defaultDetent` `onDetentChange` `grabber`。
 可拖动，松手弹簧停在最近停靠点；满高时变不透明并贴住边缘。只动 `transform`。
+
+**整块面板都是把手**，不只是顶部那条横条。判据是滚动位置而不是碰到了哪个元素：内容滚到顶时，往下拖是收起；往上拖只有在还有更高一档可长时才归面板，到了最高一档往上拖就是在读内容。横向拖动不接管。在方向定下来之前不 `preventDefault`、不捕获指针，所以面板里的按钮和输入框照常可用。
 
 ### `GlassAlert`
 `title`(必填) `message` `actions: AlertAction[]`（最多 3 个，`role`: `default`/`cancel`/`destructive`）。

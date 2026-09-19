@@ -16,8 +16,8 @@ import {
   GlassBackdrop, GlassBadge, GlassButton, GlassIconButton, GlassProgress, GlassSegmentedControl,
   GlassSlider, GlassStepper, GlassSwitch, GlassSurface, GlassGroup, LibraryIcon,
   SearchField, TextField,
-  NavigationBar, ScrollEdge, Sidebar, TabBar, GlassTabs, GlassToolbar, ToolbarGroup, ToolbarSpacer,
-  GlassActionSheet, GlassAlert, GlassDialog, GlassMenu, GlassMenuDescription, GlassPopover, GlassSheet,
+  NavigationBar, Screen, ScrollEdge, Sidebar, TabBar, GlassTabs, GlassToolbar, ToolbarGroup, ToolbarSpacer,
+  GlassActionSheet, GlassAlert, GlassDialog, GlassMenu, GlassMenuButton, GlassMenuDescription, GlassPopover, GlassSheet,
 } from '@ttqtt/liquid-glass-react';
 
 /**
@@ -73,6 +73,9 @@ const entries: Array<[string, (p: Probe) => ReactNode]> = [
   /* Navigation */
   ['NavigationBar', p => <NavigationBar {...p} title="title" />],
   ['ScrollEdge', p => <ScrollEdgeProbe {...p} />],
+  /* `page` scroll: the probe mounts every component at once, and a container-scrolled
+     Screen would be a 100dvh box in the middle of the table. */
+  ['Screen', p => <Screen {...p} scroll="page" top={<span>bar</span>}>content</Screen>],
   ['Sidebar', p => <Sidebar {...p} aria-label="sidebar">side</Sidebar>],
   ['TabBar', p => <TabBar {...p} aria-label="tabs" current="a"
     items={[{ key: 'a', href: '#/_probe/refs', label: 'A' }, { key: 'b', href: '#/_probe/refs', label: 'B' }]} />],
@@ -87,6 +90,8 @@ const entries: Array<[string, (p: Probe) => ReactNode]> = [
   ['GlassAlert', p => <GlassAlert {...p} title="alert" actions={[{ key: 'ok', label: 'OK' }]} />],
   ['GlassDialog', p => <GlassDialog {...p} title="dialog" description="d">body</GlassDialog>],
   ['GlassMenu', p => <GlassMenu {...p} aria-label="menu" items={[{ key: 'a', label: 'A', onSelect: () => {} }]} />],
+  /* The ref lands on the button, not the menu panel — the button is the element on the page. */
+  ['GlassMenuButton', p => <GlassMenuButton {...p} label="menu button" items={[{ key: 'a', label: 'A', onSelect: () => {} }]} />],
   ['GlassMenuDescription', p => <GlassMenuDescription {...p}>description</GlassMenuDescription>],
   ['GlassPopover', p => <GlassPopover {...p} title="popover">body</GlassPopover>],
   ['GlassSheet', p => <GlassSheet {...p} title="sheet">body</GlassSheet>],
@@ -133,6 +138,7 @@ const _contract = {
   TextField: null as unknown as Gap<typeof TextField>,
   NavigationBar: null as unknown as Gap<typeof NavigationBar>,
   ScrollEdge: null as unknown as Gap<typeof ScrollEdge>,
+  Screen: null as unknown as Gap<typeof Screen>,
   Sidebar: null as unknown as Gap<typeof Sidebar>,
   TabBar: null as unknown as Gap<typeof TabBar>,
   GlassTabs: null as unknown as Gap<typeof GlassTabs>,
@@ -143,6 +149,7 @@ const _contract = {
   GlassAlert: null as unknown as Gap<typeof GlassAlert>,
   GlassDialog: null as unknown as Gap<typeof GlassDialog>,
   GlassMenu: null as unknown as Gap<typeof GlassMenu>,
+  GlassMenuButton: null as unknown as Gap<typeof GlassMenuButton>,
   GlassMenuDescription: null as unknown as Gap<typeof GlassMenuDescription>,
   GlassPopover: null as unknown as Gap<typeof GlassPopover>,
   GlassSheet: null as unknown as Gap<typeof GlassSheet>,

@@ -8,7 +8,7 @@
  * It runs against the Vite dev server rather than the built site, because that is where these
  * warnings exist at all — a production build folds them away, which is the whole intent.
  */
-import { GlassButton, GlassGroup, GlassIconButton, GlassSurface, GlassToolbar, LibraryIcon, ToolbarGroup } from '@ttqtt/liquid-glass-react';
+import { GlassButton, GlassGroup, GlassIconButton, GlassMenuButton, GlassSurface, GlassToolbar, LibraryIcon, ToolbarGroup } from '@ttqtt/liquid-glass-react';
 
 export function WarnProbe() {
   return <main id="main" style={{ padding: 24, display: 'grid', gap: 24 }}>
@@ -44,12 +44,25 @@ export function WarnProbe() {
       </GlassToolbar>
     </section>
 
+    {/* A menu that costs a press to reveal less than two plain buttons would have shown. */}
+    <section id="short-menu">
+      <GlassMenuButton label="更多" items={[
+        { key: 'a', label: '重命名', onSelect: () => {} },
+        { key: 'b', label: '复制', onSelect: () => {} },
+      ]} />
+    </section>
+
     {/* A correct composition, to show the rules do not fire on everything. */}
     <section id="clean">
       <GlassGroup>
         <GlassButton variant="glassProminent">保存</GlassButton>
         <GlassButton>取消</GlassButton>
       </GlassGroup>
+      <GlassMenuButton label="新建" items={[
+        { key: 'a', label: '文稿', onSelect: () => {} },
+        { key: 'b', label: '文件夹', onSelect: () => {} },
+        { key: 'c', label: '相册', onSelect: () => {} },
+      ]} />
     </section>
   </main>;
 }

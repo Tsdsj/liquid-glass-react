@@ -75,12 +75,31 @@ export function GlassSheet({
 
   useEffect(() => { if (open) paint(DETENT_FRACTION[detent]); }, [detent, open, paint]);
 
+  /**
+   * The drag.
+   *
+   * The whole panel is the handle, not just the little bar at the top — that is what the
+   * system does, and the rule it uses is about the scroll position rather than about which
+   * element was touched. A gesture that starts in the body belongs to the sheet only while
+   * the content is scrolled to the top, and even then only in the direction that does not
+   * have somewhere else to go: downwards always, upwards only while there is a taller detent
+   * left to grow into. Once the sheet is at its tallest, pulling up is the user reading, and
+   * a sheet that took that gesture would make its own content unreachable.
+   *
+   * Nothing here calls `preventDefault` or captures the pointer before the direction is known,
+   * so buttons and fields inside the sheet keep working: a body-wide handler that swallowed
+   * `pointerdown` would break every control in the panel, which is worse than the bug it fixes.
+   */
   useEffect(() => {
     const node = glass.root.current;
     if (!node || !open) return;
     const handle = node.querySelector<HTMLElement>('.lg-sheet-grabber');
-    if (!handle) return;
-    let active = false, startY = 0, startFraction = 0, height = 1, pointer = -1, frame = 0, latest = 0;
+    const scroller = node.querySelector<HTMLElement>('.lg-sheet-scroll');
+    /** Movement, in px, before a gesture is called vertical or horizontal. */
+    const SLOP = 6;
+    let active = false, startY = 0, startX = 0, startFraction = 0, height = 1, pointer = -1, frame = 0, latest = 0;
+    /** `false` until the gesture has committed to the sheet; the grabber commits immediately. */
+    let owned = false;
     const settle = (fraction: number) => {
       // Nearest detent wins; below the smallest one the gesture is a dismissal.
       if (fraction < fractions[0] * .6) { setOpen(false); return; }
@@ -93,36 +112,66 @@ export function GlassSheet({
       animation.to(nearest);
       setDetent(name);
     };
+    /** Does a gesture from the body, moving this way, belong to the sheet or to the content? */
+    const claim = (dy: number) => {
+      if (!scroller) return true;
+      if (scroller.scrollTop > 0) return false;             // the content is the scroll view's
+      if (dy > 0) return true;                              // pulling down from the top
+      return startFraction < Math.max(...fractions) - .01;  // pulling up, with room left to grow
+    };
+    const detach = () => {
+      window.removeEventListener('pointermove', move); window.removeEventListener('pointerup', end);
+      window.removeEventListener('pointercancel', end);
+    };
     const move = (event: PointerEvent) => {
       if (!active || event.pointerId !== pointer) return;
-      latest = startFraction + (startY - event.clientY) / height;
+      const dy = event.clientY - startY, dx = event.clientX - startX;
+      if (!owned) {
+        if (Math.abs(dy) < SLOP && Math.abs(dx) < SLOP) return;
+        // A sideways gesture is not a sheet gesture; neither is one the content has a use for.
+        if (Math.abs(dx) > Math.abs(dy) || !claim(dy)) { active = false; pointer = -1; detach(); return; }
+        owned = true;
+        node.setAttribute('data-dragging', 'true');
+      }
+      latest = startFraction - dy / height;
       cancelAnimationFrame(frame);
       // Rubber-band past the top so the sheet never detaches from the finger.
       frame = requestAnimationFrame(() => paint(Math.min(1, Math.max(.04, latest > 1 ? 1 + (latest - 1) * .2 : latest))));
     };
     const end = () => {
       if (!active) return;
-      active = false; pointer = -1; cancelAnimationFrame(frame);
+      const committed = owned;
+      active = false; owned = false; pointer = -1; cancelAnimationFrame(frame);
       node.removeAttribute('data-dragging');
-      window.removeEventListener('pointermove', move); window.removeEventListener('pointerup', end); window.removeEventListener('pointercancel', end);
-      settle(Math.min(1, Math.max(.04, latest)));
+      detach();
+      if (committed) settle(Math.min(1, Math.max(.04, latest)));
     };
-    const down = (event: PointerEvent) => {
-      if (event.button !== 0 || !event.isPrimary) return;
+    const begin = (event: PointerEvent, immediate: boolean) => {
+      if (event.button !== 0 || !event.isPrimary || active) return;
       spring.current?.stop();
       // Measured once at gesture start; reading layout inside pointermove is what drops frames.
       height = window.innerHeight || 1;
       const offset = parseFloat(getComputedStyle(node).getPropertyValue('--lg-sheet-offset')) || 0;
       startFraction = 1 - offset / 100;
       latest = startFraction;
-      startY = event.clientY; active = true; pointer = event.pointerId;
-      node.setAttribute('data-dragging', 'true');
+      startY = event.clientY; startX = event.clientX; active = true; pointer = event.pointerId;
+      owned = immediate;
+      if (immediate) node.setAttribute('data-dragging', 'true');
       window.addEventListener('pointermove', move, { passive: true });
       window.addEventListener('pointerup', end); window.addEventListener('pointercancel', end);
     };
-    handle.addEventListener('pointerdown', down);
-    return () => { handle.removeEventListener('pointerdown', down); end(); spring.current?.stop(); };
-  }, [open, glass.root, detents.join(), policy.reduceMotion, paint, setDetent, setOpen]);
+    /* The grabber has nothing else the gesture could mean, so it commits at once. The body
+       waits to see where the finger goes. */
+    const onHandle = (event: PointerEvent) => begin(event, true);
+    const onBody = (event: PointerEvent) => { if (!handle?.contains(event.target as Node)) begin(event, false); };
+    handle?.addEventListener('pointerdown', onHandle);
+    node.addEventListener('pointerdown', onBody);
+    return () => {
+      handle?.removeEventListener('pointerdown', onHandle);
+      node.removeEventListener('pointerdown', onBody);
+      end(); spring.current?.stop();
+    };
+  }, [open, glass.root, detents.join(), fractions.join(), policy.reduceMotion, paint, setDetent, setOpen]);
 
   return <>
     {triggerElement(trigger, triggerRef, id, open, 'dialog', setOpen)}

@@ -1,7 +1,8 @@
 import { useState } from 'react';
 import {
   GlassActionSheet, GlassAlert, GlassButton, GlassDialog, GlassIconButton, GlassMenu, GlassPopover,
-  GlassSegmentedControl, GlassSheet, GlassSlider, LibraryIcon, Text, TextField, useToast,
+  GlassMenuButton, GlassSegmentedControl, GlassSheet, GlassSlider, LibraryIcon, List, ListRow, ListSection,
+  Text, TextField, useToast,
 } from '@ttqtt/liquid-glass-react';
 import { Icon } from '../icons.js';
 import type { ComponentDoc } from './types.js';
@@ -121,7 +122,109 @@ export const overlayDocs: ComponentDoc[] = [
       '菜单项是真正的按钮，键盘可以逐项走过去。',
       '连续打字会跳到匹配的项上，停顿约 0.7 秒后重新开始。',
     ],
-    related: ['popover', 'action-sheet', 'button'],
+    related: ['menu-button', 'popover', 'action-sheet', 'button'],
+  },
+  {
+    slug: 'menu-button', name: 'GlassMenuButton', title: '菜单按钮', group: '浮层',
+    summary: '自带菜单的按钮。菜单从按钮里长出来，不是出现在它旁边。',
+    when: [
+      '下拉式（pullDown）：按钮有自己的动作，菜单是这个动作的变体或相关命令。按钮文字不变。',
+      '弹出式（popUp）：在一组互斥的选项里选一个，按钮上显示的就是当前选中的那个。',
+      '至少三项才值得。菜单要先打开才看得到，两项的话直接摆两个按钮看到的更多。',
+      '不要把一个页面的主要操作都塞进菜单里——藏起来就等于不好找。',
+    ],
+    examples: [
+      {
+        id: 'pulldown-demo', title: '下拉式：按钮说自己做什么', description: '标签固定不变，菜单列的是这个动作的几种做法。危险项标红并排在最后。',
+        height: 210,
+        render: function PullDownDemo() {
+          const [result, setResult] = useState('还没选');
+          return <div style={{ display: 'grid', gap: 12, justifyItems: 'center' }}>
+            <GlassMenuButton label="新建" items={[
+              { key: 'doc', label: '文稿', onSelect: () => setResult('文稿') },
+              { key: 'folder', label: '文件夹', onSelect: () => setResult('文件夹') },
+              { key: 'from', label: '从模板新建…', onSelect: () => setResult('从模板') },
+              { key: 'clear', label: '清空草稿', destructive: true, separatorBefore: true, onSelect: () => setResult('清空草稿') },
+            ]} />
+            <Text id="pulldown-result" variant="caption1" tone="secondary" role="status">选了：{result}</Text>
+          </div>;
+        },
+        code: `<GlassMenuButton label="新建" items={[
+  { key: 'doc', label: '文稿', onSelect: newDoc },
+  { key: 'folder', label: '文件夹', onSelect: newFolder },
+  { key: 'clear', label: '清空草稿', destructive: true, separatorBefore: true, onSelect: clear },
+]} />`,
+      },
+      {
+        id: 'popup-demo', title: '弹出式：按钮说现在选的是什么', description: '按钮上写的就是当前值，选完立刻换掉。菜单项是一组单选，不是一排独立的勾选。',
+        height: 210,
+        render: function PopUpDemo() {
+          const [quality, setQuality] = useState('medium');
+          return <div id="popup-demo" style={{ display: 'grid', gap: 12, justifyItems: 'center' }}>
+            <GlassMenuButton kind="popUp" aria-label="画质" value={quality} onValueChange={setQuality}
+              options={[
+                { value: 'low', label: '流畅' },
+                { value: 'medium', label: '中等' },
+                { value: 'high', label: '高' },
+                { value: 'auto', label: '自动', separatorBefore: true },
+              ]} />
+            <Text variant="caption1" tone="secondary" role="status">当前画质：{quality}</Text>
+          </div>;
+        },
+        code: `<GlassMenuButton
+  kind="popUp"
+  aria-label="画质"
+  value={quality}
+  onValueChange={setQuality}
+  options={[
+    { value: 'low', label: '流畅' },
+    { value: 'medium', label: '中等' },
+    { value: 'high', label: '高' },
+  ]}
+/>`,
+      },
+      {
+        id: 'menubutton-sizes', title: '尺寸与样式', description: '和 GlassButton 用同一套 variant 与 controlSize。工具栏里通常用 gray 或 plain，别让每个都抢主按钮的位置。',
+        height: 210,
+        render: function MenuButtonSizes() {
+          const [sort, setSort] = useState('name');
+          const options = [
+            { value: 'name', label: '按名称' },
+            { value: 'date', label: '按日期' },
+            { value: 'size', label: '按大小' },
+          ];
+          return <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap', justifyContent: 'center', alignItems: 'center' }}>
+            <GlassMenuButton kind="popUp" aria-label="排序方式（小）" controlSize="small" variant="gray"
+              value={sort} onValueChange={setSort} options={options} />
+            <GlassMenuButton kind="popUp" aria-label="排序方式" value={sort} onValueChange={setSort} options={options} />
+            <GlassMenuButton kind="popUp" aria-label="排序方式（大）" controlSize="large" variant="glassProminent"
+              value={sort} onValueChange={setSort} options={options} />
+          </div>;
+        },
+        code: `<GlassMenuButton kind="popUp" aria-label="排序方式"
+  controlSize="small" variant="gray"
+  value={sort} onValueChange={setSort} options={options} />`,
+      },
+    ],
+    props: [
+      { name: 'kind', type: "'pullDown' | 'popUp'", default: "'pullDown'", description: '按钮说自己做什么，还是说现在选的是什么。' },
+      { name: 'label', type: 'ReactNode', description: 'pullDown 专用：按钮上的文字，不随菜单选择变化。' },
+      { name: 'items', type: 'GlassMenuItem[]', description: 'pullDown 专用：和 GlassMenu 完全一样的一组命令。' },
+      { name: 'options', type: 'GlassMenuOption[]', description: 'popUp 专用：一组互斥的值。没有 onSelect——选中什么由 onValueChange 统一上报。' },
+      { name: 'value / defaultValue', type: 'string', description: 'popUp 专用：当前值。不传 defaultValue 就用第一项。' },
+      { name: 'onValueChange', type: '(value: string) => void', description: 'popUp 专用：选中变化。' },
+      { name: 'aria-label', type: 'string', description: 'popUp 上必填：按钮文字是当前值，永远说不出在选什么。' },
+      { name: 'variant / controlSize', type: 'GlassButtonVariant / ControlSize', description: '同 GlassButton。' },
+      { name: 'align / placement', type: "Align / 'below' | 'above' | 'auto'", description: '菜单相对按钮的位置，同 GlassMenu。' },
+    ],
+    notes: [
+      '按钮带 aria-haspopup="menu" 与 aria-expanded，菜单打开后焦点直接落在第一项上。',
+      'popUp 的菜单项是 menuitemradio：读屏会说「三项之中的第二项，已选中」，而不是三个各自独立的勾选框。',
+      '键盘路径和 GlassMenu 一致：上下键、Home/End、打字跳转、Escape 关闭并把焦点还给按钮。',
+      '少于三项时开发模式会给一条告警——不是错误，两项是个判断题，但值得停下来想一下。',
+    ],
+    related: ['menu', 'button', 'action-sheet'],
+    imports: ['GlassMenuButton'],
   },
   {
     slug: 'sheet', name: 'GlassSheet', title: '底部面板', group: '浮层',
@@ -155,6 +258,30 @@ export const overlayDocs: ComponentDoc[] = [
   trigger={<GlassButton>分享</GlassButton>}
 >
   …
+</GlassSheet>`,
+      },
+      {
+        id: 'sheet-scroll', title: '内容可滚动时', description: '整块面板都能拖，不只是顶部的横条。内容滚到顶再往下拉才是收起——中途往下拉是在滚回去。',
+        height: 200,
+        render: function SheetScroll() {
+          const [open, setOpen] = useState(false);
+          const [picked, setPicked] = useState('还没选');
+          return <div style={{ display: 'grid', gap: 12, justifyItems: 'center' }}>
+            <GlassSheet title="选择城市" description="列表很长，可以滚动。"
+              open={open} onOpenChange={setOpen} detents={['medium', 'large']}
+              trigger={<GlassButton>打开长列表</GlassButton>}>
+              <List style={{ marginBlockStart: 12 }}>
+                <ListSection>
+                  {['北京', '上海', '广州', '深圳', '杭州', '成都', '南京', '武汉', '西安', '重庆', '苏州', '天津', '长沙', '青岛', '厦门', '合肥']
+                    .map(city => <ListRow key={city} label={city} onSelect={() => { setPicked(city); setOpen(false); }} />)}
+                </ListSection>
+              </List>
+            </GlassSheet>
+            <Text variant="caption1" tone="secondary" role="status">已选：{picked}</Text>
+          </div>;
+        },
+        code: `<GlassSheet title="选择城市" detents={['medium', 'large']} trigger={…}>
+  <List>…很长的列表…</List>
 </GlassSheet>`,
       },
     ],

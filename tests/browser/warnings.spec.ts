@@ -10,7 +10,9 @@ import { PREVIEW_PORT } from '../../playwright.config.js';
  *
  * Every rule here was previously something a person had to notice by reading a screen. Three
  * of them come from the audit that produced `reports/hig-review.md`; the fourth was already in
- * the toolbar and is included so the once-per-node bookkeeping covers it too.
+ * the toolbar and is included so the once-per-node bookkeeping covers it too. The fifth arrived
+ * with `GlassMenuButton`: a menu has to be opened before it can be read, so below about three
+ * items it reveals less than the plain buttons it replaced.
  */
 
 const RULES = [
@@ -18,6 +20,7 @@ const RULES = [
   { id: 'glass-on-glass', match: /small glass inside small glass/ },
   { id: 'clear-without-tone', match: /material="clear" needs a known backdrop/ },
   { id: 'mixed-group', match: /mixes icon-only and text buttons/ },
+  { id: 'short-menu', match: /GlassMenuButton has 2 items/ },
 ];
 
 async function warningsOn(page: import('@playwright/test').Page, path: string) {

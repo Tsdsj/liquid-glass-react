@@ -46,14 +46,16 @@ code { font-family: var(--lg-font-mono); font-size: .92em; }
    that slides away as you scroll.
    -------------------------------------------------------------------------- */
 .app-shell { min-height: 100dvh; display: flex; flex-direction: column; }
-.app-main { display: flex; flex-direction: column; flex: 1; min-width: 0;
+/* `Screen` owns the top bar and the scroll edge; what is left here is the column itself and
+   the room the floating tab bar needs at the bottom, which is not a Screen slot because the
+   tab bar becomes a sidebar at 1024 and stops being a bottom bar at all. */
+.app-main { display: flex; flex-direction: column; flex: 1; min-width: 0; }
+.app-main .lg-screen-content { display: flex; flex-direction: column; flex: 1;
   padding-block-end: calc(96px + env(safe-area-inset-bottom)); }
 .app-content { flex: 1; width: 100%; max-width: 980px; margin-inline: auto;
   padding-inline: var(--lg-margin); outline: none; }
 /* No background, border or shadow of its own — the glass groups inside carry it. */
-.app-bar { position: sticky; inset-block-start: 0; z-index: var(--lg-z-tabbar);
-  display: flex; justify-content: flex-end; width: 100%; max-width: 980px; margin-inline: auto;
-  padding: var(--lg-space-3) var(--lg-margin); padding-block-start: calc(var(--lg-space-3) + env(safe-area-inset-top)); }
+.app-bar { display: flex; justify-content: flex-end; width: 100%; max-width: 980px; margin-inline: auto; }
 .app-footer { width: 100%; max-width: 980px; margin-inline: auto;
   padding: var(--lg-space-8) var(--lg-margin) var(--lg-space-6);
   display: flex; flex-wrap: wrap; gap: var(--lg-space-3); align-items: center; justify-content: space-between;
@@ -129,8 +131,11 @@ code { font-family: var(--lg-font-mono); font-size: .92em; }
  * moment the page scrolls — which is the only time an outline is wanted at all.
  */
 /* Replaced with the measured height by the shell; this is only the value before first paint. */
-.app-main { --app-bar-height: calc(var(--lg-hit-min) + var(--lg-space-3) * 2 + env(safe-area-inset-top)); }
-.outline-compact { position: sticky; inset-block-start: var(--app-bar-height); z-index: 2;
+/* Sticks below the app bar rather than under it. The height comes from `Screen`, which
+   measures its own bars; the fallback covers the first paint only. */
+.outline-compact { position: sticky;
+  inset-block-start: var(--lg-screen-top, calc(var(--lg-hit-min) + var(--lg-space-3) * 2 + env(safe-area-inset-top)));
+  z-index: 2;
   display: flex; justify-content: flex-end; padding-block-end: var(--lg-space-2); }
 /* Section titles vary in length; the control must not resize on every scroll. */
 .outline-trigger { max-width: min(62vw, 260px); }

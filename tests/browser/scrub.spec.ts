@@ -68,6 +68,7 @@ test('the slider thumb tracks the pointer 1:1', async ({ page }) => {
   await page.goto('/#/components/slider');
   const slider = page.getByRole('slider', { name: '音量' });
   const rail = page.locator('#slider-basic .lg-slider-rail').first();
+  await rail.scrollIntoViewIfNeeded();
   const box = (await rail.boundingBox())!;
   const before = Number(await slider.inputValue());
   await page.mouse.move(box.x + box.width * 0.2, box.y + box.height / 2);

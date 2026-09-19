@@ -38,6 +38,10 @@
 
 **已完成（2026-09-20，第 1 周）**：P1（`tests/browser/rtl.spec.ts`）、P2（`disabled.spec.ts`）、P5（`strings.spec.ts` + `tests/ssr.test.mjs` 的三级优先用例）。每条都先写了会失败的用例并逐条验证过「把修复撤掉就红」：P1 3 条里红 1、P2 4 条里红 3、P5 4 条全红、`size-class.spec.ts` 2 条里红 1（另一条守的是既有行为，不是回归证据——见下）。
 
+**已完成（第 2 周）**：P3（`sheet-drag.spec.ts`）、P4（`popover.spec.ts`）。`GlassMenuButton`（`menu-button.spec.ts`）与 L1 `Screen`（`screen.spec.ts`）一并落地，站点改用 `Screen`，1.4 节「站点 ScrollEdge」那条随之关闭——连站点自己那套量栏高的代码也删掉了，现在只有一处在量。
+
+第 2 周途中另发现两条，都已修：单选菜单打开时焦点落在第一项而不是**已选中**那一项（pop-up 按钮在每个 Apple 平台上都是后者）；`usePopover` 的首个可聚焦项只找 `[role="menuitem"]`，一个全是可勾选项的菜单会把焦点留在面板上。
+
 ### 1.2 待复现的疑点（不排期，先写用例）
 
 | 疑点 | 为什么怀疑 | 怎么复现 |
@@ -190,7 +194,7 @@ HIG layout：「按尺寸类别决定布局，永远不按设备类型或方向�
 | 周 | 打磨 | 新组件 | 布局 |
 | --- | --- | --- | --- |
 | **1 ✅** | P1 RTL 对齐、P2 disabled 行、P5 字符串表 | — | `useSizeClass` |
-| 2 | P3 sheet 整块可拖、P4 popover 箭头 + 手机变 sheet | `GlassMenuButton` | L1 `Screen`，站点改用它（关闭 ScrollEdge 那条） |
+| **2 ✅** | P3 sheet 整块可拖、P4 popover 箭头 + 手机变 sheet | `GlassMenuButton` | L1 `Screen`，站点改用它（ScrollEdge 那条已关闭） |
 | 3 | 矩阵用例落地（1.3），跑出第一份 `reports/matrix.json`，修抓到的 | `Tooltip`、`Kbd` | L4 `NavigationStack` |
 | 4 | P6 stepper、P8 toast、P9 badge；1.2 的六个疑点逐一复现 | `DisclosureGroup`、`PageControl` | L2 `SplitView`（含 L3 `Inspector`） |
 | 5 | 1.5 的小 API；D7 属性表比对进 `build:site` | `ContextMenu` | L5 `Grid`、L6 `Form` |

@@ -252,9 +252,43 @@
 @starting-style { .lg-popover:popover-open, .lg-menu:popover-open { opacity: 0; transform: scale(.86) translateY(-6px); } }
 .lg-popover:not(:popover-open), .lg-menu:not(:popover-open) { opacity: 0; transform: scale(.94) translateY(-4px); transition: opacity var(--lg-duration-press) var(--lg-ease), transform var(--lg-duration-press) var(--lg-ease), display var(--lg-duration-press) allow-discrete, overlay var(--lg-duration-press) allow-discrete; }
 .lg-popover::backdrop, .lg-menu::backdrop { background: transparent; }
+
+/* The arrow. "Point the arrow as directly as possible at the element that revealed the
+   popover" — it sits on whichever edge faces the trigger and slides along that edge to the
+   trigger's centre, which is the same projection the transform origin already uses.
+
+   The scroll has to move off the root for this: an `overflow-y: auto` box clips anything
+   drawn outside it, and the arrow is by definition outside. */
+.lg-popover { overflow: visible; }
+.lg-popover > .lg-content { max-height: calc(100dvh - 64px); overflow-y: auto; overscroll-behavior: contain; scrollbar-gutter: stable; }
+.lg-popover[data-placement]::before {
+  content: ''; position: absolute; width: 22px; height: 11px; pointer-events: none;
+  inset-inline-start: var(--lg-origin-x, 50%); translate: -50% 0;
+  background: rgb(var(--lg-tint-color) / var(--lg-tint-opacity));
+  clip-path: polygon(50% 0, 100% 100%, 0 100%);
+}
+.lg-popover[data-placement="below"]::before { top: -10px; }
+.lg-popover[data-placement="above"]::before { bottom: -10px; rotate: 180deg; }
+.lg-popover[data-transparency="opaque"]::before { background: var(--lg-opaque); }
+
+/* Compact: a bottom sheet, not an anchored panel. No arrow — there is nothing left for it to
+   point at once the panel is pinned to the bottom edge. */
+.lg-popover[data-anchor="bottom"] { width: calc(100vw - 32px); max-width: none; transform-origin: 50% 100%; }
+.lg-popover[data-anchor="bottom"]::before { content: none; }
 .lg-overlay-title { margin: 0 0 var(--lg-space-2); padding-inline-end: var(--lg-space-5); font-size: var(--lg-text-title3-size); line-height: var(--lg-text-title3-leading); font-weight: var(--lg-weight-bold); color: inherit; text-align: start; }
 .lg-overlay-description { color: var(--lg-glass-fg-secondary); font-size: var(--lg-text-footnote-size); line-height: var(--lg-text-footnote-leading); margin: 0 0 var(--lg-space-5); text-align: start; }
 .lg-menu { width: 244px; padding: 7px; }
+
+/* A button that owns a menu. The chevron is the affordance — without it the control looks
+   like an ordinary button and the menu is a surprise. A pop-up button's label is the current
+   selection, so it is allowed to grow and shrink; the chevron stays put at the trailing end. */
+.lg-menu-button .lg-content { gap: var(--lg-space-2); }
+.lg-menu-button-chevron { flex: 0 0 auto; opacity: .55; }
+.lg-menu-button[aria-expanded="true"] .lg-menu-button-chevron { rotate: 180deg; }
+.lg-menu-button-chevron { transition: rotate var(--lg-duration-spring) var(--lg-spring), opacity var(--lg-duration-press) var(--lg-ease); }
+.lg-menu-button-value { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+/* Reduce Motion is not repeated here: the blanket rules further down already cover
+   `.lg-root *` and its pseudo-elements, and the chevron is inside a button. */
 .lg-menu-item { position: relative; width: 100%; border: 0; background: transparent; color: inherit; text-align: start; border-radius: var(--lg-radius-s); display: flex; justify-content: space-between; align-items: center; gap: var(--lg-space-5); font: var(--lg-weight-medium) var(--lg-text-subhead-size)/1.3 var(--lg-font-text); padding: var(--lg-space-2) var(--lg-space-3); cursor: pointer; min-height: var(--lg-hit-min); transition: background var(--lg-duration-press) var(--lg-ease), transform var(--lg-duration-spring) var(--lg-spring), color var(--lg-duration-release) var(--lg-ease); }
 @media (hover: hover) {
   .lg-menu-item:hover, .lg-menu-item:focus { background: var(--lg-hover); }
@@ -279,6 +313,30 @@
 .lg-dialog-body > :last-child { margin-bottom: 0; }
 
 /* ---------- Scroll edge: content dissolves into the bar, it is not covered by a block ---------- */
+/* ---------- Screen: floating bars, content underneath, one scroll edge ---------- */
+/* `100dvh`, not `100vh`: vh ignores the mobile browser chrome that slides away as you scroll,
+   which leaves a screen an address-bar taller than the space it actually has. */
+.lg-screen { position: relative; display: block; }
+.lg-screen[data-scroll="container"] { block-size: 100dvh; overflow: clip; }
+.lg-screen-scroll { position: relative; block-size: 100%; }
+.lg-screen[data-scroll="container"] > .lg-screen-scroll { overflow-y: auto; overscroll-behavior: contain; }
+/* The bars float above the content and own the safe-area insets. The content keeps its own
+   margins; padding it for the notch instead would leave a blank strip over a clear bar. */
+.lg-screen-bar { position: absolute; inset-inline: 0; z-index: var(--lg-z-tabbar);
+  display: flex; justify-content: center; pointer-events: none; }
+.lg-screen-bar > * { pointer-events: auto; }
+.lg-screen-bar[data-edge="top"] { inset-block-start: 0; padding: var(--lg-space-3) var(--lg-margin);
+  padding-block-start: calc(var(--lg-space-3) + env(safe-area-inset-top)); }
+.lg-screen-bar[data-edge="bottom"] { inset-block-end: 0; padding: var(--lg-space-3) var(--lg-margin);
+  padding-block-end: calc(var(--lg-space-3) + env(safe-area-inset-bottom)); }
+.lg-screen[data-scroll="page"] > .lg-screen-bar { position: fixed; }
+/* Reserved from the measured bar heights, so it is right at every text size. */
+.lg-screen-content { padding-block: calc(var(--lg-screen-top, 0px) + var(--lg-screen-inset, 12px))
+  calc(var(--lg-screen-bottom, 0px) + var(--lg-screen-inset, 12px)); }
+/* Anchored to the viewport when the page scrolls, to the box when the screen does. */
+.lg-screen[data-scroll="page"] > .lg-screen-scroll > .lg-screen-edge { position: fixed; }
+.lg-screen-edge { inset-block-start: 0; }
+
 .lg-scroll-edge { position: absolute; inset-inline: 0; pointer-events: none; z-index: var(--lg-z-scroll-edge); opacity: 0; transition: opacity var(--lg-duration-release) var(--lg-ease); }
 .lg-scroll-edge[data-active="true"] { opacity: 1; }
 /* Soft (the iOS default): a progressive blur and fade, so text thins out rather than being
@@ -719,4 +777,8 @@
   .lg-slider-track { border: 1px solid ButtonText; }
   .lg-switch-track[data-checked="true"] { background: Highlight; }
   .lg-switch-track[data-checked="true"] .lg-switch-thumb { background: HighlightText; }
+  /* The panel is a bordered Canvas box here, so a filled triangle hanging off one edge with no
+     border of its own reads as a stray shape rather than as part of it. The border is what
+     says where the popover is; the arrow has nothing left to add. */
+  .lg-popover[data-placement]::before { content: none; }
 }

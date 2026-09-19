@@ -4,8 +4,14 @@ import { useGlassPolicy } from '../system/provider.js';
 import { cx } from '../system/utils.js';
 
 export interface ScrollEdgeProps extends Omit<HTMLAttributes<HTMLDivElement>, 'children'>, RefAttributes<HTMLDivElement> {
-  /** The scroll container this watches. Not where the ref goes — that is this element. */
-  targetRef: RefObject<HTMLElement | null>;
+  /**
+   * The scroll container this watches. Not where the ref goes — that is this element.
+   *
+   * Omit it to watch the page itself, which is the right answer when the document scrolls
+   * rather than a box inside it. That case cannot be expressed as a ref: the page's scroll
+   * event fires at `document` and never reaches `documentElement`, so it needs its own path.
+   */
+  targetRef?: RefObject<HTMLElement | null>;
   edge?: 'top' | 'bottom';
   /**
    * `soft` dissolves content progressively as it approaches the bar — the iOS default.
@@ -28,7 +34,11 @@ export function ScrollEdge({ targetRef, edge = 'top', variant = 'soft', height =
   const [active, setActive] = useState(false);
   const policy = useGlassPolicy();
   useEffect(() => {
-    const target = targetRef.current; if (!target) return;
+    const page = !targetRef;
+    const target = page ? (document.scrollingElement as HTMLElement | null) : targetRef.current;
+    if (!target) return;
+    // The page's scroll event is dispatched at `document`; an element's, at the element.
+    const source: EventTarget = page ? document : target;
     let frame = 0;
     const update = () => {
       cancelAnimationFrame(frame);
@@ -39,8 +49,8 @@ export function ScrollEdge({ targetRef, edge = 'top', variant = 'soft', height =
     const observer = new ResizeObserver(update); observer.observe(target);
     if (target.firstElementChild) observer.observe(target.firstElementChild);
     const mutation = new MutationObserver(update); mutation.observe(target, { childList: true, subtree: true, characterData: true });
-    target.addEventListener('scroll', update, { passive: true }); update();
-    return () => { observer.disconnect(); mutation.disconnect(); target.removeEventListener('scroll', update); cancelAnimationFrame(frame); };
+    source.addEventListener('scroll', update, { passive: true }); update();
+    return () => { observer.disconnect(); mutation.disconnect(); source.removeEventListener('scroll', update); cancelAnimationFrame(frame); };
   }, [targetRef, edge]);
   return <div {...props} ref={ref} aria-hidden="true" className={cx('lg-scroll-edge', className)} data-lg-theme={policy.resolvedTheme}
     data-edge={edge} data-variant={variant} data-active={active ? 'true' : 'false'}

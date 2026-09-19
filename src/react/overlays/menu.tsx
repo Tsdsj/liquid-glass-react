@@ -18,6 +18,13 @@ export interface GlassMenuProps extends Omit<HTMLAttributes<HTMLDivElement>, 'ch
   items: GlassMenuItem[]; 'aria-label': string; align?: Align;
   /** Where the menu opens relative to its trigger. `auto` flips up when there is no room below. */
   placement?: 'below' | 'above' | 'auto';
+  /**
+   * What a checkmark in this menu means. `multiple` (the default) is a set of independent
+   * toggles, each item a `menuitemcheckbox`. `single` is one choice out of the list — a pop-up
+   * button's menu — and the items become `menuitemradio`, which is what tells assistive
+   * technology that picking one clears the others.
+   */
+  selection?: 'multiple' | 'single';
 }
 
 /**
@@ -27,7 +34,7 @@ export interface GlassMenuProps extends Omit<HTMLAttributes<HTMLDivElement>, 'ch
  * typing jumps to a matching label, Escape closes and returns focus, Tab closes. Keep groups
  * to about seven items and separate them rather than growing one long list.
  */
-export function GlassMenu({ trigger, open: controlled, defaultOpen = false, onOpenChange, items, 'aria-label': label, className, style, align = 'end', placement = 'auto', id: providedId, ref, ...rest }: GlassMenuProps) {
+export function GlassMenu({ trigger, open: controlled, defaultOpen = false, onOpenChange, items, 'aria-label': label, className, style, align = 'end', placement = 'auto', selection = 'multiple', id: providedId, ref, ...rest }: GlassMenuProps) {
   const [surface, props] = splitSurface(rest);
   const generated = useId(); const id = providedId ?? generated; const triggerRef = useRef<HTMLButtonElement>(null);
   const [open, setOpen] = useControllable(controlled, defaultOpen, onOpenChange);
@@ -41,7 +48,7 @@ export function GlassMenu({ trigger, open: controlled, defaultOpen = false, onOp
       className={cx('lg-root lg-menu', className)} style={{ ...glass.style, ...style }} onKeyDown={event => {
         if (event.key === 'Escape') { event.preventDefault(); close(); return; }
         if (event.key === 'Tab') { close(); return; }
-        const enabled = Array.from(glass.root.current?.querySelectorAll<HTMLButtonElement>('[role="menuitem"]:not(:disabled),[role="menuitemcheckbox"]:not(:disabled)') ?? []);
+        const enabled = Array.from(glass.root.current?.querySelectorAll<HTMLButtonElement>('[role="menuitem"]:not(:disabled),[role="menuitemcheckbox"]:not(:disabled),[role="menuitemradio"]:not(:disabled)') ?? []);
         const index = enabled.indexOf(document.activeElement as HTMLButtonElement); if (!enabled.length) return;
         let next = index;
         if (event.key === 'ArrowDown') next = (index + 1) % enabled.length;
@@ -57,7 +64,7 @@ export function GlassMenu({ trigger, open: controlled, defaultOpen = false, onOp
       }}>
       {glass.decoration}<div className="lg-content">{items.map((item, index) => <div key={item.key} role="none" style={{ '--lg-index': index } as CSSProperties}>
         {item.separatorBefore && <div role="separator" className="lg-menu-separator" />}
-        <button type="button" role={item.checked === undefined ? 'menuitem' : 'menuitemcheckbox'}
+        <button type="button" role={item.checked === undefined ? 'menuitem' : selection === 'single' ? 'menuitemradio' : 'menuitemcheckbox'}
           aria-checked={item.checked} tabIndex={-1} className="lg-menu-item" data-label={item.label}
           data-destructive={item.destructive ? 'true' : 'false'} disabled={item.disabled}
           onClick={() => { close(); item.onSelect(); }}>

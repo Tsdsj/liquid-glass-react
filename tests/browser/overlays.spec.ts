@@ -31,7 +31,8 @@ test('dragging the grabber tracks the pointer and snaps to the nearest detent', 
   // The sheet rises into place, so wait for it to settle before measuring the grabber —
   // otherwise the recorded position is somewhere along the entry animation.
   await expect.poll(() => sheet.evaluate(node => getComputedStyle(node).translate)).toBe('0px 50%');
-  const grabber = page.locator('.lg-sheet-grabber');
+  // Scoped to this sheet: the page has a second demo with a grabber of its own.
+  const grabber = sheet.locator('.lg-sheet-grabber');
   const box = (await grabber.boundingBox())!;
   await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2);
   await page.mouse.down();

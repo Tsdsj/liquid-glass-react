@@ -41,6 +41,12 @@ export function usePopover(
   open: boolean, setOpen: (value: boolean) => void,
   panel: RefObject<HTMLDivElement | null>, trigger: RefObject<HTMLButtonElement | null>,
   align: Align, menu: boolean, placement: 'below' | 'above' | 'auto' = 'auto',
+  /**
+   * `bottom` pins the panel to the bottom edge of the viewport across the full width instead
+   * of anchoring it to the trigger — the compact form, where a 300px panel with an arrow
+   * pointing at a control is the wrong shape for the screen.
+   */
+  anchor: 'source' | 'bottom' = 'source',
 ) {
   const onChange = useRef(setOpen); onChange.current = setOpen;
   useEffect(() => {
@@ -56,6 +62,14 @@ export function usePopover(
     if (!node.matches(':popover-open')) node.showPopover();
     let frame = 0;
     const position = () => {
+      if (anchor === 'bottom') {
+        node.style.left = '16px';
+        node.style.top = `${Math.max(16, innerHeight - node.offsetHeight - 16)}px`;
+        node.style.setProperty('--lg-origin-x', '50%');
+        node.style.setProperty('--lg-origin-y', '100%');
+        node.removeAttribute('data-placement');
+        return;
+      }
       const rect = trigger.current?.getBoundingClientRect();
       if (!rect) { node.style.left = `${Math.max(16, (innerWidth - node.offsetWidth) / 2)}px`; node.style.top = '96px'; return; }
       const width = node.offsetWidth, height = node.offsetHeight;
@@ -79,16 +93,33 @@ export function usePopover(
       // Grow out of the trigger: the transform origin is the trigger centre projected onto the panel box.
       const originX = Math.max(0, Math.min(100, (rect.left + rect.width / 2 - left) / width * 100));
       node.style.setProperty('--lg-origin-x', `${originX}%`);
-      node.style.setProperty('--lg-origin-y', resolvedTop >= rect.bottom ? '0%' : '100%');
+      const landedBelow = resolvedTop >= rect.bottom;
+      node.style.setProperty('--lg-origin-y', landedBelow ? '0%' : '100%');
+      /* Which side it actually landed on, for anything that has to draw an edge — the arrow
+         cannot be derived from `--lg-origin-y` in CSS, and `placement="auto"` means the
+         requested side and the resolved side are often not the same. */
+      node.dataset.placement = landedBelow ? 'below' : 'above';
     };
     const schedule = () => { cancelAnimationFrame(frame); frame = requestAnimationFrame(position); };
     position();
-    const first = menu ? node.querySelector<HTMLElement>('[role="menuitem"]:not(:disabled)') : focusable(node)[0];
+    /**
+     * Any of the three menu item roles, not just the plain one: a menu made entirely of
+     * checkable items would otherwise open with focus on the panel and no item selected.
+     *
+     * A single-choice menu opens on the item that is currently chosen, which is what a pop-up
+     * button does on every Apple platform — the menu is showing you where you are before it
+     * asks where you want to go. Opening on the first item instead means one arrow press does
+     * something different depending on what was already selected.
+     */
+    const first = menu
+      ? node.querySelector<HTMLElement>('[role="menuitemradio"][aria-checked="true"]:not(:disabled)')
+        ?? node.querySelector<HTMLElement>('[role="menuitem"]:not(:disabled),[role="menuitemcheckbox"]:not(:disabled),[role="menuitemradio"]:not(:disabled)')
+      : focusable(node)[0];
     (first ?? node).focus({ preventScroll: true });
     const resize = new ResizeObserver(schedule); resize.observe(node); if (trigger.current) resize.observe(trigger.current);
     window.addEventListener('resize', schedule); window.addEventListener('scroll', schedule, true);
     return () => { resize.disconnect(); cancelAnimationFrame(frame); window.removeEventListener('resize', schedule); window.removeEventListener('scroll', schedule, true); };
-  }, [open, panel, trigger, align, menu, placement]);
+  }, [open, panel, trigger, align, menu, placement, anchor]);
 }
 
 let scrollLocks = 0; let previousOverflow = '';

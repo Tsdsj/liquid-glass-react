@@ -1,5 +1,5 @@
-import { useEffect, useRef, useState, type MouseEvent, type ReactNode } from 'react';
-import { GlassProvider, LibraryIcon, TabBar, Text, ToastProvider, ToolbarGroup } from '@ttqtt/liquid-glass-react';
+import { useEffect, useState, type MouseEvent, type ReactNode } from 'react';
+import { GlassProvider, LibraryIcon, Screen, TabBar, Text, ToastProvider, ToolbarGroup } from '@ttqtt/liquid-glass-react';
 import { Icon } from '../icons.js';
 import { PreferencesButton, type SitePreferences } from './preferences.js';
 import { ComponentSearch } from './search.js';
@@ -64,19 +64,10 @@ export function Shell({ path, go, secondaryNav, children }: {
     return () => media.removeEventListener('change', sync);
   }, [preferences.theme]);
 
-  /**
-   * The app bar is sticky at the top, so anything else that sticks has to stop below it rather
-   * than slide underneath. Its height is not a number anyone can write down — it comes from the
-   * toolbar group inside it, which changes with Dynamic Type — so it is measured and published
-   * as a custom property instead of estimated.
-   */
-  const bar = useRef<HTMLElement>(null);
-  useEffect(() => {
-    const node = bar.current; if (!node || typeof ResizeObserver === 'undefined') return;
-    const publish = () => node.parentElement?.style.setProperty('--app-bar-height', `${Math.round(node.offsetHeight)}px`);
-    const observer = new ResizeObserver(publish); observer.observe(node); publish();
-    return () => observer.disconnect();
-  }, []);
+  /* The bar's height used to be measured here, so the compact outline could stick below it
+     rather than slide underneath. `Screen` measures its own bars and publishes the result as
+     `--lg-screen-top`, so that duplicate is gone: one measurement, and the safe-area inset is
+     part of it because the inset lives on the bar. */
 
   const section = sectionOf(path);
   const navigate = (target: string) => (event: MouseEvent<HTMLAnchorElement>) => { event.preventDefault(); go(target); };
@@ -105,13 +96,22 @@ export function Shell({ path, go, secondaryNav, children }: {
           icon: <Icon name={item.icon} size={18} />, onSelect: navigate(item.path),
         }))} />
 
-      <div className="app-main">
-        <header className="app-bar" ref={bar}>
+      {/**
+        * The site's own shell used to be three hand-written rules and a `position: sticky`
+        * header, and the review of the compact outline found what that was missing: not one
+        * `ScrollEdge` anywhere, so the toolbar simply floated over whatever scrolled past it.
+        * `Screen` is where that rule lives now — it pins the bar, gives it the safe-area
+        * inset, reserves the measured bar height from the content, and owns the one edge
+        * effect the view is allowed.
+        */}
+      <Screen scroll="page" className="app-main" top={
+        <header className="app-bar">
           <ToolbarGroup>
             <ComponentSearch onNavigate={go} />
             <PreferencesButton value={preferences} onChange={setPreferences} />
           </ToolbarGroup>
         </header>
+      }>
         <main id="main" tabIndex={-1} className="app-content">
           <div className="page-enter" key={path}>{children}</div>
         </main>
@@ -133,7 +133,7 @@ export function Shell({ path, go, secondaryNav, children }: {
             </a>
           </div>
         </footer>
-      </div>
+      </Screen>
     </div>
     </ToastProvider>
   </GlassProvider>;

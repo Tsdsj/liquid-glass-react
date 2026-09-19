@@ -46,6 +46,9 @@ test('the slider knob is quiet at rest and becomes glass only while held', async
   const decoration = page.locator('#slider-basic .lg-slider-lens > .lg-decoration').first();
   await expect(decoration).toHaveCSS('opacity', '0');
   const knob = page.locator('#slider-basic .lg-slider-lens').first();
+  // Into view first: the app bar floats over the top of the page, and a press that lands on
+  // the bar instead of the knob measures the bar.
+  await knob.scrollIntoViewIfNeeded();
   const box = (await knob.boundingBox())!;
   await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2);
   await page.mouse.down();
@@ -128,7 +131,9 @@ test('list rows are real links or buttons, never clickable divs', async ({ page 
 
 test('the scroll edge effect appears only once content passes under the bar', async ({ page }) => {
   await page.goto('/#/components/scroll-edge');
-  const top = page.locator('.lg-scroll-edge[data-edge="top"]');
+  // The demo's own edge, not the one `Screen` gives the whole page — both are correct, and
+  // "one per scroll view" is the rule, so a page with an inner scroller legitimately has two.
+  const top = page.locator('.demo-scroll-fixture .lg-scroll-edge[data-edge="top"]');
   await expect(top).toHaveAttribute('data-active', 'false');
   await page.locator('.demo-scroll-body').evaluate(node => { node.scrollTop = 150; });
   await expect(top).toHaveAttribute('data-active', 'true');

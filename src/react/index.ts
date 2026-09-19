@@ -40,6 +40,9 @@ export * from './navigation/nav-bar.js';
 export * from './navigation/tabs.js';
 export * from './navigation/scroll-edge.js';
 
+/* Layout containers: the skeleton the bars and the content are arranged in. */
+export * from './layout/screen.js';
+
 /* Overlays.
    Only the shared prop shapes are public. `triggerElement`, `usePopover` and `lockScroll` are how
    the overlays are assembled — anchoring maths, a scroll lock with a reference count, a render
@@ -47,6 +50,7 @@ export * from './navigation/scroll-edge.js';
 export type { OpenProps, TriggerProps, Align } from './overlays/anchor.js';
 export * from './overlays/popover.js';
 export * from './overlays/menu.js';
+export * from './overlays/menu-button.js';
 export * from './overlays/dialog.js';
 export * from './overlays/sheet.js';
 export * from './overlays/alert.js';
