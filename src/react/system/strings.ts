@@ -27,6 +27,12 @@ export interface GlassStrings {
   /** Search field clear button. */
   clearSearch: string;
   /**
+   * The direction word in a navigation stack's back button. The visible label is the previous
+   * screen's title; the spoken name is this plus that title — "Back to Settings" — because
+   * the title alone does not say which way it goes.
+   */
+  back: string;
+  /**
    * The sheet's drag handle, which is a slider over the detents. Takes the sheet's own title so
    * the label says which sheet it resizes when more than one has been open.
    */
@@ -39,6 +45,7 @@ export const defaultStrings: GlassStrings = {
   decrease: 'Decrease',
   increase: 'Increase',
   clearSearch: 'Clear search',
+  back: 'Back to',
   sheetHeight: title => `${title} height`,
 };
 

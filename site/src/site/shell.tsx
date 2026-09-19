@@ -23,6 +23,7 @@ const STRINGS = {
   decrease: '减少',
   increase: '增加',
   clearSearch: '清除搜索内容',
+  back: '返回',
   sheetHeight: (title: string) => `${title}的高度`,
 };
 

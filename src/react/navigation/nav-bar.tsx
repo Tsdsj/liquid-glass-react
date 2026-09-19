@@ -21,6 +21,14 @@ export interface NavigationBarProps extends Omit<HTMLAttributes<HTMLElement>, 't
   largeTitle?: boolean;
   /** Subtitle shown under the large title only; the compact bar stays to one line. */
   subtitle?: ReactNode;
+  /**
+   * Heading level for the large title. `1` is right when the bar is the top of the document,
+   * which is the usual case and the default. Lower it when the bar sits inside a page that
+   * already has an `<h1>` — a stack embedded in a longer document, a demo. A component that
+   * always emits `h1` can only be used once per page, and two `h1`s break the heading
+   * navigation a screen-reader user relies on to move around.
+   */
+  headingLevel?: 1 | 2 | 3;
   children?: ReactNode;
 }
 
@@ -32,7 +40,7 @@ export interface NavigationBarProps extends Omit<HTMLAttributes<HTMLElement>, 't
  * carries no background, border or shadow of its own: separation comes from the glass of the
  * control groups inside it and from the scroll edge effect beneath.
  */
-export function NavigationBar({ title, leading, trailing, largeTitle = true, subtitle, 'aria-label': label, className, children, ref, ...props }: NavigationBarProps) {
+export function NavigationBar({ title, leading, trailing, largeTitle = true, subtitle, headingLevel = 1, 'aria-label': label, className, children, ref, ...props }: NavigationBarProps) {
   const [compact, setCompact] = useState(!largeTitle);
   const sentinel = useRef<HTMLDivElement>(null);
   useEffect(() => {
@@ -51,7 +59,7 @@ export function NavigationBar({ title, leading, trailing, largeTitle = true, sub
       <div className="lg-navbar-trailing">{trailing}</div>
     </header>
     {largeTitle && <div className="lg-largetitle">
-      <Text as="h1" variant="largeTitle" emphasized>{title}</Text>
+      <Text as={`h${headingLevel}` as const} variant="largeTitle" emphasized>{title}</Text>
       {subtitle && <Text variant="subhead" tone="secondary">{subtitle}</Text>}
       <div ref={sentinel} className="lg-largetitle-sentinel" aria-hidden="true" />
     </div>}

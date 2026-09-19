@@ -98,3 +98,26 @@ test('inputs are at least 16px so iOS Safari does not zoom on focus', async ({ p
   const size = await page.getByLabel('工作区名称').evaluate(node => parseFloat(getComputedStyle(node).fontSize));
   expect(size).toBeGreaterThanOrEqual(16);
 });
+
+/**
+ * Found by `pnpm test:matrix`, which is why it is here: the sweep reports, and what it finds
+ * becomes a test that runs on every commit.
+ *
+ * Every page title on this site ends in an export name, and a camel-cased Latin word inside
+ * Chinese text gives the line breaker nowhere to break. At AX5 the longest of them —
+ * `GlassSegmentedControl` — was wider than its column, and an unbreakable line widens the page
+ * instead of wrapping: 57px of sideways scroll, on a page a user cannot scroll back from.
+ */
+test('the longest component name still wraps at the largest text size', async ({ page }) => {
+  for (const direction of ['ltr', 'rtl'] as const) {
+    await page.goto('/#/components/segmented-control');
+    await page.evaluate(dir => {
+      document.documentElement.dir = dir;
+      document.documentElement.dataset.lgTextSize = 'ax5';
+    }, direction);
+    await page.waitForTimeout(250);
+    const overflow = await page.evaluate(() =>
+      document.documentElement.scrollWidth - document.documentElement.clientWidth);
+    expect(overflow, `${direction} at AX5 scrolls ${overflow}px sideways`).toBeLessThanOrEqual(1);
+  }
+});

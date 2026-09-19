@@ -2,7 +2,7 @@ import { useState } from 'react';
 import {
   GlassActionSheet, GlassAlert, GlassButton, GlassDialog, GlassIconButton, GlassMenu, GlassPopover,
   GlassMenuButton, GlassSegmentedControl, GlassSheet, GlassSlider, LibraryIcon, List, ListRow, ListSection,
-  Text, TextField, useToast,
+  Text, TextField, Tooltip, useToast,
 } from '@ttqtt/liquid-glass-react';
 import { Icon } from '../icons.js';
 import type { ComponentDoc } from './types.js';
@@ -225,6 +225,79 @@ export const overlayDocs: ComponentDoc[] = [
     ],
     related: ['menu', 'button', 'action-sheet'],
     imports: ['GlassMenuButton'],
+  },
+  {
+    slug: 'tooltip', name: 'Tooltip', title: '提示', group: '浮层',
+    summary: '把图标按钮的名字显示出来，给看得见但听不见的人。',
+    when: [
+      '只有图标的按钮。aria-label 告诉了读屏它是什么，鼠标用户只能靠猜。',
+      '文案说「这个按钮做什么」，以动词开头：「恢复默认设置」。不要解释标准控件怎么用。',
+      '触摸屏上不要用，组件也不会渲染——没有悬停，只剩下「点一下先弹个东西出来」。',
+      '它是补充说明，不是名字。控件自己仍然要有 aria-label。',
+    ],
+    examples: [
+      {
+        id: 'tooltip-basic', title: '基础用法', description: '指针停留约 0.6 秒出现；用键盘 Tab 聚焦会立刻出现，因为那是有意为之的动作。',
+        height: 200,
+        render: () => <div id="tooltip-demo" style={{ display: 'flex', gap: 12, alignItems: 'center' }}>
+          <Tooltip content="恢复默认设置">
+            <GlassIconButton aria-label="恢复默认设置"><LibraryIcon name="minus" /></GlassIconButton>
+          </Tooltip>
+          <Tooltip content="添加一个新的工作区">
+            <GlassIconButton aria-label="新建工作区"><LibraryIcon name="plus" /></GlassIconButton>
+          </Tooltip>
+          <Tooltip content="在所有组件里搜索">
+            <GlassIconButton aria-label="搜索"><LibraryIcon name="search" /></GlassIconButton>
+          </Tooltip>
+        </div>,
+        code: `<Tooltip content="恢复默认设置">
+  <GlassIconButton aria-label="恢复默认设置">
+    <ResetIcon />
+  </GlassIconButton>
+</Tooltip>`,
+      },
+      {
+        id: 'tooltip-placement', title: '朝下展开', description: '默认朝上；顶部没地方时自己翻下来，也可以指定。',
+        height: 200,
+        render: () => <div style={{ display: 'flex', gap: 12, alignItems: 'center' }}>
+          <Tooltip content="朝下展开的提示" placement="below">
+            <GlassButton>朝下</GlassButton>
+          </Tooltip>
+          <Tooltip content="朝上展开的提示" placement="above">
+            <GlassButton>朝上</GlassButton>
+          </Tooltip>
+        </div>,
+        code: `<Tooltip content="朝下展开的提示" placement="below">
+  <GlassButton>朝下</GlassButton>
+</Tooltip>`,
+      },
+      {
+        id: 'tooltip-delay', title: '延迟', description: '默认 600ms。调短了，指针扫过一排按钮会一路弹出来；调长了没人等得到。',
+        height: 200,
+        render: () => <div style={{ display: 'flex', gap: 12, alignItems: 'center' }}>
+          <Tooltip content="等 0.2 秒" delay={200}><GlassButton>200ms</GlassButton></Tooltip>
+          <Tooltip content="等 0.6 秒，默认值"><GlassButton>600ms</GlassButton></Tooltip>
+          <Tooltip content="等 1.2 秒" delay={1200}><GlassButton>1200ms</GlassButton></Tooltip>
+        </div>,
+        code: `<Tooltip content="等 0.2 秒" delay={200}>
+  <GlassButton>200ms</GlassButton>
+</Tooltip>`,
+      },
+    ],
+    props: [
+      { name: 'content', type: 'ReactNode', required: true, description: '这个控件做什么，以动词开头。' },
+      { name: 'children', type: 'ReactElement', required: true, description: '它描述的那个控件。组件用 cloneElement 接上去，不加包裹层，所以布局不会变。' },
+      { name: 'delay', type: 'number', default: '600', description: '悬停多久后出现。聚焦不受这个值影响，立刻出现。' },
+      { name: 'placement', type: "'above' | 'below'", default: "'above'", description: '朝哪边展开。放不下时自动翻到另一边。' },
+    ],
+    notes: [
+      '用 aria-describedby 关联，不是 aria-labelledby——它是补充说明。控件自己的名字必须另外给。',
+      '`(pointer: coarse)` 下整个组件不渲染：触摸屏没有悬停，硬做只会变成「点一下先弹个东西挡住按钮」。',
+      '按 Escape 关掉，不影响其他任何东西。指针按下也会关——你已经点了，不需要再被告知它是什么。',
+      '同一时刻只有一个提示；指针移到下一个按钮时，前一个直接让位。',
+    ],
+    related: ['button', 'menu', 'toast'],
+    imports: ['Tooltip'],
   },
   {
     slug: 'sheet', name: 'GlassSheet', title: '底部面板', group: '浮层',

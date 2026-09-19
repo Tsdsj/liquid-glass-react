@@ -12,12 +12,12 @@
 import { Component, useEffect, useRef, useState, type ComponentProps, type ElementType, type ErrorInfo, type ReactNode } from 'react';
 import * as lib from '@ttqtt/liquid-glass-react';
 import {
-  Card, Concentric, Divider, List, ListRow, ListSection, MaterialView, Text,
+  Card, Concentric, Divider, Kbd, List, ListRow, ListSection, MaterialView, Text,
   GlassBackdrop, GlassBadge, GlassButton, GlassIconButton, GlassProgress, GlassSegmentedControl,
   GlassSlider, GlassStepper, GlassSwitch, GlassSurface, GlassGroup, LibraryIcon,
   SearchField, TextField,
-  NavigationBar, Screen, ScrollEdge, Sidebar, TabBar, GlassTabs, GlassToolbar, ToolbarGroup, ToolbarSpacer,
-  GlassActionSheet, GlassAlert, GlassDialog, GlassMenu, GlassMenuButton, GlassMenuDescription, GlassPopover, GlassSheet,
+  NavigationBar, NavigationStack, Screen, ScrollEdge, Sidebar, TabBar, GlassTabs, GlassToolbar, ToolbarGroup, ToolbarSpacer,
+  GlassActionSheet, GlassAlert, GlassDialog, GlassMenu, GlassMenuButton, GlassMenuDescription, GlassPopover, GlassSheet, Tooltip,
 } from '@ttqtt/liquid-glass-react';
 
 /**
@@ -54,6 +54,7 @@ const entries: Array<[string, (p: Probe) => ReactNode]> = [
   ['ListRow', p => <ul><ListRow {...p} label="row" /></ul>],
   ['MaterialView', p => <MaterialView {...p}>material</MaterialView>],
   ['Text', p => <Text {...p}>text</Text>],
+  ['Kbd', p => <Kbd {...p} keys="⌘K" />],
 
   /* Controls */
   ['GlassBadge', p => <GlassBadge {...p} count={3} aria-label="3 unread" />],
@@ -76,6 +77,7 @@ const entries: Array<[string, (p: Probe) => ReactNode]> = [
   /* `page` scroll: the probe mounts every component at once, and a container-scrolled
      Screen would be a 100dvh box in the middle of the table. */
   ['Screen', p => <Screen {...p} scroll="page" top={<span>bar</span>}>content</Screen>],
+  ['NavigationStack', p => <NavigationStack {...p} root={{ key: 'r', title: 'root', content: 'content' }} />],
   ['Sidebar', p => <Sidebar {...p} aria-label="sidebar">side</Sidebar>],
   ['TabBar', p => <TabBar {...p} aria-label="tabs" current="a"
     items={[{ key: 'a', href: '#/_probe/refs', label: 'A' }, { key: 'b', href: '#/_probe/refs', label: 'B' }]} />],
@@ -94,6 +96,9 @@ const entries: Array<[string, (p: Probe) => ReactNode]> = [
   ['GlassMenuButton', p => <GlassMenuButton {...p} label="menu button" items={[{ key: 'a', label: 'A', onSelect: () => {} }]} />],
   ['GlassMenuDescription', p => <GlassMenuDescription {...p}>description</GlassMenuDescription>],
   ['GlassPopover', p => <GlassPopover {...p} title="popover">body</GlassPopover>],
+  /* The ref lands on the tooltip panel. Rendered only where there is a hover, so the probe
+     reports it as absent on a touch device — which is the component working as documented. */
+  ['Tooltip', p => <Tooltip {...p} content="tip"><button type="button">anchor</button></Tooltip>],
   ['GlassSheet', p => <GlassSheet {...p} title="sheet">body</GlassSheet>],
 
   /* System */
@@ -126,6 +131,7 @@ const _contract = {
   ListRow: null as unknown as Gap<typeof ListRow>,
   MaterialView: null as unknown as Gap<typeof MaterialView>,
   Text: null as unknown as Gap<typeof Text>,
+  Kbd: null as unknown as Gap<typeof Kbd>,
   GlassBadge: null as unknown as Gap<typeof GlassBadge>,
   GlassButton: null as unknown as Gap<typeof GlassButton>,
   GlassIconButton: null as unknown as Gap<typeof GlassIconButton>,
@@ -139,6 +145,7 @@ const _contract = {
   NavigationBar: null as unknown as Gap<typeof NavigationBar>,
   ScrollEdge: null as unknown as Gap<typeof ScrollEdge>,
   Screen: null as unknown as Gap<typeof Screen>,
+  NavigationStack: null as unknown as Gap<typeof NavigationStack>,
   Sidebar: null as unknown as Gap<typeof Sidebar>,
   TabBar: null as unknown as Gap<typeof TabBar>,
   GlassTabs: null as unknown as Gap<typeof GlassTabs>,
@@ -152,6 +159,7 @@ const _contract = {
   GlassMenuButton: null as unknown as Gap<typeof GlassMenuButton>,
   GlassMenuDescription: null as unknown as Gap<typeof GlassMenuDescription>,
   GlassPopover: null as unknown as Gap<typeof GlassPopover>,
+  Tooltip: null as unknown as Gap<typeof Tooltip>,
   GlassSheet: null as unknown as Gap<typeof GlassSheet>,
   GlassBackdrop: null as unknown as Gap<typeof GlassBackdrop>,
   GlassSurface: null as unknown as Gap<typeof GlassSurface>,

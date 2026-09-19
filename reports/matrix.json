@@ -1,0 +1,21 @@
+{
+  "generated": "2026-09-19T19:11:25.334Z",
+  "pages": 31,
+  "variants": [
+    "base",
+    "touch",
+    "dark",
+    "reduce-transparency",
+    "increase-contrast",
+    "reduce-motion",
+    "forced-colors",
+    "rtl",
+    "ax5",
+    "rtl+ax5",
+    "dark+ax5"
+  ],
+  "cells": 341,
+  "failing": 0,
+  "byRule": {},
+  "findings": []
+}

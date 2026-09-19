@@ -40,6 +40,12 @@
 
 **已完成（第 2 周）**：P3（`sheet-drag.spec.ts`）、P4（`popover.spec.ts`）。`GlassMenuButton`（`menu-button.spec.ts`）与 L1 `Screen`（`screen.spec.ts`）一并落地，站点改用 `Screen`，1.4 节「站点 ScrollEdge」那条随之关闭——连站点自己那套量栏高的代码也删掉了，现在只有一处在量。
 
+**已完成（第 3 周）**：1.3 的矩阵落地为 `tests/browser/matrix.spec.ts` + `pnpm test:matrix`，产出 `reports/matrix.json`。第一轮抓到三条，**全部在文档站而不是库里**：侧栏链接与页标题在 AX5 下不换行（`GlassSegmentedControl` 这种长名字把页面撑宽 57px）、以及两处触摸命中区。修完 341 格全清，AX5 换行那条留了一条用例进 `pnpm check`。
+
+规模从计划写的「41 个组件」修正为 **31 个文档页**：41 是导出的组件数，几个组件共用一页。
+
+`Tooltip`、`Kbd`、L4 `NavigationStack` 一并落地。做 `NavigationStack` 的文档页时撞出一条既有缺陷：`NavigationBar` 写死 `h1`，所以一页里只能用一次，而两个 `h1` 会破坏读屏靠标题跳转。新增可选的 `headingLevel`。
+
 第 2 周途中另发现两条，都已修：单选菜单打开时焦点落在第一项而不是**已选中**那一项（pop-up 按钮在每个 Apple 平台上都是后者）；`usePopover` 的首个可聚焦项只找 `[role="menuitem"]`，一个全是可勾选项的菜单会把焦点留在面板上。
 
 ### 1.2 待复现的疑点（不排期，先写用例）
@@ -195,7 +201,7 @@ HIG layout：「按尺寸类别决定布局，永远不按设备类型或方向�
 | --- | --- | --- | --- |
 | **1 ✅** | P1 RTL 对齐、P2 disabled 行、P5 字符串表 | — | `useSizeClass` |
 | **2 ✅** | P3 sheet 整块可拖、P4 popover 箭头 + 手机变 sheet | `GlassMenuButton` | L1 `Screen`，站点改用它（ScrollEdge 那条已关闭） |
-| 3 | 矩阵用例落地（1.3），跑出第一份 `reports/matrix.json`，修抓到的 | `Tooltip`、`Kbd` | L4 `NavigationStack` |
+| **3 ✅** | 矩阵用例落地（1.3），第一份 `reports/matrix.json`，抓到的三条已修 | `Tooltip`、`Kbd` | L4 `NavigationStack` |
 | 4 | P6 stepper、P8 toast、P9 badge；1.2 的六个疑点逐一复现 | `DisclosureGroup`、`PageControl` | L2 `SplitView`（含 L3 `Inspector`） |
 | 5 | 1.5 的小 API；D7 属性表比对进 `build:site` | `ContextMenu` | L5 `Grid`、L6 `Form` |
 | 6 | D1 每页三示例、D3 属性面板、D8 折射开关、D5 搜索；全库 Apple-Style-Review 复审 | 第二批择前三个 | 布局容器的 AX5 / RTL 矩阵 |

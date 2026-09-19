@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import {
-  Card, Concentric, Divider, GlassSwitch, LibraryIcon, List, ListRow, ListSection, MaterialView, Text,
+  Card, Concentric, Divider, GlassSwitch, Kbd, LibraryIcon, List, ListRow, ListSection, MaterialView, Text,
 } from '@ttqtt/liquid-glass-react';
 import type { ComponentDoc } from './types.js';
 
@@ -208,6 +208,63 @@ export const contentDocs: ComponentDoc[] = [
     ],
     related: ['card', 'switch', 'divider'],
     imports: ['List', 'ListSection', 'ListRow'],
+  },
+  {
+    slug: 'kbd', name: 'Kbd', title: '快捷键', group: '内容',
+    summary: '一个快捷键提示，按平台的写法排列。',
+    when: [
+      '菜单项、按钮提示、帮助文字里提到某个快捷键的时候。',
+      '修饰键顺序是固定的：⌃ ⌥ ⇧ ⌘，Command 永远挨着被它修饰的那个键。组件会替你排好。',
+      '不要用它当按钮。它是一段关于命令的文字，不是命令本身。',
+    ],
+    examples: [
+      {
+        id: 'kbd-basic', title: '基础用法', description: '写法随意：符号、单词、加号或空格分隔都行。',
+        height: 190,
+        render: () => <div id="kbd-basic-demo" style={{ display: 'flex', gap: 12, flexWrap: 'wrap', alignItems: 'center' }}>
+          <Kbd keys="⌘K" />
+          <Kbd keys="Cmd+Shift+P" />
+          <Kbd keys="ctrl alt delete" />
+          <Kbd keys="esc" />
+          <Kbd keys="up" />
+        </div>,
+        code: `<Kbd keys="⌘K" />
+<Kbd keys="Cmd+Shift+P" />
+<Kbd keys="ctrl alt delete" />`,
+      },
+      {
+        id: 'kbd-order', title: '顺序会被纠正', description: '不管传进来的顺序是什么，渲染出来都是 ⌃ ⌥ ⇧ ⌘ 加键名。',
+        height: 190,
+        render: () => <div id="kbd-order-demo" style={{ display: 'grid', gap: 10, justifyItems: 'start' }}>
+          <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
+            <Text variant="caption1" tone="secondary">传 "K+cmd+shift"：</Text><Kbd keys="K+cmd+shift" />
+          </div>
+          <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
+            <Text variant="caption1" tone="secondary">传 "shift ctrl opt cmd S"：</Text><Kbd keys="shift ctrl opt cmd S" />
+          </div>
+        </div>,
+        code: `{/* 两种写法渲染结果相同 */}
+<Kbd keys="K+cmd+shift" />
+<Kbd keys="⇧⌘K" />`,
+      },
+      {
+        id: 'kbd-inline', title: '放在句子里', description: '它是行内元素，和正文基线对齐。',
+        height: 190,
+        render: () => <Text variant="body" style={{ maxWidth: 380 }}>
+          按 <Kbd keys="⌘K" /> 打开搜索，<Kbd keys="esc" /> 关闭。菜单里的快捷键提示也用它。
+        </Text>,
+        code: `<Text variant="body">按 <Kbd keys="⌘K" /> 打开搜索。</Text>`,
+      },
+    ],
+    props: [
+      { name: 'keys', type: 'string', required: true, description: '快捷键。符号、单词、加号或空格分隔都认；认不出来的原样输出。' },
+      { name: 'aria-label', type: 'string', description: '读屏听到的内容。默认是拼成单词的版本，比如「Command K」。' },
+    ],
+    notes: [
+      '⌘ ⌥ ⇧ 这些符号读屏念不出来——有的直接跳过，有的念成「兴趣点符号」。所以元素自己带 aria-label，符号本身标了 aria-hidden。',
+      '修饰键顺序由组件决定，不由传入顺序决定。',
+    ],
+    related: ['text', 'menu'],
   },
   {
     slug: 'material-view', name: 'MaterialView', title: '标准材质', group: '内容',

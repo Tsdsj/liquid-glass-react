@@ -20,6 +20,7 @@ pnpm test:chrome
 pnpm test:warnings  # 开发模式那三个文件，跑在 Vite dev server 上
 pnpm exec playwright install webkit firefox
 pnpm test:fallback  # 只跑退化路径那一个文件
+pnpm test:matrix    # 审计扫描，不在 check 里，见下
 ```
 
 Chrome 项目伺服的是 `site/dist`，所以跑之前站点必须先构建。也可以用 `TEST_URL` 指向一个已经部署好的地址。
@@ -63,6 +64,16 @@ pnpm test:e2e --project=chromium
 **开发模式（`tests/browser/{warnings,strict-mode,hydration}.spec.ts`，10 项）** —— 这三件只存在于开发构建里，所以跑的是 Vite dev server 而不是 `site/dist`：三条设计规则的告警（生产构建里必须一条都没有）、Strict Mode 下闲置页面不排帧、八棵树 `renderToString` 之后 `hydrateRoot` 没有不匹配。用 `pnpm test:warnings` 跑（project 名为 `dev`）。
 
 **跨引擎（`tests/browser/fallback.spec.ts`，WebKit 与 Firefox 各 9 项）** —— 没有 SVG 折射时剩下的东西还算不算材质：模糊、着色、边线、投影都在；布局、语义、键盘路径都不依赖折射分支；浮层没有入场动画也要能开能关；系统偏好照样生效。用 `pnpm test:fallback` 跑。
+
+**审计矩阵（`tests/browser/matrix.spec.ts`，`pnpm test:matrix`）** —— 把上一次人眼过 27 页的全面审计变成机器跑的东西，产出 `reports/matrix.json`。
+
+每个组件页 × 11 种变体（基线、触摸、深色、减少透明度、增强对比度、减少动效、强制颜色、RTL、AX5，外加 RTL+AX5 与深色+AX5 两个组合）。**不是**截图比对——截图只能告诉你「变了」，不能告诉你「错了」，而且每次合理的改版都会红。问的是答案与审美无关的问题：有没有横向溢出、每个目标手指够不够得着、图标按钮有没有名字、有没有文字低于 11px 的可读下限、有没有元素塌成 0、控制台有没有报错。
+
+**为什么是单因子。** 全组合是三千多格，没人会跑，也就没人会修。所以每项设置各自对着基线变一次，另加两个真的会互相影响的组合：最大字号是压垮布局的那一项，而它在镜像之后垮的方式不一样。
+
+它**不在 `pnpm check` 里**：慢，而且它的职责是找新东西，不是守旧东西。它找到什么，什么就变成一条有名有姓的用例进 `pnpm check`——`a11y.spec.ts` 里那条「最长的组件名在最大字号下仍然会换行」就是这么来的。
+
+44 的规则只在触摸变体里跑，而且是**命中测试**不是量尺寸。第一版量 `getBoundingClientRect`，报了六千多条，几乎全是错的：控件常常画得比它可触区小（输入框 38px 躺在 44px 的玻璃盒里，按钮用 `::after` 撑开命中区，两者都不在元素自己的盒子里），而且 44 本来就是**手指**的要求，在指针平台上报一个 34px 的行只会把真问题埋掉。现在的做法是以控件中心取一个 42px 方块的四角，问文档那里是什么——手指问的就是这个问题，而且它不关心这块区域是怎么造出来的。
 
 `visual.spec.ts` 内部还有 6 页面 × 4 宽度的组合。不要把内部组合数和用例数相加，那不是覆盖率。
 

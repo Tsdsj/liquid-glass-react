@@ -90,7 +90,12 @@ code { font-family: var(--lg-font-mono); font-size: .92em; }
 .subnav { display: flex; flex-direction: column; gap: 2px; padding-block-start: var(--lg-space-4); }
 .subnav-group { display: flex; flex-direction: column; gap: 2px; padding-block-end: var(--lg-space-3); }
 .subnav-title { padding-inline: var(--lg-space-3); padding-block: var(--lg-space-2) var(--lg-space-1); }
-.subnav-link { display: flex; align-items: center; min-height: 34px; padding-inline: var(--lg-space-3);
+/* `overflow-wrap: anywhere`, not `normal`: at the largest text sizes a label like
+   「分段控件 GlassSegmentedControl」 is wider than the whole sidebar, and a line that cannot
+   break pushes the sidebar wide, which pushes the page wide. Measured at AX5: the document
+   scrolled 57px sideways on every page whose label was long enough. The matrix found it. */
+.subnav-link { display: flex; align-items: center; min-height: 34px; padding-block: var(--lg-space-1);
+  padding-inline: var(--lg-space-3); overflow-wrap: anywhere;
   border-radius: var(--lg-radius-s); text-decoration: none; color: var(--lg-label-secondary);
   font-size: var(--lg-text-footnote-size); line-height: var(--lg-text-footnote-leading);
   transition: background var(--lg-duration-press) var(--lg-ease), color var(--lg-duration-press) var(--lg-ease); }
@@ -102,7 +107,12 @@ code { font-family: var(--lg-font-mono); font-size: .92em; }
    Pages
    -------------------------------------------------------------------------- */
 .page { padding-block: var(--lg-space-5) var(--lg-space-10); min-width: 0; }
-.page-head { display: flex; flex-direction: column; gap: var(--lg-space-2); margin-block-end: var(--lg-space-6); }
+/* Every page title on this site ends in an export name — `GlassSegmentedControl` — and a
+   camel-cased Latin word inside Chinese text offers the line breaker nowhere to break. At the
+   largest accessibility sizes that one word is wider than the column, and an unbreakable line
+   widens the page rather than wrapping. Measured at AX5: 57px of sideways scroll. */
+.page-head { display: flex; flex-direction: column; gap: var(--lg-space-2); margin-block-end: var(--lg-space-6);
+  overflow-wrap: anywhere; }
 .page-lede { max-width: var(--lg-readable); }
 .page-section { margin-block-start: var(--lg-space-10); display: flex; flex-direction: column; gap: var(--lg-space-4); scroll-margin-block-start: 88px; }
 .section-lede { max-width: var(--lg-readable); margin-block-start: calc(var(--lg-space-2) * -1); }
@@ -309,6 +319,7 @@ code { font-family: var(--lg-font-mono); font-size: .92em; }
     padding-block: var(--lg-space-6); }
   .outline-title { padding-inline: var(--lg-space-3); padding-block-end: var(--lg-space-2); }
   .outline-link { display: block; padding: var(--lg-space-2) var(--lg-space-3); border-radius: var(--lg-radius-s);
+    overflow-wrap: anywhere;
     border-inline-start: 2px solid transparent; text-decoration: none; color: var(--lg-label-secondary);
     font-size: var(--lg-text-footnote-size); line-height: 1.4;
     transition: color var(--lg-duration-press) var(--lg-ease), border-color var(--lg-duration-press) var(--lg-ease); }

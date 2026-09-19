@@ -57,6 +57,7 @@ import '@ttqtt/liquid-glass-react/styles.css';
 | `cancel` | `'Cancel'` | `GlassActionSheet` |
 | `decrease` / `increase` | `'Decrease'` / `'Increase'` | `GlassStepper` |
 | `clearSearch` | `'Clear search'` | `SearchField` |
+| `back` | `'Back to'` | `NavigationStack` 的返回按钮 |
 | `sheetHeight` | `` title => `${title} height` `` | `GlassSheet` 的拖动手柄 |
 
 ```tsx
@@ -74,6 +75,29 @@ import '@ttqtt/liquid-glass-react/styles.css';
 `'compact' | 'regular'`，以 768px 为界——HIG 的 layout 页要求「按尺寸类别决定布局，永远不按设备类型或方向」。CSS 侧 `--lg-margin` 在同一个断点上自己从 16px 切到 20px，所以组件和样式表不会各说各的。
 
 服务端和首次客户端渲染返回 `'compact'`，水合后立刻落到真实值；服务端标记不能动的东西请直接用 CSS 媒体查询。
+
+### `NavigationStack` / `useNavigationStack()`
+
+一摞页面和一条跟着走的导航栏。
+
+| 属性 | 类型 | 默认 | 说明 |
+| --- | --- | --- | --- |
+| `root` | `NavigationPage` | — | 栈底那一页，弹不掉 |
+| `pages` / `onPagesChange` | `NavigationPage[]` / `(pages) => void` | 自管 | 自己管理栈（接路由）。数组是根页**之上**的那些页 |
+| `backLabel` | `'title' \| 'chevron'` | `'title'` | 返回按钮写上一页标题，还是只画箭头 |
+| `headingLevel` | `1 \| 2 \| 3` | `1` | 根页大标题的标题层级 |
+
+`NavigationPage` = `{ key, title, subtitle?, trailing?, content }`。
+
+`useNavigationStack()` 返回 `{ push, pop, popToRoot, depth, canGoBack }`，在栈里任意一层可用。**不在栈里会抛错**，不是静默失效——一个什么都不做的按钮比一条报错难找得多。
+
+返回按钮可见的是**上一页的标题**，不是「返回」：方向你已经知道了，目的地你不知道。`aria-label` 是「返回 上一页标题」，两样都说。
+
+压栈、弹栈都把焦点移到新页面的 `<main>`。不这么做，键盘用户点了一行、页面换了，下一次 Tab 会从那一行原来的位置继续——而那一页已经不在了。
+
+切换是交叉淡入加位移，弹栈方向相反，RTL 镜像；减少动效只留淡入，**方向**才是被读成运动的那部分。
+
+> `NavigationBar` 也新增了 `headingLevel`。一个永远输出 `h1` 的组件一页只能用一次，而两个 `h1` 会破坏读屏用户靠标题跳转的能力。
 
 > `TabBar` 的 `sidebarBreakpoint`（默认 1024）是**另一条轴**：它决定标签栏什么时候变成侧边栏，而不是尺寸类别。两者不共用一个数字是有意的——768 的竖屏平板该有紧凑布局，不该有侧边栏。
 
@@ -114,6 +138,11 @@ import '@ttqtt/liquid-glass-react/styles.css';
 `ListRow`: `label` `secondaryLabel` `value` `leading` `accessory` `href` `onSelect` `disclosure` `destructive` `disabled`。可导航行渲染为真实 `<a>` 或 `<button>`。
 
 `disabled` 的跳转行**不渲染 `href`**，改渲染 `<button disabled>`：带 `href` 的 `<a>` 无论 `aria-disabled` 写什么，回车和点击都照样导航——`aria-disabled` 只是播报，不是实现。
+
+### `Kbd`
+`keys`(必填) `aria-label`。快捷键提示。修饰键顺序由组件排：⌃ ⌥ ⇧ ⌘，Command 挨着被它修饰的键。
+
+写法随意（`"⌘K"` `"Cmd+Shift+P"` `"mod k"`），认不出来的原样输出。⌘ ⌥ ⇧ 这些符号读屏念不出来，所以元素自带 `aria-label`（「Command K」），符号本身 `aria-hidden`。
 
 ### `MaterialView`
 `thickness`(`ultraThin`/`thin`/`regular`/`thick`) `radius`。内容层的半透明手段。
@@ -235,6 +264,15 @@ import '@ttqtt/liquid-glass-react/styles.css';
 可拖动，松手弹簧停在最近停靠点；满高时变不透明并贴住边缘。只动 `transform`。
 
 **整块面板都是把手**，不只是顶部那条横条。判据是滚动位置而不是碰到了哪个元素：内容滚到顶时，往下拖是收起；往上拖只有在还有更高一档可长时才归面板，到了最高一档往上拖就是在读内容。横向拖动不接管。在方向定下来之前不 `preventDefault`、不捕获指针，所以面板里的按钮和输入框照常可用。
+
+### `Tooltip`
+`content`(必填) `children`(必填，一个元素) `delay`(600) `placement`(`above`/`below`)。
+
+把图标按钮的名字显示出来给鼠标用户。三条它不会破的规矩：
+
+- **触摸屏上整个组件不渲染**（`(hover: hover) and (pointer: fine)` 不匹配就返回 children 本身，不加包裹层、不加属性）。没有悬停的地方，提示只能变成「点一下先弹个东西挡住按钮」。
+- **用 `aria-describedby` 关联，不是 `aria-labelledby`**。它是补充说明；控件自己的名字必须另外给。
+- 聚焦立刻出现（那是有意为之的动作），悬停要等 `delay`。Escape 关掉，不影响别的。同一时刻只有一个。
 
 ### `GlassAlert`
 `title`(必填) `message` `actions: AlertAction[]`（最多 3 个，`role`: `default`/`cancel`/`destructive`）。

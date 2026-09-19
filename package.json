@@ -77,7 +77,8 @@
     "test:fallback": "playwright test --project=webkit --project=firefox",
     "verify:package": "node scripts/verify-package.mjs",
     "prepublishOnly": "node scripts/verify-package.mjs",
-    "test:warnings": "playwright test --project=dev"
+    "test:warnings": "playwright test --project=dev",
+    "test:matrix": "playwright test --project=matrix"
   },
   "devDependencies": {
     "@playwright/test": "^1.57.0",

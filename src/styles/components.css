@@ -782,3 +782,49 @@
      says where the popover is; the arrow has nothing left to add. */
   .lg-popover[data-placement]::before { content: none; }
 }
+
+/* ---------- Kbd: a shortcut hint, in the content layer ---------- */
+.lg-kbd { display: inline-flex; align-items: center; justify-content: center; min-width: 22px;
+  padding: 2px 6px; border-radius: var(--lg-radius-xs); border: 1px solid var(--lg-separator);
+  background: var(--lg-fill-quaternary); color: var(--lg-label-secondary);
+  font-family: var(--lg-font-text); font-size: var(--lg-text-caption1-size); line-height: 1.5;
+  font-variant-numeric: tabular-nums; white-space: nowrap; }
+
+/* ---------- Tooltip: the name of an icon-only control, for the people who cannot hear it ---------- */
+/* Small glass, and never on touch — the component renders nothing where there is no hover, so
+   there is no `(pointer: coarse)` rule here to forget. */
+.lg-tooltip { position: fixed; inset: auto; margin: 0; border: 0; max-width: 260px;
+  padding: var(--lg-space-2) var(--lg-space-3); z-index: var(--lg-z-toast);
+  font-size: var(--lg-text-caption1-size); line-height: var(--lg-text-caption1-leading);
+  pointer-events: none; }
+.lg-tooltip:not(:popover-open) { display: none; }
+.lg-tooltip:popover-open { opacity: 1; scale: 1;
+  transition: opacity var(--lg-duration-release) var(--lg-ease-out), scale var(--lg-duration-spring) var(--lg-spring),
+    display var(--lg-duration-release) allow-discrete, overlay var(--lg-duration-release) allow-discrete; }
+@starting-style { .lg-tooltip:popover-open { opacity: 0; scale: .94; } }
+.lg-tooltip::backdrop { background: transparent; }
+
+/* ---------- NavigationStack: one bar that follows a stack of screens ---------- */
+.lg-stack { display: flex; flex-direction: column; min-width: 0; }
+.lg-stack-screen { min-width: 0; outline: none; }
+/* The back button reads as a destination, not a control: no glass, no fill, just the chevron
+   and the previous screen's name. The chevron points backwards, which is the leading edge and
+   therefore mirrors itself in RTL along with everything else. */
+.lg-stack-back { padding-inline: var(--lg-space-1) var(--lg-space-2); color: var(--lg-accent); max-width: 40vw; }
+.lg-stack-back-chevron { transform: scaleX(-1); flex: 0 0 auto; }
+:dir(rtl) .lg-stack-back-chevron { transform: none; }
+.lg-stack-back-title { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+/* A cross-fade with a small slide. The slide is the part Reduce Motion removes — direction is
+   what reads as movement, and a fade on its own still says "this is different now". */
+@keyframes lg-stack-push { from { opacity: 0; translate: 16px 0; } }
+@keyframes lg-stack-pop { from { opacity: 0; translate: -16px 0; } }
+@keyframes lg-stack-fade { from { opacity: 0; } }
+.lg-stack-screen[data-direction="push"] { animation: lg-stack-push var(--lg-duration-layout) var(--lg-ease-out); }
+.lg-stack-screen[data-direction="pop"] { animation: lg-stack-pop var(--lg-duration-layout) var(--lg-ease-out); }
+:dir(rtl) .lg-stack-screen[data-direction="push"] { animation-name: lg-stack-pop; }
+:dir(rtl) .lg-stack-screen[data-direction="pop"] { animation-name: lg-stack-push; }
+.lg-stack-screen[data-direction="none"] { animation: lg-stack-fade var(--lg-duration-release) var(--lg-ease); }
+@media (prefers-reduced-motion: reduce) {
+  .lg-stack-screen { animation: lg-stack-fade var(--lg-duration-release) var(--lg-ease) !important; }
+}
