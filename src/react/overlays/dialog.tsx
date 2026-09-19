@@ -7,6 +7,7 @@ import { SharedSurface } from '../system/surface.js';
 import { LibraryIcon } from '../system/icon.js';
 import { cx, useControllable } from '../system/utils.js';
 import { lockScroll, triggerElement, type OpenProps } from './anchor.js';
+import { useGlassStrings } from '../system/strings.js';
 
 /** `open` is the controlled state, not the `<dialog>` attribute — the element is opened with `showModal`. */
 export interface GlassDialogProps extends Omit<DialogHTMLAttributes<HTMLDialogElement>, 'title' | 'children' | 'open'>, RefAttributes<HTMLDialogElement>, GlassSurfaceOptions, OpenProps {
@@ -21,8 +22,9 @@ export interface GlassDialogProps extends Omit<DialogHTMLAttributes<HTMLDialogEl
  * Titles are bold and left-aligned, and the task is paired with a dimming layer because it
  * interrupts the main flow — parallel tasks get glass separation without the dim.
  */
-export function GlassDialog({ trigger, open: controlled, defaultOpen = false, onOpenChange, title, description, children, className, style, closeLabel = 'Close', dismissOnBackdrop = true, id: providedId, ref, ...rest }: GlassDialogProps) {
+export function GlassDialog({ trigger, open: controlled, defaultOpen = false, onOpenChange, title, description, children, className, style, closeLabel, dismissOnBackdrop = true, id: providedId, ref, ...rest }: GlassDialogProps) {
   const [surface, props] = splitSurface(rest);
+  const strings = useGlassStrings();
   const generated = useId(); const id = providedId ?? generated; const triggerRef = useRef<HTMLButtonElement>(null);
   const restoreRef = useRef<HTMLElement | null>(null); const downOutside = useRef(false);
   const [open, setOpen] = useControllable(controlled, defaultOpen, onOpenChange);
@@ -49,7 +51,7 @@ export function GlassDialog({ trigger, open: controlled, defaultOpen = false, on
         <h2 id={`${id}-title`} className="lg-overlay-title">{title}</h2>
         <p id={`${id}-desc`} className="lg-overlay-description">{description}</p>
         <div className="lg-dialog-body">{children}</div>
-        <GlassIconButton className="lg-dialog-close" aria-label={closeLabel} variant="plain" onClick={() => setOpen(false)}>
+        <GlassIconButton className="lg-dialog-close" aria-label={closeLabel ?? strings.close} variant="plain" onClick={() => setOpen(false)}>
           <LibraryIcon name="close" size={18} />
         </GlassIconButton>
       </SharedSurface></div>

@@ -2,9 +2,10 @@
 import { useId, useRef, type HTMLAttributes, type ReactNode, type RefAttributes } from 'react';
 import { useGlassSurface, type GlassSurfaceOptions } from '../system/material.js';
 import { splitSurface } from '../system/props.js';
-import { useMediaQuery } from '../system/provider.js';
+import { useSizeClass } from '../system/size-class.js';
 import { cx, useControllable } from '../system/utils.js';
 import { triggerElement, usePopover, type Align, type OpenProps } from './anchor.js';
+import { useGlassStrings } from '../system/strings.js';
 
 export interface ActionSheetItem {
   key: string;
@@ -37,12 +38,14 @@ export interface GlassActionSheetProps extends Omit<HTMLAttributes<HTMLDivElemen
  */
 export function GlassActionSheet({
   trigger, open: controlled, defaultOpen = false, onOpenChange, title, message, actions,
-  cancelLabel = 'Cancel', onCancel, 'aria-label': label, align = 'center', className, style, id: providedId, ref, ...rest
+  cancelLabel, onCancel, 'aria-label': label, align = 'center', className, style, id: providedId, ref, ...rest
 }: GlassActionSheetProps) {
   const [surface, props] = splitSurface(rest);
+  const strings = useGlassStrings();
   const generated = useId(); const id = providedId ?? generated; const triggerRef = useRef<HTMLButtonElement>(null);
   const [open, setOpen] = useControllable(controlled, defaultOpen, onOpenChange);
-  const wide = useMediaQuery('(min-width: 768px)');
+  // The same size class the rest of the library switches on, not a second 768 of its own.
+  const wide = useSizeClass() === 'regular';
   const glass = useGlassSurface<HTMLDivElement>({ ...surface, material: 'regular', size: 'large' }, ref);
   usePopover(open, setOpen, glass.root, triggerRef, align, true, wide ? 'auto' : 'above');
   const close = () => { setOpen(false); triggerRef.current?.focus(); };
@@ -80,7 +83,7 @@ export function GlassActionSheet({
           </button>)}
         </div>
         <button type="button" role="menuitem" tabIndex={-1} className="lg-action-cancel"
-          onClick={() => { close(); onCancel?.(); }}>{cancelLabel}</button>
+          onClick={() => { close(); onCancel?.(); }}>{cancelLabel ?? strings.cancel}</button>
       </div>
     </div>
   </>;

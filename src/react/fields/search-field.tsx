@@ -3,6 +3,7 @@ import { useId, useRef, type InputHTMLAttributes, type RefAttributes } from 'rea
 import { cx, useControllable, useMergedRef } from '../system/utils.js';
 import { LibraryIcon } from '../system/icon.js';
 import { useGlassSurface, type GlassSurfaceOptions } from '../system/material.js';
+import { useGlassStrings } from '../system/strings.js';
 
 /** The ref, like every other attribute here, lands on the `<input>` — the thing worth holding. */
 export interface SearchFieldProps extends Omit<InputHTMLAttributes<HTMLInputElement>, 'value' | 'defaultValue' | 'onChange' | 'size' | 'type'>, RefAttributes<HTMLInputElement>, GlassSurfaceOptions {
@@ -24,10 +25,11 @@ export interface SearchFieldProps extends Omit<InputHTMLAttributes<HTMLInputElem
  * something has to replace it.
  */
 export function SearchField(
-  { value, defaultValue = '', onValueChange, onSubmitQuery, 'aria-label': label, clearLabel = 'Clear search',
+  { value, defaultValue = '', onValueChange, onSubmitQuery, 'aria-label': label, clearLabel,
     className, material, backdropTone, density, renderer, radius, refraction, size, chroma, id: providedId, ref, ...props }: SearchFieldProps,
 ) {
   // A caller's id has to win: it is how a `<label for>` or an `aria-controls` reaches the input.
+  const strings = useGlassStrings();
   const generated = useId(); const id = providedId ?? `${generated}-search`;
   const [query, setQuery] = useControllable(value, defaultValue, onValueChange);
   const [input, mergedRef] = useMergedRef<HTMLInputElement>(ref);
@@ -40,7 +42,7 @@ export function SearchField(
         <LibraryIcon name="search" size={17} className="lg-search-icon" />
         <input {...props} ref={mergedRef} id={id} type="search" aria-label={label} className="lg-search-input"
           value={query} onChange={event => setQuery(event.currentTarget.value)} />
-        {query !== '' && <button type="button" className="lg-search-clear" aria-label={clearLabel}
+        {query !== '' && <button type="button" className="lg-search-clear" aria-label={clearLabel ?? strings.clearSearch}
           onClick={() => { setQuery(''); input.current?.focus(); }}>
           <LibraryIcon name="clear" size={17} />
         </button>}

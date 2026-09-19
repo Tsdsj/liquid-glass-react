@@ -43,8 +43,39 @@ import '@ttqtt/liquid-glass-react/styles.css';
 | `transparency` | `'system' \| 'reduced' \| 'opaque'` | `'system'` | 系统偏好不会被更激进的子设置覆盖。 |
 | `motion` | `'system' \| 'reduced' \| 'none'` | `'system'` | 同上。 |
 | `contrast` | `'system' \| 'more'` | `'system'` | 增强对比度。 |
+| `strings` | `Partial<GlassStrings>` | 英文 | 组件自己提供的那些文案，见下。 |
 
 `useGlassPolicy()` 返回解析后的策略，含 `resolvedTheme`、`reduceMotion`、`reduceTransparency`、`increaseContrast`、`forcedColors`。
+
+### 文案：`GlassStrings` / `useGlassStrings()` / `defaultStrings`
+
+组件自己提供、调用方通常不会传的那几个标签——对话框右上角的关闭、步进器的两个箭头、搜索框的清除、面板拖动手柄。它们也正是**只有读屏用户才会听到**的标签，所以一直是英文也不会在截图里露馅。
+
+| 键 | 默认 | 出现在 |
+| --- | --- | --- |
+| `close` | `'Close'` | `GlassDialog` |
+| `cancel` | `'Cancel'` | `GlassActionSheet` |
+| `decrease` / `increase` | `'Decrease'` / `'Increase'` | `GlassStepper` |
+| `clearSearch` | `'Clear search'` | `SearchField` |
+| `sheetHeight` | `` title => `${title} height` `` | `GlassSheet` 的拖动手柄 |
+
+```tsx
+<GlassProvider strings={{ close: '关闭', cancel: '取消' }}>
+```
+
+三级优先：组件上的具体属性（`closeLabel` 等）> `strings` 表 > 内置英文。表可以只写一部分，嵌套的 Provider 会合并。
+
+库**只内置英文**，也不从 `navigator` 或文档猜语言——判断应用说什么语言是应用的事，`locale="zh"` 会把翻译的责任揽到库里，而库跟不上。
+
+> 组件在参数非法时 `throw` 的信息不走这张表：那些是给开发者看的，不是给用户看的，而且抛出的时机拿不到 context。
+
+### `useSizeClass()` / `REGULAR_MIN_WIDTH`
+
+`'compact' | 'regular'`，以 768px 为界——HIG 的 layout 页要求「按尺寸类别决定布局，永远不按设备类型或方向」。CSS 侧 `--lg-margin` 在同一个断点上自己从 16px 切到 20px，所以组件和样式表不会各说各的。
+
+服务端和首次客户端渲染返回 `'compact'`，水合后立刻落到真实值；服务端标记不能动的东西请直接用 CSS 媒体查询。
+
+> `TabBar` 的 `sidebarBreakpoint`（默认 1024）是**另一条轴**：它决定标签栏什么时候变成侧边栏，而不是尺寸类别。两者不共用一个数字是有意的——768 的竖屏平板该有紧凑布局，不该有侧边栏。
 
 ### `GlassBackdrop` / `BackdropToneProvider` / `useBackdropTone`
 声明一个区域的背景色调（`'light' | 'dark' | 'mixed'`），内部的小玻璃据此翻转明暗。**不做像素采样。**
@@ -81,6 +112,8 @@ import '@ttqtt/liquid-glass-react/styles.css';
 `List`: `variant`(`insetGrouped`/`plain`)。
 `ListSection`: `header` `footer`（标题式大小写）。
 `ListRow`: `label` `secondaryLabel` `value` `leading` `accessory` `href` `onSelect` `disclosure` `destructive` `disabled`。可导航行渲染为真实 `<a>` 或 `<button>`。
+
+`disabled` 的跳转行**不渲染 `href`**，改渲染 `<button disabled>`：带 `href` 的 `<a>` 无论 `aria-disabled` 写什么，回车和点击都照样导航——`aria-disabled` 只是播报，不是实现。
 
 ### `MaterialView`
 `thickness`(`ultraThin`/`thin`/`regular`/`thick`) `radius`。内容层的半透明手段。

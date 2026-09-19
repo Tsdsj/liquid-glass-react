@@ -8,8 +8,10 @@ test('a sheet settles at its detents and goes opaque at full height', async ({ p
   const offset = async () => parseFloat(await sheet.evaluate(node => node.style.getPropertyValue('--lg-sheet-offset')));
   expect(await offset()).toBeCloseTo(50, 1);
 
-  // The grabber is a slider: keyboard users get the same detents as a drag.
-  const grabber = page.getByRole('slider', { name: /height/ });
+  /* The grabber is a slider: keyboard users get the same detents as a drag. Found by role
+     inside the sheet rather than by its label, which is now whatever language the application
+     speaks — `strings.spec.ts` is what checks the wording. */
+  const grabber = sheet.getByRole('slider');
   await grabber.focus();
   await page.keyboard.press('ArrowUp');
   await expect(sheet).toHaveAttribute('data-full', 'true');

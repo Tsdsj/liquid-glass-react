@@ -36,6 +36,8 @@
 
 严重度按 Apple-Style-Review 的口径：Blocker 破坏材质或无障碍，Major 看起来「不 Apple」，Minor 打磨。
 
+**已完成（2026-09-20，第 1 周）**：P1（`tests/browser/rtl.spec.ts`）、P2（`disabled.spec.ts`）、P5（`strings.spec.ts` + `tests/ssr.test.mjs` 的三级优先用例）。每条都先写了会失败的用例并逐条验证过「把修复撤掉就红」：P1 3 条里红 1、P2 4 条里红 3、P5 4 条全红、`size-class.spec.ts` 2 条里红 1（另一条守的是既有行为，不是回归证据——见下）。
+
 ### 1.2 待复现的疑点（不排期，先写用例）
 
 | 疑点 | 为什么怀疑 | 怎么复现 |
@@ -156,7 +158,9 @@
 
 HIG layout：「按尺寸类别决定布局，永远不按设备类型或方向」。web 对应（`web-implementation.md`）：compact ≈ `< 768px`（边距 16），regular ≈ `≥ 768px`（边距 20）。
 
-先做一个 `useSizeClass()`（`'compact' | 'regular'`）和 `--lg-margin` 的自动切换，其余容器都靠它。`TabBar` 现在自己带一个 `sidebarBreakpoint=1024`，改为读同一来源，避免两个断点各说各的。
+先做一个 `useSizeClass()`（`'compact' | 'regular'`）和 `--lg-margin` 的自动切换，其余容器都靠它。
+
+> **落地时改了一处。** 原计划写「`TabBar` 的 `sidebarBreakpoint=1024` 改为读同一来源」。做的时候发现这两个不是一件事：768 是尺寸类别，1024 是标签栏变侧边栏——把后者改成 768，竖屏平板就会长出侧边栏，而 HIG 要的恰恰是那里用紧凑布局。所以 `useSizeClass()` 成为**尺寸类别**的唯一来源（`GlassActionSheet` 内联的 768 已改读它），`sidebarBreakpoint` 保留为另一条轴并在 `docs/api.md` 里写明两者的区别。「两个断点各说各的」这个担心是对的，答案是把它们**命名开**，不是合并。
 
 ### 3.2 容器清单
 
@@ -185,7 +189,7 @@ HIG layout：「按尺寸类别决定布局，永远不按设备类型或方向�
 
 | 周 | 打磨 | 新组件 | 布局 |
 | --- | --- | --- | --- |
-| 1 | P1 RTL 对齐、P2 disabled 行、P5 字符串表（其余组件都要用） | — | `useSizeClass` |
+| **1 ✅** | P1 RTL 对齐、P2 disabled 行、P5 字符串表 | — | `useSizeClass` |
 | 2 | P3 sheet 整块可拖、P4 popover 箭头 + 手机变 sheet | `GlassMenuButton` | L1 `Screen`，站点改用它（关闭 ScrollEdge 那条） |
 | 3 | 矩阵用例落地（1.3），跑出第一份 `reports/matrix.json`，修抓到的 | `Tooltip`、`Kbd` | L4 `NavigationStack` |
 | 4 | P6 stepper、P8 toast、P9 badge；1.2 的六个疑点逐一复现 | `DisclosureGroup`、`PageControl` | L2 `SplitView`（含 L3 `Inspector`） |
@@ -207,9 +211,11 @@ HIG layout：「按尺寸类别决定布局，永远不按设备类型或方向�
 
 ## 六、要项目所有者拍板的
 
-| 决定 | 选项 | 我的建议 |
+2026-09-20 全部按建议定下，已生效：
+
+| 决定 | 定为 | 理由 |
 | --- | --- | --- |
-| 字符串机制（P5） | `GlassProvider strings={…}` 对象 / `locale="zh"` 内置多套 | **前者**。库不该猜语言；内置 en 一套，其余由应用传。`locale` 会把翻译责任揽到库里 |
-| `SplitView` 在 compact 下 | 折叠成 `NavigationStack` / 只显示主栏并提供切换按钮 | **折叠成栈**，这是 iPhone 上系统的做法（`NavigationSplitView` 在 compact 就是这么退化的） |
-| 第二批新组件做几个 | 全部 7 个 / 前 3 个 | **前 3 个**（`Picker`、`Banner`、`ColorWell`），其余看第一批做完后的余量 |
-| `Grid` 要不要虚拟化 | 要 / 不要 | **不要**。虚拟化是另一期的事，且和「内容层不做玻璃」无关 |
+| 字符串机制（P5） | **`GlassProvider strings={…}` 对象** ✅ 已落地 | 库不该猜语言；内置 en 一套，其余由应用传。`locale` 会把翻译责任揽到库里 |
+| `SplitView` 在 compact 下 | **折叠成 `NavigationStack`** | iPhone 上系统的做法（`NavigationSplitView` 在 compact 就是这么退化的） |
+| 第二批新组件做几个 | **前 3 个**（`Picker`、`Banner`、`ColorWell`） | 8 个全上会把打磨线挤掉，其余顺延到 [`../0.4.0/plan.md`](../0.4.0/plan.md) |
+| `Grid` 要不要虚拟化 | **不要** | 虚拟化是另一期的事，且和「内容层不做玻璃」无关 |

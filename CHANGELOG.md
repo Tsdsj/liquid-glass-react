@@ -6,6 +6,9 @@
 
 ### 修复
 
+- **RTL 下所有浮层都对错了边**。`align` 写的是 `start` / `end`（前缘 / 后缘），锚定代码算的却是 `rect.right`，不看方向——实测 `dir="rtl"` 下触发器左缘 556，菜单左缘 432：对齐的是物理右边，而那在 RTL 里是**前**缘。菜单、气泡、操作表全中。现在按触发器自己的 `direction` 解析，所以 LTR 页面里的一小块 RTL 子树也对。
+- **`disabled` 的跳转行照样能跳走**。`ListRow` 在 `disabled` 时仍渲染 `<a href>`，只多加一个 `aria-disabled`——回车、点击、Tab 停靠全都不受影响。`aria-disabled` 是播报，不是实现。现在改渲染 `<button disabled>`。
+
 - **37 个会渲染元素的组件里，25 个拿不到 `ref`**，其中大半还只收 `className`。这是在真实项目里第一天就会撞上的墙：量不了尺寸、`ScrollEdge.targetRef` 指不到自己的列表、第三方库锚不上去、给 `<label for>` 设不了 `id`。现在**每个组件都交还它渲染的那个元素，并透传 HTML 属性**；`TextField` 和 `SearchField` 的 `ref` 落在 `<input>` 上，因为那才是你要聚焦、要读值的东西。四个纯 context 的 Provider 没有 `ref`，这是写下来的决定，不是漏掉的。
 - **`TabBar` 的 `ref` 落错了元素**：它混在被当成玻璃选项的 rest 里，被透传到内层第一个 `GlassSurface`，而不是整条 `<nav>`。
 - **`SearchField` 收了 `id` 又用自己生成的覆盖掉**，`<label for>` 和 `aria-controls` 指不过去。
@@ -13,6 +16,8 @@
 
 ### 新增
 
+- **`GlassProvider strings={…}`**：组件自己提供的那几个标签——对话框的关闭、步进器的两个箭头、搜索框的清除、面板拖动手柄——此前写死英文。它们也正是**只有读屏用户才会听到**的，所以一直是英文也不会在截图里露馅。三级优先：组件上的具体属性 > `strings` 表 > 内置英文；表可以只写一部分。库只内置英文，不从 `navigator` 猜语言——判断应用说什么语言是应用的事。
+- **`useSizeClass()`**（`'compact' | 'regular'`，以 768px 为界）与 `REGULAR_MIN_WIDTH`。HIG 要求按尺寸类别决定布局，而不是按设备类型或方向。`--lg-margin` 现在在同一个断点上自己从 16px 切到 20px（此前它永远是 16px，调用方得自己写媒体查询换成 `--lg-margin-regular`），`GlassActionSheet` 内联的那个 768 也改读同一处。
 - **`placement`**（`'below' | 'above' | 'auto'`）暴露到 `GlassPopover` 与 `GlassMenu`。锚定代码一直支持，只是没有接口能用上。
 - **三条开发模式告警**，都是此前靠人眼在审查里查的规则：同一表面上两个 `glassProminent`、小玻璃套小玻璃、`material="clear"` 用在没声明色调的地方（会静默降级成 `regular`，调用方不知道）。每个节点每条规则只响一次，生产构建里完全不存在。
 

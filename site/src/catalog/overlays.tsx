@@ -240,7 +240,7 @@ export const overlayDocs: ComponentDoc[] = [
                 { key: 'share', label: '分享', onSelect: () => setResult('分享') },
                 { key: 'duplicate', label: '创建副本', onSelect: () => setResult('创建副本') },
               ]}
-              cancelLabel="取消" onCancel={() => setResult('已取消')} />
+              onCancel={() => setResult('已取消')} />
             <Text variant="caption1" tone="secondary" role="status">{result}</Text>
           </div>;
         },
@@ -282,7 +282,7 @@ export const overlayDocs: ComponentDoc[] = [
         render: function DialogForm() {
           const [name, setName] = useState('我的灵感空间');
           return <GlassDialog title="创建一个工作区" description="这个示例不会提交到任何地方。"
-            trigger={<GlassButton>打开对话框</GlassButton>} closeLabel="关闭对话框">
+            trigger={<GlassButton>打开对话框</GlassButton>}>
             <div style={{ display: 'grid', gap: 16 }}>
               <TextField label="工作区名称" value={name} onChange={event => setName(event.target.value)} />
               <Text variant="footnote" tone="secondary">当前名称：{name || '（空）'}</Text>
@@ -301,7 +301,7 @@ export const overlayDocs: ComponentDoc[] = [
     props: [
       { name: 'title / description', type: 'string', required: true, description: '标题和一句说明，都会念给读屏用户。' },
       { name: 'dismissOnBackdrop', type: 'boolean', default: 'true', description: '点击外面关闭。按下和松开都在外面才算数，拖选文字不会误关。' },
-      { name: 'closeLabel', type: 'string', default: "'Close'", description: '右上角关闭按钮的名字。' },
+      { name: 'closeLabel', type: 'string', description: '右上角关闭按钮的名字。不传就用 GlassProvider 的 strings 表，再没有就是英文 “Close”。' },
     ],
     notes: [
       '焦点被限制在对话框内，背后的内容对读屏是隐藏的，这些都由浏览器保证。',

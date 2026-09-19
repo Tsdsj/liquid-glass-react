@@ -82,7 +82,7 @@ export const fieldDocs: ComponentDoc[] = [
           const [submitted, setSubmitted] = useState('');
           return <div style={{ display: 'grid', gap: 12, width: 320 }}>
             <SearchField aria-label="搜索组件" placeholder="搜索组件…" value={query}
-              onValueChange={setQuery} onSubmitQuery={setSubmitted} clearLabel="清除搜索" />
+              onValueChange={setQuery} onSubmitQuery={setSubmitted} />
             <Text variant="caption1" tone="secondary">
               {submitted ? `已提交：${submitted}` : '输入点什么试试'}
             </Text>
@@ -101,7 +101,7 @@ export const fieldDocs: ComponentDoc[] = [
       { name: 'value / defaultValue', type: 'string', description: '当前的搜索词。' },
       { name: 'onValueChange', type: '(value: string) => void', description: '每次输入变化。' },
       { name: 'onSubmitQuery', type: '(value: string) => void', description: '按回车时触发。' },
-      { name: 'clearLabel', type: 'string', default: "'Clear search'", description: '清除按钮的名字。' },
+      { name: 'clearLabel', type: 'string', description: '清除按钮的名字。不传就用 GlassProvider 的 strings 表，再没有就是英文 “Clear search”。' },
       { name: 'aria-label', type: 'string', required: true, description: '这个搜索框在搜什么。' },
     ],
     notes: [

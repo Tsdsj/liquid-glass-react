@@ -76,8 +76,10 @@
   --lg-space-5: 20px; --lg-space-6: 24px; --lg-space-8: 32px; --lg-space-10: 40px;
 
   /* Layout metrics */
-  --lg-margin: 16px;            /* compact width */
-  --lg-margin-regular: 20px;    /* regular width */
+  /* The layout margin for the current size class. It switches itself at the breakpoint below,
+     so a caller writes var(--lg-margin) once rather than restating the media query. */
+  --lg-margin: 16px;            /* compact */
+  --lg-margin-regular: 20px;    /* regular, kept for anything that wants the value explicitly */
   --lg-hit-min: 44px;           /* minimum hit region, 44x44pt */
   --lg-readable: 672px;         /* readable content guide */
   --lg-sidebar-width: 260px;
@@ -290,6 +292,17 @@
   --lg-shadow-lift: var(--lg-glass-shadow-lift);
   --lg-tint-color: 30 30 32;
   --lg-tint-opacity: .78;
+}
+
+/* --------------------------------------------------------------------------
+   3.5 Size class
+   "Decide a layout from the size class, never from the device type or the
+   orientation" (HIG, layout). On the web that is a width: compact below 768,
+   regular at or above it. The React equivalent is useSizeClass(); both read
+   the same breakpoint so a component and its stylesheet cannot disagree.
+   -------------------------------------------------------------------------- */
+@media (min-width: 768px) {
+  :root { --lg-margin: var(--lg-margin-regular); }
 }
 
 /* --------------------------------------------------------------------------

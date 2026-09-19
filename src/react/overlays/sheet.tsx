@@ -7,6 +7,7 @@ import { useGlassPolicy } from '../system/provider.js';
 import { SharedSurface } from '../system/surface.js';
 import { cx, useControllable } from '../system/utils.js';
 import { lockScroll, triggerElement, type OpenProps } from './anchor.js';
+import { useGlassStrings } from '../system/strings.js';
 
 export type SheetDetent = 'medium' | 'large';
 /** Fraction of the viewport each detent occupies. `large` stops just short of the top. */
@@ -41,6 +42,7 @@ export function GlassSheet({
   detents = ['medium', 'large'], defaultDetent, onDetentChange, grabber = true, className, style, id: providedId, ref, ...rest
 }: GlassSheetProps) {
   const [surface, props] = splitSurface(rest);
+  const strings = useGlassStrings();
   if (detents.length === 0) throw new Error('GlassSheet requires at least one detent');
   const generated = useId(); const id = providedId ?? generated; const triggerRef = useRef<HTMLButtonElement>(null); const restoreRef = useRef<HTMLElement | null>(null);
   const [open, setOpen] = useControllable(controlled, defaultOpen, onOpenChange);
@@ -133,7 +135,7 @@ export function GlassSheet({
       <div className="lg-content">
         <SharedSurface value={true}>
           {grabber && detents.length > 1 && <div className="lg-sheet-grabber" role="slider" tabIndex={0}
-            aria-label={`${title} height`} aria-valuetext={detent}
+            aria-label={strings.sheetHeight(title)} aria-valuetext={detent}
             aria-valuenow={fractions.indexOf(DETENT_FRACTION[detent])} aria-valuemin={0} aria-valuemax={detents.length - 1}
             onKeyDown={event => {
               const index = detents.indexOf(detent);

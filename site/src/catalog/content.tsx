@@ -174,17 +174,19 @@ export const contentDocs: ComponentDoc[] = [
 />`,
       },
       {
-        id: 'list-destructive', title: '危险操作与不可用', description: '危险操作标红，并且要配确认或撤销。不可用的行保留在原位，不要直接消失。',
-        height: 210,
-        render: () => <List style={{ width: 320 }}>
+        id: 'list-destructive', title: '危险操作与不可用', description: '危险操作标红，并且要配确认或撤销。不可用的行保留在原位，不要直接消失。不可用的跳转行不再是链接，键盘和鼠标都走不进去。',
+        height: 258,
+        render: () => <List style={{ width: 320 }} id="list-disabled-demo">
           <ListSection>
             <ListRow label="导出数据" onSelect={() => {}} />
             <ListRow label="暂不可用" secondaryLabel="需要先连接网络" disabled onSelect={() => {}} />
+            <ListRow label="订阅设置" secondaryLabel="登录后可用" href="#/components/card" disabled />
             <ListRow label="删除账户" destructive onSelect={() => {}} disclosure={false} />
           </ListSection>
         </List>,
         code: `<ListRow label="删除账户" destructive onSelect={confirmDelete} disclosure={false} />
-<ListRow label="暂不可用" secondaryLabel="需要先连接网络" disabled />`,
+<ListRow label="暂不可用" secondaryLabel="需要先连接网络" disabled />
+<ListRow label="订阅设置" href="/billing" disabled />`,
       },
     ],
     props: [
@@ -197,7 +199,7 @@ export const contentDocs: ComponentDoc[] = [
       { name: 'accessory', type: 'ReactNode', description: '行尾的控件。出现时自动隐藏箭头。' },
       { name: 'href / onSelect', type: 'string | (event) => void', description: '任一存在，这一行就是可点的。' },
       { name: 'destructive', type: 'boolean', default: 'false', description: '标红。危险操作还需要确认或撤销。' },
-      { name: 'disabled', type: 'boolean', default: 'false', description: '不可用。' },
+      { name: 'disabled', type: 'boolean', default: 'false', description: '不可用。带 href 的行会改成不可点的按钮，而不是保留链接只加一个 aria-disabled——那样回车和点击还是会跳走。' },
     ],
     notes: [
       '可点的行是真正的链接或按钮，键盘能走到、读屏会报出类型，而不是一个绑了点击事件的方块。',

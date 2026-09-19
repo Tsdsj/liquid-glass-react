@@ -274,21 +274,19 @@ export const controlDocs: ComponentDoc[] = [
         render: function StepperBasic() {
           const [count, setCount] = useState(2);
           return <div style={{ display: 'grid', gap: 12, justifyItems: 'center' }}>
-            <GlassStepper aria-label="份数" value={count} onValueChange={setCount} min={1} max={9}
-              decrementLabel="减少份数" incrementLabel="增加份数" />
+            <GlassStepper aria-label="份数" value={count} onValueChange={setCount} min={1} max={9} />
             <Text variant="caption1" tone="secondary">范围 1–9，当前 {count}</Text>
           </div>;
         },
         code: `<GlassStepper aria-label="份数"
-  value={count} onValueChange={setCount} min={1} max={9}
-  decrementLabel="减少份数" incrementLabel="增加份数" />`,
+  value={count} onValueChange={setCount} min={1} max={9} />`,
       },
     ],
     props: [
       { name: 'value / defaultValue', type: 'number', default: '0', description: '当前值。' },
       { name: 'min / max / step', type: 'number', default: '-∞ / ∞ / 1', description: '范围与步长。' },
       { name: 'showValue', type: 'boolean', default: 'true', description: '值已经在旁边显示时可以关掉。' },
-      { name: 'decrementLabel / incrementLabel', type: 'string', description: '两个按钮各自的名字。' },
+      { name: 'decrementLabel / incrementLabel', type: 'string', description: '两个按钮各自的名字。不传就用 GlassProvider 的 strings 表。' },
     ],
     notes: ['是两个有名字的按钮，不是一个需要键盘调节的数字框。', '两个按钮各自都满足 44×44 的点击范围。'],
     related: ['slider', 'list'],

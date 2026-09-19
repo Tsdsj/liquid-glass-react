@@ -1,6 +1,7 @@
 'use client';
 /* System — policy, the material itself, and the primitives every layer shares. */
 export * from './system/provider.js';
+export { useSizeClass, REGULAR_MIN_WIDTH, type SizeClass } from './system/size-class.js';
 export * from './system/backdrop.js';
 export * from './system/material.js';
 export * from './system/surface.js';

@@ -12,6 +12,20 @@ const SECTIONS = [
   { key: 'guides', path: 'guides/install', label: '指南', icon: 'shield' },
 ] as const;
 
+/**
+ * The labels the components supply for themselves. The library ships English and does not
+ * guess; this site is written in Chinese, so it says so. Defined once outside the component
+ * so its identity is stable and the provider is not a new value on every render.
+ */
+const STRINGS = {
+  close: '关闭',
+  cancel: '取消',
+  decrease: '减少',
+  increase: '增加',
+  clearSearch: '清除搜索内容',
+  sheetHeight: (title: string) => `${title}的高度`,
+};
+
 const STORAGE = { theme: 'lg-docs-theme', textSize: 'lg-docs-text-size' };
 const readStored = (key: string, fallback: string) => {
   try { return localStorage.getItem(key) ?? fallback; } catch { return fallback; }
@@ -71,7 +85,8 @@ export function Shell({ path, go, secondaryNav, children }: {
     theme={preferences.theme}
     transparency={preferences.opaque ? 'opaque' : 'system'}
     motion={preferences.reducedMotion ? 'reduced' : 'system'}
-    contrast={preferences.moreContrast ? 'more' : 'system'}>
+    contrast={preferences.moreContrast ? 'more' : 'system'}
+    strings={STRINGS}>
     <ToastProvider>
     <div className="app-shell">
       <a className="skip-link" href="#main" onClick={event => { event.preventDefault(); document.getElementById('main')?.focus(); }}>

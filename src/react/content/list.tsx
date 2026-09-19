@@ -74,10 +74,16 @@ export function ListRow({ label, secondaryLabel, value, leading, accessory, href
     {showChevron && <LibraryIcon name="chevronForward" size={17} className="lg-row-chevron" />}
   </>;
   return <li {...props} ref={ref} className={cx('lg-list-row', className)} data-interactive={interactive ? 'true' : undefined} data-disabled={disabled ? 'true' : undefined}>
-    {href
-      ? <a className="lg-row-hit" href={href} draggable={false} onClick={onSelect} aria-disabled={disabled || undefined}>{body}</a>
-      : onSelect
-        ? <button className="lg-row-hit" type="button" onClick={onSelect} disabled={disabled}>{body}</button>
+    {href && !disabled
+      ? <a className="lg-row-hit" href={href} draggable={false} onClick={onSelect}>{body}</a>
+      : onSelect || href
+        /**
+         * A disabled navigating row drops its `href` rather than keeping it and adding
+         * `aria-disabled`: an anchor with an href navigates on Enter and on click whatever
+         * ARIA says about it. `aria-disabled` describes the button; `disabled` is what makes
+         * it true, and it is what takes the row out of the tab order.
+         */
+        ? <button className="lg-row-hit" type="button" onClick={onSelect} disabled={disabled} aria-disabled={disabled || undefined}>{body}</button>
         : <div className="lg-row-hit">{body}</div>}
   </li>;
 }

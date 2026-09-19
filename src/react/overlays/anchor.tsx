@@ -59,7 +59,14 @@ export function usePopover(
       const rect = trigger.current?.getBoundingClientRect();
       if (!rect) { node.style.left = `${Math.max(16, (innerWidth - node.offsetWidth) / 2)}px`; node.style.top = '96px'; return; }
       const width = node.offsetWidth, height = node.offsetHeight;
-      const x = align === 'end' ? rect.right - width : align === 'center' ? rect.left + (rect.width - width) / 2 : rect.left;
+      /**
+       * `start` and `end` are leading and trailing, not left and right: in an RTL document the
+       * trailing edge is the left one. Resolve against the trigger's own direction rather than
+       * the document's, so a single RTL subtree inside an LTR page anchors correctly too.
+       */
+      const rtl = getComputedStyle(trigger.current!).direction === 'rtl';
+      const edge = align === 'center' ? 'center' : (align === 'end') !== rtl ? 'right' : 'left';
+      const x = edge === 'right' ? rect.right - width : edge === 'center' ? rect.left + (rect.width - width) / 2 : rect.left;
       const below = rect.bottom + 10, above = rect.top - height - 10;
       const fitsBelow = below + height <= innerHeight - 16;
       const top = placement === 'above' ? Math.max(16, above)
