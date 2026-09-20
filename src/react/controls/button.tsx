@@ -44,20 +44,61 @@ export interface GlassButtonProps extends ButtonHTMLAttributes<HTMLButtonElement
   tintContrast?: string;
 }
 
-/** Relative luminance, for the development-mode check on a caller's tint. */
-function luminance(colour: string): number | null {
-  if (typeof document === 'undefined') return null;
-  const probe = document.createElement('span');
-  probe.style.color = colour;
-  document.body.appendChild(probe);
-  const parsed = getComputedStyle(probe).color.match(/[\d.]+/g);
-  probe.remove();
-  if (!parsed || parsed.length < 3) return null;
-  const [r, g, b] = parsed.slice(0, 3).map(Number).map(channel => {
+type Rgba = [number, number, number, number];
+
+/**
+ * A resolved colour from a computed style: `rgb()`, `rgba()`, or the `color(srgb r g b / a)`
+ * form Chrome hands back for anything that went through `color-mix()` — which is every
+ * accent-derived value in this stylesheet. Its channels run 0–1, not 0–255, and reading them
+ * as bytes turns any accent into near-black, which measures beautifully against a light page.
+ */
+function parseColour(value: string): Rgba | null {
+  const parts = value.match(/[\d.]+/g);
+  if (!parts || parts.length < 3) return null;
+  const scale = value.startsWith('color(') ? 255 : 1;
+  return [Number(parts[0]) * scale, Number(parts[1]) * scale, Number(parts[2]) * scale,
+    parts.length > 3 ? Number(parts[3]) : 1];
+}
+
+/** `over` composited onto `under`, both straight sRGB. */
+const composite = (over: Rgba, under: Rgba): Rgba =>
+  [0, 1, 2].map(i => over[i] * over[3] + under[i] * (1 - over[3])).concat(1) as Rgba;
+
+/** Relative luminance, per WCAG. */
+function luminance([r, g, b]: Rgba): number {
+  const [lr, lg, lb] = [r, g, b].map(channel => {
     const value = channel / 255;
     return value <= 0.03928 ? value / 12.92 : ((value + 0.055) / 1.055) ** 2.4;
   });
-  return 0.2126 * r + 0.7152 * g + 0.0722 * b;
+  return 0.2126 * lr + 0.7152 * lg + 0.0722 * lb;
+}
+
+/**
+ * What is painted behind this button's label, flattened.
+ *
+ * The layers, front to back: the tint layer inside the button's own decoration — which is where
+ * a glass button's accent lives, rather than in its `background-color` — then the button, then
+ * every ancestor until something opaque. A translucent wash over a white page and the same wash
+ * over a dark one are different colours, and the whole question is what the reader sees.
+ */
+function paintedBehind(node: HTMLElement): Rgba {
+  const layers: Rgba[] = [];
+  const tint = node.querySelector<HTMLElement>(':scope > .lg-decoration .lg-tint');
+  if (tint) {
+    const style = getComputedStyle(tint);
+    const colour = parseColour(style.backgroundColor);
+    // `opacity` on the layer multiplies the alpha of the fill it carries.
+    if (colour) layers.push([colour[0], colour[1], colour[2], colour[3] * Number(style.opacity || 1)]);
+  }
+  for (let element: HTMLElement | null = node; element; element = element.parentElement) {
+    const colour = parseColour(getComputedStyle(element).backgroundColor);
+    if (colour && colour[3] > 0) {
+      layers.push(colour);
+      if (colour[3] === 1) break;
+    }
+  }
+  // A page that never declares an opaque background is white, the same as the browser paints it.
+  return layers.reduceRight<Rgba>((under, over) => composite(over, under), [255, 255, 255, 1]);
 }
 
 const GLASSY = new Set<GlassButtonVariant>(['glass', 'glassProminent']);
@@ -93,18 +134,27 @@ export function GlassButton(
    * A tint the caller chose, checked rather than trusted. The library cannot pick a readable
    * label colour — that is why there is no global `accent` prop — but it can measure the pair
    * the caller did pick and say so when the result is unreadable.
+   *
+   * Measured off the rendered button, not off the two props. The first version of this compared
+   * `tint` with `tintContrast ?? '#fff'`, which is the pair a *prominent* button paints: white
+   * on a solid accent. On `tinted`, `plain` and `destructive` the label is the tint itself over
+   * a wash of it, so the check was measuring two colours that were nowhere on the screen — and
+   * cheerfully passing a button that rendered at 2.87:1. A guard that measures the wrong pair is
+   * worse than no guard: every caller downstream believes they have been looked at.
    */
   useEffect(() => {
     if (!inDevelopment() || !tint) return;
     const node = glass.root.current; if (!node) return;
-    const background = luminance(tint), foreground = luminance(tintContrast ?? '#fff');
-    if (background === null || foreground === null) return;
-    const ratio = (Math.max(background, foreground) + 0.05) / (Math.min(background, foreground) + 0.05);
+    const ink = parseColour(getComputedStyle(node).color);
+    if (!ink) return;
+    const behind = paintedBehind(node);
+    const pair = [luminance(composite(ink, behind)), luminance(behind)];
+    const ratio = (Math.max(...pair) + 0.05) / (Math.min(...pair) + 0.05);
     if (ratio < 4.5) {
       warnOnce(node, 'tint-contrast',
-        `tint ${tint} against ${tintContrast ?? '#fff'} measures ${ratio.toFixed(2)}:1, under the 4.5:1 floor. Pass tintContrast, or darken the tint.`);
+        `tint ${tint} renders as rgb(${ink.slice(0, 3).map(Math.round).join(' ')}) on rgb(${behind.slice(0, 3).map(Math.round).join(' ')}) — ${ratio.toFixed(2)}:1, under the 4.5:1 floor. Pass tintContrast, or darken the tint.`);
     }
-  }, [glass.root, tint, tintContrast]);
+  }, [glass.root, tint, tintContrast, variant]);
 
   const tinted = tint
     ? { '--lg-accent': tint, '--lg-accent-contrast': tintContrast ?? '#fff' } as CSSProperties

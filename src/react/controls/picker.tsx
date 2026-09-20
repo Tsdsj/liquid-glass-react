@@ -24,6 +24,17 @@ export interface PickerOption {
  */
 const INLINE_MAX = 4;
 
+/**
+ * Below this many options the control stays inline whatever the width.
+ *
+ * A menu of two costs a press to reveal less than the two segments it replaced — the same
+ * argument `GlassMenuButton` makes in development mode, and it was this component that kept
+ * tripping it: eight documentation pages printed that warning on a phone, because a two-option
+ * picker in a compact window collapsed into exactly the menu the rule is about. Two segments
+ * fit in any layout that can hold a pop-up button naming the longer of the two labels.
+ */
+const ALWAYS_INLINE = 2;
+
 export interface PickerProps extends Omit<HTMLAttributes<HTMLDivElement>, 'defaultValue' | 'onChange'>,
   RefAttributes<HTMLDivElement> {
   /** What is being chosen. Shown beside the control, and is also the control's spoken name. */
@@ -53,8 +64,9 @@ export interface PickerProps extends Omit<HTMLAttributes<HTMLDivElement>, 'defau
  * layout has, and hard-coding either at every call site is how an interface ends up with a
  * five-segment control squeezed onto a phone.
  *
- * - Up to four options in a regular-width layout: an inline segmented control, because they
- *   are all visible at once and switching costs one press.
+ * - Two options: an inline segmented control at any width.
+ * - Up to four options in a regular-width layout: the same, because they are all visible at
+ *   once and switching costs one press.
  * - More options, or a compact layout: a pop-up button, whose label shows the current choice.
  *
  * Both forms are single-selection and report the same thing, so the reader's mental model does
@@ -67,7 +79,8 @@ export function Picker({
 }: PickerProps) {
   const sizeClass = useSizeClass();
   const inline = presentation === 'inline'
-    || (presentation === 'automatic' && options.length <= INLINE_MAX && sizeClass === 'regular');
+    || (presentation === 'automatic'
+      && (options.length <= ALWAYS_INLINE || (options.length <= INLINE_MAX && sizeClass === 'regular')));
 
   return <div {...props} ref={ref} className={cx('lg-picker', className)}
     data-presentation={inline ? 'inline' : 'menu'}>

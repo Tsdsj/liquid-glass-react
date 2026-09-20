@@ -158,6 +158,6 @@ test.describe('at a compact width', () => {
     await split.scrollIntoViewIfNeeded();
     await split.locator('.lg-stack-back').click();
     // Back at the root, the title is the view's.
-    await expect(split.locator('.lg-largetitle :is(h1,h2,h3)')).toHaveText('邮件');
+    await expect(split.locator('.lg-largetitle :is(h1,h2,h3,h4,h5,h6)')).toHaveText('邮件');
   });
 });

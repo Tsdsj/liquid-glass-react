@@ -38,6 +38,51 @@ test('forced colors and OS reduced motion override the effects', async ({ page }
   await expect(page.locator('.lg-root').first()).toHaveAttribute('data-reduced-motion', 'true');
 });
 
+/* =========================================================================================
+ * An application's own preferences screen has to reach the stylesheet, not just the material.
+ *
+ * `GlassProvider`'s `contrast` and `motion` are public API, and until this round they went into
+ * a React context and stopped there: the glass honoured them, because the material asks the
+ * policy in JavaScript, and everything decided in CSS — the palette, a page transition, the tab
+ * bar — kept the media query as its only source. Measured with the site's own switches, which
+ * is the same path any application wiring its settings to these props takes.
+ * ======================================================================================= */
+
+const openPreferences = async (page: import('@playwright/test').Page) => {
+  await page.getByRole('button', { name: '打开显示偏好' }).click();
+};
+
+test('the increase-contrast switch swaps the palette, not just three label alphas', async ({ page }) => {
+  await page.goto('/#/components/badge');
+  const blue = () => page.evaluate(() =>
+    getComputedStyle(document.documentElement).getPropertyValue('--lg-blue').trim());
+
+  const before = await blue();
+  await openPreferences(page);
+  await page.getByRole('switch', { name: '增强对比度' }).check();
+  await page.keyboard.press('Escape');
+  const after = await blue();
+
+  /* The HIG lets a default sit under 4.5:1 *provided* Increase Contrast rescues it. The
+     opt-in path used to leave every system colour exactly where it was, which turns a
+     considered choice — white on the notification red — into a failure with no way out. */
+  expect(after, `--lg-blue is ${after} either way`).not.toBe(before);
+  await expect(page.locator('html')).toHaveAttribute('data-lg-contrast', 'more');
+});
+
+test('the reduced-motion switch reaches the animations that live only in CSS', async ({ page }) => {
+  await page.goto('/#/components/button');
+  await openPreferences(page);
+  await page.getByRole('switch', { name: '减少动效' }).check();
+  await page.keyboard.press('Escape');
+
+  await expect(page.locator('html')).toHaveAttribute('data-lg-motion', 'reduced');
+  // The page transition is the site's own rule, outside any `.lg-root`, and it kept running.
+  const entering = await page.locator('.page-enter').first()
+    .evaluate(node => getComputedStyle(node).animationName);
+  expect(entering, 'the page transition still plays').toBe('none');
+});
+
 test('the layout reflows at the largest accessibility text size', async ({ page }) => {
   await page.goto('/#/components/list');
   await page.evaluate(() => { document.documentElement.dataset.lgTextSize = 'ax5'; });

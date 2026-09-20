@@ -61,7 +61,7 @@ export interface NavigationStackProps extends Omit<HTMLAttributes<HTMLDivElement
    */
   backLabel?: 'title' | 'chevron';
   /** Heading level for the root screen's large title. See `NavigationBar.headingLevel`. */
-  headingLevel?: 1 | 2 | 3;
+  headingLevel?: 1 | 2 | 3 | 4 | 5 | 6;
 }
 
 /**

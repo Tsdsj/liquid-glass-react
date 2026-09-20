@@ -4,6 +4,104 @@
 
 ---
 
+## 上一轮审计的处理结果（2026-09-20）
+
+下面那 17 条**全部修了**，每条都有一个会因为撤掉修复而变红的东西守住它：可测的进浏览器用例，结构性的进 `scripts/check-props.mjs`（构建闸门），两份必须一致的调色板进 `tests/core/stylesheet.test.mjs`。
+
+自动化：71 项核心测试、7 项 SSR、299 项 Playwright（真实 Google Chrome，+13）、13 项开发模式（+2）、18 项跨引擎、440 格矩阵 0 条发现。
+
+| # | 处理 | 守住它的 |
+| --- | --- | --- |
+| 1 | `tinted` 改用**墨色**而不是强调色本身：新增 `--lg-ink-toward` / `--lg-ink-amount`，在用到的元素上混色 | `appearance.spec.ts`「a tinted button's label clears AA against its own wash」，撤掉后浅色测得 2.59:1 |
+| 2 | 护栏改为量**渲染后的那一对**：`getComputedStyle().color`，对上色调层 + 背景 + 每层祖先合成到不透明 | `warn-probe` 新增 `tint-contrast` 区块，`warnings.spec.ts` 守住它响且只响一次 |
+| 3 | `tertiary` 的两处演示改成照它的用途写（占位符 / 停用态），不再拿它当正文 | 排版页文案；11px 那一档改用 secondary |
+| 4 | 属性路径换上**整份**高对比调色板，与媒体查询逐字一致 | `stylesheet.test.mjs` 比对两个块的声明集合；`a11y.spec.ts` 断言开关真的换掉了 `--lg-blue` |
+| 5 | `GlassProvider` 把显式覆盖写到 `<html>`：`data-lg-motion` / `data-lg-transparency` / `data-lg-contrast` | `a11y.spec.ts` 断言属性上了 `<html>`，且 `.page-enter` 的动画名变成 `none` |
+| 6 | `.doc-related-link` 补 `overflow-wrap: anywhere` + `min-width: 0` | `docs.spec.ts` 在 390px/AX3 下跑三页，撤掉后横向溢出 35px |
+| 7 | `.lg-segment` / `.lg-tab` 补命中区，**只撑竖直方向** | `touch.spec.ts` 以控件中心 ±21px 做命中测试 |
+| 8 | 十一个浮层页各给一个示例 `backdrop: 'both'` | `check-props.mjs` 拒绝构建「浮层组里没有一个示例能在照片上看」的页；`docs.spec.ts` 抽查开关真的在 |
+| 9 | 偏好面板三行改成 `GlassSwitch` 自己的可见标签槽；`Form` 页那条理由改写 | `docs.spec.ts`「no label on this site contains another label」 |
+| 10 | 随第 4 条关闭：高对比下白字压通知红 **4.57:1**、压强调蓝 **4.58:1** | 同第 4 条 |
+| 11 | 修的是 `Picker` 不是面板：**两个选项在任何宽度下都并排** | `warnings.spec.ts` 在 390px 下跑四页，要求一条告警都没有 |
+| 12 | 两条死链改对，并把「related 指向不存在的页」变成构建失败 | `check-props.mjs` |
+| 13 | `NavigationBar` / `NavigationStack` 层级放开到 6，`ListSection` 新增 `headingLevel`；示例统一降到 4 | `docs.spec.ts`「a heading inside an example sits below the example's own title」 |
+| 14 | 小号输入框的内边距让步，36 成为真的 36 | `docs.spec.ts` 比对占位符里写的数和渲染高度 |
+| 15 | 页码点的说明改成只承诺竖直方向 | 文案 |
+| 16 | 文字大小加到 **AX5**（布局规则的注释量的就是这一档） | `docs.spec.ts` 切到 AX5 并断言不横向溢出 |
+| 17 | `useKnobs` 真的有 `reset`，动过之后出现「恢复示例原样」 | `docs.spec.ts` 改一个旋钮、复位、断言回到初值 |
+
+**两条值得单独记：**
+
+第 2 条改完当场逮到站点自己的绿色确认按钮 `tint="#1a7f37"`：玻璃的色调层以 0.92 不透明度压在浅色页面上，绿色被提亮成 `rgb(43 136 70)`，白字实测 **4.45:1**。旧算法给同一个按钮 5.6:1 并放行。**一条量错对子的护栏比没有护栏更坏**，这就是它的样子——不是理论上的。
+
+第 4 条顺带挖出一个从来不可能匹配的选择器：徽标的高对比边框写的是 `.lg-root[data-contrast="more"]`，而材质盖的章是 `data-lg-contrast`。这条规则从写下那天起就没生效过，而它旁边的媒体查询版本一直是对的——所以没有人看得出来。
+
+还有一处是自己的用例先错了：分段/标签的命中测试第一版接受「命中点落在包含该控件的轨道上」，于是**在完全没有命中区的情况下也是绿的**。改成必须命中控件本身或它内部，撤掉修复才真的变红。按下轨道而不是按下分段，选中的是什么都没有。
+
+---
+
+## 0.0.2 文档站演示审计：把页面上的每句断言拿去量（2026-09-20）
+
+这一轮只看一件事：**文档站上那 40 个组件页、约 120 个示例，自己说到的有没有做到。**
+
+上两轮已经把「有没有溢出、够不够得着、有没有名字」交给了 440 格矩阵，把「好不好看」交给了人眼。这一轮问的是第三种问题——页面上写着「低于 4.5:1 就告警」「触摸时命中区是 44」「label 套 label 非法」，那就把这些话一条条拿到浏览器里量。**断言本身就是可测的用例，而之前没有人把它们当用例跑过。**
+
+量的方式：真实 Chrome，桌面与 375×812 两种宽度，浅色与深色，四项偏好开关各开一遍，文字大小到 AX3。对比度按祖先链逐层合成到不透明再算，不拿半透明的 `rgba` 当实色——第一遍就是这么算错的，`variant="gray"` 被误报成 4.38:1。
+
+### Blocker
+
+| # | 位置 | 违反的规则 | 量到的 |
+| --- | --- | --- | --- |
+| 1 | `GlassButton variant="tinted"`（`button-variants`、`button-tint`） | HIG accessibility：17pt 以下正文 **4.5:1** | 标签是强调色压在**同一个强调色的 16% 淡底**上：浅色 **2.75:1**，深色 **2.55:1**；`tint="#8250df"` 的「升级」**2.87:1**。而这条示例自己的说明写着「低于 4.5:1 就告警」——告警没响 |
+| 2 | 同上，`button.tsx:98-106` 的开发期护栏 | 护栏量错了对子 | 它比的是 `tint` 对 `tintContrast ?? '#fff'`。`tinted` 的标签**不是白的**，是强调色本身。于是护栏量了一对屏幕上不存在的颜色（`#8250df` 对白 ≈ 5.6:1）并放行，真正渲染的那一对 2.87:1 从来没被看过一眼 |
+| 3 | `Text tone="tertiary"`（`text-scale` 的 caption2、`text-tone` 的「更次要」） | 同上 | 浅色 **2.37:1**，深色 **2.25:1**；其中一处是 11px。教排版的那一页，自己示范了一档读不出来的颜色 |
+
+第 1、2 条是同一件事的两半，但要分开记：光把颜色调深是治不住的，因为**护栏还会继续放行下一个人**。`components.css:486` 里 `background: color-mix(in srgb, var(--lg-accent) 16%, transparent); color: var(--lg-accent)` 决定了这个变体的对子永远是「强调色 vs 强调色的淡底」，护栏就应该量这一对；现在它量的是 `glassProminent` 的对子，只是被写在了所有变体共用的那段 effect 里。
+
+第 3 条挑明一点：Apple 的 `tertiaryLabel` 本来就是给占位和停用态用的，低对比是设计意图。问题不在这个 token 存在，在于**演示把它当成一段要读的正文**，还挑了最小的字号去示范。
+
+### Major
+
+| # | 位置 | 违反的规则 | 量到的 |
+| --- | --- | --- | --- |
+| 4 | 显示偏好里的「增强对比度」 | HIG accessibility：默认达不到 4.5:1 时，**至少要在系统「增强对比度」打开后给出更高对比的配色** | 开与关，三处测点一个数都没动：`tinted` 2.75 → 2.75，`tertiary` 2.37 → 2.37，徽标 3.57 → 3.57。高对比调色板写在 `tokens.css:388` 的 `@media (prefers-contrast: more)` 里，**只挂在系统开关上**；站内这条路走 `[data-lg-contrast="more"]`（`tokens.css:409`），只换了 `label-secondary / label-tertiary / separator` 三个值，**没有换调色板**。而且这个属性由 `material.tsx:226` 写在**每个玻璃根节点**上（实测 25 个），从来没写到 `<html>`，所以内容层的文字根本取不到它 |
+| 5 | 显示偏好里的「减少动效」 | 同上，减少动效要生效 | 打开之后 `.page-enter` 仍然跑 0.36s 的位移淡入（`app.css:129`），CSS 过渡时长不变。站内这个开关只进 React context，进不了 CSS——`app.css:387` 的 `prefers-reduced-motion` 同样只认系统。面板自己写着「这些开关叠加在系统设置之上」，三个开关里只有「减少透明度」真的做到了（实测 `backdrop-filter` 归零） |
+| 6 | `.doc-related-link`（相关组件卡片） | Dynamic Type 要的是重排，不是横向滚动 | AX3 + 375px 下，`button` / `switch` / `picker` / `tabs` / `page-control` 五页整份文档横移 **50px**。凶手是「分段控件 GlassSegmentedControl」这一条——341px 的盒子里 `scrollWidth` 408。`app.css` 已经为完全相同的原因在 6 个地方加了 `overflow-wrap: anywhere`（页头、`.doc-a11y`、`.plain-list`、`.subnav-link`、`.outline-link`、`.props-type`，注释里还留着「AX5 量到 57px」），**唯独漏了这一处**。现场补一行 `overflow-wrap: anywhere` 验证过：425 → 375 |
+| 7 | `.lg-tab`（36pt）与 `.lg-segment`（常规 36pt / 紧凑 28pt） | HIG buttons：「a button needs a hit region of at least 44x44 pt」 | `(pointer: coarse)` 下两者都**没有**任何命中区补偿。库里 `.lg-button`（`components.css:459`）、`.lg-page-dot`、`.lg-split-divider`、`.lg-tab-link` 都补了，这两个漏了。`GlassButton` 的辅助功能条目还明写着「即使按钮看起来更小，可点范围也会补足到 44×44」——同一套规矩没有落到它的兄弟控件上。紧凑分段 28pt 正好卡在 HIG 表格的最低值上，而文档站自己的显示偏好面板用的就是紧凑分段 |
+| 8 | 全部 11 个「浮层」组件 | materials：玻璃的意义在于**让底下的内容透出来** | 约 120 个示例里只有 **13 个**能在照片背景上看；40 个组件页里只有 **7 页**提供「图片背景」切换。浮层组 0 页——气泡面板、菜单、底部面板、警告框、操作表、对话框、轻提示、横幅，一个都没有。这些恰恰是「浮在内容之上」这句话唯一说得通的地方。`ComponentPage` 里 `hasMediaExample` 为假时连切换开关都不渲染，读者想试也试不了 |
+| 9 | `preferences.tsx:40-45` | 站点自己的 `Form` 页（`content.tsx:576`）写着：「label 套 label 非法」 | `.pref-row` 是 `<label>`，里面包着 `GlassSwitch`，而 `GlassSwitch` 自己就渲染 `<label htmlFor>`（`switch.tsx:53`）。三处，逐字踩中自己禁止的写法。顺带：那句话给的理由「浏览器的答复是外面那个直接失效」在 Chrome 里是**反的**——实测点外层文字，开关照样从 false 翻到 true。结论对，理由不对，而一个以「每句话都能验证」立身的站点，错的理由比错的写法更贵 |
+| 10 | `GlassBadge` | 同 4.5:1 | 12px 白字压在语气色上：通知 **3.57:1**，强调 **3.52:1**，浅深两色一致，「增强对比度」也抬不动。Apple 自己的红底白字徽标确实在这个量级，但这一页的说明正好在讲「颜色不能是唯一信息」 |
+
+第 4、5 条要合起来看，因为它们是同一个结构问题：**站内的三个无障碍开关只走到了 React 这一层，没走到 CSS 这一层。**「减少透明度」之所以是对的，纯粹因为玻璃材质本来就在 JS 里读 policy；另外两个要改的东西在 CSS 里，就断了。这不只是文档站的毛病——`GlassProvider` 的 `contrast="more"` 和 `motion="reduced"` 是**公开 API**，任何一个把自己的应用内设置接到这两个属性上的人，拿到的都是同样的空转。最短的修法是把三个状态和 `theme`、`textSize` 一样写到 `<html>` 上，让 CSS 里每一处 `@media` 都配一条属性选择器。
+
+第 8 条是这一轮里最花钱、也最值得的一条。它不是 bug，是**取舍**：把玻璃只放在纯色台面上，每张截图都干净，代价是这个库最想证明的那件事——玻璃会跟着背后的内容变——在文档站上几乎无处可看。至少让浮层组也能切到图片背景，成本只是给每个示例加一个 `backdrop: 'both'`。
+
+### Minor
+
+| # | 位置 | 违反的规则 | 量到的 |
+| --- | --- | --- | --- |
+| 11 | `KnobPanel`（`knobs.tsx:37`） | 库自己的开发期告警 | 两选项的 `select` 旋钮收成 `GlassMenuButton`，控制台每页都念一遍「has 2 items…below about three items plain buttons show more for less effort」。`list`、`segmented-control`、`progress`、`picker`、`toolbar`、`navigation-stack`、`scroll-edge`、`tooltip` 八页可复现。参考实现踩自己的 lint |
+| 12 | `navigation.tsx:569`、`overlays.tsx:1150` | 交叉引用 | `related` 写了 `'nav-bar'`（实际是 `navigation-bar'`）和 `'screen'`（不存在）。两条相关链接被静默丢掉，控制台一直在报，没人收 |
+| 13 | `text`、`navigation-bar`、`navigation-stack` 三页 | 标题层级 | 示例内部的 `as="h3"` / `headingLevel={3}` 和页面自己的示例标题**同级**。`navigation-stack` 上读屏按标题跳，听到的是「设置、设置、基础用法、调整属性、收件箱…」——示例里的样例标题和页面目录混成一份，而右侧目录里只有后者。`NavigationBar` 的 `headingLevel` 只到 3，示例想让开也让不了 |
+| 14 | `field-sizes`（`fields.tsx:92`） | 演示里的数要是真的 | 小号输入框占位符写着「36px」，实测渲染 **38px**（`components.css:996` 的 `min-height: 36px` 加上边框）。标准 44、大号 52 都对得上，只有这一个差 2 |
+| 15 | `PageControl` 辅助功能条目（`navigation.tsx:632`） | 同上 | 「触摸时命中区是 44」只有**竖直方向**成立。`components.css:921` 的 `::after` 是 `width: 100%; height: 44px`，横排时实测 **18 × 44**。取舍本身合理（点挨得近，44 宽会互相压），但话说满了 |
+| 16 | `preferences.tsx:36` | Dynamic Type 要测到 AX5 | 文字大小只给到 **AX3**，而 `app.css` 的注释里留着两处「Measured at AX5」。测过的档位，读者调不到 |
+| 17 | `knobs.tsx:53` | 注释与实现 | 「Reset puts the page back to the example as it is written」——`useKnobs` 只返回 `values` 和 `set`，没有 reset，界面上也没有 |
+
+### 先修哪一条
+
+**按顺序：2 → 4 → 6 → 7 → 8。**
+
+先修护栏（第 2 条）而不是先修颜色（第 1 条），因为护栏是这个库真正的卖点——它敢在文档里承诺「开发模式会量这一对的对比度」。一条量错对子的护栏比没有护栏更坏：它让每个下游调用方都以为自己被看过了。改完护栏，第 1 条会自己浮出来，连带把别人 app 里的同类问题也一起浮出来。
+
+第 4 条紧随其后，因为 HIG 在对比度这件事上留的台阶就是它：**默认可以不到 4.5:1，前提是「增强对比度」能把它救回来。** 现在这级台阶是空的，于是第 1、3、10 三条从「和 Apple 一样的取舍」变成了「没有退路的失败」。修好它，徽标和强调色按钮这类 Apple 自己也在做的选择就重新站得住了。
+
+第 6、7 条各是一行 CSS，且都是「已经想明白的规矩漏了一处」，性价比最高。
+
+第 8 条不急，但它决定这个站给人的第一印象。现在读者翻完 40 页，看到的是一套很克制、很正确、但**几乎没有背景**的组件——而背景正是 Liquid Glass 全部的意思所在。
+
+---
+
 ## 0.0.2 外观复查：人眼先看，再换算成数（2026-09-20）
 
 上面那轮的 440 格矩阵是 0 条发现，而所有者在真实屏幕上一眼看出五条。这不是矩阵失职——它问的是「有没有溢出、够不够得着、有没有名字」，**没有一条规则在问「这个界面好不好看、读不读得清」**。这一节记下来，是因为它划出了自动化的边界在哪。

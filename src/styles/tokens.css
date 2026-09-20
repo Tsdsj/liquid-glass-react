@@ -168,6 +168,22 @@
      for selection. Fork this single pair to re-brand — nothing else encodes the colour. */
   --lg-accent: var(--lg-blue);
   --lg-accent-contrast: #fff;
+  /**
+   * How to turn an accent into *ink* — a label painted in the accent, on a surface washed with
+   * that same accent. The `tinted` button is the only case so far.
+   *
+   * System blue is a background colour. As text on a light page it measures 3.4:1, and over the
+   * 16% wash the tinted variant paints under it, 2.75:1. Darkening the ink rather than
+   * deepening the wash keeps the variant quiet, which is the whole reason to reach for it
+   * instead of a prominent button.
+   *
+   * A recipe rather than a finished colour, deliberately: a custom property is substituted
+   * where it is *declared*, so a `--lg-accent-ink` computed up here would keep resolving
+   * against the root accent and a caller's `tint` — which sets `--lg-accent` on the button
+   * itself — would silently get the default blue's ink. Mixed at the point of use, it follows
+   * whatever accent that element actually has. */
+  --lg-ink-toward: #000;
+  --lg-ink-amount: 66%;
 
   /**
    * Semantic labels and separators.
@@ -301,6 +317,10 @@
 
   --lg-accent: var(--lg-blue);
   --lg-accent-contrast: #fff;
+  /* Same rule as the light appearance, in the other direction: the ink is lifted away from the
+     dark wash it sits on rather than pushed into it. */
+  --lg-ink-toward: #fff;
+  --lg-ink-amount: 80%;
 
   --lg-label: rgb(255 255 255);
   --lg-label-secondary: rgb(235 235 245 / .60);
@@ -381,9 +401,21 @@
 
 /* --------------------------------------------------------------------------
    4. Increase Contrast
+
    The HIG ships a separate palette for this setting, and the material becomes
    predominantly black/white with a contrasting border (handled in styles.css).
-   Both the OS preference and an explicit opt-in are honoured.
+
+   Two mechanisms, deliberately identical: the OS preference, and the explicit
+   `contrast="more"` on GlassProvider, which the provider publishes as
+   `data-lg-contrast="more"` on <html>. The opt-in used to swap three label
+   alphas and leave the palette alone, which made it a much weaker setting than
+   the media query it claims to layer on top of — and since Increase Contrast is
+   the step the HIG allows a below-4.5:1 default to stand on, a hollow one turns
+   every considered choice into a plain failure.
+
+   The two palettes below are duplicated because CSS cannot share declarations
+   between a media query and a selector; `tests/core/stylesheet.test.ts` asserts
+   they stay identical, which is the part that would otherwise rot.
    -------------------------------------------------------------------------- */
 @media (prefers-contrast: more) {
   :root,
@@ -406,12 +438,24 @@
     --lg-separator: rgb(255 255 255 / .60);
   }
 }
-[data-lg-contrast="more"] {
+[data-lg-contrast="more"],
+[data-lg-contrast="more"] [data-lg-theme="light"] {
+  --lg-red: rgb(233 21 45);     --lg-orange: rgb(197 83 0);   --lg-yellow: rgb(161 106 0);
+  --lg-green: rgb(0 137 50);    --lg-mint: rgb(0 133 117);    --lg-teal: rgb(0 129 152);
+  --lg-cyan: rgb(0 126 174);    --lg-blue: rgb(30 110 244);   --lg-indigo: rgb(86 74 222);
+  --lg-purple: rgb(176 47 194); --lg-pink: rgb(231 18 77);    --lg-brown: rgb(149 109 81);
   --lg-label-secondary: rgb(60 60 67 / .82);
   --lg-label-tertiary: rgb(60 60 67 / .55);
   --lg-separator: rgb(0 0 0 / .55);
 }
-[data-lg-contrast="more"][data-lg-theme="dark"] {
+/* The compound form is for <html> carrying both attributes; the descendant form is for the
+   glass roots below it, each of which stamps its own appearance. */
+[data-lg-contrast="more"][data-lg-theme="dark"],
+[data-lg-contrast="more"] [data-lg-theme="dark"] {
+  --lg-red: rgb(255 97 101);    --lg-orange: rgb(255 160 86);  --lg-yellow: rgb(254 223 67);
+  --lg-green: rgb(74 217 104);  --lg-mint: rgb(84 223 203);    --lg-teal: rgb(59 221 236);
+  --lg-cyan: rgb(109 217 255);  --lg-blue: rgb(92 184 255);    --lg-indigo: rgb(167 170 255);
+  --lg-purple: rgb(234 141 255);--lg-pink: rgb(255 138 196);   --lg-brown: rgb(219 166 121);
   --lg-label-secondary: rgb(235 235 245 / .85);
   --lg-label-tertiary: rgb(235 235 245 / .60);
   --lg-separator: rgb(255 255 255 / .60);

@@ -27,8 +27,13 @@ export interface NavigationBarProps extends Omit<HTMLAttributes<HTMLElement>, 't
    * already has an `<h1>` — a stack embedded in a longer document, a demo. A component that
    * always emits `h1` can only be used once per page, and two `h1`s break the heading
    * navigation a screen-reader user relies on to move around.
+   *
+   * The range runs to 6 because 3 was not low enough for the one place this is actually used:
+   * a documentation page whose own example titles are already `h3`, where a bar stuck at 3
+   * interleaves sample titles with the page outline and a reader listening to the heading list
+   * hears "Settings, Settings, Basics, Adjust, Inbox" as one flat run.
    */
-  headingLevel?: 1 | 2 | 3;
+  headingLevel?: 1 | 2 | 3 | 4 | 5 | 6;
   children?: ReactNode;
 }
 

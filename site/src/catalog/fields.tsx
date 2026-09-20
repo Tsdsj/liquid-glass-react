@@ -190,7 +190,7 @@ export const fieldDocs: ComponentDoc[] = [
             <SearchField aria-label="搜索文件" placeholder="文件名" value={query} onValueChange={setQuery} />
             {matches.length > 0
               ? <List>
-                <ListSection header={`${matches.length} 个文件`}>
+                <ListSection headingLevel={4} header={`${matches.length} 个文件`}>
                   {matches.map(name => <ListRow key={name} label={name} />)}
                 </ListSection>
               </List>

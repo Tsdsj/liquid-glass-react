@@ -33,16 +33,27 @@ export function PreferencesButton({ value, onChange }: {
       <Text variant="subhead" emphasized>文字大小</Text>
       <GlassSegmentedControl aria-label="文字大小" density="compact" value={value.textSize}
         onValueChange={next => set('textSize', next as TextSize)}
-        items={[{ value: 'm', label: '小' }, { value: 'l', label: '标准' }, { value: 'xxl', label: '大' }, { value: 'ax3', label: 'AX3' }]} />
-      <Text variant="caption1" tone="secondary">Dynamic Type 的 Web 等价物。AX3 用来检查布局是否还能回流。</Text>
+        items={[{ value: 'm', label: '小' }, { value: 'l', label: '标准' }, { value: 'xxl', label: '大' }, { value: 'ax5', label: 'AX5' }]} />
+      {/* AX5, not AX3: AX5 is the size the layout rules in `app.css` were measured at — the
+          comments there quote widths found at AX5 — and it is the one the HIG asks a layout to
+          survive. Offering a gentler setting than the one the tests use invites a reader to
+          conclude the layout holds up when the hard case was never on screen. */}
+      <Text variant="caption1" tone="secondary">Dynamic Type 的 Web 等价物。AX5 是最大的一档，用来检查布局是否还能回流。</Text>
     </div>
+    {/*
+      Each row is the switch and nothing else.
+      These were `<label className="pref-row">` wrapping a `GlassSwitch`, which renders its own
+      `<label htmlFor>` — a label inside a label, which is exactly the markup this site's own
+      `Form` page tells readers not to write. `GlassSwitch` has a visible-label slot for this;
+      the words come first by way of `row-reverse` rather than by a second element.
+    */}
     <div className="pref-rows">
-      <label className="pref-row"><Text as="span" variant="subhead">减少透明度</Text>
-        <GlassSwitch aria-label="减少透明度" checked={value.opaque} onCheckedChange={next => set('opaque', next)} /></label>
-      <label className="pref-row"><Text as="span" variant="subhead">减少动效</Text>
-        <GlassSwitch aria-label="减少动效" checked={value.reducedMotion} onCheckedChange={next => set('reducedMotion', next)} /></label>
-      <label className="pref-row"><Text as="span" variant="subhead">增强对比度</Text>
-        <GlassSwitch aria-label="增强对比度" checked={value.moreContrast} onCheckedChange={next => set('moreContrast', next)} /></label>
+      <GlassSwitch className="pref-row" aria-label="减少透明度" label="减少透明度"
+        checked={value.opaque} onCheckedChange={next => set('opaque', next)} />
+      <GlassSwitch className="pref-row" aria-label="减少动效" label="减少动效"
+        checked={value.reducedMotion} onCheckedChange={next => set('reducedMotion', next)} />
+      <GlassSwitch className="pref-row" aria-label="增强对比度" label="增强对比度"
+        checked={value.moreContrast} onCheckedChange={next => set('moreContrast', next)} />
     </div>
   </GlassPopover>;
 }

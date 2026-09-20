@@ -160,6 +160,20 @@
 }
 .lg-segment:not([data-disabled="true"]):has(input:active) > span { transform: scale(.94); transition-duration: var(--lg-duration-press); }
 .lg-segment input { position: absolute; margin: 0; inset: 0; width: 100%; height: 100%; opacity: 0; cursor: inherit; }
+/**
+ * 44 to a finger, on the block axis only.
+ *
+ * A segment is 36pt tall — 28 in the compact density, exactly the floor of the HIG's own table
+ * — and `.lg-button` has grown itself a hit region on coarse pointers since the first audit
+ * while its siblings never did. Only the block axis, because segments are packed edge to edge:
+ * widening a short one to 44 would put its hit region on top of the next segment's, and a press
+ * landing on the wrong option is worse than a press that misses.
+ */
+@media (pointer: coarse) {
+  .lg-segment::after, .lg-tab::after { content: ''; position: absolute;
+    inset-block-start: 50%; inset-inline-start: 0; translate: 0 -50%;
+    width: 100%; height: 100%; min-height: var(--lg-hit-min); }
+}
 .lg-segment:has(input:focus-visible) { outline: var(--lg-focus-width) solid var(--lg-focus); outline-offset: var(--lg-focus-offset); border-radius: 999px; }
 .lg-segment[data-disabled="true"] { opacity: .45; cursor: not-allowed; }
 /**
@@ -483,7 +497,11 @@
 @media (hover: hover) {
   .lg-button[data-variant="gray"]:not(:disabled):hover { background: var(--lg-fill); }
 }
-.lg-button[data-variant="tinted"] { background: color-mix(in srgb, var(--lg-accent) 16%, transparent); color: var(--lg-accent); }
+/* Accent ink rather than the accent itself: the label and the wash under it are the same hue,
+   so the colour that reads as "the accent" on a white page measures 2.75:1 here. Mixed on the
+   button so a caller's `tint` gets the same treatment — see `--lg-ink-toward` in tokens.css. */
+.lg-button[data-variant="tinted"] { background: color-mix(in srgb, var(--lg-accent) 16%, transparent);
+  color: color-mix(in srgb, var(--lg-accent) var(--lg-ink-amount), var(--lg-ink-toward)); }
 @media (hover: hover) {
   .lg-button[data-variant="tinted"]:not(:disabled):hover { background: color-mix(in srgb, var(--lg-accent) 24%, transparent); }
 }
@@ -748,6 +766,37 @@
   .lg-root, .lg-root * { --lg-shift-x: 0px; --lg-shift-y: 0px; --lg-stretch-x: 1; --lg-stretch-y: 1; }
   :is(.lg-popover,.lg-menu,.lg-dialog), :is(.lg-popover,.lg-menu,.lg-dialog)::backdrop { transform: none !important; opacity: 1; }
 }
+/**
+ * The same settings arriving from an application's own preferences screen.
+ *
+ * `GlassProvider` publishes an explicit `motion="reduced"` / `transparency="opaque"` as an
+ * attribute on <html>, and these mirror the media queries above for everything that is only
+ * CSS. Glass surfaces already honoured both — the material reads the policy in JavaScript and
+ * stamps `data-reduced-motion` on itself — so what was missing was precisely the parts no
+ * component asks about: a page transition, a standard material, the tab bar, the stack.
+ * `contrast="more"` swaps the palette and lives in `tokens.css` beside the palette it swaps.
+ *
+ * Presence, not value: the provider writes the attribute only for an explicit override, and
+ * every value it can then hold — `reduced` or `none`, `reduced` or `opaque` — means the same
+ * thing to a stylesheet.
+ */
+[data-lg-motion] :is(.lg-root,.lg-tabbar,.lg-navbar,.lg-list-row,.lg-stepper),
+[data-lg-motion] :is(.lg-root,.lg-tabbar,.lg-navbar,.lg-list-row,.lg-stepper) *,
+[data-lg-motion] .lg-root *::before, [data-lg-motion] .lg-root *::after {
+  animation: none !important; transition: none !important; }
+[data-lg-motion] .lg-progress[data-determinate="false"] .lg-progress-fill { animation: none; width: 100%; opacity: .5; }
+[data-lg-motion] .lg-progress-ring { animation: none; border-top-color: var(--lg-fill); }
+[data-lg-motion] .lg-root:is(:active,[data-pressed="true"]) { transform: none; scale: none; }
+[data-lg-motion] :is(.lg-decoration::after,.lg-glow,.lg-fusion) { display: none; }
+[data-lg-motion] .lg-root, [data-lg-motion] .lg-root * { --lg-shift-x: 0px; --lg-shift-y: 0px; --lg-stretch-x: 1; --lg-stretch-y: 1; }
+[data-lg-motion] :is(.lg-popover,.lg-menu,.lg-dialog),
+[data-lg-motion] :is(.lg-popover,.lg-menu,.lg-dialog)::backdrop { transform: none !important; opacity: 1; }
+[data-lg-motion] .lg-stack-screen { animation: lg-stack-fade var(--lg-duration-release) var(--lg-ease) !important; }
+
+[data-lg-transparency] .lg-material-view { backdrop-filter: none !important; -webkit-backdrop-filter: none !important; background: var(--lg-bg-secondary); }
+[data-lg-transparency] .lg-scroll-edge { backdrop-filter: none !important; -webkit-backdrop-filter: none !important; background: var(--lg-glass-opaque); mask: none; -webkit-mask: none; }
+[data-lg-transparency] .lg-dialog::backdrop { backdrop-filter: none; -webkit-backdrop-filter: none; }
+
 @media (prefers-reduced-transparency: reduce) {
   .lg-root:not([data-renderer="shared"]) { background: var(--lg-opaque); }
   /* Standard materials and the scroll edge frost over too, not just Liquid Glass. */
@@ -858,7 +907,9 @@
 @media (prefers-contrast: more) {
   .lg-badge { border: 1px solid var(--lg-label); }
 }
-.lg-root[data-contrast="more"] .lg-badge, .lg-badge[data-contrast="more"] { border: 1px solid var(--lg-label); }
+/* `data-lg-contrast`, not `data-contrast`: the material stamps the former, so the latter was a
+   selector that could never match — the opt-in path had no border at all. */
+[data-lg-contrast="more"] .lg-badge, .lg-badge[data-lg-contrast="more"] { border: 1px solid var(--lg-label); }
 
 /* ---------- DisclosureGroup: a row that folds, on a real <details> ---------- */
 /**
@@ -993,7 +1044,12 @@
 
 /* Field sizes and the multi-line form. The *control* gets smaller; the text does not, because
    anything under 16px makes iOS Safari zoom the page on focus. */
+/* The input's own line box is 22px of leading plus 8px of padding either side — 38 — so a
+   `min-height` of 36 was a floor the content was already above, and the small field rendered
+   two pixels taller than every page that documents it says. The padding is what has to give;
+   the 16px type does not, because anything smaller makes iOS Safari zoom on focus. */
 .lg-field[data-control-size="small"] .lg-field-box { min-height: 36px; }
+.lg-field[data-control-size="small"] .lg-field-input { padding-block: calc(var(--lg-space-2) - 1px); }
 .lg-field[data-control-size="large"] .lg-field-box { min-height: 52px; }
 .lg-field[data-multiline="true"] .lg-field-box { min-height: 0; align-items: flex-start; padding-block: var(--lg-space-2); }
 .lg-field[data-multiline="true"] textarea.lg-field-input { resize: vertical; min-height: 4lh; line-height: 1.45; }

@@ -20,7 +20,7 @@ test('the root has a large title and no way back', async ({ page }) => {
   await page.goto(PAGE);
   const stack = page.locator(STACK);
   await stack.scrollIntoViewIfNeeded();
-  await expect(stack.locator('.lg-largetitle :is(h1,h2,h3)')).toHaveText('设置');
+  await expect(stack.locator('.lg-largetitle :is(h1,h2,h3,h4,h5,h6)')).toHaveText('设置');
   expect(await stack.locator('.lg-stack-back').count(), 'the bottom of the stack offers a way out of it').toBe(0);
 });
 
@@ -55,7 +55,7 @@ test('the back button follows the stack down and back up', async ({ page }) => {
   await expect(stack.locator('.lg-stack-back-title')).toHaveText('设置');
   await stack.locator('.lg-stack-back').click();
   expect(await stack.locator('.lg-stack-back').count()).toBe(0);
-  await expect(stack.locator('.lg-largetitle :is(h1,h2,h3)')).toHaveText('设置');
+  await expect(stack.locator('.lg-largetitle :is(h1,h2,h3,h4,h5,h6)')).toHaveText('设置');
 });
 
 test('popToRoot goes all the way in one step', async ({ page }) => {
@@ -65,7 +65,7 @@ test('popToRoot goes all the way in one step', async ({ page }) => {
   await stack.getByRole('button', { name: '通用' }).click();
   await stack.getByRole('button', { name: '储存空间' }).click();
   await stack.getByRole('button', { name: '回到最上层' }).click();
-  await expect(stack.locator('.lg-largetitle :is(h1,h2,h3)')).toHaveText('设置');
+  await expect(stack.locator('.lg-largetitle :is(h1,h2,h3,h4,h5,h6)')).toHaveText('设置');
 });
 
 test('focus moves to the new screen, not left on a row that no longer exists', async ({ page }) => {

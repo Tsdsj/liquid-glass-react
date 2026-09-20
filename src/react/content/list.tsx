@@ -23,11 +23,18 @@ export interface ListSectionProps extends Omit<HTMLAttributes<HTMLElement>, 'tit
    */
   header?: ReactNode;
   footer?: ReactNode;
+  /**
+   * The header's heading level. A group label is a real heading — someone moving by heading uses
+   * it to find the group — so it cannot simply stop being one; what it can do is sit at the
+   * right depth. `3` suits a list under a page title and a section title, which is the common
+   * case; lower it when the list is nested deeper than that.
+   */
+  headingLevel?: 1 | 2 | 3 | 4 | 5 | 6;
   children: ReactNode;
 }
-export function ListSection({ header, footer, children, className, ref, ...props }: ListSectionProps) {
+export function ListSection({ header, footer, headingLevel = 3, children, className, ref, ...props }: ListSectionProps) {
   return <section {...props} ref={ref} className={cx('lg-list-section', className)}>
-    {header && <Text as="h3" variant="subhead" emphasized tone="secondary" className="lg-list-header">{header}</Text>}
+    {header && <Text as={`h${headingLevel}` as const} variant="subhead" emphasized tone="secondary" className="lg-list-header">{header}</Text>}
     <ul className="lg-list-group" role="list">{children}</ul>
     {footer && <Text variant="footnote" tone="secondary" className="lg-list-footer">{footer}</Text>}
   </section>;

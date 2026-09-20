@@ -107,6 +107,7 @@ for (const file of CATALOG) {
       const read = key => node.properties.find(property =>
         ts.isPropertyAssignment(property) && property.name.getText() === key);
       const slug = read('slug'), name = read('name'), props = read('props'), examples = read('examples');
+      const group = read('group'), related = read('related');
       if (slug && name && props && ts.isArrayLiteralExpression(props.initializer)) {
         const rows = new Set();
         for (const row of props.initializer.elements) {
@@ -128,8 +129,18 @@ for (const file of CATALOG) {
           ? examples.initializer.elements.filter(ts.isObjectLiteralExpression) : [];
         const adjustable = entries.filter(entry => entry.properties.some(property =>
           ts.isPropertyAssignment(property) && property.name.getText() === 'knobs')).length;
+        /* Which examples can be seen over a photograph. A glass surface's whole claim is that
+           it takes its colour from what is behind it, and a page that only ever shows it on a
+           flat panel never makes that claim testable by the reader. */
+        const overMedia = entries.filter(entry => entry.properties.some(property =>
+          ts.isPropertyAssignment(property) && property.name.getText() === 'backdrop'
+          && ts.isStringLiteralLike(property.initializer)
+          && (property.initializer.text === 'both' || property.initializer.text === 'media'))).length;
         documented.set(name.initializer.text, {
-          slug: slug.initializer.text, rows, file, examples: entries.length, adjustable,
+          slug: slug.initializer.text, rows, file, examples: entries.length, adjustable, overMedia,
+          group: group && ts.isStringLiteralLike(group.initializer) ? group.initializer.text : '',
+          related: related && ts.isArrayLiteralExpression(related.initializer)
+            ? related.initializer.elements.filter(ts.isStringLiteralLike).map(node => node.text) : [],
         });
       }
     }
@@ -153,8 +164,29 @@ for (const file of CATALOG) {
  */
 const MIN_EXAMPLES = 3;
 
+/**
+ * The groups whose components exist to float above something. For these, at least one example
+ * has to be viewable over a photograph.
+ *
+ * Of roughly 120 examples, 13 could be seen on anything but a flat panel, and the overlay group
+ * — popover, menu, sheet, alert, action sheet, dialog, toast, banner — had none at all. Those
+ * are the components for which "floats above content" is the entire description, so a
+ * documentation site that never shows them above any content is arguing against itself.
+ */
+const MUST_SHOW_MEDIA = new Set(['浮层']);
+
+const slugs = new Set([...documented.values()].map(page => page.slug));
+
 const problems = [];
 for (const [component, page] of documented) {
+  if (MUST_SHOW_MEDIA.has(page.group) && page.overMedia === 0) {
+    problems.push(`${page.slug} is in 浮层 and no example can be seen over a photograph; give one backdrop: 'both'`);
+  }
+  /* A dead cross-reference used to be a `console.warn` in the browser and a link that quietly
+     vanished from the page — two ways of not being noticed. */
+  for (const slug of page.related) {
+    if (!slugs.has(slug)) problems.push(`${page.slug}.related names "${slug}", which is not a component page`);
+  }
   if (page.examples < MIN_EXAMPLES) {
     problems.push(`${page.slug} has ${page.examples} example${page.examples === 1 ? '' : 's'}; a page needs at least ${MIN_EXAMPLES}`);
   }
@@ -181,4 +213,5 @@ if (problems.length) {
   process.exit(1);
 }
 
-console.log(`catalog: ${documented.size} pages agree with their interfaces, each with ${MIN_EXAMPLES}+ examples and one adjustable`);
+const overMedia = [...documented.values()].filter(page => page.overMedia > 0).length;
+console.log(`catalog: ${documented.size} pages agree with their interfaces, each with ${MIN_EXAMPLES}+ examples and one adjustable; ${overMedia} can be seen over a photograph`);

@@ -47,6 +47,8 @@ import '@ttqtt/liquid-glass-react/styles.css';
 
 `useGlassPolicy()` 返回解析后的策略，含 `resolvedTheme`、`reduceMotion`、`reduceTransparency`、`increaseContrast`、`forcedColors`。
 
+**最外层的 Provider 会把显式覆盖写到 `<html>` 上**：`data-lg-motion`、`data-lg-transparency`、`data-lg-contrast`，取值就是你传的那个（`'system'` 时不写属性，因为媒体查询已经管了）。这是必须的：玻璃听这三个属性，是因为材质在 JS 里读 policy；而页面转场、标准材质、标签栏这些**只在 CSS 里决定**的东西只认媒体查询，于是 `motion="reduced"` 会变成一个看起来生效、实际什么都没变的开关。只有最外层写——嵌套的 Provider 管的是一棵子树，把它写到 `<html>` 上等于让一张深色卡片替整页做主。卸载时恢复原值，不是清空：应用自己可能也在写这些属性。
+
 ### 文案：`GlassStrings` / `useGlassStrings()` / `defaultStrings`
 
 组件自己提供、调用方通常不会传的那几个标签——对话框右上角的关闭、步进器的两个箭头、搜索框的清除、面板拖动手柄。它们也正是**只有读屏用户才会听到**的标签，所以一直是英文也不会在截图里露馅。
@@ -110,7 +112,7 @@ import '@ttqtt/liquid-glass-react/styles.css';
 | `root` | `NavigationPage` | — | 栈底那一页，弹不掉 |
 | `pages` / `onPagesChange` | `NavigationPage[]` / `(pages) => void` | 自管 | 自己管理栈（接路由）。数组是根页**之上**的那些页 |
 | `backLabel` | `'title' \| 'chevron'` | `'title'` | 返回按钮写上一页标题，还是只画箭头 |
-| `headingLevel` | `1 \| 2 \| 3` | `1` | 根页大标题的标题层级 |
+| `headingLevel` | `1 \| 2 \| 3 \| 4 \| 5 \| 6` | `1` | 根页大标题的标题层级 |
 
 `NavigationPage` = `{ key, title, subtitle?, trailing?, content }`。
 
@@ -122,7 +124,7 @@ import '@ttqtt/liquid-glass-react/styles.css';
 
 切换是交叉淡入加位移，弹栈方向相反，RTL 镜像；减少动效只留淡入，**方向**才是被读成运动的那部分。
 
-> `NavigationBar` 也新增了 `headingLevel`。一个永远输出 `h1` 的组件一页只能用一次，而两个 `h1` 会破坏读屏用户靠标题跳转的能力。
+> `NavigationBar` 也新增了 `headingLevel`，同样的 1–6。一个永远输出 `h1` 的组件一页只能用一次，而两个 `h1` 会破坏读屏用户靠标题跳转的能力。范围到 6 而不是 3，是因为 3 对唯一真正用到它的地方还不够低：文档站的示例标题本身就是 `h3`，栏停在 3 就会让样例标题和页面目录混成一份。
 
 > `TabBar` 的 `sidebarBreakpoint`（默认 1024）是**另一条轴**：它决定标签栏什么时候变成侧边栏，而不是尺寸类别。两者不共用一个数字是有意的——768 的竖屏平板该有紧凑布局，不该有侧边栏。
 
@@ -159,7 +161,7 @@ import '@ttqtt/liquid-glass-react/styles.css';
 
 ### `List` / `ListSection` / `ListRow`
 `List`: `variant`(`insetGrouped`/`plain`)。
-`ListSection`: `header` `footer`（标题式大小写）。
+`ListSection`: `header` `footer`（标题式大小写）、`headingLevel`（`1`–`6`，默认 `3`）。分区标题是真标题——读屏用户靠它找到这一组——所以嵌得更深时是把它放到对的深度，不是取消它。
 `ListRow`: `label` `secondaryLabel` `value` `leading` `accessory` `href` `onSelect` `disclosure` `destructive` `disabled`。可导航行渲染为真实 `<a>` 或 `<button>`。
 
 `disabled` 的跳转行**不渲染 `href`**，改渲染 `<button disabled>`：带 `href` 的 `<a>` 无论 `aria-disabled` 写什么，回车和点击都照样导航——`aria-disabled` 只是播报，不是实现。
@@ -180,7 +182,9 @@ import '@ttqtt/liquid-glass-react/styles.css';
 ### `GlassButton` / `GlassIconButton`
 `variant`: `glass` | `glassProminent` | `plain` | `gray` | `tinted` | `destructive` | `destructiveProminent`。
 `icon` / `trailingIcon`：图标插槽。是插槽而不是 children，因为图标和文字之间的间距是系统值。
-`tint` / `tintContrast`：这一个按钮的色调，和压在它上面的文字色（默认白）。**一屏仍然只有一个主操作**——tint 换的是它的颜色，不是让你摆三个。开发模式会量这一对的对比度，低于 4.5:1 告警：库挑不出能读的文字色（所以没有全局 `accent`），但它能验调用方挑的那个。
+`tint` / `tintContrast`：这一个按钮的色调，和压在它上面的文字色（默认白）。**一屏仍然只有一个主操作**——tint 换的是它的颜色，不是让你摆三个。开发模式会量**按钮实际画出来的那一对**——渲染后的 `color`，对上按钮自己的色调层、背景和每一层祖先合成到不透明的结果——低于 4.5:1 告警：库挑不出能读的文字色（所以没有全局 `accent`），但它能验调用方挑的那个。
+
+> 早先它比的是 `tint` 对 `tintContrast`，也就是**主操作**按钮画出来的那一对。`tinted`、`plain`、`destructive` 的标签是色调本身压在同色的淡底上，于是护栏量的是屏幕上不存在的两个颜色，并放行了实际 2.87:1 的按钮。改成量渲染结果之后，当场逮到本站自己的绿色确认按钮：4.45:1。
 `controlSize`: `small`(32) | `regular`(44) | `large`(50) | `extraLarge`(60)——注意与选择玻璃厚度的 `size` 不同。
 `loading` 同时禁用并置 `aria-busy`。`independent` 在共享表面内保留自己的玻璃（玻璃叠玻璃，慎用）。
 `GlassIconButton` 的 `aria-label` 是**必填类型**。
@@ -213,7 +217,7 @@ import '@ttqtt/liquid-glass-react/styles.css';
 ### `Picker`
 `label`(必填) `labelHidden` `options: PickerOption[]`（`value` `label` `disabled`）、`value`/`defaultValue`/`onValueChange` `presentation` `disabled` `name`。
 
-**形态是结论，不是参数。** `presentation="automatic"`（默认）按选项数量和尺寸类别决定：四个以内且处在 regular 尺寸类别就并排成分段控件，再多或者到了 compact 就收成弹出式菜单按钮。这正是 layout 那一页反复说的那条——按尺寸类别决定布局，永远不按设备类型。写死 `inline` 或 `menu` 只在形态本身就是设计的一部分时用。
+**形态是结论，不是参数。** `presentation="automatic"`（默认）按选项数量和尺寸类别决定：**两个选项在任何宽度下都并排**；四个以内且处在 regular 尺寸类别也并排；再多或者到了 compact 就收成弹出式菜单按钮。两个那一档是单独的规则，理由和 `GlassMenuButton` 的开发期告警是同一条——一个两项的菜单要按一下才能读到，比它替掉的两段露出的信息更少。这正是 layout 那一页反复说的那条——按尺寸类别决定布局，永远不按设备类型。写死 `inline` 或 `menu` 只在形态本身就是设计的一部分时用。
 
 `PickerOption` **没有图标插槽**：同一个选择器会在两种形态之间切换，而分段控件不允许一组里图文混排。
 

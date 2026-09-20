@@ -231,3 +231,101 @@ test('the refraction switch turns refraction on where the browser can do it', as
   await expect(page.locator('.lg-tabbar[data-renderer="svg"]')).toHaveCount(0);
 });
 
+
+/* ---------- The demo audit: the page has to do what the page says ----------
+ *
+ * These come from reading the site as a set of claims rather than as a set of screens. A page
+ * that prints "36px" beside a field, or "the hit region is 44", has made a statement that can be
+ * measured — and nothing had ever measured them.
+ */
+
+test('the field sizes a page prints are the sizes it renders', async ({ page }) => {
+  await page.goto('/#/components/text-field');
+  await page.locator('#field-sizes-demo').scrollIntoViewIfNeeded();
+  const claims = await page.locator('#field-sizes-demo .lg-field-box').evaluateAll(nodes => nodes
+    .map(node => ({
+      said: node.querySelector('input')?.getAttribute('placeholder') ?? '',
+      measured: Math.round(node.getBoundingClientRect().height),
+    }))
+    .filter(entry => /^\d+px$/.test(entry.said)));
+  expect(claims.length, 'the size comparison is gone').toBeGreaterThanOrEqual(3);
+  for (const { said, measured } of claims) {
+    expect(measured, `the placeholder says ${said} and it renders ${measured}px`).toBe(parseInt(said, 10));
+  }
+});
+
+test('every overlay page can be seen over a photograph', async ({ page }) => {
+  /* A glass surface's whole claim is that it takes its colour from what is behind it, and the
+     eleven components for which "floats above content" is the entire description were the ones
+     with no content to float above. `scripts/check-props.mjs` keeps this true for all of them;
+     this checks that the switch a reader needs actually reaches the screen. */
+  for (const slug of ['popover', 'sheet', 'toast', 'banner']) {
+    await page.goto(`/#/components/${slug}`);
+    await expect(page.getByRole('radio', { name: '图片背景' }),
+      `${slug} offers no way to see it over anything`).toHaveCount(1);
+  }
+});
+
+test('the adjustable example can be put back the way it was written', async ({ page }) => {
+  await page.goto('/#/components/card');
+  const panel = page.locator('.knob-panel');
+  await panel.scrollIntoViewIfNeeded();
+  // Nothing has moved, so there is nothing to undo and no control saying otherwise.
+  await expect(panel.getByRole('button', { name: '恢复示例原样' })).toHaveCount(0);
+
+  const raised = panel.getByRole('switch', { name: '投影' });
+  await raised.check();
+  const reset = panel.getByRole('button', { name: '恢复示例原样' });
+  await expect(reset).toBeVisible();
+  await reset.click();
+  await expect(reset).toHaveCount(0);
+  await expect(raised).not.toBeChecked();
+});
+
+test('no label on this site contains another label', async ({ page }) => {
+  /* The site's own `Form` page tells readers not to do this, and the preferences popover did it
+     three times — a `<label>` row wrapped around a `GlassSwitch`, which renders its own. */
+  await page.goto('/#/components/form');
+  await page.getByRole('button', { name: '打开显示偏好' }).click();
+  const nested = await page.evaluate(() =>
+    [...document.querySelectorAll('label label')].map(node => node.className));
+  expect(nested, `nested labels: ${nested.join(', ')}`).toEqual([]);
+});
+
+test('the text size switch reaches the size the layout rules were measured at', async ({ page }) => {
+  await page.goto('/#/components/list');
+  await page.getByRole('button', { name: '打开显示偏好' }).click();
+  await page.getByRole('radio', { name: 'AX5' }).click();
+  await page.keyboard.press('Escape');
+  await expect(page.locator('html')).toHaveAttribute('data-lg-text-size', 'ax5');
+  expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth),
+    'the largest text size pushes the document sideways').toBe(true);
+});
+
+test('a related-component card wraps rather than widening the document', async ({ page }) => {
+  /* 「分段控件 GlassSegmentedControl」 — one unbreakable Latin token, 408px wide inside a 341px
+     card at AX3 on a phone. Five pages moved 50px sideways because of it, and `app.css` had
+     already learned this lesson in six other places. */
+  await page.setViewportSize({ width: 390, height: 844 });
+  for (const slug of ['button', 'switch', 'picker']) {
+    await page.goto(`/#/components/${slug}`);
+    await page.evaluate(() => { document.documentElement.dataset.lgTextSize = 'ax3'; });
+    await page.waitForTimeout(200);
+    const overflow = await page.evaluate(() => document.documentElement.scrollWidth - window.innerWidth);
+    expect(overflow, `${slug} is ${overflow}px wider than the window at AX3`).toBeLessThanOrEqual(0);
+  }
+});
+
+test('a heading inside an example sits below the example’s own title', async ({ page }) => {
+  /* The page's example titles are `h3`. A `NavigationBar` demo emitting `h3` too put sample
+     titles and page structure on one level: a reader moving by heading on the navigation-stack
+     page heard "设置, 设置, 基础用法, 调整属性, 收件箱" as a flat run, and only half of those
+     are in the outline on the right. */
+  for (const slug of ['text', 'navigation-bar', 'navigation-stack']) {
+    await page.goto(`/#/components/${slug}`);
+    await page.waitForSelector('#main');
+    const inside = await page.evaluate(() =>
+      [...document.querySelectorAll('.demo-stage :is(h1,h2,h3)')].map(node => node.textContent?.trim() ?? ''));
+    expect(inside, `${slug}: ${inside.join(', ')}`).toEqual([]);
+  }
+});

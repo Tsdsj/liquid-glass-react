@@ -110,3 +110,47 @@ test('every control a finger can reach is at least 44 across', async ({ page }) 
   });
   expect(small, `targets under 44: ${JSON.stringify(small)}`).toEqual([]);
 });
+
+/**
+ * The segments and tabs, asked the same question by hit test rather than by tape measure.
+ *
+ * `.lg-button` has grown itself a 44 hit region on coarse pointers since the first audit, and
+ * `.lg-page-dot`, `.lg-split-divider` and `.lg-tab-link` followed. `.lg-segment` (36pt, and 28
+ * in the compact density — the floor of the HIG's own table) and `.lg-tab` (36pt) never did,
+ * while the button's own documentation promised the rule to every reader of the site.
+ *
+ * Probed 21px above and below the centre, which is a 42px finger box: the block axis is the one
+ * that is short here, and it is the only one that was widened — packed edge to edge, a segment
+ * grown sideways would put its hit region on top of its neighbour's.
+ */
+for (const [page_, selector] of [['segmented-control', '.lg-segment'], ['tabs', '.lg-tab']] as const) {
+  test(`a finger lands on ${selector} at the top and bottom of a 44 box`, async ({ page }) => {
+    await page.goto(`/#/components/${page_}`);
+    await page.waitForTimeout(700);
+    const missed = await page.evaluate(selector => {
+      const out: string[] = [];
+      for (const node of document.querySelectorAll(selector)) {
+        const box = node.getBoundingClientRect();
+        if (box.width === 0 || box.top < 0 || box.bottom > innerHeight) continue;
+        const x = box.left + box.width / 2;
+        for (const y of [box.top + box.height / 2 - 21, box.top + box.height / 2 + 21]) {
+          if (y < 0 || y > innerHeight) continue;
+          const hit = document.elementFromPoint(x, y);
+          /* The site's own floating tab bar covers the bottom of a phone screen, and a demo
+             underneath it is genuinely out of reach there — which is the documentation's
+             layout, not the component's hit region. */
+          if (hit?.closest('.lg-tabbar')) continue;
+          /* The control itself or something inside it — *not* merely an ancestor. Accepting the
+             track that contains the segment passes this test with no hit region at all, which
+             is what the first version of it did: a press landing on the strip beside a segment
+             selects nothing. */
+          if (!hit || !node.contains(hit)) {
+            out.push(`${(node.textContent || '').trim().slice(0, 8)} @${Math.round(y - box.top - box.height / 2)}`);
+          }
+        }
+      }
+      return out;
+    }, selector);
+    expect(missed, `presses that landed on something else: ${missed.join(', ')}`).toEqual([]);
+  });
+}

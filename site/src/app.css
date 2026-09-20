@@ -197,6 +197,7 @@ code { font-family: var(--lg-font-mono); font-size: .92em; }
 .demo-card[data-adjustable="true"] { grid-column: 1 / -1; }
 .knob-panel { padding: 0 var(--lg-space-4) var(--lg-space-4); gap: var(--lg-space-4); }
 .knob-panel .lg-form-group { background: var(--lg-bg-grouped-3, var(--lg-fill-quaternary)); }
+.knob-reset { display: flex; justify-content: flex-end; }
 .knob-slider { width: min(220px, 40vw); }
 
 /* A card whose whole box is one link. The focus ring is on the link, which fills the card. */
@@ -269,8 +270,14 @@ code { font-family: var(--lg-font-mono); font-size: .92em; }
 /* The import line, the related components and the two repository links — see D6 in the roadmap. */
 .doc-import { margin-block: var(--lg-space-4) var(--lg-space-6); }
 .doc-import .code-block > pre { padding-block: var(--lg-space-4); }
-.doc-related { display: grid; gap: var(--lg-space-3); grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); }
-.doc-related-link { display: flex; flex-direction: column; gap: var(--lg-space-1);
+/* `minmax(260px, …)` rather than a fixed track so the grid itself collapses to one column, and
+   `min-width: 0` so a card is allowed to be narrower than its longest word. */
+.doc-related { display: grid; gap: var(--lg-space-3); grid-template-columns: repeat(auto-fit, minmax(min(260px, 100%), 1fr)); }
+/* The seventh place this rule was needed and the one it was missing from: a card's title is
+   「分段控件 GlassSegmentedControl」, one unbreakable Latin token 408px wide inside a 341px box
+   at AX3 on a phone, and the whole document moved 50px sideways because of it. */
+.doc-related-link { min-width: 0; overflow-wrap: anywhere;
+  display: flex; flex-direction: column; gap: var(--lg-space-1);
   padding: var(--lg-space-4); border-radius: var(--lg-radius-m); text-decoration: none;
   background: var(--lg-bg-secondary); border: 1px solid var(--lg-separator);
   transition: background var(--lg-duration-release) var(--lg-ease); }
@@ -310,8 +317,12 @@ code { font-family: var(--lg-font-mono); font-size: .92em; }
 .pref-group .lg-segmented { width: 100%; }
 .pref-group .lg-segmented-track { display: grid; grid-auto-flow: column; grid-auto-columns: 1fr; }
 .pref-rows { display: grid; gap: var(--lg-space-1); }
-.pref-row { display: flex; align-items: center; justify-content: space-between; gap: var(--lg-space-4);
+/* The row *is* the switch now — see `preferences.tsx`. `row-reverse` puts the words first and
+   the capsule at the end without a second element to click. */
+.pref-row.lg-switch { display: flex; flex-direction: row-reverse; align-items: center;
+  justify-content: space-between; gap: var(--lg-space-4); width: 100%;
   min-height: var(--lg-hit-min); cursor: pointer; }
+.pref-row .lg-switch-label { font-size: var(--lg-text-subhead-size); line-height: var(--lg-text-subhead-leading); }
 .search-results { margin-block-start: var(--lg-space-4); min-height: 120px; }
 
 .field-label { display: block; margin: var(--lg-space-4) 0 var(--lg-space-2);
@@ -386,6 +397,9 @@ code { font-family: var(--lg-font-mono); font-size: .92em; }
 @media (prefers-reduced-motion: reduce) {
   .page-enter, .scene-art { animation: none !important; transition: none !important; }
 }
+/* And the same setting arriving from this site's own switch, which `GlassProvider` publishes on
+   <html>. Everything inside a glass surface already stopped; these two are the site's own. */
+[data-lg-motion] :is(.page-enter, .scene-art) { animation: none !important; transition: none !important; }
 
 /* The overview's refraction switch, above the media viewer it applies to.
    `flex`, not `grid`: the viewer has an aspect-ratio and a max-height, and as a grid item it

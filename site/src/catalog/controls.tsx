@@ -114,15 +114,15 @@ export const controlDocs: ComponentDoc[] = [
       },
       {
         id: 'button-tint', title: '单个按钮的色调',
-        description: '一屏仍然只有**一个**主操作——tint 换的是它的颜色，不是让你摆三个。其余的用扁平的 tinted。色调需要配一个能读的文字色，而这一点算不出来，所以开发模式会量这一对的对比度，低于 4.5:1 就告警。',
+        description: '一屏仍然只有**一个**主操作——tint 换的是它的颜色，不是让你摆三个。其余的用扁平的 tinted。色调需要配一个能读的文字色，而这一点算不出来，所以开发模式会把按钮**实际画出来**的那一对——标签的颜色，和它底下所有图层合成后的颜色——量一遍，低于 4.5:1 就告警。',
         height: 200,
         render: () => <div id="button-tint-demo" style={{ display: 'flex', gap: 12, flexWrap: 'wrap', alignItems: 'center' }}>
-          <GlassButton variant="glassProminent" tint="#1a7f37">确认</GlassButton>
+          <GlassButton variant="glassProminent" tint="#146c2e">确认</GlassButton>
           <GlassButton variant="tinted" tint="#8250df">升级</GlassButton>
           <GlassButton variant="tinted">默认强调色</GlassButton>
         </div>,
         code: `{/* 这一屏唯一的主操作 */}
-<GlassButton variant="glassProminent" tint="#1a7f37">确认</GlassButton>
+<GlassButton variant="glassProminent" tint="#146c2e">确认</GlassButton>
 {/* 其余的是扁平的 */}
 <GlassButton variant="tinted" tint="#8250df">升级</GlassButton>
 {/* 浅色调要自己配文字色 */}
@@ -559,7 +559,7 @@ ${['日', '周', '月', '季', '年'].slice(0, Number(knobs.count)).map((label, 
           const [loading, setLoading] = useState(true);
           return <div id="progress-not-blocking-demo" style={{ display: 'grid', gap: 12, width: 300 }}>
             <List>
-              <ListSection header="收件箱">
+              <ListSection headingLevel={4} header="收件箱">
                 <ListRow label="周会纪要" secondaryLabel="昨天" />
                 <ListRow label="发票" secondaryLabel="上周" />
                 <ListRow label={loading ? '正在收取更多…' : '设计评审'}
@@ -630,7 +630,7 @@ ${['日', '周', '月', '季', '年'].slice(0, Number(knobs.count)).map((label, 
         height: 200,
         render: () => <div id="badge-on-tab-demo" style={{ display: 'grid', gap: 14, width: 300 }}>
           <List>
-            <ListSection header="邮箱">
+            <ListSection headingLevel={4} header="邮箱">
               <ListRow label="收件箱" accessory={<GlassBadge count={12} aria-label="12 封未读" />} onSelect={() => {}} />
               <ListRow label="已发送" onSelect={() => {}} />
               <ListRow label="草稿" accessory={<GlassBadge dot aria-label="有未完成的草稿" />} onSelect={() => {}} />

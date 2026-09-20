@@ -75,7 +75,7 @@ export function Demo({ id, children, backdrop = 'plain', height = 200 }: {
  */
 export function DemoCard({ id, title, description, render: Render, code, backdrop, height, knobs }: DemoEntry) {
   const [showCode, setShowCode] = useState(false);
-  const { values, set } = useKnobs(knobs);
+  const { values, set, reset, changed } = useKnobs(knobs);
   const snippet = typeof code === 'function' ? code(values) : code;
   return <section className="demo-card" data-demo={id} data-adjustable={knobs ? 'true' : undefined}>
     <Demo id={id} backdrop={backdrop} height={height}><Render knobs={values} /></Demo>
@@ -83,7 +83,7 @@ export function DemoCard({ id, title, description, render: Render, code, backdro
       <Text as="h3" variant="headline">{title}</Text>
       {description && <Text variant="subhead" tone="secondary">{description}</Text>}
     </div>
-    {knobs && <KnobPanel knobs={knobs} values={values} onChange={set} />}
+    {knobs && <KnobPanel knobs={knobs} values={values} onChange={set} onReset={reset} changed={changed} />}
     <button type="button" className="demo-code-toggle" aria-expanded={showCode} aria-controls={`${id}-code`}
       onClick={() => setShowCode(value => !value)}>
       <LibraryIcon name={showCode ? 'chevronDown' : 'chevronForward'} size={15} />

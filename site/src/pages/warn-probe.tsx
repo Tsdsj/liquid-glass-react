@@ -52,6 +52,16 @@ export function WarnProbe() {
       ]} />
     </section>
 
+    {/*
+      A tint whose label lands under 4.5:1 on what is actually painted behind it. A pale yellow
+      on a prominent button is the classic case: `tintContrast` defaults to white, and white on
+      yellow is unreadable whatever the variant. The rule used to compare the two *props*, so it
+      could only ever see the prominent pairing — which is why this section is worth having.
+    */}
+    <section id="tint-contrast">
+      <GlassButton variant="glassProminent" tint="#ffd60a">继续</GlassButton>
+    </section>
+
     {/* A correct composition, to show the rules do not fire on everything. */}
     <section id="clean">
       <GlassGroup>

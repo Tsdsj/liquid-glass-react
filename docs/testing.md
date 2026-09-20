@@ -35,11 +35,11 @@ pnpm test:e2e --project=chromium
 
 ## 各层测什么
 
-**核心（`tests/core/`，70 项）** —— 不碰浏览器的那部分：有符号距离场的方向与中性值、非法输入的拒绝、贴图尺寸预算、LRU 的字节记账、弹簧积分器（收敛、过冲幅度、大 dt 钳制、非有限输入）、同心圆角（含掐角与喇叭口的边界）。另有三项是对样式表本身的静态检查：hover 规则必须带指针门、颜色必须来自 token、不得有 will-change。
+**核心（`tests/core/`，71 项）** —— 不碰浏览器的那部分：有符号距离场的方向与中性值、非法输入的拒绝、贴图尺寸预算、LRU 的字节记账、弹簧积分器（收敛、过冲幅度、大 dt 钳制、非有限输入）、同心圆角（含掐角与喇叭口的边界）。另有四项是对样式表本身的静态检查：hover 规则必须带指针门、颜色必须来自 token、不得有 will-change，以及两份「增强对比度」调色板——媒体查询那份和 `data-lg-contrast` 那份——声明逐字相同。CSS 没法让一个媒体查询和一个选择器共用声明，所以重复是有意的，这一项是让它不腐烂的那半。
 
 **SSR（`tests/ssr.test.mjs`，3 项）** —— 服务端导入不需要 DOM，多个渲染根的 id 不冲突，默认打开的对话框在服务端输出安全标记。它导入的是 `dist/`，因此测的是真正发布的产物。
 
-**浏览器（`tests/browser/`，103 项，真实 Google Chrome）**：
+**浏览器（`tests/browser/`，299 项，真实 Google Chrome）**：
 
 | 文件 | 覆盖 |
 | --- | --- |
@@ -53,18 +53,18 @@ pnpm test:e2e --project=chromium
 | `materials.spec.ts` | 大小玻璃的行为差异、内容层不采样背景 |
 | `fusion.spec.ts` | 共享表面上的液滴融合 |
 | `contrast.spec.ts` | 玻璃压在真实场景上，文字对比度从合成后的像素上量，最差的一块不得低于 4.5 |
-| `touch.spec.ts` | 真实 touch 事件：拖动轴的归属、手指 1:1 带动透镜、点完不留 hover、命中区 44 |
+| `touch.spec.ts` | 真实 touch 事件：拖动轴的归属、手指 1:1 带动透镜、点完不留 hover、命中区 44；分段与标签以控件中心 ±21px 做命中测试，**必须命中控件本身**——接受它所在的轨道，等于在完全没有命中区时也判绿 |
 | `visual.spec.ts` | 四个宽度下的布局与截图证据 |
 | `csp.spec.ts` | 限制性 CSP 下无违规、零外部请求 |
 | `refs.spec.ts` | 每个导出的组件都交还它渲染的那个元素，并透传 `id` / `style` / `data-*`；探针表必须覆盖整个公开面 |
 | `routing.spec.ts` | 切页会设标题、把焦点移进新页面；跳过链接；更新日志页就是仓库里那个文件 |
-| `docs.spec.ts` | 每页都说了该 import 什么、指向了别处、没有死链；代码高亮的颜色来自 token，且显示的和复制的一致；旋钮同时改示例和代码块、旋钮面板在示例之外；⌘K 能搜到属性名、示例标题与章节并跳到位；折射开关在做得到的浏览器上真的打开折射，做不到的浏览器上禁用并说明 |
+| `docs.spec.ts` | 每页都说了该 import 什么、指向了别处、没有死链；页面印出来的尺寸就是它渲染的尺寸；浮层页都能切到照片背景；旋钮可以复位；站内没有 label 套 label；文字大小能调到 AX5 且不横向溢出；示例里的标题低于示例自己的标题；代码高亮的颜色来自 token，且显示的和复制的一致；旋钮同时改示例和代码块、旋钮面板在示例之外；⌘K 能搜到属性名、示例标题与章节并跳到位；折射开关在做得到的浏览器上真的打开折射，做不到的浏览器上禁用并说明 |
 | `second-batch.spec.ts` | `Picker` 的形态随尺寸类别切换而选择不变、标签只念一遍；`ColorWell` 是真 `<input type="color">`、色值可读、快捷色有名字；`Banner` 客气播报、关闭按钮 44、上滑关闭 |
-| `appearance.spec.ts` | 两种外观各自欠读者的东西：深色下的光晕强度远低于浅色、浅色没有一个满亮度纯白的表面、次级文字压在它真正所在的面板上过 4.5:1、折叠区展开有中间帧、选中胶囊与轨道的亮度差 ≥ 12/255、首页演示铺满整列 |
+| `appearance.spec.ts` | 两种外观各自欠读者的东西：深色下的光晕强度远低于浅色、浅色没有一个满亮度纯白的表面、次级文字压在它真正所在的面板上过 4.5:1、折叠区展开有中间帧、选中胶囊与轨道的亮度差 ≥ 12/255、首页演示铺满整列、`tinted` 按钮的标签压在自己的淡底上过 4.5:1 |
 | `layout-matrix.spec.ts` | 布局容器 × 四个宽度 × LTR/RTL × 默认/AX5：页面不横向滚动、容器不溢出自己、不塌成零；分栏视图在 RTL 下是镜像；AX5 下标签不被挤成一列一个字 |
 | `outline.spec.ts` | 窄屏目录菜单：滚动后不被工具栏吞掉、是跳转项不是复选框、按钮名就是可见文字 |
 
-**开发模式（`tests/browser/{warnings,strict-mode,hydration}.spec.ts`，10 项）** —— 这三件只存在于开发构建里，所以跑的是 Vite dev server 而不是 `site/dist`：三条设计规则的告警（生产构建里必须一条都没有）、Strict Mode 下闲置页面不排帧、八棵树 `renderToString` 之后 `hydrateRoot` 没有不匹配。用 `pnpm test:warnings` 跑（project 名为 `dev`）。
+**开发模式（`tests/browser/{warnings,strict-mode,hydration}.spec.ts`，13 项）** —— 这三件只存在于开发构建里，所以跑的是 Vite dev server 而不是 `site/dist`：三条设计规则的告警（生产构建里必须一条都没有）、Strict Mode 下闲置页面不排帧、八棵树 `renderToString` 之后 `hydrateRoot` 没有不匹配。用 `pnpm test:warnings` 跑（project 名为 `dev`）。
 
 **跨引擎（`tests/browser/fallback.spec.ts`，WebKit 与 Firefox 各 9 项）** —— 没有 SVG 折射时剩下的东西还算不算材质：模糊、着色、边线、投影都在；布局、语义、键盘路径都不依赖折射分支；浮层没有入场动画也要能开能关；系统偏好照样生效。用 `pnpm test:fallback` 跑。
 
@@ -104,5 +104,7 @@ pnpm test:e2e --project=chromium
 ## CI 跑的是什么
 
 `.github/workflows/ci.yml` 跑的就是上面这一串，一条不少，用 `--frozen-lockfile` 安装。推 `main`、开 PR、打标签时各跑一次——标签走的是同一个 job（`workflow_call` 复用，不是复制一份），所以发版的检查不可能比 PR 的松。
+
+`scripts/check-props.mjs`（在 `pnpm build:site` 里）除了属性表，还守着三条结构规则：每页至少三个示例且恰好一个可调、`related` 不许指向不存在的页、浮层组每页至少有一个示例能在照片背景上看。它们都是**构建失败**而不是控制台告警——死链此前在浏览器里 `console.warn` 了很久，链接静默消失，两种都是不会被看见的方式。
 
 最后两步是打包前的闸门：`pnpm verify:package` 问打包器"你到底会装哪些文件进去"，核对源码没泄漏、每个 `exports` 入口都落到真实文件、`"use client"` 还在第一行、标签号与 `package.json` 一致。发版流程见 `../RELEASING.md`。

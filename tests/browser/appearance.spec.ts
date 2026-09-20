@@ -199,6 +199,50 @@ test('the capsule is lifted, not merely tinted', async ({ page }) => {
 });
 
 /* =========================================================================================
+ * 6. A label and the wash under it are the same hue, and that is the whole difficulty.
+ *
+ * The `tinted` variant paints the accent on a 16% wash of itself. System blue on white is
+ * already 3.4:1; over its own wash it measured 2.75:1 in the light appearance and 2.55:1 in the
+ * dark one — while the page describing it promised that development mode measures exactly this
+ * and complains. Composited, because a translucent label over a translucent wash is three
+ * colours deep and reading any one of them in isolation says nothing.
+ * ======================================================================================= */
+
+for (const scheme of ['light', 'dark'] as const) {
+  test(`a tinted button's label clears AA against its own wash (${scheme})`, async ({ page }) => {
+    await page.emulateMedia({ colorScheme: scheme });
+    await page.goto('/#/components/button');
+    await page.waitForSelector('#main');
+    const button = page.locator('.lg-button[data-variant="tinted"]').first();
+    await button.scrollIntoViewIfNeeded();
+
+    const pair = await button.evaluate(node => {
+      /* `color(srgb …)` is what Chrome returns for anything that came out of `color-mix()`,
+         and its channels are 0–1. Read as bytes, every accent-derived colour becomes
+         near-black — which passes this test against a light page for entirely the wrong
+         reason. It did, on the first run. */
+      const parse = (value: string) => {
+        const parts = value.match(/[\d.]+/g)!.map(Number);
+        const scale = value.startsWith('color(') ? 255 : 1;
+        return [parts[0] * scale, parts[1] * scale, parts[2] * scale, parts.length > 3 ? parts[3] : 1];
+      };
+      const over = (a: number[], b: number[]) => [0, 1, 2].map(i => a[i] * a[3] + b[i] * (1 - a[3])).concat(1);
+      let behind = [255, 255, 255, 1];
+      const stack: number[][] = [];
+      for (let el: Element | null = node; el; el = el.parentElement) {
+        const colour = parse(getComputedStyle(el).backgroundColor);
+        if (colour[3] > 0) { stack.push(colour); if (colour[3] === 1) break; }
+      }
+      for (let i = stack.length - 1; i >= 0; i--) behind = over(stack[i], behind);
+      return { ink: over(parse(getComputedStyle(node).color), behind), behind };
+    });
+
+    const contrast = ratio(luminance(pair.ink), luminance(pair.behind));
+    expect(contrast, `the label measures ${contrast.toFixed(2)}:1 on its wash`).toBeGreaterThanOrEqual(4.5);
+  });
+}
+
+/* =========================================================================================
  * 5. The overview's first screen.
  * ======================================================================================= */
 

@@ -12,7 +12,9 @@ import { PREVIEW_PORT } from '../../playwright.config.js';
  * of them come from the audit that produced `reports/hig-review.md`; the fourth was already in
  * the toolbar and is included so the once-per-node bookkeeping covers it too. The fifth arrived
  * with `GlassMenuButton`: a menu has to be opened before it can be read, so below about three
- * items it reveals less than the plain buttons it replaced.
+ * items it reveals less than the plain buttons it replaced. The sixth, `tint-contrast`, existed
+ * before this round but measured a pair of colours that were nowhere on the screen, so nothing
+ * could demonstrate it firing — and nothing did.
  */
 
 const RULES = [
@@ -21,6 +23,7 @@ const RULES = [
   { id: 'clear-without-tone', match: /material="clear" needs a known backdrop/ },
   { id: 'mixed-group', match: /mixes icon-only and text buttons/ },
   { id: 'short-menu', match: /GlassMenuButton has 2 items/ },
+  { id: 'tint-contrast', match: /tint #ffd60a renders as rgb\(.+\) on rgb\(.+\) — \d\.\d\d:1/ },
 ];
 
 async function warningsOn(page: import('@playwright/test').Page, path: string) {
@@ -43,6 +46,23 @@ for (const rule of RULES) {
 test('a correct composition draws no warnings at all', async ({ page }) => {
   const warnings = await warningsOn(page, '/#/components/button');
   expect(warnings, `the documentation site should not be breaking its own rules:\n${warnings.join('\n')}`).toEqual([]);
+});
+
+/**
+ * And on a phone, where the adjustable-properties panel used to break the short-menu rule.
+ *
+ * A two-option `select` knob became a `Picker`, and `Picker`'s automatic presentation reads the
+ * *window's* size class — so in a narrow window it collapsed into a pop-up button holding two
+ * items, which is precisely what `GlassMenuButton` warns about. Eight pages printed it. The
+ * reference implementation tripping its own lint is worse than the lint being wrong: a reader
+ * opening the console on the site that taught them the rule finds the rule being broken.
+ */
+test('the properties panel keeps its own rules on a phone', async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  for (const slug of ['progress', 'list', 'tooltip', 'picker']) {
+    const warnings = await warningsOn(page, `/#/components/${slug}`);
+    expect(warnings, `${slug} at 390px:\n${warnings.join('\n')}`).toEqual([]);
+  }
 });
 
 test('the warnings are absent from a production build', async ({ page, baseURL }) => {

@@ -407,7 +407,7 @@ export const navigationDocs: ComponentDoc[] = [
               <span className="demo-navbar-title">地标</span>
               <GlassIconButton aria-label="更多" variant="plain" controlSize="small"><LibraryIcon name="ellipsis" size={18} /></GlassIconButton>
             </div>
-            <Text as="h3" variant="largeTitle" emphasized>地标</Text>
+            <Text as="h4" variant="largeTitle" emphasized>地标</Text>
           </div>
           <div className="demo-navbar-row">
             <Text variant="caption1" tone="secondary">滚动后</Text>
@@ -437,7 +437,7 @@ export const navigationDocs: ComponentDoc[] = [
         ],
         render: function NavBarLive({ knobs }) {
           return <div id="navbar-live-demo" style={{ width: '100%', maxWidth: 380, border: '1px solid var(--lg-separator)', borderRadius: 16, padding: 12 }}>
-            <NavigationBar headingLevel={3} title="地标"
+            <NavigationBar headingLevel={4} title="地标"
               largeTitle={knobs.largeTitle === true}
               subtitle={String(knobs.subtitle) || undefined}
               leading={<GlassIconButton aria-label="返回" variant="plain" controlSize="small">
@@ -462,7 +462,7 @@ export const navigationDocs: ComponentDoc[] = [
         description: '不是每一页都要来一个大标题。深入一层之后，返回按钮已经在同一行说明了来处，再摆一个大标题只是重复。',
         height: 240,
         render: () => <div id="navbar-compact-demo" style={{ width: '100%', maxWidth: 380, border: '1px solid var(--lg-separator)', borderRadius: 16, padding: 12 }}>
-          <NavigationBar headingLevel={3} title="储存空间" largeTitle={false}
+          <NavigationBar headingLevel={4} title="储存空间" largeTitle={false}
             leading={<GlassButton variant="plain" controlSize="small"
               icon={<LibraryIcon name="chevronForward" size={16} style={{ transform: 'scaleX(-1)' }} />}>通用</GlassButton>} />
           <Text variant="subhead" tone="secondary" style={{ marginBlockStart: 8 }}>
@@ -476,7 +476,7 @@ export const navigationDocs: ComponentDoc[] = [
     props: [
       { name: 'title', type: 'string', required: true, description: '页面标题，大标题和紧凑标题共用。' },
       { name: 'largeTitle', type: 'boolean', default: 'true', description: '关掉就直接使用紧凑标题。' },
-      { name: 'headingLevel', type: '1 | 2 | 3', default: '1', description: '大标题的标题层级。栏在页面顶部时是 1；嵌在已经有 h1 的页面里时调低——一页两个 h1 会毁掉读屏用户靠标题跳转的能力。' },
+      { name: 'headingLevel', type: '1 | 2 | 3 | 4 | 5 | 6', default: '1', description: '大标题的标题层级。栏在页面顶部时是 1；嵌在已经有 h1 的页面里时调低——一页两个 h1 会毁掉读屏用户靠标题跳转的能力。这一页的示例用的是 4，因为示例自己的标题已经是 3。' },
       { name: 'subtitle', type: 'ReactNode', description: '只出现在大标题下方。' },
       { name: 'leading / trailing', type: 'ReactNode', description: '两端的控件。' },
     ],
@@ -506,7 +506,7 @@ export const navigationDocs: ComponentDoc[] = [
         ],
         render: function StackBasic({ knobs }) {
           return <div id="stack-demo" style={{ width: '100%', maxWidth: 420, border: '1px solid var(--lg-separator)', borderRadius: 20, overflow: 'hidden', padding: 12 }}>
-            <NavigationStack headingLevel={3} backLabel={knobs.backLabel as 'title'} root={{
+            <NavigationStack headingLevel={4} backLabel={knobs.backLabel as 'title'} root={{
               key: 'settings',
               title: '设置',
               content: <StackRoot />,
@@ -524,7 +524,7 @@ push({ key: 'general', title: '通用', content: <General /> });`,
         height: 360,
         render: function StackTrailing() {
           return <div style={{ width: '100%', maxWidth: 420, border: '1px solid var(--lg-separator)', borderRadius: 20, overflow: 'hidden', padding: 12 }}>
-            <NavigationStack headingLevel={3} root={{
+            <NavigationStack headingLevel={4} root={{
               key: 'inbox',
               title: '收件箱',
               trailing: <GlassButton controlSize="small" variant="gray">编辑</GlassButton>,
@@ -543,7 +543,7 @@ push({ key: 'general', title: '通用', content: <General /> });`,
         height: 340,
         render: function StackChevron() {
           return <div style={{ width: '100%', maxWidth: 420, border: '1px solid var(--lg-separator)', borderRadius: 20, overflow: 'hidden', padding: 12 }}>
-            <NavigationStack backLabel="chevron" headingLevel={3} root={{
+            <NavigationStack backLabel="chevron" headingLevel={4} root={{
               key: 'root', title: '一个名字非常非常长的页面',
               content: <StackChevronRoot />,
             }} />
@@ -556,7 +556,7 @@ push({ key: 'general', title: '通用', content: <General /> });`,
       { name: 'root', type: 'NavigationPage', required: true, description: '栈底那一页，永远在，弹不掉。' },
       { name: 'pages / onPagesChange', type: 'NavigationPage[] / (pages) => void', description: '自己管理栈（比如接路由）。不传就由组件自己管。数组是根页**之上**的那些页。' },
       { name: 'backLabel', type: "'title' | 'chevron'", default: "'title'", description: '返回按钮写上一页标题，还是只画箭头。' },
-      { name: 'headingLevel', type: '1 | 2 | 3', default: '1', description: '根页大标题的标题层级，同 NavigationBar。' },
+      { name: 'headingLevel', type: '1 | 2 | 3 | 4 | 5 | 6', default: '1', description: '根页大标题的标题层级，同 NavigationBar。' },
       { name: 'NavigationPage', type: '{ key, title, subtitle?, trailing?, content }', description: '一页。key 用来标识，title 是导航栏上的字。' },
       { name: 'useNavigationStack()', type: '() => { push, pop, popToRoot, depth, canGoBack }', description: '在栈里的任意一层调用。不在栈里会抛错——静默失效的按钮更难找。' },
     ],
@@ -566,7 +566,7 @@ push({ key: 'general', title: '通用', content: <General /> });`,
       '切换是交叉淡入加一点位移，弹栈时方向相反，RTL 下整体镜像。开启「减少动效」后只剩淡入：方向才是被读成「运动」的那一部分。',
       '页面用 key 区分，切换时 React 会整棵替换——上一页的状态不会漏到下一页。',
     ],
-    related: ['nav-bar', 'tab-bar', 'sidebar'],
+    related: ['navigation-bar', 'tab-bar', 'sidebar'],
     imports: ['NavigationStack', 'useNavigationStack'],
   },
   {
@@ -629,7 +629,7 @@ push({ key: 'general', title: '通用', content: <General /> });`,
     notes: [
       '是一个 tablist：整体一个 Tab 停靠点，方向键在内部移动，Home/End 跳到两端。',
       '每个点都是真正的按钮并且有自己的名字（「3 / 6」），所以拖动是键盘路径之外的补充，不是替代。',
-      '点画出来只有 7px，但触摸时命中区是 44——和库里其他小控件一样，用伪元素撑开而不是把图形画大。',
+      '点画出来只有 7px，触摸时**竖直方向**的命中区撑到 44，横向只撑到相邻两点的中线——横向也撑到 44 的话，一排点的命中区会互相压住，按到隔壁比按不到更糟。',
     ],
     related: ['tab-bar', 'tabs', 'segmented-control'],
   },
@@ -865,7 +865,7 @@ push({ key: 'general', title: '通用', content: <General /> });`,
 function StackRoot() {
   const { push } = useNavigationStack();
   return <List>
-    <ListSection header="设置">
+    <ListSection headingLevel={4} header="设置">
       <ListRow label="通用" value="8 项" onSelect={() => push({
         key: 'general', title: '通用', content: <StackGeneral />,
       })} />
@@ -882,7 +882,7 @@ function StackRoot() {
 function StackGeneral() {
   const { push, depth } = useNavigationStack();
   return <List>
-    <ListSection header={`第 ${depth} 层`} footer="再进一层试试，返回按钮会跟着换。">
+    <ListSection headingLevel={4} header={`第 ${depth} 层`} footer="再进一层试试，返回按钮会跟着换。">
       <ListRow label="软件更新" onSelect={() => push({
         key: 'update', title: '软件更新', content: <StackLeaf text="返回按钮现在写着「通用」。" />,
       })} />

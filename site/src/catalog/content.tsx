@@ -20,20 +20,20 @@ export const contentDocs: ComponentDoc[] = [
         id: 'text-scale', title: '文本样式', description: '从大标题到脚注共十一档。右上角把文字大小调大，可以看到整套一起放大。',
         height: 330,
         render: () => <div style={{ display: 'grid', gap: 10, textAlign: 'start' }}>
-          <Text as="h3" variant="largeTitle" emphasized>大标题</Text>
+          <Text as="h4" variant="largeTitle" emphasized>大标题</Text>
           <Text variant="title2" emphasized>二级标题</Text>
           <Text variant="headline">小标题会自动加粗</Text>
           <Text variant="body">正文。大段阅读用这一档。</Text>
           <Text variant="subhead" tone="secondary">次级说明</Text>
           <Text variant="footnote" tone="secondary">脚注</Text>
-          <Text variant="caption2" tone="tertiary">最小的一档，11px</Text>
+          <Text variant="caption2" tone="secondary">最小的一档，11px</Text>
         </div>,
         code: `<Text as="h1" variant="largeTitle" emphasized>大标题</Text>
 <Text variant="body">正文</Text>
 <Text variant="footnote" tone="secondary">脚注</Text>`,
       },
       {
-        id: 'text-tone', title: '强调与色调', description: '同一档字号下，用字重和颜色区分主次。',
+        id: 'text-tone', title: '强调与色调', description: '同一档字号下，用字重和颜色区分主次。tertiary 是占位符和停用态的颜色，对比度本来就低，不要拿它写正文。',
         height: 230,
         knobs: [
           { name: 'variant', label: '样式', type: 'select', value: 'body', options: [
@@ -52,7 +52,9 @@ export const contentDocs: ComponentDoc[] = [
               调上面的旋钮看这一行
             </Text>
             <Text variant="body" tone="secondary">次要</Text>
-            <Text variant="body" tone="tertiary">更次要</Text>
+            {/* tertiary 不是"更次要的正文"，是占位符和停用态的颜色——它在设计上就不到 4.5:1。
+                这一行照它的用途写，因为这一页是教人排版的那一页。 */}
+            <Text variant="body" tone="tertiary">占位符 / 已停用</Text>
             <Text variant="body" tone="destructive">危险操作</Text>
           </div>;
         },
@@ -195,7 +197,7 @@ export const contentDocs: ComponentDoc[] = [
         ],
         render: function ListBasic({ knobs }) {
           return <List style={{ width: 320 }} variant={knobs.variant as 'plain'}>
-            <ListSection header="显示与亮度" footer={knobs.footer === true ? '这些设置只影响这个演示。' : undefined}>
+            <ListSection headingLevel={4} header="显示与亮度" footer={knobs.footer === true ? '这些设置只影响这个演示。' : undefined}>
               <ListRow label="外观" value="浅色" onSelect={() => {}} disclosure={knobs.disclosure === true} />
               <ListRow label="文字大小" secondaryLabel="影响整站排版" value="标准" onSelect={() => {}}
                 disclosure={knobs.disclosure === true} />
@@ -215,7 +217,7 @@ export const contentDocs: ComponentDoc[] = [
           const [wifi, setWifi] = useState(true);
           const [roam, setRoam] = useState(false);
           return <List style={{ width: 320 }}>
-            <ListSection header="网络">
+            <ListSection headingLevel={4} header="网络">
               <ListRow label="Wi‑Fi" leading={<LibraryIcon name="search" size={20} />}
                 accessory={<GlassSwitch aria-label="Wi‑Fi" checked={wifi} onCheckedChange={setWifi} />} />
               <ListRow label="数据漫游" leading={<LibraryIcon name="plus" size={20} />}
@@ -248,6 +250,7 @@ export const contentDocs: ComponentDoc[] = [
     props: [
       { name: 'variant', type: "'insetGrouped' | 'plain'", default: "'insetGrouped'", description: 'List：分组内嵌，或通栏铺满。' },
       { name: 'header / footer', type: 'ReactNode', description: 'ListSection：分区标题与下方说明。' },
+      { name: 'headingLevel', type: '1 | 2 | 3 | 4 | 5 | 6', default: '3', description: 'ListSection：分区标题的标题层级。它确实是个标题——读屏用户靠它找到这一组——所以不是取消，而是放到对的深度。' },
       { name: 'label', type: 'ReactNode', required: true, description: 'ListRow：这一行的主文字。' },
       { name: 'secondaryLabel', type: 'ReactNode', description: '第二行补充说明。' },
       { name: 'value', type: 'ReactNode', description: '行尾的只读值。' },
@@ -383,7 +386,7 @@ export const contentDocs: ComponentDoc[] = [
         render: function DisclosureInList() {
           return <div style={{ display: 'grid', gap: 16, width: 360 }}>
             <List>
-              <ListSection header="网络">
+              <ListSection headingLevel={4} header="网络">
                 <ListRow label="自动连接" value="开" onSelect={() => {}} />
               </ListSection>
             </List>
@@ -573,7 +576,7 @@ export const contentDocs: ComponentDoc[] = [
     ],
     notes: [
       '是真正的 `<form>`：回车提交、浏览器能自动填充、提交按钮名副其实。',
-      '行的标题是 span 不是 label。把控件包进 label 让那行字也能点，是想当然的写法——但 GlassSwitch 和 TextField 自己就渲染 label，label 套 label 非法，浏览器的答复是外面那个直接失效。而且库里每个控件本来就带自己的名字，包一层是加第二个名字。想让文字也能点，给控件 labelHidden，让它自己拥有那行字。',
+      '行的标题是 span 不是 label。把控件包进 label 让那行字也能点，是想当然的写法——但 GlassSwitch 和 TextField 自己就渲染 label，而 HTML 不允许 label 套 label。浏览器不会报错：实测在 Chrome 里点外层那行字，开关照样会翻，所以这个写法看起来是成立的。它错在名字——里外两个 label 各给控件贴一个名，读屏把同一句话念两遍。想让文字也能点，用控件自己的可见标签槽（GlassSwitch 的 label、字段的 labelHidden），让它自己拥有那行字。',
       '分区标题是真 heading，读屏可以在分区之间跳；分区说明挂在 aria-describedby 上。',
     ],
     related: ['list', 'text-field', 'switch'],
@@ -697,7 +700,7 @@ export const contentDocs: ComponentDoc[] = [
         height: 260,
         render: () => <div id="divider-when-not-demo" style={{ display: 'grid', gap: 16, width: 300 }}>
           <List>
-            <ListSection header="列表自己就有线">
+            <ListSection headingLevel={4} header="列表自己就有线">
               <ListRow label="第一行" />
               <ListRow label="第二行" />
             </ListSection>

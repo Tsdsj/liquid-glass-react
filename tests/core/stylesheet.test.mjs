@@ -52,6 +52,36 @@ test('colour comes from tokens, not from literals', () => {
   assert.deepEqual([...new Set(literals)], [], 'hard-coded colours bypass the palette');
 });
 
+/**
+ * The two Increase Contrast palettes are the same palette.
+ *
+ * One arrives from the OS as `prefers-contrast: more`, the other from an application's own
+ * settings screen as `contrast="more"` on GlassProvider, and the second is the step the HIG
+ * lets a below-4.5:1 default stand on. It used to swap three label alphas and leave all twelve
+ * system colours alone, so the opt-in was a visibly weaker setting than the one it claims to
+ * layer over. CSS cannot share declarations between a media query and a selector, so the
+ * duplication is deliberate and this is what keeps it honest.
+ */
+test('the opt-in increase-contrast palette matches the media-query one', () => {
+  const tokens = readFileSync(new URL('../../src/styles/tokens.css', import.meta.url), 'utf8');
+  /** Every `--name: value` inside a block, as a sorted comparable set. */
+  const declarations = source => [...source.matchAll(/(--[\w-]+)\s*:\s*([^;]+);/g)]
+    .map(([, name, value]) => `${name}: ${value.trim()}`).sort();
+  const block = selector => {
+    const at = tokens.indexOf(selector);
+    assert.notEqual(at, -1, `no block for ${selector}`);
+    const open = tokens.indexOf('{', at);
+    return declarations(tokens.slice(open + 1, tokens.indexOf('}', open)));
+  };
+  for (const [fromMedia, fromAttribute] of [
+    ['[data-lg-theme="light"] {\n    --lg-red', '[data-lg-contrast="more"],'],
+    ['[data-lg-theme="dark"] {\n    --lg-red', '[data-lg-contrast="more"][data-lg-theme="dark"],'],
+  ]) {
+    assert.deepEqual(block(fromAttribute), block(fromMedia),
+      `the ${fromAttribute} palette has drifted from the media query's`);
+  }
+});
+
 test('nothing claims a compositing layer up front', () => {
   // A blanket will-change on glass promotes every surface whether or not it ever animates.
   assert.equal(/will-change/.test(css), false);

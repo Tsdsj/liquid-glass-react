@@ -29,6 +29,7 @@ export const overlayDocs: ComponentDoc[] = [
     examples: [
       {
         id: 'popover-basic', title: '基础用法', description: '面板从触发它的按钮位置展开，按 Escape 关闭并把焦点还回去。',
+        backdrop: 'both',
         height: 240,
         knobs: [
           { name: 'align', label: '对齐', type: 'select', value: 'end', options: [
@@ -119,6 +120,7 @@ export const overlayDocs: ComponentDoc[] = [
     examples: [
       {
         id: 'menu-basic', title: '基础用法', description: '支持上下键、Home/End、直接打字跳转，Escape 关闭。',
+        backdrop: 'both',
         height: 220,
         knobs: [
           { name: 'align', label: '对齐', type: 'select', value: 'end', options: [
@@ -238,6 +240,7 @@ export const overlayDocs: ComponentDoc[] = [
     examples: [
       {
         id: 'pulldown-demo', title: '下拉式：按钮说自己做什么', description: '标签固定不变，菜单列的是这个动作的几种做法。危险项标红并排在最后。',
+        backdrop: 'both',
         height: 210,
         render: function PullDownDemo() {
           const [result, setResult] = useState('还没选');
@@ -350,6 +353,7 @@ export const overlayDocs: ComponentDoc[] = [
     examples: [
       {
         id: 'tooltip-basic', title: '基础用法', description: '指针停留约 0.6 秒出现；用键盘 Tab 聚焦会立刻出现，因为那是有意为之的动作。',
+        backdrop: 'both',
         height: 200,
         render: () => <div id="tooltip-demo" style={{ display: 'flex', gap: 12, alignItems: 'center' }}>
           <Tooltip content="恢复默认设置">
@@ -433,6 +437,7 @@ export const overlayDocs: ComponentDoc[] = [
     examples: [
       {
         id: 'context-basic', title: '基础用法', description: '在卡片上右键；触摸屏长按；用 Tab 聚焦到里面的按钮后按 Shift+F10。',
+        backdrop: 'both',
         height: 280,
         render: function ContextBasic() {
           const [result, setResult] = useState('还没选');
@@ -542,6 +547,7 @@ export const overlayDocs: ComponentDoc[] = [
     examples: [
       {
         id: 'sheet-basic', title: '基础用法', description: '按住顶部的横条上下拖动，松手会停在最近的高度。往下拖到底就是关闭。',
+        backdrop: 'both',
         height: 220,
         knobs: [
           { name: 'detents', label: '停靠高度', type: 'select', value: 'medium,large', options: [
@@ -647,6 +653,7 @@ export const overlayDocs: ComponentDoc[] = [
     examples: [
       {
         id: 'alert-destructive', title: '危险操作', description: '有危险选项时，焦点一开始就落在“取消”上。按 Escape 等于取消。',
+        backdrop: 'both',
         height: 210,
         knobs: [
           { name: 'message', label: '说明', type: 'text', value: '里面的 12 个项目会一起被删除，这个操作没法撤销。' },
@@ -754,6 +761,7 @@ toast({ message: '已删除', action: { label: '撤销', onSelect: restore } });
     examples: [
       {
         id: 'sheet-actions', title: '基础用法', description: '危险项会被自动排到最后，不管你传进来的顺序是什么。',
+        backdrop: 'both',
         height: 210,
         knobs: [
           { name: 'align', label: '宽屏下的对齐', type: 'select', value: 'center', options: [
@@ -870,6 +878,7 @@ toast({ message: '已删除', action: { label: '撤销', onSelect: restore } });
     examples: [
       {
         id: 'dialog-form', title: '表单对话框', description: 'Tab 只会在框内循环，Escape 关闭并把焦点还给原来的按钮。',
+        backdrop: 'both',
         height: 210,
         knobs: [
           { name: 'description', label: '说明', type: 'text', value: '这个示例不会提交到任何地方。' },
@@ -962,6 +971,7 @@ toast({ message: '已删除', action: { label: '撤销', onSelect: restore } });
     examples: [
       {
         id: 'toast-undo', title: '删除并撤销', description: '删完立刻可以撤销。鼠标放上去或键盘走进去，计时会暂停。',
+        backdrop: 'both',
         height: 190,
         render: function ToastUndo() {
           const toast = useToast();
@@ -1063,6 +1073,7 @@ toast({
     examples: [
       {
         id: 'banner-tones', title: '四种语气',
+        backdrop: 'both',
         description: '语气自带图标，所以从来不是只靠颜色。标题一行说清发生了什么，第二行说它意味着什么。',
         height: 260,
         knobs: [
@@ -1147,6 +1158,6 @@ toast({
       '用户开启「减少动效」后不再跟手形变，手势本身仍然可用。',
       '关闭按钮有 44×44 的点击范围。',
     ],
-    related: ['toast', 'alert', 'screen'],
+    related: ['toast', 'alert', 'sheet'],
   },
 ];
