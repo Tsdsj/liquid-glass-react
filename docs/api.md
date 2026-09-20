@@ -1,6 +1,6 @@
 # API
 
-`@ttqtt/liquid-glass-react` 共 92 个导出：58 个组件与 Provider、11 个 Hook、23 个常量表、纯函数与诊断工具。所有组件都是 `'use client'`。
+`@ttqtt/liquid-glass-react` 共 98 个导出：60 个组件与 Provider、13 个 Hook、25 个常量表、纯函数与诊断工具。所有组件都是 `'use client'`。
 
 样式必须引入一次，顺序不能颠倒：
 
@@ -196,10 +196,27 @@ import '@ttqtt/liquid-glass-react/styles.css';
 
 `disabled` 的跳转行**不渲染 `href`**，改渲染 `<button disabled>`：带 `href` 的 `<a>` 无论 `aria-disabled` 写什么，回车和点击都照样导航——`aria-disabled` 只是播报，不是实现。
 
-### `Kbd`
+### `Kbd` / `useShortcut()`
 `keys`(必填) `aria-label`。快捷键提示。修饰键顺序由组件排：⌃ ⌥ ⇧ ⌘，Command 挨着被它修饰的键。
 
 写法随意（`"⌘K"` `"Cmd+Shift+P"` `"mod k"`），认不出来的原样输出。⌘ ⌥ ⇧ 这些符号读屏念不出来，所以元素自带 `aria-label`（「Command K」），符号本身 `aria-hidden`。
+
+**`mod` 会按平台解析**：苹果设备上是 ⌘，别的机器上是 ⌃。只有 `mod` 会——写 `"ctrl alt delete"` 的人要的就是那几个键，组件不替他改。其余符号原样画出来。
+
+```tsx
+useShortcut('mod k', () => setPaletteOpen(true));
+<Kbd keys="mod k" />   // 同一张表、同一次解析
+```
+
+`useShortcut(keys, handler, options?)`。`options`：`enabled`、`scope`（`RefObject`，限定事件必须来自这个元素内部）、`passive`（不拦截浏览器默认行为）。三条规则都是关于**不触发**的：
+
+- **模态打开时，外层的快捷键全部失效**，只有 `scope` 落在对话框里的还响。否则 ⌘S 会去保存那张正在问你要不要保存的表单背后的文档。
+- **不带修饰键的快捷键在输入框里就是一个字符。** 带修饰键的照常触发——输入框里的 ⌘F 仍然是查找。
+- **按住不放只算一次命令**（`event.repeat`）。
+
+开发模式下，两个同时存在的命令绑到同一组键会告警：先挂载的那个会赢，而那不是任何人做过的决定。
+
+`GlassMenuItem.shortcut` 用同一个组件渲染，并写进菜单项的 `aria-keyshortcuts`——可见的那串符号是 `aria-hidden` 的装饰，读屏从属性里拿键。
 
 ### `MaterialView`
 `thickness`(`ultraThin`/`thin`/`regular`/`thick`) `radius`。内容层的半透明手段。
@@ -230,6 +247,24 @@ import '@ttqtt/liquid-glass-react/styles.css';
 ### `GlassSwitch`
 `checked`/`defaultChecked`/`onCheckedChange`、`label`、`aria-label`(必填，描述**打开后**的状态)。
 底层是 `input[type=checkbox][role=switch]`。**可甩**：拖动方向决定结果。打开态为系统绿。
+
+### `GlassCheckbox`
+`checked`（`boolean | 'mixed'`）/`defaultChecked`/`onCheckedChange`、`label`、`description`、`aria-label`、`disabled`、`name`/`value`。**内容层**，不是玻璃——HIG：开关、复选框、单选按钮属于窗口内容，不属于窗口边框。
+
+底层是真正的 `<input type="checkbox">`。开和关是两个**形状**（勾 / 空）而不是两种颜色。
+
+`'mixed'` 是**显示**状态，不是读者能选的值：按下半选的父项会全开，因为「一半」不是一个人点击时能表达的意思。它走的是原生 `indeterminate`——那是一个没有对应 HTML 属性的 DOM 属性，必须在渲染之后写到元素上，漏掉的话框**看起来**是半选、**念出来**是未选中。
+
+什么时候用它而不是 `GlassSwitch`：改动需要按保存才生效；设置之间有层级；或者同一组里有好几个——一列复选框对得齐、读起来是一组。
+
+### `RadioGroup`
+`label`(必填) `labelHidden` `options`(必填) `value`/`defaultValue`/`onValueChange` `orientation` `name`。内容层。
+
+`options` 是 `{ value, label, description?, disabled? }`。建在共用 `name` 的原生 `<input type="radio">` 上，**而这就是键盘模型**：整组一个 Tab 位，方向键移动并选中，到头绕回，自动跳过不可用项。组件一行都没有覆盖它。
+
+组标题渲染成真正的 `<legend>`：`fieldset` 上的 `aria-label` 各家读屏念得并不一致。每项的 `description` 用 `aria-describedby` 绑定，所以是跟着选项一起念的。
+
+超过五项会在开发模式下告警并建议换 `Picker`——HIG 的原话是一长列单选按钮占地方也读不完。两种状态用 `GlassCheckbox`：有没有那个勾比两个圆圈哪个被填上更快读懂。
 
 ### `GlassSlider`
 `value`/`defaultValue`/`onValueChange`、`min`/`max`/`step`、`formatValue`（→ `aria-valuetext`）、`minLabel`/`maxLabel`、`marks`、`aria-label`(必填)。

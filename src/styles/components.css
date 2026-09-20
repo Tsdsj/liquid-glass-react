@@ -310,6 +310,88 @@
 @media (hover: hover) {
   .lg-switch:not([data-disabled="true"]):hover .lg-switch-track { transform: scale(1.03); }
 }
+
+/* ---------- Checkbox and radio: the window body, not the window frame ----------
+ * "Use switches, checkboxes, and radio buttons in the window body, not the window frame"
+ * (toggles · macOS). So: content layer, flat, no glass. The box is filled with the accent
+ * colour when it is on and carries a **shape** as well — a checkmark, or a dash for mixed —
+ * because "avoid relying solely on different colours to communicate state".
+ *
+ * The real `<input>` sits exactly where the box is drawn, and nowhere else. Stretching it over
+ * the whole row sounds like a bigger target and is not one — the `<label>` already makes the
+ * whole row clickable, which is how a checkbox has always worked — while an input lying on top
+ * of the text stops the text being selectable and swallows anything else placed in the label.
+ */
+.lg-checkbox, .lg-radio { position: relative; display: flex; align-items: flex-start;
+  gap: var(--lg-space-3); min-height: var(--lg-hit-min); padding-block: var(--lg-space-1);
+  cursor: pointer; font-family: var(--lg-font-text); color: var(--lg-label); }
+.lg-checkbox > input, .lg-radio > input { position: absolute; width: 16px; height: 16px; margin: 0;
+  inset-inline-start: 0; inset-block-start: calc(var(--lg-space-1) + (var(--lg-text-body-leading) - 16px) / 2);
+  opacity: 0; cursor: inherit; }
+.lg-checkbox[data-disabled="true"], .lg-radio[data-disabled="true"] { opacity: .45; cursor: not-allowed; }
+
+/* Aligned with the first line of the label rather than centred on the whole block: a two-line
+   option would otherwise put the box beside the gap between its lines. */
+.lg-checkbox-box, .lg-radio-dot { flex: 0 0 auto; display: inline-flex; align-items: center;
+  justify-content: center; width: 16px; height: 16px; margin-block-start: calc((var(--lg-text-body-leading) - 16px) / 2);
+  /* A well, not a hole: `--lg-bg` is pure black in the dark appearance, which drew an empty
+     checkbox as a black square on a grey card. A translucent fill takes whatever it is sitting
+     on, which is what an empty container is supposed to look like on either appearance. */
+  border: 1px solid var(--lg-label-tertiary); background: var(--lg-fill-quaternary);
+  transition: background var(--lg-duration-press) var(--lg-ease), border-color var(--lg-duration-press) var(--lg-ease),
+    transform var(--lg-duration-press) var(--lg-ease); }
+.lg-checkbox-box { border-radius: 4px; }
+.lg-radio-dot { border-radius: 999px; }
+
+.lg-checkbox[data-state="on"] .lg-checkbox-box,
+.lg-checkbox[data-state="mixed"] .lg-checkbox-box,
+.lg-radio[data-state="on"] .lg-radio-dot { background: var(--lg-accent); border-color: var(--lg-accent); }
+/* The dot is drawn with a border rather than a child element, so it scales with the circle. */
+.lg-radio[data-state="on"] .lg-radio-dot::after { content: ''; width: 6px; height: 6px;
+  border-radius: 999px; background: var(--lg-accent-contrast); }
+
+.lg-checkbox-mark { width: 16px; height: 16px; fill: none; stroke: var(--lg-accent-contrast);
+  stroke-width: 2; stroke-linecap: round; stroke-linejoin: round;
+  opacity: 0; transition: opacity var(--lg-duration-press) var(--lg-ease); }
+.lg-checkbox[data-state="on"] .lg-checkbox-mark,
+.lg-checkbox[data-state="mixed"] .lg-checkbox-mark { opacity: 1; }
+
+.lg-checkbox-text, .lg-radio-text { display: flex; flex-direction: column; gap: 1px; min-width: 0; }
+.lg-checkbox-label, .lg-radio-label { font-size: var(--lg-text-body-size); line-height: var(--lg-text-body-leading); }
+.lg-checkbox-description, .lg-radio-description { font-size: var(--lg-text-footnote-size);
+  line-height: var(--lg-text-footnote-leading); color: var(--lg-label-secondary); }
+
+/* The ring goes on the box, not on the invisible input and not on the whole row: it has to say
+   which control has the keyboard, and a ring around a paragraph of label text does not. */
+.lg-checkbox:has(input:focus-visible) .lg-checkbox-box,
+.lg-radio:has(input:focus-visible) .lg-radio-dot {
+  outline: var(--lg-focus-width) solid var(--lg-focus); outline-offset: var(--lg-focus-offset); }
+@media (hover: hover) {
+  .lg-checkbox:not([data-disabled="true"]):hover .lg-checkbox-box,
+  .lg-radio:not([data-disabled="true"]):hover .lg-radio-dot { border-color: var(--lg-label-secondary); }
+}
+.lg-checkbox:not([data-disabled="true"]):active .lg-checkbox-box,
+.lg-radio:not([data-disabled="true"]):active .lg-radio-dot { transform: scale(.92); }
+
+/* `fieldset` resets, then the group's own layout. A fieldset with a legend is what names the
+   set to a screen reader; `aria-label` on one is not announced consistently. */
+.lg-radio-group { border: 0; margin: 0; padding: 0; min-width: 0;
+  display: flex; flex-direction: column; gap: var(--lg-space-1); }
+.lg-radio-group[data-orientation="horizontal"] { flex-direction: row; flex-wrap: wrap; gap: var(--lg-space-5); }
+.lg-radio-legend { padding: 0; margin-block-end: var(--lg-space-1);
+  font: var(--lg-weight-semibold) var(--lg-text-subhead-size)/var(--lg-text-subhead-leading) var(--lg-font-text);
+  color: var(--lg-label); }
+/* A legend is not a flex item — it is taken out of the flow by the fieldset — so the group's
+   gap does not apply to it and the margin above is what separates it from the first option. */
+
+@media (forced-colors: active) {
+  .lg-checkbox-box, .lg-radio-dot { border-color: ButtonText; background: ButtonFace; }
+  .lg-checkbox[data-state="on"] .lg-checkbox-box,
+  .lg-checkbox[data-state="mixed"] .lg-checkbox-box,
+  .lg-radio[data-state="on"] .lg-radio-dot { background: Highlight; border-color: Highlight; }
+  .lg-checkbox-mark { stroke: HighlightText; }
+  .lg-radio[data-state="on"] .lg-radio-dot::after { background: HighlightText; }
+}
 .lg-switch:not([data-disabled="true"]):has(input:active) .lg-switch-thumb { width: 28px; transition-duration: var(--lg-duration-press); }
 .lg-switch:not([data-disabled="true"]):has(input:active) .lg-switch-track { transform: scale(.97); transition-duration: var(--lg-duration-press); }
 .lg-switch > input:focus-visible + .lg-switch-track { outline: var(--lg-focus-width) solid var(--lg-focus); outline-offset: var(--lg-focus-offset); }
@@ -385,7 +467,11 @@
 .lg-menu-item:focus { outline: 2px solid var(--lg-focus); outline-offset: -2px; }
 .lg-menu-item:disabled { opacity: .45; cursor: not-allowed; }
 .lg-menu-item[data-destructive="true"] { color: var(--lg-red); }
-.lg-menu-shortcut { color: var(--lg-glass-fg-secondary); font: var(--lg-text-caption2-size) var(--lg-font-text); flex-shrink: 0; }
+/* The hint inside a menu is a `Kbd`, so it inherits the glyph order and the spoken name — but
+   not the key-cap border: a row of outlined caps down the trailing edge of a menu is a column
+   of boxes, and the menu is already a list of rows. Quiet text, the way the system draws it. */
+.lg-menu-shortcut.lg-kbd { flex-shrink: 0; min-width: 0; padding: 0; border: 0; background: none;
+  color: var(--lg-glass-fg-secondary); font-size: var(--lg-text-caption1-size); }
 .lg-menu-separator { height: 1px; background: var(--lg-edge); margin: 5px 8px; }
 .lg-menu:popover-open .lg-menu-item { animation: lg-menu-item-in var(--lg-duration-overlay) var(--lg-ease-out) both; animation-delay: calc(var(--lg-index,0) * 22ms); }
 @keyframes lg-menu-item-in { from { opacity: 0; transform: translateY(-4px); } }

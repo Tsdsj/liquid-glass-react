@@ -119,10 +119,26 @@ HIG motion：「**Let people cancel motion.** 不要让人等动画播完才能�
 
 ### B. 桌面组件（第 5–8 周，按价值排序）
 
+#### 已完成（2026-09-21，第 5 周）
+
+`GlassCheckbox`（含 mixed）、`RadioGroup`、`useShortcut` + 菜单快捷键，两个新组件页 + `Kbd` 页多一个活的示例（42 页）。
+
+两个控件都不是重新实现的：真 `<input type="checkbox">`、共用 `name` 的真单选按钮。后者尤其重要——整组一个 Tab 位、方向键移动并选中、到头绕回、跳过不可用项，这些是浏览器给的，而手写一套 roving tabindex 通常会在其中某一条上出错。
+
+`useShortcut` 与 `Kbd` 读同一张表、同一次解析 `mod`。计划里写的「冲突与作用域有规则」落成三条**不触发**的规则加一条开发期告警，见更新日志。
+
+三处值得记下来的：
+
+1. **我把 `Kbd` 改过了头。** 一度让它在非苹果平台上把符号换成单词，`kbd.spec.ts` 当场红三条。理由（PC 键帽上没有 ⌃）成立，但那不是这个组件该替调用方做的决定。收回，只留 `mod` 的平台解析。
+2. **两条守卫一开始没有证据。** 撤掉 `event.repeat` 和「输入框里的裸字母」两处判断，用例照样全绿——前者是因为 Playwright 的键盘永远发 `repeat: false`，后者是因为示例里只有一个带修饰键的快捷键，那条分支根本到不了。给示例加了一个不带修饰键的 `/`，并用合成事件测 `repeat`（并写明这比真输入弱在哪）。和第 1 周的 `grab` 是同一回事。
+3. 复选框的隐形 `<input>` 原本铺满整行。听起来是更大的目标，其实不是——`<label>` 本来就让整行可点——而压在文字上的输入框会让文字选不中，也会吞掉标签里的任何其他东西。
+
+#### 排期里的其余各项
+
 | 组件 | 为什么是它 | HIG |
 | --- | --- | --- |
-| `Checkbox`（含 mixed）、`RadioGroup` | 表单的基础件，桌面没有它们等于没有表单；`Form` 已就位 | toggles · macOS |
-| `useShortcut` + `GlassMenuItem.shortcut` | 快捷键从「能显示」变成「能用」；菜单项右侧显示 `Kbd`；冲突与作用域（对话框打开时外层失效）有规则 | keyboards「Standard keyboard shortcuts」 |
+| ~~`Checkbox`（含 mixed）、`RadioGroup`~~ **已完成** | 表单的基础件，桌面没有它们等于没有表单；`Form` 已就位 | toggles · macOS |
+| ~~`useShortcut` + `GlassMenuItem.shortcut`~~ **已完成** | 快捷键从「能显示」变成「能用」；菜单项右侧显示 `Kbd`；冲突与作用域（对话框打开时外层失效）有规则 | keyboards「Standard keyboard shortcuts」 |
 | `MenuBar` | 桌面应用的命令面；已有 `GlassMenu` 的键盘模型，缺的是横向一排、悬停时在已打开的菜单间滑动、⌥ 显示替代项 | the-menu-bar |
 | `CommandPalette`（⌘K） | 桌面网页的通用惯用语；文档站 `search.tsx` 已经是一个，抽成组件而不是让每个应用重写。a11y 模型是 combobox + listbox 的虚拟焦点——正是 0.4.0 判「Combobox 做半截比不做差」的那一套，**做完这个就顺手有了 Combobox 的骨架** | searching |
 | `PathBar`（面包屑） | 0.4.0 顺延项；桌面导航层级的标准表示 | path-controls |

@@ -54,12 +54,12 @@ export function App() {
 
 ## 有什么
 
-58 个组件，分成两层——这个分层本身就是这套设计的核心：
+60 个组件，分成两层——这个分层本身就是这套设计的核心：
 
 | 层 | 组件 |
 | --- | --- |
 | **内容**（实色，不透明） | Text、Card、Concentric、List、MaterialView、Divider、Kbd、DisclosureGroup |
-| **控件** | GlassButton、GlassSegmentedControl、GlassSwitch、GlassSlider、GlassStepper、GlassProgress、GlassBadge、Picker、ColorWell |
+| **控件** | GlassButton、GlassSegmentedControl、GlassSwitch、GlassCheckbox、RadioGroup、GlassSlider、GlassStepper、GlassProgress、GlassBadge、Picker、ColorWell |
 | **输入** | TextField、SearchField |
 | **导航** | GlassToolbar、TabBar、Sidebar、NavigationBar、GlassTabs、ScrollEdge、PageControl |
 | **布局**（骨架） | Screen、NavigationStack、SplitView、Inspector、Grid、Form |

@@ -1,8 +1,8 @@
 import { useState } from 'react';
 import {
-  Card, ColorWell, Form, FormRow, FormSection, GlassBadge, GlassButton, GlassIconButton, GlassProgress,
-  GlassSegmentedControl, GlassSlider, GlassStepper, GlassSwitch, Grid, LibraryIcon, List, ListRow, ListSection,
-  Picker, Text,
+  Card, ColorWell, Form, FormRow, FormSection, GlassBadge, GlassButton, GlassCheckbox, GlassIconButton,
+  GlassProgress, GlassSegmentedControl, GlassSlider, GlassStepper, GlassSwitch, Grid, LibraryIcon, List,
+  ListRow, ListSection, Picker, RadioGroup, Text,
 } from '@ttqtt/liquid-glass-react';
 import { Icon } from '../icons.js';
 import type { ComponentDoc } from './types.js';
@@ -853,5 +853,202 @@ ${['日', '周', '月', '季', '年'].slice(0, Number(knobs.count)).map((label, 
       '快捷色的选中态是描边，在强制颜色模式下也看得见。',
     ],
     related: ['picker', 'form', 'slider'],
+  },
+  {
+    slug: 'checkbox', name: 'GlassCheckbox', title: '复选框', group: '控件',
+    summary: '一个小方块：关着是空的，开着是一个勾，半选是一道横杠。',
+    when: [
+      '改动需要点「保存」才生效——立刻生效的用开关 GlassSwitch。',
+      '同一组里有好几个选项要一起看。一列复选框对得齐、读起来是一组；一列开关读起来是一块控制面板。',
+      '设置之间有层级：父项管着子项，子项状态不一致时父项显示半选。',
+      '互斥的多选一用单选组 RadioGroup；超过五项用选择器 Picker。',
+    ],
+    examples: [
+      {
+        id: 'checkbox-basic', title: '基础用法',
+        description: '整行都能点，文字也算。标签下面可以再加一行说明它是什么意思。',
+        height: 260,
+        knobs: [
+          { name: 'label', label: '标签', type: 'text', value: '发送每周摘要' },
+          { name: 'description', label: '第二行', type: 'text', value: '每周一早上一封，只列有变化的项目。' },
+          { name: 'disabled', label: '不可用', type: 'boolean', value: false },
+        ],
+        render: function CheckboxBasic({ knobs }) {
+          const [on, setOn] = useState(true);
+          return <div id="checkbox-basic-demo" style={{ display: 'grid', gap: 8, width: 340 }}>
+            <GlassCheckbox checked={on} onCheckedChange={setOn}
+              label={String(knobs.label)}
+              description={knobs.description ? String(knobs.description) : undefined}
+              disabled={knobs.disabled === true} />
+            <Text variant="caption1" tone="secondary">现在是{on ? '选中' : '未选中'}。</Text>
+          </div>;
+        },
+        code: knobs => `<GlassCheckbox
+  checked={on} onCheckedChange={setOn}
+  label="${knobs.label}"${knobs.description ? `\n  description="${knobs.description}"` : ''}${knobs.disabled ? '\n  disabled' : ''}
+/>`,
+      },
+      {
+        id: 'checkbox-mixed', title: '半选是父项在替子项说话',
+        description: '子项有的开有的关时，父项显示一道横杠。半选**不是**读者能选的状态：按下半选的父项会全开，因为「一半」不是一个人点击时能表达的意思。',
+        height: 300,
+        render: function CheckboxMixed() {
+          const [styles, setStyles] = useState({ bold: true, italic: false, underline: false });
+          const values = Object.values(styles);
+          const all = values.every(Boolean);
+          const some = values.some(Boolean);
+          return <div id="checkbox-mixed-demo" style={{ display: 'grid', gap: 6, width: 340 }}>
+            <GlassCheckbox label="文字样式" checked={all ? true : some ? 'mixed' : false}
+              onCheckedChange={next => setStyles({ bold: next, italic: next, underline: next })} />
+            <div style={{ display: 'grid', gap: 6, paddingInlineStart: 28 }}>
+              {([['bold', '加粗'], ['italic', '斜体'], ['underline', '下划线']] as const).map(([key, label]) =>
+                <GlassCheckbox key={key} label={label} checked={styles[key]}
+                  onCheckedChange={next => setStyles(current => ({ ...current, [key]: next }))} />)}
+            </div>
+          </div>;
+        },
+        code: `<GlassCheckbox label="文字样式"
+  checked={all ? true : some ? 'mixed' : false}
+  onCheckedChange={next => setAll(next)} />`,
+      },
+      {
+        id: 'checkbox-in-form', title: '放在表单里',
+        description: '一组并列的选项对齐在左边缘，缩进用来表示从属关系。',
+        height: 300,
+        render: function CheckboxInForm() {
+          const [picked, setPicked] = useState<Record<string, boolean>>({ email: true, push: true, sms: false });
+          return <div id="checkbox-form-demo" style={{ width: 360 }}>
+            <Form>
+              <FormSection header="通知方式" footer="改完记得按保存。">
+                <div style={{ display: 'grid', gap: 2, padding: '4px 16px 12px' }}>
+                  {([['email', '邮件'], ['push', '推送'], ['sms', '短信']] as const).map(([key, label]) =>
+                    <GlassCheckbox key={key} label={label} checked={picked[key]}
+                      onCheckedChange={next => setPicked(current => ({ ...current, [key]: next }))} />)}
+                </div>
+              </FormSection>
+            </Form>
+          </div>;
+        },
+        code: `<FormSection header="通知方式" footer="改完记得按保存。">
+  <GlassCheckbox label="邮件" checked={email} onCheckedChange={setEmail} />
+  <GlassCheckbox label="推送" checked={push} onCheckedChange={setPush} />
+</FormSection>`,
+      },
+    ],
+    props: [
+      { name: 'checked', type: "boolean | 'mixed'", description: "受控状态。`'mixed'` 只用来显示，不是读者能选的值。" },
+      { name: 'defaultChecked', type: 'boolean', default: 'false', description: '非受控时的初始值。' },
+      { name: 'onCheckedChange', type: '(checked: boolean) => void', description: '状态变化。半选被按下时给 true。' },
+      { name: 'label', type: 'ReactNode', description: '方块旁边的文字。没有它就必须给 aria-label。' },
+      { name: 'description', type: 'ReactNode', description: '第二行，说这个选项意味着什么。会和标签一起读出来。' },
+      { name: 'aria-label', type: 'string', description: '没有可见标签时必须给——一个空方块只会被念成「复选框」。' },
+      { name: 'disabled', type: 'boolean', default: 'false', description: '不可用。' },
+      { name: 'name / value', type: 'string', description: '参与原生表单提交。' },
+    ],
+    notes: [
+      '底层是真正的 <input type="checkbox">：Tab 能聚焦，空格切换，能参与表单提交。',
+      '半选用的是原生的 indeterminate 属性，所以读屏会念「半选中」，而不是只有画面上有一道横杠。',
+      '开和关是两个**形状**（勾 / 空）而不是两种颜色——分不清颜色的人也要能看出状态。',
+      '焦点环画在方块上，不是画在整行上：它要说清楚键盘在哪个控件上。',
+    ],
+    related: ['switch', 'radio-group', 'form'],
+  },
+  {
+    slug: 'radio-group', name: 'RadioGroup', title: '单选组', group: '控件',
+    summary: '两到五个互斥选项，每个都有自己的标签。',
+    when: [
+      '选项互斥，而且每一项都需要一句自己的说明——这是它和分段控件的分界线。',
+      '超过五项换选择器 Picker：一长列单选按钮占地方，也读不完。',
+      '只有开/关两种，用复选框：有没有那个勾比两个圆圈哪个被填上更快读懂。',
+      '能同时选多个，用一列复选框。',
+    ],
+    examples: [
+      {
+        id: 'radio-basic', title: '基础用法',
+        description: '整组只占一个 Tab 位，进去之后用方向键选——这是原生单选按钮自带的键盘模型，没有任何一行代码去改它。',
+        height: 300,
+        knobs: [
+          { name: 'label', label: '组标题', type: 'text', value: '同步频率' },
+          { name: 'orientation', label: '排列', type: 'select', value: 'vertical', options: [
+            { value: 'vertical', label: '竖排' }, { value: 'horizontal', label: '横排' },
+          ] },
+        ],
+        render: function RadioBasic({ knobs }) {
+          const [value, setValue] = useState('hourly');
+          return <div id="radio-basic-demo" style={{ width: 340 }}>
+            <RadioGroup label={String(knobs.label)} value={value} onValueChange={setValue}
+              orientation={knobs.orientation as 'vertical'}
+              options={[
+                { value: 'realtime', label: '实时' },
+                { value: 'hourly', label: '每小时' },
+                { value: 'manual', label: '手动' },
+              ]} />
+          </div>;
+        },
+        code: knobs => `<RadioGroup
+  label="${knobs.label}"${knobs.orientation === 'vertical' ? '' : '\n  orientation="horizontal"'}
+  value={value} onValueChange={setValue}
+  options={[
+    { value: 'realtime', label: '实时' },
+    { value: 'hourly', label: '每小时' },
+    { value: 'manual', label: '手动' },
+  ]}
+/>`,
+      },
+      {
+        id: 'radio-description', title: '每项带一句说明',
+        description: '说明会和选项一起被读出来，不是读完选项之后再单独念一遍。',
+        height: 300,
+        render: function RadioDescription() {
+          const [value, setValue] = useState('balanced');
+          return <div id="radio-description-demo" style={{ width: 380 }}>
+            <RadioGroup label="渲染质量" value={value} onValueChange={setValue} options={[
+              { value: 'balanced', label: '均衡', description: '默认。大多数机器上都跑得动。' },
+              { value: 'high', label: '高', description: '折射更细腻，也更吃显卡。' },
+              { value: 'off', label: '关闭', description: '只保留模糊。最省电。' },
+            ]} />
+          </div>;
+        },
+        code: `<RadioGroup label="渲染质量" value={value} onValueChange={setValue} options={[
+  { value: 'balanced', label: '均衡', description: '默认。大多数机器上都跑得动。' },
+  { value: 'high', label: '高', description: '折射更细腻，也更吃显卡。' },
+]} />`,
+      },
+      {
+        id: 'radio-disabled', title: '某一项不可选',
+        description: '不可选的项会被方向键跳过——这也是原生行为，不用自己算下一个是谁。',
+        height: 260,
+        render: function RadioDisabled() {
+          const [value, setValue] = useState('personal');
+          return <div id="radio-disabled-demo" style={{ width: 340 }}>
+            <RadioGroup label="账户类型" value={value} onValueChange={setValue} options={[
+              { value: 'personal', label: '个人' },
+              { value: 'team', label: '团队', description: '当前套餐不含。', disabled: true },
+              { value: 'enterprise', label: '企业' },
+            ]} />
+          </div>;
+        },
+        code: `options={[
+  { value: 'personal', label: '个人' },
+  { value: 'team', label: '团队', disabled: true },
+]}`,
+      },
+    ],
+    props: [
+      { name: 'label', type: 'ReactNode', required: true, description: '这组选项在问什么。渲染成 <legend>。' },
+      { name: 'labelHidden', type: 'boolean', default: 'false', description: '视觉上藏起来，读屏仍然念得到。周围已经问过了才关。' },
+      { name: 'options', type: 'RadioOption[]', required: true, description: '`{ value, label, description?, disabled? }`。' },
+      { name: 'value / defaultValue', type: 'string', description: '受控 / 非受控的选中值。' },
+      { name: 'onValueChange', type: '(value: string) => void', description: '选中项变化。' },
+      { name: 'orientation', type: "'vertical' | 'horizontal'", default: "'vertical'", description: '横排只适合短标签，而且每项占的宽度要一致。' },
+      { name: 'name', type: 'string', description: '一组输入共用的 name。不传会自动生成。' },
+    ],
+    notes: [
+      '底层是共用 name 的原生 <input type="radio">：整组一个 Tab 位，方向键移动并选中，到头会绕回来，不可用的项自动跳过。这些都是浏览器给的，组件一行都没有覆盖。',
+      '组标题是真正的 <legend>——fieldset 上的 aria-label 各家读屏念得并不一致。',
+      '每项的说明用 aria-describedby 绑定，所以是跟着选项一起念的。',
+      '超过五项会在开发模式下告警，并建议换 Picker。',
+    ],
+    related: ['checkbox', 'picker', 'segmented-control'],
   },
 ];

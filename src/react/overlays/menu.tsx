@@ -2,6 +2,7 @@
 import { useId, useRef, type CSSProperties, type HTMLAttributes, type ReactNode, type RefAttributes } from 'react';
 import { useGlassSurface, type GlassSurfaceOptions } from '../system/material.js';
 import { splitSurface } from '../system/props.js';
+import { Kbd } from '../content/kbd.js';
 import { cx, useControllable } from '../system/utils.js';
 import { triggerElement, usePopover, type Align, type OpenProps } from './anchor.js';
 
@@ -90,11 +91,12 @@ export function GlassMenu({ trigger, open: controlled, defaultOpen = false, onOp
         {item.separatorBefore && <div role="separator" className="lg-menu-separator" />}
         <button type="button" role={item.checked === undefined ? 'menuitem' : selection === 'single' ? 'menuitemradio' : 'menuitemcheckbox'}
           aria-checked={item.checked} tabIndex={-1} className="lg-menu-item" data-label={item.label}
+            aria-keyshortcuts={item.shortcut}
           data-destructive={item.destructive ? 'true' : 'false'} disabled={item.disabled}
           onClick={() => { close(); item.onSelect(); }}>
           {item.icon && <span className="lg-menu-icon" aria-hidden="true">{item.icon}</span>}
           <span className="lg-menu-label">{item.label}</span>
-          {item.shortcut && <span aria-hidden="true" className="lg-menu-shortcut">{item.shortcut}</span>}
+          {item.shortcut && <Kbd className="lg-menu-shortcut" keys={item.shortcut} aria-hidden="true" />}
         </button>
       </div>)}</div>
     </div>

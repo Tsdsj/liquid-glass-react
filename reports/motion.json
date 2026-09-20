@@ -1,29 +1,46 @@
 {
-  "generated": "2026-09-20T14:03:51.566Z",
-  "pages": 40,
-  "swept": 40,
-  "probes": 2464,
-  "asked": 562,
-  "still": 2,
+  "generated": "2026-09-20T18:28:56.442Z",
+  "pages": 42,
+  "swept": 42,
+  "probes": 2564,
+  "asked": 572,
+  "still": 4,
   "byPage": {
+    "card": 1,
     "grid": 1,
-    "segmented-control": 1
+    "divider": 1,
+    "toast": 1
   },
   "byKind": {
-    "activate lg-stepper-button": 2
+    "activate lg-stepper-button": 3,
+    "activate lg-field-input": 1
   },
   "sample": [
     {
-      "slug": "grid",
+      "slug": "card",
       "trigger": "activate",
-      "target": "lg-stepper-button #0",
+      "target": "lg-stepper-button #1",
       "owed": true,
       "moved": []
     },
     {
-      "slug": "segmented-control",
+      "slug": "grid",
       "trigger": "activate",
       "target": "lg-stepper-button #1",
+      "owed": true,
+      "moved": []
+    },
+    {
+      "slug": "divider",
+      "trigger": "activate",
+      "target": "lg-stepper-button #1",
+      "owed": true,
+      "moved": []
+    },
+    {
+      "slug": "toast",
+      "trigger": "activate",
+      "target": "lg-field-input #0",
       "owed": true,
       "moved": []
     }

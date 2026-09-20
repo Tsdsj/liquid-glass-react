@@ -8,6 +8,7 @@ export * from './system/surface.js';
 export { useFusion, type FusionOptions } from './system/fusion.js';
 export { usePull, attachPull, elementAt, type PullOptions, type PullRange, type PullRelease } from './system/pull.js';
 export { LibraryIcon, type LibraryIconProps, type LibraryIconName } from './system/icon.js';
+export { useShortcut, parseShortcut, matchesShortcut, useCommandKey, type Shortcut, type UseShortcutOptions } from './system/shortcut.js';
 
 /* Content layer — solid surfaces and standard materials, never Liquid Glass. */
 export * from './content/text.js';
@@ -31,6 +32,8 @@ export * from './controls/progress.js';
 export * from './controls/badge.js';
 export * from './controls/picker.js';
 export * from './controls/color-well.js';
+export * from './controls/checkbox.js';
+export * from './controls/radio-group.js';
 
 /* Fields */
 export * from './fields/text-field.js';

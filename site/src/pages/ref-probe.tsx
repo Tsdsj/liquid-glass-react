@@ -16,6 +16,7 @@ import {
   List, ListRow, ListSection, MaterialView, Text,
   GlassBackdrop, GlassBadge, GlassButton, GlassIconButton, GlassProgress, GlassSegmentedControl,
   GlassSlider, GlassStepper, GlassSwitch, GlassSurface, GlassGroup, LibraryIcon, Picker, ColorWell, Banner,
+  GlassCheckbox, RadioGroup,
   SearchField, TextField,
   Inspector, NavigationBar, NavigationStack, PageControl, Screen, ScrollEdge, Sidebar, SplitView, TabBar, GlassTabs, GlassToolbar, ToolbarGroup, ToolbarSpacer,
   GlassActionSheet, GlassAlert, GlassDialog, GlassMenu, GlassMenuButton, GlassMenuDescription, GlassPopover, GlassSheet, ContextMenu, Tooltip,
@@ -72,6 +73,9 @@ const entries: Array<[string, (p: Probe) => ReactNode]> = [
   ['GlassSlider', p => <GlassSlider {...p} aria-label="slider" defaultValue={40} />],
   ['GlassStepper', p => <GlassStepper {...p} aria-label="stepper" defaultValue={1} />],
   ['GlassSwitch', p => <GlassSwitch {...p} aria-label="switch" />],
+  ['GlassCheckbox', p => <GlassCheckbox {...p} label="checkbox" />],
+  ['RadioGroup', p => <RadioGroup {...p} label="radios"
+    options={[{ value: 'a', label: 'A' }, { value: 'b', label: 'B' }]} />],
   /* Inline, so the probe measures one shape rather than whichever the window happened to pick. */
   ['Picker', p => <Picker {...p} label="picker" presentation="inline"
     options={[{ value: 'a', label: 'A' }, { value: 'b', label: 'B' }]} />],

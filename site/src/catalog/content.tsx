@@ -2,6 +2,7 @@ import { useState } from 'react';
 import {
   Card, Concentric, DisclosureGroup, Divider, Form, FormRow, FormSection, GlassButton,
   GlassStepper, GlassSwitch, Grid, Kbd, LibraryIcon, TextField, List, ListRow, ListSection, MaterialView, Text,
+  useShortcut,
 } from '@ttqtt/liquid-glass-react';
 import { demoLink } from '../site/demo.js';
 import type { ComponentDoc } from './types.js';
@@ -317,14 +318,50 @@ export const contentDocs: ComponentDoc[] = [
         </Text>,
         code: `<Text variant="body">按 <Kbd keys="⌘K" /> 打开搜索。</Text>`,
       },
+      {
+        id: 'kbd-bind', title: '把它接上',
+        description: '`useShortcut` 和 `Kbd` 读的是同一张表、用同一套规则解析 `mod`，所以印在屏幕上的和真正监听的不会是两回事。下面这个是活的：按一下试试。',
+        height: 240,
+        render: function KbdBind() {
+          const [count, setCount] = useState(0);
+          const [bare, setBare] = useState(0);
+          useShortcut('mod j', () => setCount(n => n + 1));
+          /* 不带修饰键的那一个，就是为了让「在输入框里打字时它不响」可以被看见。 */
+          useShortcut('/', () => setBare(n => n + 1));
+          return <div id="kbd-bind-demo" style={{ display: 'grid', gap: 12, justifyItems: 'center' }}>
+            <div style={{ display: 'flex', gap: 16, alignItems: 'center' }}>
+              <span style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+                <Kbd keys="mod j" /><Text as="span" variant="title2" id="kbd-bind-count">{count}</Text>
+              </span>
+              <span style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+                <Kbd keys="/" /><Text as="span" variant="title2" id="kbd-bind-bare">{bare}</Text>
+              </span>
+            </div>
+            <TextField label="随便打点什么" placeholder="在这里打 / 和 j" style={{ width: 260 }} />
+            <Text variant="caption1" tone="secondary">
+              在上面的输入框里打字：<Kbd keys="/" /> 只是一个斜杠，而 <Kbd keys="mod j" /> 仍然是命令。
+            </Text>
+          </div>;
+        },
+        code: `useShortcut('mod j', () => setCount(n => n + 1));
+useShortcut('/', () => setBare(n => n + 1));   // 不带修饰键，打字时不响
+
+// 屏幕上印的是同一个来源
+<Kbd keys="mod j" />`,
+      },
     ],
     props: [
-      { name: 'keys', type: 'string', required: true, description: '快捷键。符号、单词、加号或空格分隔都认；认不出来的原样输出。' },
+      { name: 'keys', type: 'string', required: true, description: '快捷键。符号、单词、加号或空格分隔都认；认不出来的原样输出。`mod` 会按平台解析成 ⌘ 或 Ctrl。' },
       { name: 'aria-label', type: 'string', description: '读屏听到的内容。默认是拼成单词的版本，比如「Command K」。' },
+      { name: 'useShortcut(keys, handler, options?)', type: 'Hook', description: '把同一个写法绑成真的快捷键。options：`enabled`、`scope`（限定在某个元素内）、`passive`（不拦截浏览器默认行为）。' },
     ],
     notes: [
       '⌘ ⌥ ⇧ 这些符号读屏念不出来——有的直接跳过，有的念成「兴趣点符号」。所以元素自己带 aria-label，符号本身标了 aria-hidden。',
       '修饰键顺序由组件决定，不由传入顺序决定。',
+      '`mod` 在苹果设备上是 ⌘，在别的机器上是 Ctrl——而且显示和绑定用的是同一次解析。屏幕上写着 ⌘K、实际监听 Ctrl+K，是一句印在界面上的假话。',
+      '有模态对话框打开时，外层的快捷键全部失效，只有限定在对话框内的还响。否则 ⌘S 会去保存那张正在问你要不要保存的表单背后的文档。',
+      '不带修饰键的快捷键在输入框里打字时不触发——那是字母。带修饰键的照常触发，因为输入框里的 ⌘F 仍然是查找。',
+      '开发模式下，两个同时存在的命令绑到同一组键会告警：先挂载的那个会赢，而那不是任何人做过的决定。',
     ],
     related: ['text', 'menu'],
   },
