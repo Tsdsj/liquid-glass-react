@@ -352,6 +352,10 @@ useShortcut('mod k', () => setPaletteOpen(true));
 `TabBarItem`: `key` `href` `label` `icon` `badge` `badgeLabel` `onSelect`。
 是 `<nav>` + 链接 + `aria-current="page"`，**不是** tablist。宽屏自动变形为侧边栏。
 
+侧边栏形态是**源列表**：一整块玻璃跑满窗口高度，分区链接在上，`accessory` 在一条分隔线下面占掉剩下的部分并**自己滚动**（分区因此不会跟着走）。手机上 `accessory` 回到浮动胶囊的上方——那里没有一条栏要填。
+
+> `accessory` 的 flex 基准是 0 而不是 `auto`：收缩是按基准分配的，一个四十页的列表基准高到能把上面四条分区压成一条 47px 的滚动条。
+
 ### `Sidebar`
 `aria-label`(必填) `header` `footer` `side`(`leading`/`trailing`) + `GlassSurfaceOptions`。自动使用大玻璃。
 
@@ -440,7 +444,9 @@ useShortcut('mod k', () => setPaletteOpen(true));
 > 替代项永远只是快捷写法。按住修饰键这件事本身不可发现，所以**不能有命令只住在那里**——它对不知道有这回事的人，以及对一次只能按一个键的人，等于不存在。
 
 ### `MenuBar`
-`menus: MenuBarMenu[]`（`key` `title` `items: GlassMenuItem[]` `disabled`）、`aria-label`(必填)、`open` / `defaultOpen` / `onOpenChange`（当前打开的是哪个菜单的 `key`，`null` 表示没有）。`role="menubar"`，标题是 `menuitem`。
+`menus: MenuBarMenu[]`（`key` `title` `items: GlassMenuItem[]` `selection` `disabled`）、`aria-label`(必填)、`open` / `defaultOpen` / `onOpenChange`（当前打开的是哪个菜单的 `key`，`null` 表示没有）。`role="menubar"`，标题是 `menuitem`。
+
+`selection` 和 `GlassMenu` 上的那个是同一个，但它按**菜单**给而不是按栏给——一条菜单栏里两种都有是常态：「外观」是三选一，三个辅助功能开关各自独立。把一组单选画成复选框，等于告诉读屏用户「选了另一个，这个还留着」，而那不是实际发生的事。
 
 和一排菜单按钮的区别全在**打开之后**：指针移到另一个标题上时开着的菜单跟着走，左右方向键也是——**一次按键换一个菜单**，不是先关再开，中间没有一帧是空的。整排只占一个 Tab 位，下方向键打开，菜单内部是 `GlassMenu` 的键盘模型，Escape 关闭并把焦点还给标题。
 

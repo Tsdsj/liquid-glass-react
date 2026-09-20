@@ -16,6 +16,16 @@ export interface MenuBarMenu {
   title: string;
   items: GlassMenuItem[];
   /**
+   * What a checkmark in this menu means, exactly as on `GlassMenu`. `multiple` (the default)
+   * is a set of independent toggles; `single` is one choice out of the list.
+   *
+   * It is per menu rather than per bar because one menu bar routinely has both: Appearance is
+   * one choice out of three, and the accessibility switches are three independent ones. A menu
+   * of radios announced as checkboxes tells a screen-reader user that picking another will
+   * leave the first one on, which is not what happens.
+   */
+  selection?: 'multiple' | 'single';
+  /**
    * A whole menu that does not apply right now. Still drawn: a menu bar that changes shape is
    * a menu bar nobody can learn. Same rule one level down — disable an item, never hide it.
    */
@@ -150,6 +160,7 @@ export function MenuBar({
         key={menu.key}
         aria-label={menu.title}
         items={menu.items}
+        selection={menu.selection}
         align="start"
         placement="below"
         open={openKey === menu.key}

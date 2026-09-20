@@ -19,6 +19,17 @@
      somewhere to sit, and gives the glass something to actually refract. */
   --site-canvas: #e6e8ee;
   --site-canvas-top: #edeff4;
+
+  /* How wide the page itself is allowed to get. It steps up with the window so the content is
+     not stranded in the middle of a 1900px display, and it stops, because past about 1300px
+     nothing is gained but distance between the sidebar and the outline.
+
+     The **line** is not this: prose is already capped at `--lg-readable` where it is written.
+     A second cap here in `ch` made things worse rather than better — `ch` resolves against
+     each element's own font size, and a card that inherits the document's 16px got 847px out
+     of the same declaration that gave a 12px lede 635. Measured, removed. */
+  --doc-column: 980px;
+  --doc-aside: 200px;
 }
 :root[data-app-theme="dark"] { --site-canvas: #000; --site-canvas-top: #0a0a0d; }
 * { box-sizing: border-box; }
@@ -52,11 +63,14 @@ code { font-family: var(--lg-font-mono); font-size: .92em; }
 .app-main { display: flex; flex-direction: column; flex: 1; min-width: 0; }
 .app-main .lg-screen-content { display: flex; flex-direction: column; flex: 1;
   padding-block-end: calc(96px + env(safe-area-inset-bottom)); }
-.app-content { flex: 1; width: 100%; max-width: 980px; margin-inline: auto;
+.app-content { flex: 1; width: 100%; max-width: var(--doc-column); margin-inline: auto;
   padding-inline: var(--lg-margin); outline: none; }
 /* No background, border or shadow of its own — the glass groups inside carry it. */
-.app-bar { display: flex; justify-content: flex-end; width: 100%; max-width: 980px; margin-inline: auto; }
-.app-footer { width: 100%; max-width: 980px; margin-inline: auto;
+.app-bar { display: flex; align-items: center; justify-content: space-between; gap: var(--lg-space-3);
+  width: 100%; max-width: var(--doc-column); margin-inline: auto; }
+/* Commands only exist where there is a window to put them on. */
+.app-bar-commands { display: none; }
+.app-footer { width: 100%; max-width: var(--doc-column); margin-inline: auto;
   padding: var(--lg-space-8) var(--lg-margin) var(--lg-space-6);
   display: flex; flex-wrap: wrap; gap: var(--lg-space-3); align-items: center; justify-content: space-between;
   border-block-start: 1px solid var(--lg-separator); margin-block-start: var(--lg-space-10); }
@@ -180,7 +194,12 @@ code { font-family: var(--lg-font-mono); font-size: .92em; }
    -------------------------------------------------------------------------- */
 .demo-settings { display: flex; flex-wrap: wrap; gap: var(--lg-space-2); justify-content: flex-end;
   margin-block-end: var(--lg-space-2); }
-.demo-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: var(--lg-space-4); align-items: start; }
+/* `min(100%, …)` as the floor, not the bare 420px: a track whose minimum is wider than the
+   space it has does not shrink, it overflows, and that is a horizontal scrollbar on a phone.
+   420 rather than 320 because a demo of a row of buttons at 327px wrapped into three rows —
+   the example was showing the reader what happens in a narrow column, not what the component
+   looks like. */
+.demo-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 420px), 1fr)); gap: var(--lg-space-4); align-items: start; }
 .demo-card { border: 1px solid var(--lg-separator); border-radius: var(--lg-radius-l); overflow: hidden;
   background: var(--lg-bg-grouped-2); display: flex; flex-direction: column; scroll-margin-block-start: 88px; }
 .demo-card-body { padding: var(--lg-space-4) var(--lg-space-4) var(--lg-space-2); display: grid; gap: var(--lg-space-1); }
@@ -371,12 +390,24 @@ code { font-family: var(--lg-font-mono); font-size: .92em; }
    there is finally room for the outline as well.
    -------------------------------------------------------------------------- */
 @media (min-width: 1024px) {
+  :root { --doc-column: 1000px; }
   .app-main { padding-inline-start: var(--lg-sidebar-width); padding-block-end: var(--lg-space-10); }
-  .app-content, .app-bar, .app-footer { max-width: 1000px; padding-inline: var(--lg-margin-regular); }
+  /* The title bar is pinned to the viewport, so the rail is not in its containing block and
+     it was centring against the whole window while the content centred against what is left
+     of it — 130px out of step, which is what made the toolbar read as floating rather than as
+     part of the page. */
+  .app-main > .lg-screen-bar[data-edge="top"] { padding-inline: var(--lg-sidebar-width) 0; }
+  .app-content, .app-bar, .app-footer { padding-inline: var(--lg-margin-regular); }
+  /* The window has a title bar from here up: commands on the leading side.
+     The preferences popover stays. Taking it away looked like removing a duplicate and was
+     not: a menu bar and a settings panel are two different things on a desktop — the menus are
+     the fast, keyboard-reachable path, and the panel is where the sentence explaining that
+     these switches sit *on top of* the system's own settings can actually fit. */
+  .app-bar-commands { display: block; }
 }
 @media (min-width: 1280px) {
-  .app-content, .app-bar, .app-footer { max-width: 1120px; }
-  .component-layout { display: grid; grid-template-columns: minmax(0, 1fr) 180px; gap: var(--lg-space-8); align-items: start; }
+  :root { --doc-column: 1180px; }
+  .component-layout { display: grid; grid-template-columns: minmax(0, 1fr) var(--doc-aside); gap: var(--lg-space-8); align-items: start; }
   .outline-compact { display: none; }
   .outline { display: flex; flex-direction: column; gap: 2px; position: sticky; inset-block-start: 88px;
     padding-block: var(--lg-space-6); }
@@ -389,6 +420,10 @@ code { font-family: var(--lg-font-mono); font-size: .92em; }
   .outline-link:hover { color: var(--lg-label); }
   .outline-link[aria-current="location"] { color: var(--lg-label); border-inline-start-color: var(--lg-accent);
     font-weight: var(--lg-weight-semibold); }
+}
+/* One more step and then it stops. A 1900px display gets a wider page, not a wider line. */
+@media (min-width: 1600px) {
+  :root { --doc-column: 1300px; --doc-aside: 216px; }
 }
 @media (pointer: coarse) {
   .subnav-link, .outline-link { min-height: var(--lg-hit-min); }

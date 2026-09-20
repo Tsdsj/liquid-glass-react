@@ -41,7 +41,14 @@ export interface TabBarProps extends Omit<HTMLAttributes<HTMLElement>, 'children
   sidebarBreakpoint?: number;
   /** Optional heading shown above the items in sidebar form. */
   sidebarHeader?: ReactNode;
-  /** Persistent accessory (a now-playing strip, a status line). Never screen-specific actions. */
+  /**
+   * Persistent accessory (a now-playing strip, a status line, the current section's own list of
+   * pages). Never screen-specific actions.
+   *
+   * In sidebar form it lands **inside** the source list, under a separator, and takes the rest
+   * of the column with its own scroll — which is what a desktop sidebar is. Above the tab bar
+   * on a phone, where the bar is a floating capsule and there is no column to fill.
+   */
   accessory?: ReactNode;
 }
 
@@ -125,11 +132,24 @@ export function TabBar({
         <span aria-hidden="true" className="lg-selection-lens" ref={lensRef} />
         {items.map(item => link(item, 'tab'))}
       </div>
+      {/**
+        * In sidebar form the accessory is **inside** this surface, under a separator, and it
+        * is the half that scrolls.
+        *
+        * A source list on a desktop is one material running the full height of the window.
+        * Rendered outside, the accessory sat on the page background below a small floating
+        * pill — two different treatments in one column, and a column that was mostly empty:
+        * measured at 1680×1000, the pill was 228×114 in a 260×1000 rail.
+        */}
+      {asSidebar && accessory && <>
+        <div role="none" className="lg-tabbar-divider" />
+        <div className="lg-tabbar-accessory">{accessory}</div>
+      </>}
     </GlassSurface>
     {/* Search sits on its own glass so it reads as a separate destination, not a sixth section. */}
     {search && <GlassSurface {...surface} size={asSidebar ? 'large' : 'small'} radius={asSidebar ? 26 : 'pill'} className="lg-tabbar-group lg-tabbar-search">
       <div className="lg-tab-links">{link(search, 'search')}</div>
     </GlassSurface>}
-    {accessory && <div className="lg-tabbar-accessory">{accessory}</div>}
+    {!asSidebar && accessory && <div className="lg-tabbar-accessory">{accessory}</div>}
   </nav>;
 }

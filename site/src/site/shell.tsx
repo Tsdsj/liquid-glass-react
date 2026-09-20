@@ -2,6 +2,7 @@ import { useEffect, useState, type MouseEvent, type ReactNode } from 'react';
 import { GlassProvider, LibraryIcon, Screen, TabBar, Text, ToastProvider, ToolbarGroup } from '@ttqtt/liquid-glass-react';
 import { Icon } from '../icons.js';
 import { PreferencesButton, type SitePreferences } from './preferences.js';
+import { SiteMenuBar } from './menus.js';
 import { ComponentSearch } from './search.js';
 import { sectionOf } from '../router.js';
 
@@ -108,8 +109,23 @@ export function Shell({ path, go, secondaryNav, children }: {
         * inset, reserves the measured bar height from the content, and owns the one edge
         * effect the view is allowed.
         */}
+      {/**
+        * The window's title bar: commands on the leading side, the two things that are not
+        * commands on the trailing side.
+        *
+        * The menu bar only exists from 1024 up, which is the same width at which the tab bar
+        * becomes a sidebar — below it there is no window to put a menu bar on.
+        *
+        * The preferences popover stays at every width. Hiding it once the menus could carry
+        * the same five settings looked like removing a duplicate, and it is not one: the menus
+        * are the fast path, and the panel is the only place the sentence saying these switches
+        * layer *on top of* the system's own settings will fit.
+        */}
       <Screen scroll="page" className="app-main" top={
         <header className="app-bar">
+          <div className="app-bar-commands">
+            <SiteMenuBar value={preferences} onChange={setPreferences} go={go} />
+          </div>
           <ToolbarGroup>
             <ComponentSearch onNavigate={go} />
             <PreferencesButton value={preferences} onChange={setPreferences} />
