@@ -47,6 +47,8 @@ import '@ttqtt/liquid-glass-react/styles.css';
 
 `useGlassPolicy()` 返回解析后的策略，含 `resolvedTheme`、`reduceMotion`、`reduceTransparency`、`increaseContrast`、`forcedColors`。
 
+**「减少动效」覆盖这个库画的每一个元素**，按类名前缀（`lg-` 开头，前缀不是包含，所以你自己的 `mlg-card` 不会被误伤），不是一份组件名单。曾经是名单，于是库里没被写进去的部分在这个设置打开时照常动——而这种错是没有声音的：被记住的那几个组件，正是你会先去检查的那几个。由脚本驱动的动画（比如徽标数字变化时那一下）管不到，所以那些组件自己读 `reduceMotion`。
+
 **最外层的 Provider 会把显式覆盖写到 `<html>` 上**：`data-lg-motion`、`data-lg-transparency`、`data-lg-contrast`，取值就是你传的那个（`'system'` 时不写属性，因为媒体查询已经管了）。这是必须的：玻璃听这三个属性，是因为材质在 JS 里读 policy；而页面转场、标准材质、标签栏这些**只在 CSS 里决定**的东西只认媒体查询，于是 `motion="reduced"` 会变成一个看起来生效、实际什么都没变的开关。只有最外层写——嵌套的 Provider 管的是一棵子树，把它写到 `<html>` 上等于让一张深色卡片替整页做主。卸载时恢复原值，不是清空：应用自己可能也在写这些属性。
 
 ### 文案：`GlassStrings` / `useGlassStrings()` / `defaultStrings`

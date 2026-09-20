@@ -37,6 +37,21 @@ export function triggerElement(
  * popovers and action sheets morph from their source rather than appearing from nowhere,
  * so the origin is projected onto the panel box every time it is repositioned.
  */
+/**
+ * The side the panel will land on, without being able to measure it.
+ *
+ * `26` is the 10px gap plus the 16px the panel keeps from the edge of the window — the same
+ * two numbers `position()` uses, so a prediction and the decision cannot drift apart.
+ */
+function predictPlacement(node: HTMLElement, trigger: Element | null, placement: 'below' | 'above' | 'auto') {
+  if (placement !== 'auto') return placement;
+  const rect = trigger?.getBoundingClientRect();
+  if (!rect) return 'below';
+  const room = innerHeight - rect.bottom - 26;
+  const height = Number(node.dataset.height) || 0;
+  return height ? (room >= height ? 'below' : 'above') : (room >= rect.top ? 'below' : 'above');
+}
+
 export function usePopover(
   open: boolean, setOpen: (value: boolean) => void,
   panel: RefObject<HTMLDivElement | null>, trigger: RefObject<HTMLButtonElement | null>,
@@ -59,6 +74,22 @@ export function usePopover(
     const node = panel.current; if (!node) return;
     if (!open) { if (node.matches(':popover-open')) node.hidePopover(); return; }
     if (typeof node.showPopover !== 'function') { onChange.current(false); return; }
+    /**
+     * Which way it is about to open, decided **before** it is shown.
+     *
+     * `@starting-style` is read at the moment the panel stops being `display: none`, and
+     * `showPopover()` is that moment — so anything written afterwards is too late to be the
+     * style it grows from. `position()` runs a few lines below and sets the same attribute
+     * correctly, which is why this went unnoticed: the arrow, the shadow and everything else
+     * that reads `data-placement` were right, and only the one frame that decides the
+     * direction of the entrance was wrong. Measured on the `placement="above"` example: the
+     * panel opened 16px above the button and settled at 10, growing away from it.
+     *
+     * For an explicit placement this is simply the answer. For `auto` it is a prediction, made
+     * the same way `position()` makes the decision — against the panel's height from last time
+     * if it has been open before, and otherwise against whichever side has more room.
+     */
+    if (anchor === 'source') node.dataset.placement = predictPlacement(node, trigger.current, placement);
     if (!node.matches(':popover-open')) node.showPopover();
     let frame = 0;
     const position = () => {
@@ -99,6 +130,8 @@ export function usePopover(
          cannot be derived from `--lg-origin-y` in CSS, and `placement="auto"` means the
          requested side and the resolved side are often not the same. */
       node.dataset.placement = landedBelow ? 'below' : 'above';
+      // What it actually measured, so the next open can predict with it rather than guess.
+      node.dataset.height = String(Math.round(height));
     };
     const schedule = () => { cancelAnimationFrame(frame); frame = requestAnimationFrame(position); };
     position();

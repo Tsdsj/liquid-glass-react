@@ -191,6 +191,29 @@
    The spring only runs once the gesture ends. */
 .lg-selection-lens[data-pulling="true"] { transition: width var(--lg-duration-spring) var(--lg-spring), box-shadow var(--lg-duration-press) var(--lg-ease); --lg-lens-swell-x: 1.04; --lg-lens-swell-y: 1.06; box-shadow: var(--lg-lens-shadow-held); z-index: 1; }
 .lg-segmented-track:has(input:checked:active) .lg-selection-lens:not([data-pulling="true"]) { --lg-lens-swell-x: 1.06; --lg-lens-swell-y: 1.1; transition-duration: var(--lg-duration-press); }
+/**
+ * Hovering the selected segment lifts the capsule a little.
+ *
+ * An unselected segment grows its own label on hover; the selected one had nothing — the
+ * inventory found it sixty-three times, once per page that has a segmented control. And it is
+ * the one segment where hover feedback earns its keep: the selected segment is the part you
+ * are meant to *drag*, so the thing that ought to answer the pointer is the capsule, not the
+ * label underneath it.
+ *
+ * The lift is the shadow and **not** a scale, which is not a stylistic choice: the swell is
+ * written into `transform`, and starting a transform transition on hover replaces whatever
+ * transform transition is already running — so moving the pointer across the control mid-glide
+ * would restart the glide. `interruptible.spec.ts` said so within a minute of the first version
+ * of this rule. A press may change where the capsule is going; a pointer passing over it may not.
+ */
+@media (hover: hover) {
+  .lg-segmented-track:has(.lg-segment:hover input:checked) .lg-selection-lens:not([data-pulling="true"]),
+  /* The same thing, on the two other controls built from the same capsule. All three are
+     dragged by their selected item, so all three owe the pointer the same answer. */
+  .lg-tab-list:has(.lg-tab[aria-selected="true"]:hover) .lg-selection-lens:not([data-pulling="true"]),
+  .lg-tab-links:has(.lg-tab-link[aria-current="page"]:hover) .lg-selection-lens:not([data-pulling="true"]) {
+    box-shadow: var(--lg-lens-shadow-held); }
+}
 
 /* ---------- Tabs: shared sliding indicator ---------- */
 .lg-tabs-surface { width: fit-content; padding: 4px; }
@@ -285,8 +308,25 @@
 .lg-popover, .lg-menu { position: fixed; inset: auto; margin: 0; width: 300px; max-width: calc(100vw - 32px); max-height: calc(100dvh - 32px); overflow-y: auto; overscroll-behavior: contain; scrollbar-gutter: stable; padding: var(--lg-space-5); border: 0; transform-origin: var(--lg-origin-x,50%) var(--lg-origin-y,0%); }
 .lg-popover:not(:popover-open), .lg-menu:not(:popover-open) { display: none; }
 .lg-popover:popover-open, .lg-menu:popover-open { display: block; opacity: 1; transform: scale(1) translateY(0); transition: opacity var(--lg-duration-release) var(--lg-ease-out), transform var(--lg-duration-spring) var(--lg-spring), display var(--lg-duration-release) allow-discrete, overlay var(--lg-duration-release) allow-discrete; }
+/**
+ * It grows out of the control, so it has to grow *towards* where it landed.
+ *
+ * The scale already starts from the trigger — `anchor.tsx` projects the trigger's centre onto
+ * the panel box and writes it into `--lg-origin-*`. The six pixels are the rest of the
+ * gesture: the first frame sits nearer the button than the last, so the panel reads as coming
+ * out of it. Unsigned, that offset was right for a panel below the trigger and exactly wrong
+ * for one above it — measured on the `placement="above"` example, it opened 16px from the
+ * button and settled at 10, growing away from the thing that opened it.
+ */
 @starting-style { .lg-popover:popover-open, .lg-menu:popover-open { opacity: 0; transform: scale(.86) translateY(-6px); } }
+@starting-style {
+  .lg-popover[data-placement="above"]:popover-open,
+  .lg-menu[data-placement="above"]:popover-open { opacity: 0; transform: scale(.86) translateY(6px); }
+}
 .lg-popover:not(:popover-open), .lg-menu:not(:popover-open) { opacity: 0; transform: scale(.94) translateY(-4px); transition: opacity var(--lg-duration-press) var(--lg-ease), transform var(--lg-duration-press) var(--lg-ease), display var(--lg-duration-press) allow-discrete, overlay var(--lg-duration-press) allow-discrete; }
+/* And back into it on the way out, for the same reason. */
+.lg-popover[data-placement="above"]:not(:popover-open),
+.lg-menu[data-placement="above"]:not(:popover-open) { transform: scale(.94) translateY(4px); }
 .lg-popover::backdrop, .lg-menu::backdrop { background: transparent; }
 
 /* The arrow. "Point the arrow as directly as possible at the element that revealed the
@@ -774,9 +814,22 @@
 .lg-root[data-reduced-motion="true"], .lg-root[data-reduced-motion="true"] * { --lg-shift-x: 0px; --lg-shift-y: 0px; --lg-stretch-x: 1; --lg-stretch-y: 1; }
 .lg-root[data-reduced-motion="true"]:is(.lg-popover,.lg-menu,.lg-dialog), .lg-root[data-reduced-motion="true"]:is(.lg-popover,.lg-menu,.lg-dialog)::backdrop { transform: none !important; opacity: 1; }
 @media (prefers-reduced-motion: reduce) {
-  .lg-root,.lg-root *,.lg-root *::before,.lg-root *::after { animation: none !important; transition: none !important; }
-  /* Components outside a .lg-root still animate, so they are named explicitly. */
-  .lg-tabbar,.lg-tabbar *,.lg-navbar *,.lg-list-row *,.lg-stepper * { transition: none !important; animation: none !important; }
+  /**
+   * Every element this library draws, not a list of the ones somebody remembered.
+   *
+   * This used to name `.lg-root` and four components by hand, and the rest of the library kept
+   * animating with Reduce Motion on: the colour well's selection ring, the disclosure summary's
+   * hover, the split view's divider. A list that has to be added to every time a component gains
+   * a transition is a list that will be wrong, and the failure is silent — the setting looks
+   * like it works, because the parts that were remembered are the parts you check first.
+   *
+   * `[class^="lg-"], [class*=" lg-"]` is a class **beginning** `lg-`, not a class containing it,
+   * so a consumer's own `mlg-card` is not caught by it.
+   */
+  :is([class^="lg-"],[class*=" lg-"]),
+  :is([class^="lg-"],[class*=" lg-"]) *,
+  :is([class^="lg-"],[class*=" lg-"])::before,
+  :is([class^="lg-"],[class*=" lg-"])::after { animation: none !important; transition: none !important; }
   /* An indeterminate bar has nothing to communicate by moving; it becomes a static track. */
   .lg-progress[data-determinate="false"] .lg-progress-fill { animation: none; width: 100%; opacity: .5; }
   .lg-progress-ring { animation: none; border-top-color: var(--lg-fill); }
@@ -800,9 +853,10 @@
  * every value it can then hold — `reduced` or `none`, `reduced` or `opaque` — means the same
  * thing to a stylesheet.
  */
-[data-lg-motion] :is(.lg-root,.lg-tabbar,.lg-navbar,.lg-list-row,.lg-stepper),
-[data-lg-motion] :is(.lg-root,.lg-tabbar,.lg-navbar,.lg-list-row,.lg-stepper) *,
-[data-lg-motion] .lg-root *::before, [data-lg-motion] .lg-root *::after {
+[data-lg-motion] :is([class^="lg-"],[class*=" lg-"]),
+[data-lg-motion] :is([class^="lg-"],[class*=" lg-"]) *,
+[data-lg-motion] :is([class^="lg-"],[class*=" lg-"])::before,
+[data-lg-motion] :is([class^="lg-"],[class*=" lg-"])::after {
   animation: none !important; transition: none !important; }
 [data-lg-motion] .lg-progress[data-determinate="false"] .lg-progress-fill { animation: none; width: 100%; opacity: .5; }
 [data-lg-motion] .lg-progress-ring { animation: none; border-top-color: var(--lg-fill); }
@@ -955,7 +1009,11 @@
 .lg-disclosure-summary { display: flex; align-items: center; gap: var(--lg-space-3);
   min-height: var(--lg-hit-min); padding: var(--lg-space-2) var(--lg-space-4); cursor: pointer;
   list-style: none; user-select: none; -webkit-user-select: none;
-  font-family: var(--lg-font-text); color: var(--lg-label); }
+  font-family: var(--lg-font-text); color: var(--lg-label);
+  /* The hover and press tints were already there and arrived between frames. A summary is a
+     row you press, and the rule is the same one list rows follow. */
+  transition: background var(--lg-duration-press) var(--lg-ease); }
+.lg-disclosure-summary:active { background: var(--lg-fill-tertiary); }
 /* The UA triangle is replaced, not hidden by opacity: two markers is worse than the wrong one. */
 .lg-disclosure-summary::-webkit-details-marker { display: none; }
 .lg-disclosure-summary::marker { content: ''; }
@@ -980,7 +1038,12 @@
   opacity: .42; transition: opacity var(--lg-duration-release) var(--lg-ease), scale var(--lg-duration-spring) var(--lg-spring); }
 .lg-page-dot[aria-selected="true"] > span { opacity: 1; scale: 1.15; }
 .lg-page-dot:focus-visible { outline: var(--lg-focus-width) solid var(--lg-focus); outline-offset: -1px; border-radius: 999px; }
-@media (hover: hover) { .lg-page-dot:not([aria-selected="true"]):hover > span { opacity: .7; } }
+@media (hover: hover) {
+  .lg-page-dot:not([aria-selected="true"]):hover > span { opacity: .7; }
+  /* The current dot had nothing: it is already at full opacity, and the rule above excludes
+     it. It grows instead — it is the dot the gesture is carried from. */
+  .lg-page-dot[aria-selected="true"]:hover > span { scale: 1.35; }
+}
 /* The touch region grows on the **cross** axis only.
    Growing it on both, the way a standalone button does, makes each dot's 44px square overlap
    its neighbours': the dots are 18px apart, so dot 2's region covers dot 1's centre entirely,
@@ -1055,7 +1118,10 @@
 /* "Keep the divider visible": a hairline that is always there, with a grab region around it
    wider than the line — the line is 1px and a pointer target is not. */
 .lg-split-divider { position: relative; flex: 0 0 1px; background: var(--lg-separator);
-  cursor: col-resize; touch-action: none; }
+  cursor: col-resize; touch-action: none;
+  /* It brightens under the pointer and again while it is being dragged; both were instant.
+     A hairline that snaps between two greys reads as a repaint, not as a control answering. */
+  transition: background var(--lg-duration-press) var(--lg-ease); }
 .lg-split-divider::before { content: ''; position: absolute; inset-block: 0;
   inset-inline-start: 50%; translate: -50% 0; width: 11px; }
 .lg-split-divider:focus-visible { outline: var(--lg-focus-width) solid var(--lg-focus); outline-offset: 1px; }
@@ -1224,7 +1290,15 @@
 .lg-color-well-input { position: absolute; inset: 0; width: 100%; height: 100%; margin: 0; padding: 0;
   border: 0; background: transparent; opacity: 0; cursor: pointer; }
 .lg-color-well-swatch { width: 32px; height: 32px; border-radius: var(--lg-radius-xs);
-  box-shadow: inset 0 0 0 1px var(--lg-separator); }
+  box-shadow: inset 0 0 0 1px var(--lg-separator);
+  transition: transform var(--lg-duration-press) var(--lg-ease); }
+/* The pointer lands on an invisible `<input type="color">` stretched over the box, so the
+   thing that has to answer is the swatch underneath it — the well had no hover or press state
+   at all, which on a control whose entire surface is the value is the one place it shows. */
+@media (hover: hover) {
+  .lg-color-well-box:hover:not(:has(:disabled)) .lg-color-well-swatch { transform: scale(1.06); }
+}
+.lg-color-well-box:active:not(:has(:disabled)) .lg-color-well-swatch { transform: scale(.96); }
 .lg-color-well-value { color: var(--lg-label-secondary); font-variant-numeric: tabular-nums;
   font: var(--lg-weight-regular) var(--lg-text-footnote-size)/1.2 var(--lg-font-mono); }
 /* 8, not 4: the HIG's minimum between controls, and the room two focus rings need in order
@@ -1237,8 +1311,12 @@
   outline: var(--lg-focus-width) solid transparent; outline-offset: var(--lg-focus-offset);
   transition: outline-color var(--lg-duration-press) var(--lg-ease); }
 .lg-color-well-quick:focus-visible { outline-color: var(--lg-focus); }
+/* `box-shadow` as well as `transform`: the selected state *is* the ring, and it was the one
+   property not in the transition list — so choosing a colour was a ring appearing between two
+   frames, on the one control whose whole job is to show you what you picked. */
 .lg-color-well-quick > span { width: 20px; height: 20px; border-radius: var(--lg-radius-xs);
-  box-shadow: inset 0 0 0 1px var(--lg-separator); transition: transform var(--lg-duration-press) var(--lg-ease); }
+  box-shadow: inset 0 0 0 1px var(--lg-separator);
+  transition: transform var(--lg-duration-press) var(--lg-ease), box-shadow var(--lg-duration-release) var(--lg-ease-out); }
 /* Selected is a ring, not just a colour — the state of a colour control must not itself be a colour. */
 .lg-color-well-quick[aria-pressed="true"] > span { box-shadow: inset 0 0 0 1px var(--lg-separator), 0 0 0 2px var(--lg-label); }
 .lg-color-well[data-disabled] { opacity: .4; }

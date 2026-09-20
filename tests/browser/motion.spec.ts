@@ -257,3 +257,163 @@ test('a column closing does not re-wrap its own contents on the way out', async 
   expect(during, `the contents narrowed from ${before} to ${during} while the column closed`)
     .toBeCloseTo(before, 0);
 });
+
+/* =========================================================================================
+ * Morph: a panel grows out of the control that opened it, in the direction it opened.
+ *
+ * HIG, and the review checklist's wording: "menus / sheets / dialogs **morph out of the
+ * control** that opened them". On the web the honest approximation is a scale from the
+ * trigger's own position — which the anchoring code already computes — plus a small offset
+ * towards the trigger, so the first frame is nearer the button than the last.
+ *
+ * Measured as the gap between the two boxes, because that is the thing being claimed. A
+ * transform-matrix assertion would pass on a panel that grows out of the wrong edge.
+ * ======================================================================================= */
+
+/** Distance between the panel's near edge and the trigger's, in the axis they are stacked. */
+async function gapToTrigger(page: Page, panel: string, trigger: Locator) {
+  const box = (await trigger.boundingBox())!;
+  return page.evaluate(({ selector, top, bottom }) => {
+    const node = document.querySelector(selector);
+    if (!node) return Number.NaN;
+    const rect = node.getBoundingClientRect();
+    // Whichever way round they are: positive is "apart", and smaller is "nearer the control".
+    return rect.top >= bottom ? rect.top - bottom : top - rect.bottom;
+  }, { selector: panel, top: box.y, bottom: box.y + box.height });
+}
+
+for (const direction of [
+  { name: 'downwards', demo: '#popover-above-demo', button: '向下', placement: 'below' },
+  { name: 'upwards', demo: '#popover-above-demo', button: '向上', placement: 'above' },
+]) {
+  test(`a popover that opens ${direction.name} starts nearer its trigger than it ends`, async ({ page }) => {
+    await page.goto('/#/components/popover');
+    await page.waitForTimeout(700);
+    const demo = page.locator(direction.demo);
+    const trigger = demo.getByRole('button', { name: direction.button });
+    await trigger.scrollIntoViewIfNeeded();
+    await trigger.click();
+
+    const panel = page.locator('.lg-popover:popover-open');
+    await expect(panel).toHaveAttribute('data-placement', direction.placement);
+    const early = await gapToTrigger(page, '.lg-popover:popover-open', trigger);
+    await page.waitForTimeout(700);
+    const settled = await gapToTrigger(page, '.lg-popover:popover-open', trigger);
+
+    expect(early, `it opened ${early.toFixed(1)}px from the button and settled at ${settled.toFixed(1)}px — it grew away from it`)
+      .toBeLessThan(settled);
+  });
+}
+
+/* =========================================================================================
+ * The gaps the inventory found once it stopped reporting things that were already right.
+ * ======================================================================================= */
+
+test('the colour well swatch ring arrives rather than appears', async ({ page }) => {
+  await page.goto('/#/components/color-well');
+  await page.waitForTimeout(700);
+  // 绿 is selected in this example, so 红 is a swatch whose ring has to arrive.
+  const target = page.locator('#color-swatches-demo .lg-color-well-quick').first();
+  await target.scrollIntoViewIfNeeded();
+  await target.click();
+  /* The ring is a `box-shadow`, and `box-shadow` was not in the transition list — so the
+     selection state of a colour control changed with nothing to see. */
+  const moving = await running(target);
+  expect(moving.join(' '), `nothing ran on the swatch: ${moving.join(' ') || '(none)'}`).toContain('box-shadow');
+});
+
+test('a disclosure summary reacts to the pointer over time, not between frames', async ({ page }) => {
+  await page.goto('/#/components/disclosure');
+  await page.waitForTimeout(700);
+  const summary = page.locator('#main .lg-disclosure-summary').first();
+  await summary.scrollIntoViewIfNeeded();
+  const box = (await summary.boundingBox())!;
+  await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2);
+  expect(await running(summary), 'the hover background switched with no transition').not.toHaveLength(0);
+});
+
+test('the split view divider lights up over time', async ({ page }) => {
+  await page.goto('/#/components/split-view');
+  await page.waitForTimeout(700);
+  const divider = page.locator('#main .lg-split-divider').first();
+  await divider.scrollIntoViewIfNeeded();
+  const box = (await divider.boundingBox())!;
+  await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2);
+  expect(await running(divider), 'the divider changed colour with no transition').not.toHaveLength(0);
+});
+
+test('hovering the segment that is already selected still does something', async ({ page }) => {
+  await page.goto('/#/components/segmented-control');
+  await page.waitForTimeout(700);
+  const selected = page.locator('#segmented-basic .lg-segment:has(input:checked)');
+  const lens = page.locator('#segmented-basic .lg-selection-lens');
+  await selected.scrollIntoViewIfNeeded();
+  const box = (await selected.boundingBox())!;
+  await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2);
+  /* The capsule is the selected segment's feedback, so the answer lives on the lens rather
+     than on the segment — but "no answer at all" is what the inventory found sixty-three
+     times, on every page that has a segmented control. */
+  expect(await running(lens), 'the selected segment is the one you can drag, and it said nothing')
+    .not.toHaveLength(0);
+});
+
+test('under reduced motion none of these move', async ({ page }) => {
+  await reduceMotion(page);
+  await page.goto('/#/components/color-well');
+  await page.waitForTimeout(700);
+  const swatch = page.locator('#color-swatches-demo .lg-color-well-quick').first();
+  await swatch.scrollIntoViewIfNeeded();
+  await swatch.click();
+  expect(await running(swatch), 'the swatch ring animated with Reduce Motion on').toHaveLength(0);
+
+  await page.goto('/#/components/disclosure');
+  await page.waitForTimeout(700);
+  const summary = page.locator('#main .lg-disclosure-summary').first();
+  await summary.scrollIntoViewIfNeeded();
+  const box = (await summary.boundingBox())!;
+  await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2);
+  expect(await running(summary), 'the summary animated with Reduce Motion on').toHaveLength(0);
+});
+
+/**
+ * The same question on the other three controls built around a selected item.
+ *
+ * All four are dragged by whatever is currently selected, and in all four the selected item
+ * was the one that answered a hover with nothing — the unselected ones all had a rule and the
+ * selected one fell through it. The answer lands on the capsule (or the dot), which is a
+ * sibling of the thing under the pointer, so the assertion looks where the feedback is.
+ */
+for (const control of [
+  { name: '页内标签', url: '/#/components/tabs', item: '#tabs-basic .lg-tab[aria-selected="true"]', feedback: '#tabs-basic .lg-selection-lens' },
+  { name: '标签栏', url: '/#/components/tab-bar', item: '#main .lg-tab-link[aria-current="page"]', feedback: '#main .lg-tabbar .lg-selection-lens' },
+  { name: '页码点', url: '/#/components/page-control', item: '#main .lg-page-dot[aria-selected="true"]', feedback: '#main .lg-page-dot[aria-selected="true"] > span' },
+]) {
+  test(`hovering the current ${control.name} answers the pointer`, async ({ page }) => {
+    await page.goto(control.url);
+    await page.waitForTimeout(700);
+    const item = page.locator(control.item).first();
+    await item.scrollIntoViewIfNeeded();
+    const box = (await item.boundingBox())!;
+    await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2);
+    expect(await running(page.locator(control.feedback).first()), 'the current item said nothing')
+      .not.toHaveLength(0);
+  });
+}
+
+test('the colour well itself reacts to the pointer, not just its swatches', async ({ page }) => {
+  await page.goto('/#/components/color-well');
+  await page.waitForTimeout(700);
+  const box = page.locator('#main .lg-color-well-box').first();
+  await box.scrollIntoViewIfNeeded();
+  const rect = (await box.boundingBox())!;
+  await page.mouse.move(rect.x + rect.width / 2, rect.y + rect.height / 2);
+  /* The pointer is over an invisible `<input type="color">`; the visible swatch is underneath
+     it, and that is what has to move. */
+  expect(await running(box), 'hovering the well did nothing').not.toHaveLength(0);
+  await page.mouse.down();
+  await page.waitForTimeout(30);
+  const pressed = await box.locator('.lg-color-well-swatch').evaluate(node =>
+    new DOMMatrix(getComputedStyle(node).transform).a);
+  await page.mouse.up();
+  expect(pressed, `the swatch was at ${pressed.toFixed(3)} while held`).toBeLessThan(1);
+});

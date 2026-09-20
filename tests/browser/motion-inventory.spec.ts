@@ -29,12 +29,23 @@ import { dirname, resolve } from 'node:path';
 /** One thing we did to the page, and what moved because of it. */
 interface Probe {
   slug: string;
-  /** How a reader would describe the action: "press", "hover", "focus", "toggle". */
+  /** How a reader would describe the action: "hover", "press", "activate", "focus". */
   trigger: string;
   /** The element it landed on, as a stable-ish description. */
   target: string;
   /** `animation-name`s and transitioned properties that were running one frame later. */
   moved: string[];
+  /**
+   * Whether motion is actually owed here. Only these count as findings.
+   *
+   * The first version counted every empty reading and produced 1,255 of them — and most were
+   * the library being right. A focus ring is an `outline` and appears at once, as the system's
+   * own does; a card is content and should not react to a pointer passing over it; an
+   * activation that changed nothing on screen has nothing to animate. A sweep whose output is
+   * mostly correct behaviour is one nobody reads, and the number at the top of it
+   * ("1,255 findings") is worse than no number, because somebody will quote it.
+   */
+  owed: boolean;
 }
 
 /**
@@ -57,10 +68,34 @@ const PROBE_LIMIT = 3;
  */
 const PAGE_LIMIT = 24;
 
+/**
+ * What counts as something a pointer is supposed to get a reaction out of.
+ *
+ * The control layer, in other words. A text field is left out on purpose: pressing one owes a
+ * focus ring, not a press animation, and the ring is an outline. `.lg-card` is in the target
+ * list but not in here — it is probed so the report shows it was looked at, and it is not a
+ * finding when it sits still, because content is supposed to sit still.
+ */
+const INTERACTIVE = 'button, a[href], summary, [role="switch"], [role="tab"], '
+  + '.lg-split-divider, .lg-list-row, .lg-sidebar-row, .lg-page-dot, .lg-color-swatch, .lg-segment, '
+  + 'input[type="checkbox"], input[type="radio"], input[type="range"], input[type="color"]';
+
+/**
+ * …and what cancels that, because the control is in a state where nothing is owed.
+ *
+ * A disabled button is supposed to ignore the pointer; a `ListRow` with no `onSelect` is a line
+ * of text. Without this the report's largest entries were the library being right: sixteen
+ * readings from the disabled examples on the button page, eighteen from rows that are not
+ * rows you can press.
+ */
+const NOT_OWED = ':disabled, [aria-disabled="true"], [data-disabled="true"], '
+  + '[data-disabled="true"] *, .lg-list-row:not([data-interactive="true"]), '
+  + '.lg-list-row:not([data-interactive="true"]) *';
+
 async function probeTargets(page: Page) {
-  return page.evaluate(limit => {
+  return page.evaluate(({ limit, interactive, notOwed }) => {
     const seen = new Map<string, number>();
-    const out: { selector: string; label: string }[] = [];
+    const out: { selector: string; label: string; interactive: boolean }[] = [];
     const nodes = document.querySelectorAll<HTMLElement>(
       '#main :is(button, a[href], input, summary, [role="switch"], [role="tab"], [role="separator"], ' +
       '.lg-list-row, .lg-sidebar-row, .lg-page-dot, .lg-color-swatch, .lg-segment, .lg-card)');
@@ -69,16 +104,24 @@ async function probeTargets(page: Page) {
       if (node.closest('.example-toolbar, .code-block, .outline, .subnav')) return;
       const box = node.getBoundingClientRect();
       if (!box.width || !box.height) return;
-      const kind = node.className.split(/\s+/).find(name => name.startsWith('lg-'))
-        ?? node.getAttribute('role') ?? node.tagName.toLowerCase();
+      /* The most specific `lg-` class, not the first: every glass element carries `lg-root`
+         first, so naming by the first one filed sixteen different controls under "lg-root". */
+      const classes = node.className.split(/\s+/).filter(name => name.startsWith('lg-'));
+      const own = classes.find(name => name !== 'lg-root') ?? classes[0];
+      const kind = own ?? node.getAttribute('role') ?? node.tagName.toLowerCase();
       const count = seen.get(kind) ?? 0;
       if (count >= limit) return;
       seen.set(kind, count + 1);
       node.setAttribute('data-motion-probe', String(index));
-      out.push({ selector: `[data-motion-probe="${index}"]`, label: `${kind} #${count}` });
+      /* `own` as well as the role test: the documentation site's own buttons and links are on
+         these pages too, in every example, and this sweep is about the library. A plain text
+         link in a paragraph owes no animation, and forty-two readings saying so is how a
+         report stops being read. */
+      out.push({ selector: `[data-motion-probe="${index}"]`, label: `${kind} #${count}`,
+        interactive: !!own && node.matches(interactive) && !node.matches(notOwed) });
     });
     return out;
-  }, PROBE_LIMIT);
+  }, { limit: PROBE_LIMIT, interactive: INTERACTIVE, notOwed: NOT_OWED });
 }
 
 /** Kept up to date after every page, so a run that is cut short still leaves its findings. */
@@ -99,29 +142,65 @@ async function writeReport(body: object) {
  */
 const SETTLE = 40;
 
-/** What is animating on this element or inside it, just after the trigger. */
+/**
+ * What is animating on this element or inside it, just after the trigger — and failing that,
+ * on its immediate surroundings.
+ *
+ * The second look is not slack, it is the shape of these controls. A segmented control answers
+ * a hover on the selected segment by lifting the **capsule**, which is a sibling of that
+ * segment, not a child of it; a colour well's visible swatch is a sibling of the invisible
+ * `<input type="color">` that receives the pointer. Reading only the element's own subtree
+ * reported both as dead, sixty-six times between them, after they had been fixed and their
+ * behaviour proved by a test. A neighbour that started moving within forty milliseconds of
+ * this hover is this hover's answer; it is marked `^` in the report so a reader can see the
+ * feedback landed next door rather than here.
+ */
 async function moving(page: Page, selector: string): Promise<string[]> {
   await page.waitForTimeout(SETTLE);
   return page.evaluate(target => {
     const node = document.querySelector(target);
     if (!node) return [];
-    return node.getAnimations({ subtree: true }).map(animation => {
+    const name = (animation: Animation, near: boolean) => {
       const css = animation as CSSTransition & CSSAnimation;
-      return css.transitionProperty ? `transition:${css.transitionProperty}` : `animation:${css.animationName ?? '?'}`;
-    });
+      const what = css.transitionProperty ? `transition:${css.transitionProperty}` : `animation:${css.animationName ?? '?'}`;
+      return near ? `^${what}` : what;
+    };
+    const own = node.getAnimations({ subtree: true });
+    if (own.length) return own.map(animation => name(animation, false));
+    return (node.parentElement?.getAnimations({ subtree: true }) ?? []).map(animation => name(animation, true));
   }, selector);
 }
 
-/** The whole document, for triggers whose effect lands somewhere else entirely. */
-async function movingAnywhere(page: Page): Promise<string[]> {
+/**
+ * Remember what was already running, and what the page looked like, before an activation.
+ *
+ * Both halves exist because the first version asked "is anything animating in the document"
+ * and got "yes" every single time: one indeterminate progress bar spins forever on the page
+ * that documents it, and several pages have one. That reading was true, useless, and — since
+ * it never once came back empty — it meant the whole `activate` dimension tested nothing.
+ */
+async function markDocument(page: Page) {
+  return page.evaluate(() => {
+    const store = window as unknown as { __before: Set<Animation> };
+    store.__before = new Set(document.getAnimations());
+    // Cheap signature of "what is on screen", to tell a click that did something from one
+    // that did nothing. Nothing changed means nothing was owed.
+    return document.querySelectorAll('*').length;
+  });
+}
+
+/** Animations that were **not** running before the trigger, named by where they landed. */
+async function startedSince(page: Page): Promise<{ moved: string[]; changed: number }> {
   await page.waitForTimeout(SETTLE);
   return page.evaluate(() => {
-    return document.getAnimations().map(animation => {
+    const store = window as unknown as { __before: Set<Animation> };
+    const moved = document.getAnimations().filter(animation => !store.__before.has(animation)).map(animation => {
       const css = animation as CSSTransition & CSSAnimation;
       const owner = (css.effect as KeyframeEffect | null)?.target as HTMLElement | null;
       const where = owner?.className?.split?.(/\s+/).find((name: string) => name.startsWith('lg-')) ?? owner?.tagName?.toLowerCase() ?? '?';
       return `${where} ${css.transitionProperty ? `transition:${css.transitionProperty}` : `animation:${css.animationName ?? '?'}`}`;
     });
+    return { moved, changed: document.querySelectorAll('*').length };
   });
 }
 
@@ -160,32 +239,52 @@ test('the motion inventory', async ({ page }) => {
     process.stdout.write(`  ${slug} (${targets.length})`);
     const began = Date.now();
 
-    for (const { selector, label } of targets) {
+    for (const { selector, label, interactive } of targets) {
       const node = sheet.locator(selector);
       if (!(await node.isVisible().catch(() => false))) continue;
+      /**
+       * Into view first, and only then measure.
+       *
+       * `boundingBox()` is in viewport coordinates, and `mouse.move` to a y below the fold
+       * moves the pointer nowhere in particular — the control is never hovered and the reading
+       * comes back "nothing moved". That is the sweep testing the scroll position rather than
+       * the component, and it is indistinguishable in the report from a real gap: a list row
+       * with a perfectly good hover transition was filed as a finding because it was 1,400px
+       * down the page.
+       */
+      await node.scrollIntoViewIfNeeded({ timeout: 600 }).catch(() => {});
       const box = await node.boundingBox().catch(() => null);
-      if (!box) continue;
+      if (!box || box.y < 0 || box.y + box.height > 1000) continue;
       const centre = { x: box.x + box.width / 2, y: box.y + box.height / 2 };
+      // And confirm the pointer actually arrived, rather than assuming it.
+      await sheet.mouse.move(centre.x, centre.y);
+      if (!(await node.evaluate(element => element.matches(':hover')).catch(() => false))) continue;
 
       // Hover, then press, then release — the three states every control is supposed to have.
-      await sheet.mouse.move(centre.x, centre.y);
-      probes.push({ slug, trigger: 'hover', target: label, moved: await moving(sheet, selector) });
+      probes.push({ slug, trigger: 'hover', target: label, owed: interactive, moved: await moving(sheet, selector) });
 
       await sheet.mouse.down();
-      probes.push({ slug, trigger: 'press', target: label, moved: await moving(sheet, selector) });
+      probes.push({ slug, trigger: 'press', target: label, owed: interactive, moved: await moving(sheet, selector) });
 
       /* Everything the release does — a menu opening, a panel swapping, a toast arriving —
-         happens somewhere other than the control, so this one looks at the whole document. */
+         happens somewhere other than the control, so this one looks at the whole document:
+         only what started because of the release, and only when the release changed anything. */
+      const was = await markDocument(sheet);
       await sheet.mouse.up();
-      probes.push({ slug, trigger: 'activate', target: label, moved: await movingAnywhere(sheet) });
+      const after = await startedSince(sheet);
+      probes.push({ slug, trigger: 'activate', target: label, owed: after.changed !== was, moved: after.moved });
 
-      /* Keyboard focus is its own state, and the one most often left with no ring at all.
+      /* Keyboard focus is its own state. Never a finding: the ring is an `outline` and appears
+         at once, which is what the system's own ring does — `catalog.spec.ts` is what checks
+         it is there at all. Recorded anyway, because "nothing here animates on focus" is worth
+         being able to see rather than assume.
+
          With an explicit timeout: the activation above may have replaced this element, and
          `focus()` then waits the default thirty seconds for it to come back. Fourteen controls
          at thirty seconds each is seven minutes on one page, which is how the first version of
          this sweep managed to look like an infinite loop. */
       await node.focus({ timeout: 600 }).catch(() => {});
-      probes.push({ slug, trigger: 'focus', target: label, moved: await moving(sheet, selector) });
+      probes.push({ slug, trigger: 'focus', target: label, owed: false, moved: await moving(sheet, selector) });
 
       // Put the page back: an activation may have opened something modal over the next probe.
       await sheet.keyboard.press('Escape').catch(() => {});
@@ -194,7 +293,7 @@ test('the motion inventory', async ({ page }) => {
     }
 
     process.stdout.write(` ${((Date.now() - began) / 1000).toFixed(1)}s\n`);
-    const still = probes.filter(probe => probe.moved.length === 0);
+    const still = probes.filter(probe => probe.owed && probe.moved.length === 0);
     const byPage = new Map<string, number>();
     const byKind = new Map<string, number>();
     for (const probe of still) {
@@ -211,6 +310,9 @@ test('the motion inventory', async ({ page }) => {
       pages: slugs.length,
       swept: slugs.indexOf(slug) + 1,
       probes: probes.length,
+      /* Of the probes where motion was owed. The rest are in `asked` and are not findings —
+         see `Probe.owed` for what "owed" means and why the distinction is the whole report. */
+      asked: probes.filter(probe => probe.owed).length,
       still: still.length,
       byPage: rank(byPage),
       byKind: rank(byKind),
