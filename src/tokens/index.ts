@@ -5,6 +5,16 @@ export type GlassDensity = 'compact' | 'comfortable';
 export type GlassTransparency = 'system' | 'reduced' | 'opaque';
 export type GlassMotion = 'system' | 'reduced' | 'none';
 export type GlassContrast = 'system' | 'more';
+/**
+ * Which set of metrics the interface is drawn with.
+ *
+ * `auto` — the default — reads `(pointer: fine) and (min-width: 768px)`: a cursor, on a screen
+ * wide enough that a desktop layout is the honest one. A tablet with a trackpad reports a fine
+ * pointer at phone width, and 22px controls there would be the wrong answer to the right
+ * question. The resolved value is on the policy as `resolvedPlatform` and, when it was
+ * overridden explicitly, on `<html>` as `data-lg-platform`.
+ */
+export type GlassPlatform = 'auto' | 'desktop' | 'touch';
 export type BackdropTone = 'light' | 'dark' | 'mixed';
 export type GlassQuality = 'balanced' | 'high';
 /**
@@ -31,6 +41,7 @@ export interface GlassPolicy {
   transparency?: GlassTransparency;
   motion?: GlassMotion;
   contrast?: GlassContrast;
+  platform?: GlassPlatform;
 }
 
 /** Optical parameters per material and per glass size. Sizes are CSS pixels. */
@@ -45,9 +56,22 @@ export const materialTokens = {
   },
 } as const;
 
+/**
+ * Touch metrics. The heights here are the iOS ones and are what the stylesheet's
+ * `--lg-height-*` tokens hold by default; on desktop CSS substitutes the macOS table, so
+ * `controlHeight` is the number to reason about in TypeScript rather than the number that will
+ * necessarily be drawn. `radius` is not switched by platform: it feeds the refraction geometry,
+ * and changing the lens's shape by pointer kind is a different decision from changing its size.
+ */
 export const densityTokens = {
   compact: { controlHeight: 36, radius: 12, gap: 6 },
   comfortable: { controlHeight: 44, radius: 18, gap: 8 },
+} as const;
+
+/** The same two, as macOS draws them: regular 22pt, small 19. See `tokens.css`. */
+export const desktopDensityTokens = {
+  compact: { controlHeight: 19, radius: 12, gap: 6 },
+  comfortable: { controlHeight: 22, radius: 18, gap: 8 },
 } as const;
 
 export const motionTokens = { press: 90, release: 220, layout: 280, spring: 520, overlay: 360 } as const;
@@ -97,4 +121,5 @@ export const zIndexTokens = {
 export const defaultPolicy: Required<GlassPolicy> = {
   material: 'regular', renderer: 'auto', quality: 'balanced', theme: 'system',
   density: 'comfortable', transparency: 'system', motion: 'system', contrast: 'system',
+  platform: 'auto',
 };

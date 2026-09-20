@@ -1,3 +1,4 @@
+import { expectReachable } from './hit-floor.js';
 import { test, expect } from '@playwright/test';
 
 /**
@@ -101,20 +102,16 @@ test('the destructive item is marked as such, not only coloured', async ({ page 
 });
 
 /**
- * A `small` control is a smaller *drawing*, never a smaller target: the hit region stays 44
- * through padding. This is the one that regresses silently, because it looks right either way.
+ * A `small` control is a smaller *drawing*, never a smaller target: the hit region grows
+ * through padding to whatever the pointer needs. This is the one that regresses silently,
+ * because it looks right either way.
  */
-test('every size keeps a 44pt hit region', async ({ page }) => {
+test('every size stays reachable on both platforms', async ({ page }) => {
   await page.goto(PAGE);
-  const boxes = await page.locator('#menubutton-sizes button[aria-haspopup="menu"]')
-    .evaluateAll(nodes => nodes.map(node => {
-      const box = node.getBoundingClientRect();
-      return { width: box.width, height: box.height };
-    }));
-  expect(boxes.length).toBe(3);
-  for (const box of boxes) {
-    expect(box.height, `a ${box.height}px tall target`).toBeGreaterThanOrEqual(44);
-    expect(box.width).toBeGreaterThanOrEqual(44);
+  const triggers = page.locator('#menubutton-sizes button[aria-haspopup="menu"]');
+  expect(await triggers.count()).toBe(3);
+  for (let index = 0; index < 3; index++) {
+    await expectReachable(page, triggers.nth(index), `menu trigger ${index}`);
   }
 });
 

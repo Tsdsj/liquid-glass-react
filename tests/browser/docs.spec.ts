@@ -1,3 +1,4 @@
+import { asPlatform } from './hit-floor.js';
 import { test, expect, type Page } from '@playwright/test';
 
 /**
@@ -239,19 +240,33 @@ test('the refraction switch turns refraction on where the browser can do it', as
  * measured — and nothing had ever measured them.
  */
 
-test('the field sizes a page prints are the sizes it renders', async ({ page }) => {
+/**
+ * And it prints two sets of numbers, because there are two.
+ *
+ * The same field is 44px tall under a finger and 24 under a cursor. Printing one of them as
+ * the answer makes the page wrong for half its readers, and this used to print the touch set
+ * with no qualifier at all.
+ */
+test('the field sizes a page prints are the sizes it renders, on both platforms', async ({ page }) => {
   await page.goto('/#/components/text-field');
   await page.locator('#field-sizes-demo').scrollIntoViewIfNeeded();
-  const claims = await page.locator('#field-sizes-demo .lg-field-box').evaluateAll(nodes => nodes
-    .map(node => ({
-      said: node.querySelector('input')?.getAttribute('placeholder') ?? '',
-      measured: Math.round(node.getBoundingClientRect().height),
-    }))
-    .filter(entry => /^\d+px$/.test(entry.said)));
-  expect(claims.length, 'the size comparison is gone').toBeGreaterThanOrEqual(3);
-  for (const { said, measured } of claims) {
-    expect(measured, `the placeholder says ${said} and it renders ${measured}px`).toBe(parseInt(said, 10));
+  for (const [platform, index] of [['touch', 0], ['desktop', 1]] as const) {
+    await asPlatform(page, platform);
+    const claims = await page.locator('#field-sizes-demo .lg-field-box').evaluateAll((nodes, at) => nodes
+      .map(node => ({
+        said: node.querySelector('input')?.getAttribute('placeholder') ?? '',
+        measured: Math.round(node.getBoundingClientRect().height),
+      }))
+      .map(entry => ({ ...entry, numbers: entry.said.match(/\d+/g) ?? [] }))
+      .filter(entry => entry.numbers.length === 2)
+      .map(entry => ({ said: entry.numbers[at], measured: entry.measured, whole: entry.said })), index);
+    expect(claims.length, 'the size comparison is gone').toBeGreaterThanOrEqual(3);
+    for (const { said, measured, whole } of claims) {
+      expect(measured, `on ${platform} the placeholder "${whole}" promises ${said} and it renders ${measured}px`)
+        .toBe(Number(said));
+    }
   }
+  await asPlatform(page, null);
 });
 
 test('every overlay page can be seen over a photograph', async ({ page }) => {

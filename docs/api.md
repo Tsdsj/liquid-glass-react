@@ -42,10 +42,33 @@ import '@ttqtt/liquid-glass-react/styles.css';
 | `density` | `'compact' \| 'comfortable'` | `'comfortable'` | 控件高度 36 / 44。 |
 | `transparency` | `'system' \| 'reduced' \| 'opaque'` | `'system'` | 系统偏好不会被更激进的子设置覆盖。 |
 | `motion` | `'system' \| 'reduced' \| 'none'` | `'system'` | 同上。 |
+| `platform` | `'auto' \| 'desktop' \| 'touch'` | `'auto'` | 用哪一套度量画界面。 |
 | `contrast` | `'system' \| 'more'` | `'system'` | 增强对比度。 |
 | `strings` | `Partial<GlassStrings>` | 英文 | 组件自己提供的那些文案，见下。 |
 
 `useGlassPolicy()` 返回解析后的策略，含 `resolvedTheme`、`reduceMotion`、`reduceTransparency`、`increaseContrast`、`forcedColors`。
+
+### `platform`：两套度量
+
+`auto`（默认）读的是 `(pointer: fine) and (min-width: 768px)`——有光标，且屏幕宽到画桌面布局是诚实的。带触控板的平板在手机宽度下也报 fine，而那里 22px 的控件是对的问题给了错的答案。解析后的值在 `useGlassPolicy().resolvedPlatform`；显式覆盖时会写成 `<html>` 上的 `data-lg-platform`，`auto` 什么都不写（媒体查询已经是答案了）。
+
+| | 触摸 | 指针 |
+| --- | --- | --- |
+| 控件高（标准 / 小 / 大） | 44 / 32 / 50 | 22 / 19 / 28 |
+| 命中区下限 | 44（HIG） | 24（WCAG 2.2 指针下限） |
+| 正文 | 17/22 | 13/16 |
+| 大标题 … 标注 | iOS 表 | macOS 表 |
+| 输入框里的字 | 至少 16（否则 iOS Safari 聚焦时缩放页面） | 跟随正文 |
+| 拖动时的形变 | 全量 | 55% |
+
+**度量全部由 CSS 决定，不由 JS。** 一个从 JavaScript 里算出来的高度会让服务端渲染的页面先带着触摸度量到达、再在 hydrate 的那一刻重排一次，而且写成内联样式之后 `platform="desktop"` 永远赢不了它。
+
+两条**有意的偏离**，写在这里而不是悄悄应用：
+
+1. **字号下限仍然是 11px。** macOS 把脚注和两种说明文字都放在 10pt；网页不行。这个库本来就拒绝画 11px 以下的字，审计矩阵每一页都在查。读者的眼睛不会因为平台的表变小了就变好，所以小字那一端是被夹住的。
+2. **Dynamic Type 照常工作。** macOS 没有 Dynamic Type，但浏览器有用户字号和缩放，`data-lg-text-size` 在桌面下依然生效。一张按 macOS 尺寸写的表是起点，不是「一个人最多能把字放多大」的上限。
+
+**仍然不按平台切换的：** 圆角。`radius` 喂给折射几何，按指针种类改变透镜的形状，和改变它的大小是两个决定。HIG 说 macOS 的小控件是圆角矩形而不是胶囊，这条记在待办里，没有在这一轮做。
 
 **「减少动效」覆盖这个库画的每一个元素**，按类名前缀（`lg-` 开头，前缀不是包含，所以你自己的 `mlg-card` 不会被误伤），不是一份组件名单。曾经是名单，于是库里没被写进去的部分在这个设置打开时照常动——而这种错是没有声音的：被记住的那几个组件，正是你会先去检查的那几个。由脚本驱动的动画（比如徽标数字变化时那一下）管不到，所以那些组件自己读 `reduceMotion`。
 

@@ -1,3 +1,4 @@
+import { asPlatform } from './hit-floor.js';
 import { test, expect, type Locator, type Page } from '@playwright/test';
 
 /**
@@ -96,10 +97,21 @@ test('no surface in the light appearance is pure white', async ({ page }) => {
   }
 });
 
-test('secondary text clears AA against the surface it is actually painted on', async ({ page }) => {
+/**
+ * Both metric tables, because the desktop one is where this gets harder.
+ *
+ * 4.5:1 is the same number at any size — WCAG only relaxes it for text at 18pt, or 14pt bold,
+ * and nothing here is either. But the desktop table puts secondary labels at 11px where the
+ * touch table had 13, and a grey that was already sitting on the floor is a grey a reader has
+ * to work harder for. Running the same measurement under both is how a change of default
+ * metrics fails to quietly become a change of legibility.
+ */
+for (const platform of ['touch', 'desktop'] as const) {
+test(`secondary text clears AA against the surface it is actually painted on (${platform})`, async ({ page }) => {
   await page.emulateMedia({ colorScheme: 'light' });
   await page.goto('/#/components/list');
   await page.waitForSelector('#main');
+  await asPlatform(page, platform);
 
   /* The composited colour, not the token: `--lg-label-secondary` is a translucent grey and what
      it ends up as depends entirely on the panel under it. */
@@ -118,8 +130,10 @@ test('secondary text clears AA against the surface it is actually painted on', a
   const alpha = Number(measured.ink.match(/[\d.]+/g)?.[3] ?? 1);
   const flat = ink.map((channel, index) => channel * alpha + behind[index] * (1 - alpha));
   const contrast = ratio(luminance(flat), luminance(behind));
-  expect(contrast, `secondary text measured ${contrast.toFixed(2)}:1`).toBeGreaterThanOrEqual(4.5);
+  expect(contrast, `secondary text measured ${contrast.toFixed(2)}:1 on ${platform}`).toBeGreaterThanOrEqual(4.5);
+  await asPlatform(page, null);
 });
+}
 
 /* =========================================================================================
  * 3. The disclosure had a chevron animation and no height animation.

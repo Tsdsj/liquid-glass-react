@@ -64,6 +64,24 @@ const saturate = (t: number) => t / (1 + t);
 /** Deformation ceiling, how strongly speed and resistance feed it, and the velocity smoothing per frame. */
 const CAP = .26, FROM_SPEED = 2.4, FROM_RESIST = 3, SMOOTH = .28;
 const PROPS = ['--lg-shift-x', '--lg-shift-y', '--lg-stretch-x', '--lg-stretch-y'];
+
+/**
+ * How much of the elastic deformation this pointer gets, read from the page.
+ *
+ * The HIG's motion page: Liquid Glass "responds more emphatically to direct touch, and more
+ * subtly when you use a trackpad or a mouse". A finger is on the thing; a cursor is an
+ * instrument at a distance, and the same squash under it reads as the interface being loose.
+ *
+ * Read once per gesture from `--lg-stretch-gain`, rather than each control passing a number or
+ * this module deciding for itself what a desktop is: the platform is settled in one place, in
+ * CSS, and this asks that place. One `getComputedStyle` on `pointerdown` — not on a move, which
+ * is the read that would cost anything.
+ */
+function platformGain(node: Element | undefined) {
+  if (!node || typeof getComputedStyle !== 'function') return 1;
+  const value = Number(getComputedStyle(node).getPropertyValue('--lg-stretch-gain'));
+  return Number.isFinite(value) && value > 0 ? value : 1;
+}
 export function attachPull(source: HTMLElement, getOptions: () => PullOptions = () => ({})): () => void {
   interface Active {
     id: number; x: number; y: number; targets: HTMLElement[]; frame: number;
@@ -81,6 +99,8 @@ export function attachPull(source: HTMLElement, getOptions: () => PullOptions = 
     px: number; py: number; vx: number; vy: number; time: number;
     /** Last origin, to tell a moving reference point apart from a moving finger. */
     ox: number; oy: number;
+    /** What this pointer kind is allowed to deform, read from the page once on the way down. */
+    gain: number;
   }
   let active: Active | null = null;
   const centreOf = (node: HTMLElement) => {
@@ -160,7 +180,7 @@ export function attachPull(source: HTMLElement, getOptions: () => PullOptions = 
     // it just never moves it.
     if (!active.grab) return;
     if (!active.carrying) takeOver(event, o);
-    const limit = o.limit ?? 12, gain = o.stretch ?? .6, axis = o.axis ?? 'both';
+    const limit = o.limit ?? 12, gain = (o.stretch ?? .6) * active.gain, axis = o.axis ?? 'both';
     const origin = o.origin?.(event) ?? { x: active.x, y: active.y };
     const free = o.range?.(event) ?? null;
     const dx = axis === 'y' ? 0 : event.clientX - origin.x - active.ax - active.ex;
@@ -214,6 +234,7 @@ export function attachPull(source: HTMLElement, getOptions: () => PullOptions = 
       id: event.pointerId, x: event.clientX, y: event.clientY, targets, frame: 0, event, fresh: false,
       grab: o.grab?.(event) ?? true, carrying: false, ax: 0, ay: 0, ex: 0, ey: 0,
       px: 0, py: 0, vx: 0, vy: 0, time: performance.now(), ox: NaN, oy: NaN,
+      gain: platformGain(targets[0]),
     };
     // `data-pulling` is not stamped here any more — see `takeOver`. A press that marks the
     // element as being dragged before it is being dragged is what cancelled the transition.

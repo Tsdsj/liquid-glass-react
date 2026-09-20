@@ -248,7 +248,12 @@ code { font-family: var(--lg-font-mono); font-size: .92em; }
 .code-block { position: relative; }
 .code-block > pre { margin: 0; padding: var(--lg-space-5); padding-inline-end: 96px; overflow-x: auto;
   border-radius: var(--lg-radius-m); background: var(--lg-bg-secondary); border: 1px solid var(--lg-separator);
-  font: var(--lg-text-footnote-size)/1.8 var(--lg-font-mono); white-space: pre; tab-size: 2; }
+  /* A floor of its own, and the nested `code` does not shrink it again. Sized off the footnote
+     style alone, a code block followed the desktop type table down to 11px and the `<code>`
+     inside took another 8% off it: `pnpm test:matrix` measured 10.1px on every page. Prose can
+     be read at a glance; a line of code is read character by character. */
+  font: max(12px, var(--lg-text-footnote-size))/1.8 var(--lg-font-mono); white-space: pre; tab-size: 2; }
+.code-block > pre code { font-size: inherit; }
 .code-copy { position: absolute; inset-block-start: var(--lg-space-2); inset-inline-end: var(--lg-space-2); }
 
 /**

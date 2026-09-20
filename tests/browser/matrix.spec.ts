@@ -59,8 +59,25 @@ async function fakeMedia(page: Page, query: string) {
 const VARIANTS: Variant[] = [
   { id: 'base' },
   /* The finger. `hasTouch` is what makes `(pointer: coarse)` match in Chromium, and it is the
-     only variant in which the 44pt rule runs at all. */
+     one in which the 44pt rule runs; the `desktop` rows below run the 24pt one. */
   { id: 'touch', context: { hasTouch: true } },
+  /**
+   * The cursor, with the metrics that belong to it: 22pt controls, 13pt body text, a 24pt hit
+   * floor. This is the appearance most readers of a documentation site actually get, and until
+   * the desktop metrics existed the sweep had never once looked at it — every cell above was a
+   * phone interface being measured on a desktop.
+   *
+   * Both appearances, because the small end of the type scale is where a light-on-light or
+   * dark-on-dark pairing stops being legible first, and 13px is a smaller small end than 17px.
+   */
+  { id: 'desktop', apply: page => page.evaluate(() => { document.documentElement.dataset.lgPlatform = 'desktop'; }) },
+  {
+    id: 'desktop+dark',
+    apply: async page => {
+      await page.emulateMedia({ colorScheme: 'dark' });
+      await page.evaluate(() => { document.documentElement.dataset.lgPlatform = 'desktop'; });
+    },
+  },
   { id: 'dark', apply: page => page.emulateMedia({ colorScheme: 'dark' }) },
   { id: 'reduce-transparency', init: page => fakeMedia(page, 'prefers-reduced-transparency') },
   { id: 'increase-contrast', apply: page => page.emulateMedia({ contrast: 'more' }) },
@@ -127,7 +144,7 @@ async function audit(page: Page): Promise<Finding[]> {
     )).filter(visible);
 
     /**
-     * 44×44, hit-tested rather than measured.
+     * Big enough to hit, hit-tested rather than measured.
      *
      * The first version of this rule read `getBoundingClientRect` and reported six thousand
      * failures, almost all of them wrong. Two reasons, and both matter:
@@ -139,12 +156,16 @@ async function audit(page: Page): Promise<Finding[]> {
      * - 44pt is a *finger* requirement. On a pointer platform a 34px row is not a defect, and
      *   flagging it everywhere buries the cases that are.
      *
-     * So: sample the four corners of a 42px square centred on the control and ask the document
-     * what is there. That is the question a finger asks, it is indifferent to how the region
-     * was produced, and it only runs where the pointer is coarse.
+     * So: sample the four corners of a square centred on the control and ask the document what
+     * is there. That is the question a pointing device asks, it is indifferent to how the
+     * region was produced, and the square is the size that pointing device needs — 44 for a
+     * finger (HIG), 24 for a cursor (WCAG 2.2 Target Size (Minimum)). Running it for cursors
+     * too is new: while every control was 44px tall there was nothing to find, and with the
+     * desktop metrics a control is 22.
      */
-    const coarse = matchMedia('(pointer: coarse)').matches;
-    if (coarse) for (const node of interactive) {
+    const desktop = document.documentElement.dataset.lgPlatform === 'desktop';
+    const floor = desktop ? 24 : matchMedia('(pointer: coarse)').matches ? 44 : 0;
+    if (floor) for (const node of interactive) {
       const box = node.getBoundingClientRect();
       // Text inside prose is a link, not a control; the same HIG page exempts it.
       const inProse = node.tagName === 'A' && !!node.closest('p, li, .md-p, .md-list');
@@ -153,7 +174,8 @@ async function audit(page: Page): Promise<Finding[]> {
       if (inProse || isRegion) continue;
 
       const x = box.left + box.width / 2, y = box.top + box.height / 2;
-      const reach = 21;
+      // One pixel inside the square, so a target exactly at the floor is not a rounding failure.
+      const reach = floor / 2 - 1;
       /**
        * Only corners that are on screen. `elementFromPoint` is a viewport query and answers
        * `null` for anything outside it, which the first run read as "nothing there" and
@@ -273,6 +295,7 @@ test('the matrix', async ({ page, browser }) => {
       await sheet.evaluate(() => {
         document.documentElement.removeAttribute('dir');
         delete document.documentElement.dataset.lgTextSize;
+        delete document.documentElement.dataset.lgPlatform;
       });
       sheet.removeAllListeners('console');
       sheet.removeAllListeners('pageerror');

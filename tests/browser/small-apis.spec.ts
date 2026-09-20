@@ -1,3 +1,4 @@
+import { asPlatform } from './hit-floor.js';
 import { test, expect } from '@playwright/test';
 
 /**
@@ -117,19 +118,34 @@ test('the label still points at it', async ({ page }) => {
   await expect(demo.locator(`label[for="${id}"]`)).toHaveText('备注');
 });
 
-test('a smaller control is not smaller text', async ({ page }) => {
+/**
+ * Three sizes have to be three sizes, and on a touchscreen the text in them may not shrink.
+ *
+ * The 16px floor is iOS Safari's rule, not a design one: below it, focusing a field zooms the
+ * page. That reason does not exist on a machine with a mouse, and keeping the floor there had
+ * a visible cost — a 16px line cannot fit inside a 22px box, so `small` and `regular` came out
+ * the same height and the control had two sizes wearing three names.
+ */
+test('a smaller control is not smaller text on a touchscreen, and is still a smaller control', async ({ page }) => {
   await page.goto('/#/components/text-field');
   const demo = page.locator('#field-sizes-demo');
   await demo.scrollIntoViewIfNeeded();
-  const sizes = await demo.locator('.lg-field-input').evaluateAll(nodes =>
-    nodes.map(node => parseFloat(getComputedStyle(node).fontSize)));
-  // Anything under 16 makes iOS Safari zoom the page on focus.
-  for (const size of sizes) expect(size).toBeGreaterThanOrEqual(16);
 
-  const boxes = await demo.locator('.lg-field-box').evaluateAll(nodes =>
-    nodes.map(node => Math.round(node.getBoundingClientRect().height)));
-  expect(boxes[0]).toBeLessThan(boxes[1]);
-  expect(boxes[1]).toBeLessThan(boxes[2]);
+  await asPlatform(page, 'touch');
+  const touchSizes = await demo.locator('.lg-field-input').evaluateAll(nodes =>
+    nodes.map(node => parseFloat(getComputedStyle(node).fontSize)));
+  for (const size of touchSizes) {
+    expect(size, `${size}px would make iOS Safari zoom the page on focus`).toBeGreaterThanOrEqual(16);
+  }
+
+  for (const platform of ['desktop', 'touch'] as const) {
+    await asPlatform(page, platform);
+    const boxes = await demo.locator('.lg-field-box').evaluateAll(nodes =>
+      nodes.map(node => Math.round(node.getBoundingClientRect().height)));
+    expect(boxes[0], `${platform}: ${boxes.join(' / ')}`).toBeLessThan(boxes[1]);
+    expect(boxes[1], `${platform}: ${boxes.join(' / ')}`).toBeLessThan(boxes[2]);
+  }
+  await asPlatform(page, null);
 });
 
 /* ---------- SearchField: suggestions ---------- */

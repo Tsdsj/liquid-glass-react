@@ -1,3 +1,4 @@
+import { asPlatform } from './hit-floor.js';
 import { test, expect } from '@playwright/test';
 
 /* Chromium cannot emulate prefers-reduced-transparency, so this drives the same policy
@@ -138,10 +139,21 @@ test('an invalid field is marked for assistive technology, not only in red', asy
   await expect(page.locator(`#${describedBy!.split(' ')[0]}`)).toContainText('@');
 });
 
-test('inputs are at least 16px so iOS Safari does not zoom on focus', async ({ page }) => {
+/**
+ * On a touchscreen, which is where the rule comes from.
+ *
+ * iOS Safari zooms the page when a field with text under 16px takes focus, and the zoom does
+ * not come back on its own. That is a fact about touchscreen Safari, not a typographic
+ * preference, so the floor is lifted for a fine pointer rather than kept everywhere: at the
+ * macOS metrics a 16px line does not fit inside a 22px control, and keeping it made `small`
+ * and `regular` fields render at the same height.
+ */
+test('inputs are at least 16px on a touchscreen so iOS Safari does not zoom on focus', async ({ page }) => {
   await page.goto('/#/components/text-field');
+  await asPlatform(page, 'touch');
   const size = await page.getByLabel('工作区名称').evaluate(node => parseFloat(getComputedStyle(node).fontSize));
   expect(size).toBeGreaterThanOrEqual(16);
+  await asPlatform(page, null);
 });
 
 /**

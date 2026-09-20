@@ -1,9 +1,11 @@
 {
-  "generated": "2026-09-20T10:57:47.703Z",
+  "generated": "2026-09-20T15:43:41.015Z",
   "pages": 40,
   "variants": [
     "base",
     "touch",
+    "desktop",
+    "desktop+dark",
     "dark",
     "reduce-transparency",
     "increase-contrast",
@@ -14,7 +16,7 @@
     "rtl+ax5",
     "dark+ax5"
   ],
-  "cells": 440,
+  "cells": 520,
   "failing": 0,
   "byRule": {},
   "findings": []

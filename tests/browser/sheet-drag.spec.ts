@@ -18,6 +18,12 @@ async function offset(page: import('@playwright/test').Page) {
 
 async function openSheet(page: import('@playwright/test').Page, trigger = '打开面板') {
   await page.goto('/#/components/sheet');
+  /* The touch metrics, because this is a touch gesture. A sheet that docks at heights and is
+     dragged by its whole surface is the iPhone idiom; the desktop form is a card that falls
+     from the top of the window and is not dragged at all. With the desktop metrics the rows in
+     the long-list demo are short enough that the list no longer scrolls, and the test's own
+     guard said so rather than quietly passing. */
+  await page.evaluate(() => document.documentElement.setAttribute('data-lg-platform', 'touch'));
   await page.getByRole('button', { name: trigger }).first().click();
   const sheet = page.locator('.lg-sheet[open]');
   await expect(sheet).toBeVisible();

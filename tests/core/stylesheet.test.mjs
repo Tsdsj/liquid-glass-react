@@ -108,3 +108,46 @@ test('the duration tokens and their JavaScript copies are the same numbers', () 
       `leave.ts waits ${fromJs[1]}ms for something the stylesheet plays over ${fromCss[1]}ms`);
   }
 });
+
+/**
+ * The two desktop metric tables are the same table.
+ *
+ * Exactly the Increase Contrast situation, one level up: the media query answers a machine
+ * with a mouse, the attribute answers `platform="desktop"` from an application, and CSS has no
+ * way to share the declarations between them. Drift here would mean a control that is 22px
+ * tall when the browser decides and 44px when the application asks for the same thing.
+ */
+test('the opt-in desktop metrics match the media-query ones', () => {
+  const tokens = readFileSync(new URL('../../src/styles/tokens.css', import.meta.url), 'utf8');
+  const declarations = source => [...source.matchAll(/(--[\w-]+)\s*:\s*([^;]+);/g)]
+    .map(([, name, value]) => `${name}: ${value.trim()}`).sort();
+  const block = selector => {
+    const at = tokens.indexOf(selector);
+    assert.notEqual(at, -1, `no block for ${selector}`);
+    const open = tokens.indexOf('{', at);
+    return declarations(tokens.slice(open + 1, tokens.indexOf('}', open)));
+  };
+  const fromMedia = block(':root:not([data-lg-platform="touch"])');
+  const fromAttribute = block(':root[data-lg-platform="desktop"]');
+  assert.ok(fromMedia.length > 20, `the desktop table has only ${fromMedia.length} declarations`);
+  assert.deepEqual(fromAttribute, fromMedia, 'the desktop metrics have drifted apart');
+});
+
+/**
+ * Nothing in the desktop table goes below the library's own readable floor.
+ *
+ * macOS puts Footnote and both Captions at 10pt. This is a web library, the audit matrix
+ * checks every page for text under 11px, and the reader's eyes do not improve because the
+ * platform's table got smaller — so the small end of the table is clamped, deliberately, and
+ * this is the assertion that says it was deliberate.
+ */
+test('the desktop text table keeps the 11px floor', () => {
+  const tokens = readFileSync(new URL('../../src/styles/tokens.css', import.meta.url), 'utf8');
+  const at = tokens.indexOf(':root[data-lg-platform="desktop"]');
+  const block = tokens.slice(at, tokens.indexOf('}', at));
+  const sizes = [...block.matchAll(/--lg-text-([\w-]+)-size:\s*calc\((\d+)px/g)];
+  assert.ok(sizes.length >= 11, `only ${sizes.length} text sizes in the desktop table`);
+  for (const [, style, px] of sizes) {
+    assert.ok(Number(px) >= 11, `${style} is ${px}px on desktop, below the 11px floor`);
+  }
+});

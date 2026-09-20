@@ -89,9 +89,11 @@ export const fieldDocs: ComponentDoc[] = [
              measured, and a fourth field of adjustable height at the top would be the first
              thing measured. */
           return <div id="field-sizes-demo" style={{ display: 'grid', gap: 12, width: 340 }}>
-            <TextField controlSize="small" label="小" placeholder="36px" />
-            <TextField label="标准" placeholder="44px" />
-            <TextField controlSize="large" label="大" placeholder="52px" />
+            {/* 两组数：手指一组，指针一组。同一个控件在触摸屏上是 44、在有鼠标的机器上是 22，
+                把其中一组印在页面上当成唯一答案，另一组的读者看到的就是一句假话。 */}
+            <TextField controlSize="small" label="小" placeholder="触摸 36 · 指针 22" />
+            <TextField label="标准" placeholder="触摸 44 · 指针 24" />
+            <TextField controlSize="large" label="大" placeholder="触摸 52 · 指针 32" />
             {knobs.multiline === true ? <TextField multiline rows={3} {...shared} /> : <TextField {...shared} />}
           </div>;
         },

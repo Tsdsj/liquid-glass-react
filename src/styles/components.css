@@ -169,8 +169,20 @@
  * widening a short one to 44 would put its hit region on top of the next segment's, and a press
  * landing on the wrong option is worse than a press that misses.
  */
-@media (pointer: coarse) {
-  .lg-segment::after, .lg-tab::after { content: ''; position: absolute;
+/**
+ * `z-index: -1`, and it is not cosmetic.
+ *
+ * A segment's radio input is stretched invisibly across the whole label, and it is what a
+ * click is supposed to land on. The hit region is a pseudo-element of the same label, so with
+ * no z-index it paints after the input and swallows every click aimed at it — Playwright's
+ * report is blunt about it: "`<label class="lg-segment">` intercepts pointer events". Behind
+ * the input it still extends the target past the artwork, which is the entire job.
+ *
+ * This was latent for as long as the region existed only under a coarse pointer, because a
+ * tap on the label works either way. Drawing it for a cursor too is what surfaced it.
+ */
+@media (pointer: coarse), (pointer: fine) {
+  .lg-segment::after, .lg-tab::after { content: ''; position: absolute; z-index: -1;
     inset-block-start: 50%; inset-inline-start: 0; translate: 0 -50%;
     width: 100%; height: 100%; min-height: var(--lg-hit-min); }
 }
@@ -519,15 +531,42 @@
    Button variants & control sizes
    Style, not size, marks the preferred option — one prominent button per view.
    ========================================================================== */
-.lg-button[data-control-size="small"] { --lg-control-height: 32px; padding-inline: 12px; font-size: var(--lg-text-footnote-size); }
-.lg-button[data-control-size="large"] { --lg-control-height: 50px; padding-inline: 22px; font-size: var(--lg-text-callout-size); }
-.lg-button[data-control-size="extraLarge"] { --lg-control-height: 60px; padding-inline: 26px; font-size: var(--lg-text-body-size); }
-/* A control may look smaller than 44x44; it must not be smaller to a finger. The pseudo-element
-   grows the hit area outwards from the centre without touching the artwork. */
+.lg-button[data-control-size="small"] { --lg-control-height: var(--lg-height-small); padding-inline: 12px; font-size: var(--lg-text-footnote-size); }
+.lg-button[data-control-size="large"] { --lg-control-height: var(--lg-height-large); padding-inline: 22px; font-size: var(--lg-text-callout-size); }
+.lg-button[data-control-size="extraLarge"] { --lg-control-height: var(--lg-height-extra-large); padding-inline: 26px; font-size: var(--lg-text-body-size); }
+/**
+ * A control may look smaller than its hit region; it must not be smaller to whatever is
+ * pointing at it. The pseudo-element grows the hit area outwards from the centre without
+ * touching the artwork.
+ *
+ * Both pointer kinds, because both have a floor and they are different floors: 44×44 for a
+ * finger (HIG), 24×24 for a cursor (WCAG 2.2 Target Size (Minimum)). It used to be drawn only
+ * for coarse pointers, which was right while every control was 44px tall anyway. A desktop
+ * regular button is 22px, and 22 is below 24 — the two pixels nobody would notice looking at
+ * it, and the difference between meeting the criterion and not.
+ */
 @media (pointer: coarse) {
   .lg-button::after { content: ''; position: absolute;
     inset-block-start: 50%; inset-inline-start: 50%; translate: -50% -50%;
     width: 100%; height: 100%; min-width: var(--lg-hit-min); min-height: var(--lg-hit-min); }
+}
+/**
+ * For a cursor, the block axis only.
+ *
+ * An absolutely positioned region that sticks out past its container still counts towards the
+ * page's scrollable overflow, and the first version of this widened every button on both axes
+ * for fine pointers too: `layout-matrix.spec.ts` came back with "390px rtl: the page scrolls
+ * 82px sideways" on five layout pages. A horizontal scrollbar is a real defect and an
+ * invisible hit region is a poor reason to have one.
+ *
+ * Nothing is lost by it. The 44px-wide region exists because a fingertip is round and
+ * imprecise; a cursor is one pixel, and every control that could be narrower than 24px —
+ * icon buttons, dots — already carries `min-width: var(--lg-hit-min)` in its own rule.
+ */
+@media (pointer: fine) {
+  .lg-button::after { content: ''; position: absolute; z-index: -1;
+    inset-block-start: 50%; inset-inline-start: 0; translate: 0 -50%;
+    width: 100%; height: 100%; min-height: var(--lg-hit-min); }
 }
 /* The one prominent action: the *background* is tinted and the label goes white. Tinting the
    label instead, or tinting several controls, means nothing stands out. */
@@ -680,9 +719,15 @@
 .lg-field-box:has(:focus-visible) { outline-color: var(--lg-focus); }
 .lg-field[data-invalid="true"] .lg-field-box { background: color-mix(in srgb, var(--lg-red) 10%, transparent); box-shadow: inset 0 0 0 1px var(--lg-red); }
 .lg-field-input { flex: 1; min-width: 0; border: 0; background: transparent; color: var(--lg-label); outline: none;
-  /* 16px minimum: anything smaller makes iOS Safari zoom the page on focus. */
-  font: var(--lg-weight-regular) max(16px, var(--lg-text-body-size))/var(--lg-text-body-leading) var(--lg-font-text);
-  padding-block: var(--lg-space-2); }
+  /**
+   * 16px minimum: anything smaller makes iOS Safari zoom the page on focus — which is why the
+   * floor is lifted for a fine pointer rather than removed. iOS Safari is a touchscreen, so
+   * the reason for the floor does not exist on a machine with a mouse, and keeping it there
+   * had a cost that showed up immediately: a 16px line cannot fit in a 22px box, so the three
+   * field sizes collapsed to two identical ones on desktop.
+   */
+  font: var(--lg-weight-regular) var(--lg-field-font)/var(--lg-text-body-leading) var(--lg-font-text);
+  padding-block: var(--lg-field-padding-block); }
 .lg-field-input::placeholder { color: var(--lg-placeholder); }
 /* The ring belongs to the container. Stated with enough specificity that an application
    stylesheet loaded after this one cannot put a second ring back on the input itself. */
@@ -1122,13 +1167,16 @@
   /* It brightens under the pointer and again while it is being dragged; both were instant.
      A hairline that snaps between two greys reads as a repaint, not as a control answering. */
   transition: background var(--lg-duration-press) var(--lg-ease); }
+/* The grab region, sized by whatever is pointing at it: 44 for a finger, 24 for a cursor.
+   11px was neither, and `pnpm test:matrix` reported it as a target nobody can hit once the
+   desktop rows started asking the 24px question. Twelve pixels of slop either side is less
+   than the twenty-two a finger has always had here. */
 .lg-split-divider::before { content: ''; position: absolute; inset-block: 0;
-  inset-inline-start: 50%; translate: -50% 0; width: 11px; }
+  inset-inline-start: 50%; translate: -50% 0; width: var(--lg-hit-min); }
 .lg-split-divider:focus-visible { outline: var(--lg-focus-width) solid var(--lg-focus); outline-offset: 1px; }
 @media (hover: hover) { .lg-split-divider:hover { background: var(--lg-label-tertiary); } }
 .lg-split[data-dragging="true"] { user-select: none; -webkit-user-select: none; cursor: col-resize; }
 .lg-split[data-dragging="true"] .lg-split-divider { background: var(--lg-accent); }
-@media (pointer: coarse) { .lg-split-divider::before { width: var(--lg-hit-min); } }
 @media (forced-colors: active) { .lg-split-divider { background: ButtonText; } }
 
 /* ---------- Inspector: the trailing column ---------- */
@@ -1173,9 +1221,9 @@
    `min-height` of 36 was a floor the content was already above, and the small field rendered
    two pixels taller than every page that documents it says. The padding is what has to give;
    the 16px type does not, because anything smaller makes iOS Safari zoom on focus. */
-.lg-field[data-control-size="small"] .lg-field-box { min-height: 36px; }
-.lg-field[data-control-size="small"] .lg-field-input { padding-block: calc(var(--lg-space-2) - 1px); }
-.lg-field[data-control-size="large"] .lg-field-box { min-height: 52px; }
+.lg-field[data-control-size="small"] .lg-field-box { min-height: var(--lg-height-field-small); }
+.lg-field[data-control-size="small"] .lg-field-input { padding-block: calc(var(--lg-field-padding-block) - 1px); }
+.lg-field[data-control-size="large"] .lg-field-box { min-height: var(--lg-height-field-large); }
 .lg-field[data-multiline="true"] .lg-field-box { min-height: 0; align-items: flex-start; padding-block: var(--lg-space-2); }
 .lg-field[data-multiline="true"] textarea.lg-field-input { resize: vertical; min-height: 4lh; line-height: 1.45; }
 .lg-field[data-multiline="true"] textarea.lg-field-input[data-autosize="true"] { resize: none; field-sizing: content; min-height: 2lh; max-height: 12lh; }

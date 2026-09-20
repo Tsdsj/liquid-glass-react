@@ -87,6 +87,25 @@ export function ThemingGuide() {
       <CodeBlock code={`document.documentElement.dataset.lgTextSize = 'ax3';
 // xs | s | m | l | xl | xxl | xxxl | ax1 … ax5`} />
     </Section>
+
+    <Section title="鼠标和手指用的不是同一套尺寸"
+      description="有光标的宽窗口下，控件更矮、字更小、命中区更紧——这是 Apple 自己在 macOS 上的那套数。默认自动判断，不用配置。">
+      <Card fill="secondary" radius={20} padding={20}>
+        <ul className="plain-list">
+          <li><Text as="span" variant="subhead">标准控件 <strong>44 → 22</strong>，正文 <strong>17 → 13</strong>。</Text></li>
+          <li><Text as="span" variant="subhead">命中区下限 <strong>44 → 24</strong>：手指的数来自 Apple，光标的数来自 WCAG 2.2。控件画得比这小没关系，能点到的范围不会小。</Text></li>
+          <li><Text as="span" variant="subhead">字号不会跌破 11px，文字大小设置在桌面上照常生效——一张按桌面写的表是起点，不是上限。</Text></li>
+        </ul>
+      </Card>
+      <CodeBlock code={`{/* 默认：有光标且窗口宽于 768px 就用桌面那套 */}
+<GlassProvider platform="auto">…</GlassProvider>
+
+{/* 你比浏览器更清楚的时候，两个方向都能压过去 */}
+<GlassProvider platform="touch">…</GlassProvider>`} />
+      <Text variant="subhead" tone="secondary">
+        带触控板的平板在手机宽度下也会报“有光标”，所以还要看窗口宽度——22px 的控件放在 390px 的屏幕上，是对的问题给了错的答案。
+      </Text>
+    </Section>
   </Page>;
 }
 

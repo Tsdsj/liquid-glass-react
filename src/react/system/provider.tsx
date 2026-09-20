@@ -15,13 +15,19 @@ export interface GlassProviderProps extends GlassPolicy {
 }
 export interface ResolvedPolicy extends Required<GlassPolicy> {
   resolvedTheme: 'light' | 'dark';
+  /**
+   * `platform` with `auto` answered. Components that need to reason about the pointer read
+   * this; nothing that only needs to *draw* differently should, because the metrics are in
+   * the stylesheet where a server-rendered page already has them.
+   */
+  resolvedPlatform: 'desktop' | 'touch';
   reduceTransparency: boolean;
   reduceMotion: boolean;
   increaseContrast: boolean;
   forcedColors: boolean;
   enableSvgAuto: boolean;
 }
-const initial: ResolvedPolicy = { ...defaultPolicy, resolvedTheme: 'light', reduceTransparency: false, reduceMotion: false, increaseContrast: false, forcedColors: false, enableSvgAuto: false };
+const initial: ResolvedPolicy = { ...defaultPolicy, resolvedTheme: 'light', resolvedPlatform: 'touch', reduceTransparency: false, reduceMotion: false, increaseContrast: false, forcedColors: false, enableSvgAuto: false };
 const PolicyContext = createContext<ResolvedPolicy>(initial);
 export function useMediaQuery(query: string): boolean {
   const store = useMemo(() => ({
@@ -42,6 +48,8 @@ export function GlassProvider({ children, strings, ...overrides }: GlassProvider
   const reduceTransparency = useMediaQuery('(prefers-reduced-transparency: reduce)');
   const increaseContrast = useMediaQuery('(prefers-contrast: more)');
   const forcedColors = useMediaQuery('(forced-colors: active)');
+  /* The same test the stylesheet makes, so the two cannot disagree about what a desktop is. */
+  const pointerDesktop = useMediaQuery('(pointer: fine) and (min-width: 768px)');
   const defined = Object.fromEntries(Object.entries(overrides).filter(([, v]) => v !== undefined));
   const merged = { ...parent, ...defined } as ResolvedPolicy;
   const value: ResolvedPolicy = {
@@ -52,6 +60,7 @@ export function GlassProvider({ children, strings, ...overrides }: GlassProvider
     // Increase Contrast and forced colours both mean "stop relying on translucency for legibility".
     increaseContrast: parent.increaseContrast || increaseContrast || forcedColors || merged.contrast !== 'system',
     forcedColors: parent.forcedColors || forcedColors,
+    resolvedPlatform: merged.platform === 'auto' ? (pointerDesktop ? 'desktop' : 'touch') : merged.platform,
   };
   /**
    * The three accessibility overrides, published where CSS can read them.
@@ -68,7 +77,7 @@ export function GlassProvider({ children, strings, ...overrides }: GlassProvider
    * scopes a subtree — writing that onto <html> would let a dark card silence the whole page.
    */
   const outermost = parent === initial;
-  const { motion, transparency, contrast } = merged;
+  const { motion, transparency, contrast, platform } = merged;
   useEffect(() => {
     if (!outermost || typeof document === 'undefined') return;
     const root = document.documentElement;
@@ -76,6 +85,10 @@ export function GlassProvider({ children, strings, ...overrides }: GlassProvider
       ['data-lg-motion', motion === 'system' ? null : motion],
       ['data-lg-transparency', transparency === 'system' ? null : transparency],
       ['data-lg-contrast', contrast === 'system' ? null : contrast],
+      /* `auto` writes nothing, for the same reason `'system'` does above: the media query is
+         already the answer, and an attribute that merely repeats it is one more thing that can
+         disagree with it. */
+      ['data-lg-platform', platform === 'auto' ? null : platform],
     ];
     const before = written.map(([name]) => [name, root.getAttribute(name)] as const);
     for (const [name, value] of written) {
@@ -88,7 +101,7 @@ export function GlassProvider({ children, strings, ...overrides }: GlassProvider
         if (value === null) root.removeAttribute(name); else root.setAttribute(name, value);
       }
     };
-  }, [outermost, motion, transparency, contrast]);
+  }, [outermost, motion, transparency, contrast, platform]);
 
   // Identity is stable while nothing is passed, so an untranslated tree never re-renders on this.
   const mergedStrings = useMemo(

@@ -1,3 +1,4 @@
+import { asPlatform, hitFloor } from './hit-floor.js';
 import { test, expect } from '@playwright/test';
 
 /* ---------------------------------------------------------------------------------------
@@ -159,11 +160,22 @@ test('it is a real form', async ({ page }) => {
   expect(await form.evaluate(node => node.tagName)).toBe('FORM');
 });
 
-test('rows keep a 44pt height', async ({ page }) => {
+test('rows are at least as tall as the pointer needs', async ({ page }) => {
   await page.goto('/#/components/form');
   const form = page.locator('#form-basic-demo');
   await form.scrollIntoViewIfNeeded();
-  const heights = await form.locator('.lg-form-row-label').evaluateAll(nodes =>
-    nodes.map(node => node.getBoundingClientRect().height));
-  for (const height of heights) expect(height).toBeGreaterThanOrEqual(44);
+  /* 44 under a finger, 24 under a cursor — both floors, checked against the one the page is
+     currently drawn with. Pinned at 44 before the desktop metrics existed, which read as a
+     rule about rows and was really a rule about fingertips. */
+  for (const platform of ['desktop', 'touch'] as const) {
+    await asPlatform(page, platform);
+    const floor = await hitFloor(page);
+    const heights = await form.locator('.lg-form-row-label').evaluateAll(nodes =>
+      nodes.map(node => node.getBoundingClientRect().height));
+    expect(heights.length).toBeGreaterThan(0);
+    for (const height of heights) {
+      expect(height, `a ${height}px row against the ${floor}px ${platform} floor`).toBeGreaterThanOrEqual(floor);
+    }
+  }
+  await asPlatform(page, null);
 });

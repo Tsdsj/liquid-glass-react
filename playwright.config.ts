@@ -36,16 +36,16 @@ export default defineConfig({
        nothing about the layout, the semantics or the keyboard depends on the refraction path. */
     { name: 'webkit', use: { ...devices['Desktop Safari'] }, testMatch: /[/\\]fallback\.spec\.ts$/ },
     { name: 'firefox', use: { ...devices['Desktop Firefox'] }, testMatch: /[/\\]fallback\.spec\.ts$/ },
-    /* The audit sweep. Its own project because it is slow and because it reports rather than
-       asserts: `pnpm test:matrix` writes reports/matrix.json, and what it finds becomes a
-       dedicated test in one of the projects above. */
-    { name: 'matrix', use: { ...devices['Desktop Chrome'], channel: 'chrome' }, testMatch: /[/\\]matrix\.spec\.ts$/, timeout: 20 * 60_000 },
-    /* The motion sweep, on the same terms: reports what moves and what does not, and every
-       gap it finds becomes a named test in `chrome`. */
-    /* No trace: this one run performs several thousand actions on one page, and the trace
-       collector gives up partway through ("file data stream has unexpected number of bytes"),
-       taking the browser with it. There is nothing to replay here anyway — the answer is the
-       report. */
+    /* The two sweeps. Their own projects because they are slow and because they report rather
+       than assert: `pnpm test:matrix` writes reports/matrix.json and `pnpm test:motion` writes
+       reports/motion.json, and what either finds becomes a dedicated test in `chrome`.
+
+       Neither collects a trace. A sweep performs tens of thousands of actions in one test, and
+       the trace collector gives up partway through — "file data stream has unexpected number
+       of bytes" — taking the browser with it. There is nothing to replay here anyway: the
+       answer is the report. */
+    { name: 'matrix', use: { ...devices['Desktop Chrome'], channel: 'chrome', trace: 'off', screenshot: 'off' },
+      testMatch: /[/\\]matrix\.spec\.ts$/, timeout: 20 * 60_000 },
     { name: 'motion', use: { ...devices['Desktop Chrome'], channel: 'chrome', trace: 'off', screenshot: 'off' },
       testMatch: /[/\\]motion-inventory\.spec\.ts$/, timeout: 20 * 60_000 },
   ],

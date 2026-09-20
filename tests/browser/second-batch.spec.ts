@@ -1,3 +1,4 @@
+import { expectReachable } from './hit-floor.js';
 import { test, expect } from '@playwright/test';
 
 /* =========================================================================================
@@ -103,13 +104,11 @@ test('every quick colour has a name, and the chosen one is marked by more than i
   await expect(demo.getByRole('button', { name: '绿' })).toHaveAttribute('aria-pressed', 'false');
 });
 
-test('the well keeps a 44×44 hit region whatever the swatch is drawn at', async ({ page }) => {
+test('the well stays reachable whatever the swatch is drawn at', async ({ page }) => {
   await page.goto('/#/components/color-well');
   const demo = page.locator('#color-basic-demo');
   await demo.scrollIntoViewIfNeeded();
-  const box = (await demo.locator('.lg-color-well-box').boundingBox())!;
-  expect(Math.round(box.width)).toBeGreaterThanOrEqual(44);
-  expect(Math.round(box.height)).toBeGreaterThanOrEqual(44);
+  await expectReachable(page, demo.locator('.lg-color-well-box'), 'the colour well');
 });
 
 /* =========================================================================================
@@ -134,19 +133,14 @@ test('it announces politely rather than interrupting', async ({ page }) => {
   await expect(banner).toHaveAttribute('aria-live', 'polite');
 });
 
-test('the close button is a real named button with a 44pt region', async ({ page }) => {
+test('the close button is a real named button and is reachable', async ({ page }) => {
   await page.goto('/#/components/banner');
   const demo = page.locator('#banner-tones-demo');
   await demo.scrollIntoViewIfNeeded();
   const close = demo.getByRole('button', { name: '关闭这条通知' });
   await expect(close).toBeVisible();
-  const reach = await close.evaluate(node => {
-    const box = node.getBoundingClientRect();
-    const after = getComputedStyle(node, '::after');
-    // The button grows its region with a pseudo-element rather than by drawing bigger.
-    return Math.max(box.width, parseFloat(after.width) || 0);
-  });
-  expect(reach).toBeGreaterThanOrEqual(44);
+  // The button grows its region with a pseudo-element rather than by drawing bigger.
+  await expectReachable(page, close, "the banner's close button");
   await close.click();
   await expect(demo.locator('.lg-banner')).toHaveCount(0);
 });

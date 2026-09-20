@@ -81,6 +81,29 @@
   --lg-margin: 16px;            /* compact */
   --lg-margin-regular: 20px;    /* regular, kept for anything that wants the value explicitly */
   --lg-hit-min: 44px;           /* minimum hit region, 44x44pt */
+  /**
+   * Control heights, as tokens rather than as numbers in the components.
+   *
+   * They are here and not in the stylesheet's own rules because the desktop block below has to
+   * be able to restate all of them in one place, and because `--lg-control-height` is written
+   * onto every glass surface: if that came out of JavaScript, a server-rendered page would
+   * arrive with touch metrics and re-lay itself out the moment it hydrated. It is a `var()`
+   * reference, so the answer is decided by the same CSS that decides everything else.
+   */
+  --lg-height-compact: 36px;
+  --lg-height-comfortable: 44px;
+  --lg-height-small: 32px;
+  --lg-height-large: 50px;
+  --lg-height-extra-large: 60px;
+  --lg-height-field-small: 36px;
+  --lg-height-field-large: 52px;
+  /* Text inside a field. Its own token because the floor under it is iOS Safari's zoom-on-focus
+     rule, not a design decision — see `.lg-field-input`. */
+  --lg-field-font: max(16px, var(--lg-text-body-size));
+  /* Air above and below the text in a field. On desktop the control is 22px tall in total, so
+     8px each side is more than the box has; without this the three field sizes came out
+     30/32/32 — a content floor wearing three names. */
+  --lg-field-padding-block: var(--lg-space-2);
   --lg-readable: 672px;         /* readable content guide */
   --lg-sidebar-width: 260px;
 
@@ -123,6 +146,16 @@
   --lg-press-scale: 1.06;
   --lg-press-scale-shared: 1.07;
   --lg-hover-scale: 1.015;
+  /**
+   * How much of a drag's elastic stretch is actually drawn.
+   *
+   * The HIG's motion page: Liquid Glass "responds more emphatically to direct touch, and more
+   * subtly when you use a trackpad or a mouse". A finger is the thing itself and the material
+   * answers it like a material; a cursor is an instrument several inches away, and the same
+   * amount of squash under it reads as the interface being loose rather than alive. `pull.ts`
+   * multiplies by this rather than each control passing a different number.
+   */
+  --lg-stretch-gain: 1;
 
   /* Glass geometry.
      Blur, saturation, refraction and edge width are NOT declared here: they vary per
@@ -155,6 +188,124 @@
 :root[data-lg-text-size="ax3"]  { --lg-text-scale: 2.353; }
 :root[data-lg-text-size="ax4"]  { --lg-text-scale: 2.765; }
 :root[data-lg-text-size="ax5"]  { --lg-text-scale: 3.118; }
+
+/* --------------------------------------------------------------------------
+   Desktop metrics
+   --------------------------------------------------------------------------
+   Everything above this line is the iOS table, because that is what the library was built
+   from. On a machine with a mouse it is the wrong table, and not by a little: a 44px control
+   and 17px body text are sized for a fingertip and for a screen held at arm's length.
+
+   The HIG's own macOS numbers, which is what this block is:
+   - Controls: regular 22pt, small 19, mini 16 (`toggles` / `buttons`, macOS).
+   - Text: Large Title 26/32 · Title 1 22/26 · Title 2 17/22 · Title 3 15/20 ·
+     Headline 13/16 Bold · **Body 13/16** · Callout 12/15 · Subheadline 11/14 ·
+     Footnote 10/13 · Caption 10/13.
+   - `pointing-devices`: "make a distinction between a pointer and a fingertip only where it
+     brings value" — stretching every control to 44px under a 1px cursor is drawing a phone
+     interface on a desktop.
+
+   Two deliberate departures, both stated rather than quietly applied:
+
+   1. **The floor stays at 11px.** macOS puts Footnote at 10 and both Captions at 10; the web
+      does not. This library already refuses to draw text below 11px and the audit matrix
+      checks for it on every page. The reader's eyes do not get better because the platform's
+      table got smaller, so Subheadline down to Caption 2 are clamped at 11/14.
+   2. **Dynamic Type keeps working.** macOS has no Dynamic Type; browsers do have a user
+      font size and a zoom level, and `data-lg-text-size` stays live on desktop. A macOS-sized
+      table is a starting point, not a cap on how large someone may need text to be.
+
+   Written twice on purpose — once for the media query, once for `[data-lg-platform]` — for
+   the same reason the Increase Contrast palette is, and with the same guard:
+   `tests/core/stylesheet.test.mjs` asserts the two are declaration-for-declaration identical.
+   The media query excludes `[data-lg-platform="touch"]` rather than there being a third block
+   restating the iOS numbers: an explicit override has to win in *both* directions — a setting
+   that can only be turned on is half a switch — and the way to do that without a third copy
+   of the table is to let the one override turn the query off.
+
+   `(min-width: 768px)` as well as `(pointer: fine)`: a Surface or an iPad with a trackpad
+   reports a fine pointer at phone width, and a 22px control there is the wrong answer to the
+   right question. */
+@media (pointer: fine) and (min-width: 768px) {
+  :root:not([data-lg-platform="touch"]) {
+    --lg-height-compact: 19px;
+    --lg-height-comfortable: 22px;
+    --lg-height-small: 19px;
+    --lg-height-large: 28px;
+    --lg-height-extra-large: 36px;
+    --lg-height-field-small: 22px;
+    --lg-height-field-large: 32px;
+    /* WCAG 2.2 Target Size (Minimum) is 24×24 for a pointer. The 22px control keeps a hit
+       region two pixels taller than itself; `components.css` draws it. */
+    --lg-hit-min: 24px;
+    --lg-text-largetitle-size: calc(26px * var(--lg-text-scale));
+    --lg-text-largetitle-leading: calc(32px * var(--lg-text-scale));
+    --lg-text-title1-size: calc(22px * var(--lg-text-scale));
+    --lg-text-title1-leading: calc(26px * var(--lg-text-scale));
+    --lg-text-title2-size: calc(17px * var(--lg-text-scale));
+    --lg-text-title2-leading: calc(22px * var(--lg-text-scale));
+    --lg-text-title3-size: calc(15px * var(--lg-text-scale));
+    --lg-text-title3-leading: calc(20px * var(--lg-text-scale));
+    --lg-text-headline-size: calc(13px * var(--lg-text-scale));
+    --lg-text-headline-leading: calc(16px * var(--lg-text-scale));
+    --lg-text-body-size: calc(13px * var(--lg-text-scale));
+    --lg-text-body-leading: calc(16px * var(--lg-text-scale));
+    --lg-text-callout-size: calc(12px * var(--lg-text-scale));
+    --lg-text-callout-leading: calc(15px * var(--lg-text-scale));
+    --lg-text-subhead-size: calc(11px * var(--lg-text-scale));
+    --lg-text-subhead-leading: calc(14px * var(--lg-text-scale));
+    --lg-text-footnote-size: calc(11px * var(--lg-text-scale));
+    --lg-text-footnote-leading: calc(14px * var(--lg-text-scale));
+    --lg-text-caption1-size: calc(11px * var(--lg-text-scale));
+    --lg-text-caption1-leading: calc(14px * var(--lg-text-scale));
+    --lg-text-caption2-size: calc(11px * var(--lg-text-scale));
+    --lg-text-caption2-leading: calc(14px * var(--lg-text-scale));
+    --lg-field-font: var(--lg-text-body-size);
+    --lg-field-padding-block: 3px;
+    --lg-margin: 20px;
+    --lg-press-scale: 1.03;
+    --lg-press-scale-shared: 1.035;
+    --lg-stretch-gain: .55;
+  }
+}
+:root[data-lg-platform="desktop"] {
+  --lg-height-compact: 19px;
+  --lg-height-comfortable: 22px;
+  --lg-height-small: 19px;
+  --lg-height-large: 28px;
+  --lg-height-extra-large: 36px;
+  --lg-height-field-small: 22px;
+  --lg-height-field-large: 32px;
+  --lg-hit-min: 24px;
+  --lg-text-largetitle-size: calc(26px * var(--lg-text-scale));
+  --lg-text-largetitle-leading: calc(32px * var(--lg-text-scale));
+  --lg-text-title1-size: calc(22px * var(--lg-text-scale));
+  --lg-text-title1-leading: calc(26px * var(--lg-text-scale));
+  --lg-text-title2-size: calc(17px * var(--lg-text-scale));
+  --lg-text-title2-leading: calc(22px * var(--lg-text-scale));
+  --lg-text-title3-size: calc(15px * var(--lg-text-scale));
+  --lg-text-title3-leading: calc(20px * var(--lg-text-scale));
+  --lg-text-headline-size: calc(13px * var(--lg-text-scale));
+  --lg-text-headline-leading: calc(16px * var(--lg-text-scale));
+  --lg-text-body-size: calc(13px * var(--lg-text-scale));
+  --lg-text-body-leading: calc(16px * var(--lg-text-scale));
+  --lg-text-callout-size: calc(12px * var(--lg-text-scale));
+  --lg-text-callout-leading: calc(15px * var(--lg-text-scale));
+  --lg-text-subhead-size: calc(11px * var(--lg-text-scale));
+  --lg-text-subhead-leading: calc(14px * var(--lg-text-scale));
+  --lg-text-footnote-size: calc(11px * var(--lg-text-scale));
+  --lg-text-footnote-leading: calc(14px * var(--lg-text-scale));
+  --lg-text-caption1-size: calc(11px * var(--lg-text-scale));
+  --lg-text-caption1-leading: calc(14px * var(--lg-text-scale));
+  --lg-text-caption2-size: calc(11px * var(--lg-text-scale));
+  --lg-text-caption2-leading: calc(14px * var(--lg-text-scale));
+  --lg-field-font: var(--lg-text-body-size);
+  --lg-field-padding-block: 3px;
+  --lg-margin: 20px;
+  --lg-press-scale: 1.03;
+  --lg-press-scale-shared: 1.035;
+  --lg-stretch-gain: .55;
+}
 
 /* --------------------------------------------------------------------------
    2. Light appearance
