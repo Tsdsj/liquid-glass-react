@@ -30,16 +30,21 @@ test('search is its own destination at the trailing end', async ({ page }) => {
 
 test('command-K opens component search and Escape restores focus', async ({ page }) => {
   await page.goto('/#/overview');
-  await page.keyboard.press('ControlOrMeta+k');
-  const dialog = page.getByRole('dialog', { name: '搜索' });
+  /* The modifier the button prints, not the one this machine happens to use: `mod` is resolved
+     from what the browser reports, and the hint and the binding come from the same parse. */
+  const hint = await page.getByRole('button', { name: /^搜索/ }).first().getAttribute('aria-label');
+  await page.keyboard.press(`${hint?.includes('⌘') ? 'Meta' : 'Control'}+k`);
+  const dialog = page.getByRole('dialog', { name: '搜索文档' });
   await expect(dialog).toBeVisible();
-  const field = page.getByRole('searchbox', { name: '搜索' });
+  const field = page.getByRole('combobox', { name: '搜索文档' });
   await field.fill('sheet');
-  await expect(dialog.getByText('GlassSheet')).toBeVisible();
-  // Escape in a non-empty search field is claimed by the browser to clear it; the second
-  // press reaches the dialog. That is the platform behaviour, not a swallowed key.
-  await page.keyboard.press('Escape');
-  await expect(field).toHaveValue('');
+  await expect(dialog.getByText('GlassSheet').first()).toBeVisible();
+  /**
+   * One press, not two. The old hand-assembled search used `type="search"`, where the browser
+   * claims the first Escape to clear the field — so closing a search you had typed into took
+   * two presses. The palette's field is plain text and Escape reaches the dialog, which is the
+   * platform's own way out of a modal and the only one anybody expects.
+   */
   await page.keyboard.press('Escape');
   await expect(dialog).toBeHidden();
 });

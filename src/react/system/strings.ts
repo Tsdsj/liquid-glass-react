@@ -26,6 +26,10 @@ export interface GlassStrings {
   increase: string;
   /** Search field clear button. */
   clearSearch: string;
+  /** The command palette's field before anything has been typed into it. */
+  searchCommands: string;
+  /** The command palette with nothing matching what was typed. */
+  noResults: string;
   /**
    * The direction word in a navigation stack's back button. The visible label is the previous
    * screen's title; the spoken name is this plus that title — "Back to Settings" — because
@@ -47,6 +51,8 @@ export const defaultStrings: GlassStrings = {
   decrease: 'Decrease',
   increase: 'Increase',
   clearSearch: 'Clear search',
+  searchCommands: 'Search commands',
+  noResults: 'No matching commands',
   back: 'Back to',
   resizeSidebar: 'Resize sidebar',
   sheetHeight: title => `${title} height`,

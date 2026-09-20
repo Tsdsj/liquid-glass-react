@@ -1,6 +1,6 @@
 # API
 
-`@ttqtt/liquid-glass-react` 共 98 个导出：60 个组件与 Provider、13 个 Hook、25 个常量表、纯函数与诊断工具。所有组件都是 `'use client'`。
+`@ttqtt/liquid-glass-react` 共 101 个导出：63 个组件与 Provider、14 个 Hook、24 个常量表、纯函数与诊断工具。所有组件都是 `'use client'`。
 
 样式必须引入一次，顺序不能颠倒：
 
@@ -435,6 +435,20 @@ useShortcut('mod k', () => setPaletteOpen(true));
 
 `selection`：勾在这个菜单里表示什么。`multiple`（默认）是一组互相独立的开关，项是 `menuitemcheckbox`；`single` 是一组里选一个，项变成 `menuitemradio`——这才告诉读屏「选了这个就会取消别的」。
 
+`alternate?: GlassMenuAlternate`（`label` `onSelect` `shortcut` `destructive`）：按住 Option 时这一项**原地变成**的样子——「关闭」变「全部关闭」，「复制一份」变「存储为…」。不是多一行，这正是长菜单能保持短的原因。松开、或者窗口失去焦点（按住 ⌘Tab 走掉时 `keyup` 永远不会来），都会还原。
+
+> 替代项永远只是快捷写法。按住修饰键这件事本身不可发现，所以**不能有命令只住在那里**——它对不知道有这回事的人，以及对一次只能按一个键的人，等于不存在。
+
+### `MenuBar`
+`menus: MenuBarMenu[]`（`key` `title` `items: GlassMenuItem[]` `disabled`）、`aria-label`(必填)、`open` / `defaultOpen` / `onOpenChange`（当前打开的是哪个菜单的 `key`，`null` 表示没有）。`role="menubar"`，标题是 `menuitem`。
+
+和一排菜单按钮的区别全在**打开之后**：指针移到另一个标题上时开着的菜单跟着走，左右方向键也是——**一次按键换一个菜单**，不是先关再开，中间没有一帧是空的。整排只占一个 Tab 位，下方向键打开，菜单内部是 `GlassMenu` 的键盘模型，Escape 关闭并把焦点还给标题。
+
+- **一直显示同一组菜单项。** `disabled` 在整个菜单和单条命令上都是「仍然画出来，只是不能用」。菜单栏是靠位置记住的。
+- **标题尽量一个词**，窗口窄的时候这条栏要扛得住。
+- 指针跟随只在**真的移动过**之后才算数：用鼠标点开一个菜单会把光标停在那个标题上，之后用方向键走时浏览器会在原地补发一个指针事件，照单全收就会把菜单拽回光标底下。手指不参与——划过去的那一路不该开四个菜单。
+- 玻璃只在这条栏上，标题是栏上的项。
+
 ### `GlassSheet`
 `title`(必填) `description` `detents`(`['medium','large']`) `defaultDetent` `onDetentChange` `grabber`。
 可拖动，松手弹簧停在最近停靠点；满高时变不透明并贴住边缘。只动 `transform`。
@@ -475,6 +489,18 @@ useShortcut('mod k', () => setPaletteOpen(true));
 
 ### `GlassDialog`
 `title`(必填) `description`(必填) `dismissOnBackdrop` `closeLabel`。基于原生 `<dialog>` + `showModal()`。
+
+### `CommandPalette`
+`commands: PaletteCommand[]`（`id` `label` `onSelect` `group` `detail` `icon` `shortcut` `keywords` `disabled`）、`title`(必填) `placeholder` `shortcut`(`'mod k'`) `query` / `defaultQuery` / `onQueryChange` `filter` `emptyLabel` `limit`(50)，以及 `trigger`。
+
+一个输入框、一张列表、一次按键到达。`title` 只念不画——面板上方的标题栏是 Spotlight 从来没有过的东西。
+
+- **虚拟焦点**：输入框是 `role="combobox"`，列表是 `listbox`，高亮那一行由 `aria-activedescendant` 点名，**真正的焦点一直在输入框里**。把焦点移进列表是这类控件最常见的做法，也正好废掉它唯一的用途——下一个字得还能打进去。上下键移动高亮并跳过不可用项，Home/End 到两端，回车执行，Escape 关闭并把焦点还回原处。
+- **`filter`**：默认规则是输入的每个词都要在 `label` / `group` / `detail` / `keywords` 里出现过，大小写和顺序都不管。传一个函数换掉它，传 `false` 表示「给你的列表就是答案」（自己排过序、或者问过服务端）。
+  > 这和 `SearchField` **坚持不自带筛选**不矛盾：搜索框的结果可能在任何地方，只有应用知道「匹配」对它的数据意味着什么；而面板一开始就拿到了全部命令，对一个已经握着整份清单的函数没什么好隐瞒的。
+- **两个绑定，不是一个开关。** 打开它的快捷键是应用级的，按 `useShortcut` 的规则在有模态窗时不响；关掉它的那个限定在面板内部，所以是那条规则的例外——同一组键，从它自己打开的东西里面按。`shortcut={null}` 表示由应用自己决定怎么打开。
+- **它不记任何东西**：没有历史，没有「最近使用」，什么都不往外写。要这些的话由应用自己给 `commands` 排序，并提供清除的入口。
+- **它是快的那条路，不是唯一那条路。** 只住在面板里的命令，等于只对已经知道它存在的人存在——每条命令都该在菜单栏或工具栏里有位置。这一条代码检查不了，所以写在这里。
 
 ### `ToastProvider` / `useToast`
 `toast({ message, action?: { label, onSelect }, duration? })`。可逆操作用它提供撤销，而不是每次都弹确认框。区域为 `role="status"` + `aria-live="polite"`，悬停或聚焦时暂停计时。

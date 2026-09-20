@@ -18,8 +18,8 @@ import {
   GlassSlider, GlassStepper, GlassSwitch, GlassSurface, GlassGroup, LibraryIcon, Picker, ColorWell, Banner,
   GlassCheckbox, RadioGroup,
   SearchField, TextField,
-  Inspector, NavigationBar, NavigationStack, PageControl, Screen, ScrollEdge, Sidebar, SplitView, TabBar, GlassTabs, GlassToolbar, ToolbarGroup, ToolbarSpacer,
-  GlassActionSheet, GlassAlert, GlassDialog, GlassMenu, GlassMenuButton, GlassMenuDescription, GlassPopover, GlassSheet, ContextMenu, Tooltip,
+  Inspector, MenuBar, NavigationBar, NavigationStack, PageControl, Screen, ScrollEdge, Sidebar, SplitView, TabBar, GlassTabs, GlassToolbar, ToolbarGroup, ToolbarSpacer,
+  CommandPalette, GlassActionSheet, GlassAlert, GlassDialog, GlassMenu, GlassMenuButton, GlassMenuDescription, GlassPopover, GlassSheet, ContextMenu, Tooltip,
 } from '@ttqtt/liquid-glass-react';
 
 /**
@@ -94,6 +94,8 @@ const entries: Array<[string, (p: Probe) => ReactNode]> = [
   ['Screen', p => <Screen {...p} scroll="page" top={<span>bar</span>}>content</Screen>],
   ['NavigationStack', p => <NavigationStack {...p} root={{ key: 'r', title: 'root', content: 'content' }} />],
   ['PageControl', p => <PageControl {...p} aria-label="pages" count={3} />],
+  ['MenuBar', p => <MenuBar {...p} aria-label="menu bar"
+    menus={[{ key: 'a', title: 'A', items: [{ key: 'x', label: 'X', onSelect: () => {} }] }]} />],
   ['SplitView', p => <SplitView {...p} title="split" sidebar={<span>side</span>}>content</SplitView>],
   ['Inspector', p => <Inspector {...p} title="inspector">body</Inspector>],
   ['Sidebar', p => <Sidebar {...p} aria-label="sidebar">side</Sidebar>],
@@ -109,6 +111,8 @@ const entries: Array<[string, (p: Probe) => ReactNode]> = [
   ['GlassActionSheet', p => <GlassActionSheet {...p} aria-label="actions" title="sheet" actions={[{ key: 'a', label: 'A' }]} />],
   ['GlassAlert', p => <GlassAlert {...p} title="alert" actions={[{ key: 'ok', label: 'OK' }]} />],
   ['GlassDialog', p => <GlassDialog {...p} title="dialog" description="d">body</GlassDialog>],
+  ['CommandPalette', p => <CommandPalette {...p} title="commands" shortcut={null}
+    commands={[{ id: 'a', label: 'A', onSelect: () => {} }]} />],
   ['GlassMenu', p => <GlassMenu {...p} aria-label="menu" items={[{ key: 'a', label: 'A', onSelect: () => {} }]} />],
   /* The ref lands on the button, not the menu panel — the button is the element on the page. */
   ['GlassMenuButton', p => <GlassMenuButton {...p} label="menu button" items={[{ key: 'a', label: 'A', onSelect: () => {} }]} />],
@@ -177,6 +181,7 @@ const _contract = {
   Screen: null as unknown as Gap<typeof Screen>,
   NavigationStack: null as unknown as Gap<typeof NavigationStack>,
   PageControl: null as unknown as Gap<typeof PageControl>,
+  MenuBar: null as unknown as Gap<typeof MenuBar>,
   SplitView: null as unknown as Gap<typeof SplitView>,
   Inspector: null as unknown as Gap<typeof Inspector>,
   Sidebar: null as unknown as Gap<typeof Sidebar>,
@@ -188,6 +193,7 @@ const _contract = {
   GlassActionSheet: null as unknown as Gap<typeof GlassActionSheet>,
   GlassAlert: null as unknown as Gap<typeof GlassAlert>,
   GlassDialog: null as unknown as Gap<typeof GlassDialog>,
+  CommandPalette: null as unknown as Gap<typeof CommandPalette>,
   GlassMenu: null as unknown as Gap<typeof GlassMenu>,
   GlassMenuButton: null as unknown as Gap<typeof GlassMenuButton>,
   GlassMenuDescription: null as unknown as Gap<typeof GlassMenuDescription>,

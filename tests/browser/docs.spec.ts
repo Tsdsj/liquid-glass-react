@@ -158,27 +158,39 @@ test('every component page shows at least three examples', async ({ page }) => {
 
 /* ---------- D5: search reaches inside the pages ---------- */
 
+/* The site's ⌘K is the library's own `CommandPalette` — so these also read as the first
+   application to use it, which is the only way to find out what it is missing. */
+/**
+ * Pressed with whichever modifier the page itself prints.
+ *
+ * `ControlOrMeta` asks the machine Playwright is running on, and the library asks the browser
+ * — which reports a Linux platform here, so `mod` is Control while the host is a Mac. The
+ * button says which one it is, and the button and the binding come from the same resolution.
+ */
 const openSearch = async (page: import('@playwright/test').Page) => {
-  await page.keyboard.press('ControlOrMeta+k');
-  const dialog = page.getByRole('dialog', { name: '搜索' });
+  const label = await page.getByRole('button', { name: /^搜索/ }).first().getAttribute('aria-label');
+  await page.keyboard.press(`${label?.includes('⌘') ? 'Meta' : 'Control'}+k`);
+  const dialog = page.getByRole('dialog', { name: '搜索文档' });
   await expect(dialog).toBeVisible();
   return dialog;
 };
+const searchField = (page: import('@playwright/test').Page) =>
+  page.getByRole('combobox', { name: '搜索文档' });
 
 test('searching finds a property name, not only a component name', async ({ page }) => {
   await page.goto('/#/overview');
   const dialog = await openSearch(page);
-  await page.getByRole('searchbox', { name: '搜索' }).fill('marks');
-  const row = dialog.getByRole('listitem').filter({ hasText: 'marks' }).first();
+  await searchField(page).fill('marks');
+  const row = dialog.getByRole('option').filter({ hasText: 'marks' }).first();
   await expect(row).toBeVisible();
   await expect(row).toContainText('属性');
 });
 
 test('choosing a property result lands on that page at its API table', async ({ page }) => {
   await page.goto('/#/overview');
-  await openSearch(page);
-  await page.getByRole('searchbox', { name: '搜索' }).fill('marks');
-  await page.getByRole('listitem').filter({ hasText: 'marks' }).first().getByRole('button').click();
+  const dialog = await openSearch(page);
+  await searchField(page).fill('marks');
+  await dialog.getByRole('option').filter({ hasText: 'marks' }).first().click();
 
   await expect(page).toHaveURL(/#\/components\/slider/);
   await page.waitForTimeout(400);
@@ -189,8 +201,8 @@ test('choosing a property result lands on that page at its API table', async ({ 
 test('searching finds an example by its title', async ({ page }) => {
   await page.goto('/#/overview');
   const dialog = await openSearch(page);
-  await page.getByRole('searchbox', { name: '搜索' }).fill('刻度');
-  const row = dialog.getByRole('listitem').filter({ hasText: '刻度' }).first();
+  await searchField(page).fill('刻度');
+  const row = dialog.getByRole('option').filter({ hasText: '刻度' }).first();
   await expect(row).toBeVisible();
   await expect(row).toContainText('示例');
 });
@@ -198,8 +210,10 @@ test('searching finds an example by its title', async ({ page }) => {
 test('searching finds a section heading', async ({ page }) => {
   await page.goto('/#/overview');
   const dialog = await openSearch(page);
-  await page.getByRole('searchbox', { name: '搜索' }).fill('键盘与辅助功能');
-  await expect(dialog.getByRole('listitem').first()).toContainText('章节');
+  await searchField(page).fill('键盘与辅助功能');
+  /* What kind of hit it is now lives in the section heading rather than repeated on every row,
+     and the heading is a real `role="group"` label — so it is said once, to everybody. */
+  await expect(dialog.getByRole('group', { name: '章节' }).getByRole('option').first()).toBeVisible();
 });
 
 /* ---------- D8: the refraction switch ---------- */

@@ -70,7 +70,7 @@
 .lg-root[data-transparency="opaque"][data-lg-theme="dark"][data-material="clear"] { --lg-fg: rgb(255 255 255); }
 .lg-root:focus-visible,
 .lg-root :is(button,a,select,textarea,[tabindex]):focus-visible,
-.lg-root input:not(.lg-field-input):not(.lg-search-input):focus-visible,
+.lg-root input:not(.lg-field-input):not(.lg-search-input):not(.lg-palette-input):focus-visible,
 .lg-tab-panel:focus-visible { outline: var(--lg-focus-width) solid var(--lg-focus); outline-offset: var(--lg-focus-offset); }
 .lg-surface { padding: 18px; }
 .lg-group > .lg-content, .lg-toolbar-group > .lg-content { display: flex; align-items: center; gap: 4px; }
@@ -475,6 +475,35 @@
 .lg-menu-separator { height: 1px; background: var(--lg-edge); margin: 5px 8px; }
 .lg-menu:popover-open .lg-menu-item { animation: lg-menu-item-in var(--lg-duration-overlay) var(--lg-ease-out) both; animation-delay: calc(var(--lg-index,0) * 22ms); }
 @keyframes lg-menu-item-in { from { opacity: 0; transform: translateY(-4px); } }
+/* An alternate is the same row saying something else, so it gets no decoration of its own.
+   The marker is here for anything that has to find one — a test, an application's own styling. */
+.lg-menu-item[data-alternate="true"] { font-style: normal; }
+
+/* ---------- Menu bar: one glass bar, titles are items on it ---------- */
+.lg-menubar { width: fit-content; max-width: 100%; padding: 4px; }
+.lg-menubar > .lg-content { display: flex; align-items: center; gap: 2px; overflow-x: auto; scrollbar-width: none; }
+.lg-menubar > .lg-content::-webkit-scrollbar { display: none; }
+/* Concentric: the bar's radius less its own padding, so the highlight nests inside the capsule
+   instead of sitting in it as a differently-shaped pill. */
+.lg-menubar-title { border: 0; background: transparent; color: inherit; cursor: pointer; white-space: nowrap;
+  display: inline-flex; align-items: center; border-radius: max(var(--lg-radius-xs), calc(var(--lg-radius) - 4px));
+  font: var(--lg-weight-medium) var(--lg-control-font)/1 var(--lg-font-text);
+  padding: 0 var(--lg-space-3); min-height: var(--lg-height-comfortable);
+  transition: background var(--lg-duration-press) var(--lg-ease), color var(--lg-duration-press) var(--lg-ease),
+    transform var(--lg-duration-spring) var(--lg-spring); }
+@media (hover: hover) {
+  .lg-menubar-title:not(:disabled):not([aria-expanded="true"]):hover { background: var(--lg-hover); }
+}
+/* The same press the menu rows have. A title that only washed its background had a press state
+   on paper — 90ms of colour, over before anyone saw it — and the motion sweep said so. */
+.lg-menubar-title:not(:disabled):active { background: var(--lg-pressed); transform: scale(.97); }
+/* The open menu's title is filled, the way the system marks which menu you are in. */
+.lg-menubar-title[aria-expanded="true"] { background: var(--lg-accent); color: var(--lg-accent-contrast); }
+.lg-menubar-title:disabled { opacity: .4; cursor: default; }
+.lg-menubar-title:focus-visible { outline: 2px solid var(--lg-focus); outline-offset: -2px; }
+/* A menu bar's menus hang off their title, so they line up with its leading edge, not its box. */
+.lg-menubar .lg-menu { min-width: 220px; }
+
 .lg-dialog { position: fixed; margin: auto; max-width: min(520px,calc(100vw - 32px)); width: 520px; max-height: calc(100dvh - 48px); padding: 30px; overflow-y: auto; overscroll-behavior: contain; scrollbar-gutter: stable; }
 .lg-dialog:not([open]) { display: none; opacity: 0; transform: scale(.96) translateY(8px); transition: opacity var(--lg-duration-release) var(--lg-ease), transform var(--lg-duration-release) var(--lg-ease), display var(--lg-duration-release) allow-discrete, overlay var(--lg-duration-release) allow-discrete; }
 .lg-dialog[open] { opacity: 1; transform: scale(1) translateY(0); transition: opacity var(--lg-duration-overlay) var(--lg-ease-out), transform var(--lg-duration-spring) var(--lg-spring), display var(--lg-duration-overlay) allow-discrete, overlay var(--lg-duration-overlay) allow-discrete; }
@@ -485,6 +514,54 @@
 .lg-dialog-close { position: absolute; inset-inline-end: var(--lg-space-2); inset-block-start: var(--lg-space-2); }
 .lg-dialog-body { margin-top: 20px; }
 .lg-dialog-body > :last-child { margin-bottom: 0; }
+
+/* ---------- Command palette: a field and a list, nothing else ---------- */
+/* Placed high rather than centred: the list grows downwards, and a panel that moves as you
+   type is a panel you have to re-find after every keystroke. */
+.lg-palette { width: 560px; max-width: min(560px,calc(100vw - 32px)); padding: 0; overflow: hidden;
+  margin: min(14vh,120px) auto auto; max-height: min(64dvh,540px); display: flex; flex-direction: column; }
+.lg-palette > .lg-content { display: flex; flex-direction: column; min-height: 0; }
+.lg-palette-field { display: flex; align-items: center; gap: var(--lg-space-3); flex: 0 0 auto;
+  padding: var(--lg-space-4) var(--lg-space-5); border-bottom: 1px solid var(--lg-edge); }
+.lg-palette-icon { flex: 0 0 auto; color: var(--lg-glass-fg-secondary); }
+/* The ring goes on the row, not on the input: the input has no box of its own, so a ring
+   around it is a rectangle floating in the middle of the panel with nothing inside it. Same
+   rule the text field and the search field already follow — the container wears the ring. */
+.lg-palette-field:has(:focus-visible) { outline: var(--lg-focus-width) solid var(--lg-focus);
+  outline-offset: calc(var(--lg-focus-offset) * -1); }
+/* 16px on touch or the browser zooms the page when the field takes focus; the desktop tier
+   settles it back onto the system's own control size. */
+.lg-palette-input { flex: 1; min-width: 0; border: 0; background: none; color: inherit;
+  font: var(--lg-weight-regular) var(--lg-field-font)/1.3 var(--lg-font-text); }
+/* Spelled out rather than left to `outline: none` on the element: an application with its own
+   blanket `:focus-visible` rule matches this input too, and a one-class rule ties with it and
+   loses on order. The same shape the text field and the search field already use. */
+.lg-palette .lg-palette-input:focus-visible { outline: none; }
+.lg-palette-input::placeholder { color: var(--lg-glass-fg-secondary); }
+.lg-palette-list { overflow-y: auto; overscroll-behavior: contain; padding: var(--lg-space-2); min-height: 0; }
+.lg-palette-list:empty { display: none; }
+.lg-palette-section { padding: var(--lg-space-3) var(--lg-space-3) var(--lg-space-2);
+  font: var(--lg-weight-semibold) var(--lg-text-caption1-size)/1.2 var(--lg-font-text);
+  color: var(--lg-glass-fg-secondary); }
+.lg-palette-option { display: flex; align-items: center; gap: var(--lg-space-3); cursor: pointer;
+  border-radius: var(--lg-radius-s); padding: var(--lg-space-2) var(--lg-space-3); min-height: var(--lg-hit-min);
+  transition: background var(--lg-duration-press) var(--lg-ease); }
+/* The highlight is `aria-selected`, not `:hover` — the keyboard and the pointer move the same
+   one thing, and two highlights on screen at once is two answers to "what does Return do". */
+.lg-palette-option[aria-selected="true"] { background: var(--lg-hover); }
+.lg-palette-option[aria-disabled="true"] { opacity: .45; cursor: default; }
+.lg-palette-option-icon { flex: 0 0 auto; display: inline-flex; color: var(--lg-glass-fg-secondary); }
+.lg-palette-option-text { flex: 1; min-width: 0; display: grid; }
+.lg-palette-option-label { overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  font: var(--lg-weight-medium) var(--lg-text-subhead-size)/1.3 var(--lg-font-text); }
+.lg-palette-option-detail { overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  font: var(--lg-weight-regular) var(--lg-text-caption1-size)/1.3 var(--lg-font-text);
+  color: var(--lg-glass-fg-secondary); }
+.lg-palette-option-shortcut.lg-kbd { flex-shrink: 0; padding: 0; border: 0; background: none;
+  color: var(--lg-glass-fg-secondary); font-size: var(--lg-text-caption1-size); }
+.lg-palette-empty { margin: 0; padding: var(--lg-space-6) var(--lg-space-5); text-align: center;
+  font: var(--lg-weight-regular) var(--lg-text-subhead-size)/1.4 var(--lg-font-text);
+  color: var(--lg-glass-fg-secondary); }
 
 /* ---------- Scroll edge: content dissolves into the bar, it is not covered by a block ---------- */
 /* ---------- Screen: floating bars, content underneath, one scroll edge ---------- */

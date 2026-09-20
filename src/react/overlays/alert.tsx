@@ -1,11 +1,12 @@
 'use client';
-import { useEffect, useId, useRef, type DialogHTMLAttributes, type RefAttributes } from 'react';
+import { useId, useRef, type DialogHTMLAttributes, type RefAttributes } from 'react';
 import { useGlassSurface, type GlassSurfaceOptions } from '../system/material.js';
 import { splitSurface } from '../system/props.js';
 import { GlassButton } from '../controls/button.js';
 import { SharedSurface } from '../system/surface.js';
 import { cx, useControllable } from '../system/utils.js';
-import { lockScroll, triggerElement, type OpenProps } from './anchor.js';
+import { triggerElement, type OpenProps } from './anchor.js';
+import { useModalDialog } from './modal.js';
 
 export interface AlertAction {
   key: string;
@@ -38,22 +39,16 @@ export function GlassAlert({ trigger, open: controlled, defaultOpen = false, onO
   const [surface, props] = splitSurface(rest);
   if (actions.length === 0) throw new Error('GlassAlert requires at least one action');
   if (actions.length > 3) throw new RangeError('GlassAlert supports at most three actions; use an action sheet for longer lists');
-  const generated = useId(); const id = providedId ?? generated; const triggerRef = useRef<HTMLButtonElement>(null); const restoreRef = useRef<HTMLElement | null>(null);
+  const generated = useId(); const id = providedId ?? generated; const triggerRef = useRef<HTMLButtonElement>(null);
   const [open, setOpen] = useControllable(controlled, defaultOpen, onOpenChange);
   const glass = useGlassSurface<HTMLDialogElement>({ ...surface, material: 'regular', size: 'large', radius: surface.radius ?? 26 }, ref);
   const hasDestructive = actions.some(action => action.role === 'destructive');
-  useEffect(() => {
-    const node = glass.root.current; if (!node) return;
-    if (!open) { if (node.open) node.close(); return; }
-    restoreRef.current = document.activeElement as HTMLElement | null;
-    if (!node.open) node.showModal();
+  useModalDialog(open, glass.root, triggerRef, node => {
     // When something irreversible is on offer, the safe option is the one under the user's hands.
     const preferred = node.querySelector<HTMLButtonElement>(hasDestructive ? '[data-role="cancel"]' : '[data-role="default"]')
       ?? node.querySelector<HTMLButtonElement>('.lg-alert-action');
     preferred?.focus({ preventScroll: true });
-    const unlock = lockScroll();
-    return () => { if (node.open) node.close(); unlock(); const target = triggerRef.current ?? restoreRef.current; if (target?.isConnected) target.focus({ preventScroll: true }); };
-  }, [open, glass.root, hasDestructive]);
+  });
   const run = (action: AlertAction) => { setOpen(false); action.onSelect?.(); };
   return <>
     {triggerElement(trigger, triggerRef, id, open, 'dialog', setOpen)}

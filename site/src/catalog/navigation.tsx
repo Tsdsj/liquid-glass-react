@@ -1,7 +1,7 @@
 import { useRef, useState, type MouseEvent } from 'react';
 import {
   GlassButton, GlassIconButton, GlassSegmentedControl, GlassTabs, GlassToolbar, LibraryIcon, List, ListRow, ListSection,
-  Inspector, NavigationBar, NavigationStack, PageControl, ScrollEdge, Sidebar, SplitView, useNavigationStack,
+  Inspector, MenuBar, NavigationBar, NavigationStack, PageControl, ScrollEdge, Sidebar, SplitView, useNavigationStack,
   TabBar, Text, ToolbarGroup, ToolbarSpacer,
 } from '@ttqtt/liquid-glass-react';
 import { Icon } from '../icons.js';
@@ -856,6 +856,132 @@ push({ key: 'general', title: '通用', content: <General /> });`,
     ],
     notes: ['纯装饰，读屏会跳过。只有内容真的交叠时才出现。', '用户开启“减少透明度”后会变成一条实边。'],
     related: ['navigation-bar', 'tab-bar'],
+  },
+  {
+    slug: 'menu-bar', name: 'MenuBar', title: '菜单栏', group: '导航',
+    summary: '桌面应用的命令面：一排标题，每个标题后面是一个菜单。',
+    when: [
+      '应用的命令比工具栏放得下的多。工具栏放常用的几个，菜单栏放全部。',
+      '标题尽量一个词。窗口变窄时它要能扛得住。',
+      '命令不适用的时候把它置灰，不要拿走——菜单栏换了形状就没人记得住了。',
+      '如果只有三五个命令，一个菜单按钮就够了，不需要一排标题。',
+    ],
+    examples: [
+      {
+        id: 'menubar-basic', title: '基础用法',
+        description: '打开一个菜单之后，鼠标划过别的标题就直接换过去；方向键同理，一次一个菜单，中间不会有一帧什么都没有。整排只占一个 Tab 位。',
+        backdrop: 'both', height: 240,
+        knobs: [
+          { name: 'count', label: '菜单数量', type: 'number', value: 4, min: 1, max: 4, step: 1 },
+          { name: 'shortcuts', label: '显示快捷键', type: 'boolean', value: true },
+        ],
+        render: function MenuBarBasic({ knobs }) {
+          const [last, setLast] = useState('还没执行命令');
+          const pick = (label: string) => () => setLast(label);
+          const trim = (items: { key: string; label: string; shortcut?: string; onSelect: () => void; separatorBefore?: boolean }[]) =>
+            items.map(item => (knobs.shortcuts === true ? item : { ...item, shortcut: undefined }));
+          return <div style={{ display: 'grid', gap: 16, justifyItems: 'center' }}>
+            <MenuBar aria-label="示例应用菜单" menus={[
+              { key: 'file', title: '文件', items: trim([
+                { key: 'new', label: '新建', shortcut: 'mod n', onSelect: pick('新建') },
+                { key: 'open', label: '打开…', shortcut: 'mod o', onSelect: pick('打开') },
+                { key: 'save', label: '存储', shortcut: 'mod s', separatorBefore: true, onSelect: pick('存储') },
+              ]) },
+              { key: 'edit', title: '编辑', items: trim([
+                { key: 'undo', label: '撤销', shortcut: 'mod z', onSelect: pick('撤销') },
+                { key: 'cut', label: '剪切', shortcut: 'mod x', separatorBefore: true, onSelect: pick('剪切') },
+                { key: 'copy', label: '拷贝', shortcut: 'mod c', onSelect: pick('拷贝') },
+                { key: 'paste', label: '粘贴', shortcut: 'mod v', onSelect: pick('粘贴') },
+              ]) },
+              { key: 'view', title: '显示', items: trim([
+                { key: 'sidebar', label: '隐藏侧边栏', shortcut: 'mod ctrl s', onSelect: pick('隐藏侧边栏') },
+                { key: 'zoom', label: '放大', shortcut: 'mod +', onSelect: pick('放大') },
+              ]) },
+              { key: 'help', title: '帮助', items: trim([
+                { key: 'docs', label: '使用手册', onSelect: pick('使用手册') },
+              ]) },
+            ].slice(0, Number(knobs.count))} />
+            <Text id="menubar-last" variant="caption1" tone="secondary" role="status">{last}</Text>
+          </div>;
+        },
+        code: `<MenuBar aria-label="示例应用菜单" menus={[
+  { key: 'file', title: '文件', items: [
+    { key: 'new', label: '新建', shortcut: 'mod n', onSelect: create },
+    { key: 'save', label: '存储', shortcut: 'mod s', separatorBefore: true, onSelect: save },
+  ] },
+  { key: 'edit', title: '编辑', items: [
+    { key: 'undo', label: '撤销', shortcut: 'mod z', onSelect: undo },
+  ] },
+]} />`,
+      },
+      {
+        id: 'menubar-alternate', title: '按住 Option，命令换成它的另一种做法',
+        description: '「关闭」变「全部关闭」，「拷贝」变「拷贝为纯文本」——替代项是原地替换，不是再加一行，这是长菜单能保持短的原因。它永远只是快捷写法：按住修饰键这件事本身不可发现，所以不能有命令只住在那里。',
+        height: 250,
+        render: function MenuBarAlternate() {
+          const [last, setLast] = useState('还没执行命令');
+          const pick = (label: string) => () => setLast(label);
+          return <div id="menubar-alternate-demo" style={{ display: 'grid', gap: 16, justifyItems: 'center' }}>
+            <MenuBar aria-label="替代项示例" menus={[
+              { key: 'file', title: '文件', items: [
+                { key: 'close', label: '关闭', shortcut: 'mod w', onSelect: pick('关闭'),
+                  alternate: { label: '全部关闭', shortcut: '⌥ mod w', onSelect: pick('全部关闭') } },
+                { key: 'duplicate', label: '复制一份', onSelect: pick('复制一份'),
+                  alternate: { label: '存储为…', onSelect: pick('存储为') } },
+              ] },
+            ]} />
+            <Text variant="caption1" tone="secondary">打开「文件」，按住 Option 看这两行。</Text>
+            <Text id="menubar-alternate-last" variant="caption1" tone="secondary" role="status">{last}</Text>
+          </div>;
+        },
+        code: `{ key: 'close', label: '关闭', shortcut: 'mod w', onSelect: close,
+  alternate: { label: '全部关闭', shortcut: '⌥ mod w', onSelect: closeAll } }`,
+      },
+      {
+        id: 'menubar-disabled', title: '不适用的时候置灰，不要拿走',
+        description: '菜单栏是靠位置记住的。一个命令这会儿不能用，它也得在原来那一行——否则下次要找它的人只能重新学一遍。整个菜单也一样。',
+        height: 220,
+        render: function MenuBarDisabled() {
+          const [selected, setSelected] = useState(false);
+          return <div id="menubar-disabled-demo" style={{ display: 'grid', gap: 16, justifyItems: 'center' }}>
+            <MenuBar aria-label="置灰示例" menus={[
+              { key: 'edit', title: '编辑', items: [
+                { key: 'copy', label: '拷贝', shortcut: 'mod c', disabled: !selected, onSelect: () => {} },
+                { key: 'paste', label: '粘贴', shortcut: 'mod v', onSelect: () => {} },
+              ] },
+              { key: 'format', title: '格式', disabled: true, items: [
+                { key: 'bold', label: '粗体', shortcut: 'mod b', onSelect: () => {} },
+              ] },
+            ]} />
+            <GlassButton controlSize="small" variant="gray" onClick={() => setSelected(!selected)}>
+              {selected ? '取消选择' : '选中一段文字'}
+            </GlassButton>
+          </div>;
+        },
+        code: `{ key: 'copy', label: '拷贝', shortcut: 'mod c', disabled: !hasSelection, onSelect: copy }
+
+{/* 整个菜单也可以置灰，但它仍然在原来的位置 */}
+{ key: 'format', title: '格式', disabled: true, items: [...] }`,
+      },
+    ],
+    props: [
+      { name: 'menus', type: 'MenuBarMenu[]', required: true, description: '每一项是一个标题加它的菜单内容。' },
+      { name: 'title', type: 'string', required: true, description: '标题文字，尽量一个词。' },
+      { name: 'items', type: 'GlassMenuItem[]', required: true, description: '这个菜单里的命令，和 GlassMenu 完全一样。' },
+      { name: 'disabled', type: 'boolean', description: '整个菜单不可用。它仍然画出来，位置不变。' },
+      { name: 'aria-label', type: 'string', required: true, description: '这排菜单属于什么。' },
+      { name: 'open', type: 'string | null', description: '当前打开的是哪个菜单，由应用控制时传。null 表示没有打开的。' },
+      { name: 'defaultOpen', type: 'string | null', default: 'null', description: '非受控时的初始值。' },
+      { name: 'onOpenChange', type: '(key: string | null) => void', description: '打开的菜单变了。' },
+    ],
+    notes: [
+      '整排只占一个 Tab 位。左右方向键在标题之间走，下方向键打开，Escape 关闭并把焦点还给标题。',
+      '菜单打开着的时候，左右方向键直接换菜单——不是先关再开。',
+      '菜单内部是 GlassMenu 的那套键盘模型：上下移动、Home/End 跳到两端、打字跳到匹配项。',
+      '角色是真的 menubar / menuitem，读屏会说「菜单栏，四项之中的第一项」。',
+    ],
+    related: ['menu', 'menu-button', 'command-palette', 'toolbar'],
+    imports: ['MenuBar', 'GlassButton', 'Text'],
   },
 ];
 

@@ -417,3 +417,40 @@ test('the colour well itself reacts to the pointer, not just its swatches', asyn
   await page.mouse.up();
   expect(pressed, `the swatch was at ${pressed.toFixed(3)} while held`).toBeLessThan(1);
 });
+
+/* =========================================================================================
+ * Menu bar — a press state that was only a colour.
+ * ======================================================================================= */
+
+/**
+ * Found by the sweep, not by looking: the title *had* a press state, and it was 90ms of
+ * background colour, which is over before it registers as a response to anything. Every other
+ * pressable surface in this library moves under the finger. This one now does too.
+ */
+test('pressing a menu bar title moves it, not only its colour', async ({ page }) => {
+  await page.goto('/#/components/menu-bar');
+  const title = page.locator('#menubar-basic .lg-menubar-title').first();
+  await title.scrollIntoViewIfNeeded();
+  const box = (await title.boundingBox())!;
+  await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2);
+  await page.mouse.down();
+  const moving = await running(title);
+  expect(moving, 'nothing was playing while the title was held down').toContain('transition:transform');
+  // Part-way in: the transition is read on the frame it starts, where it has not moved yet.
+  await page.waitForTimeout(120);
+  const scale = await title.evaluate(node => new DOMMatrix(getComputedStyle(node).transform).a);
+  expect(scale, `the title was at ${scale} while held`).toBeLessThan(1);
+  await page.mouse.up();
+});
+
+test('and it does not move at all under Reduce Motion', async ({ page }) => {
+  await reduceMotion(page);
+  await page.goto('/#/components/menu-bar');
+  const title = page.locator('#menubar-basic .lg-menubar-title').first();
+  await title.scrollIntoViewIfNeeded();
+  const box = (await title.boundingBox())!;
+  await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2);
+  await page.mouse.down();
+  expect(await running(title)).toHaveLength(0);
+  await page.mouse.up();
+});

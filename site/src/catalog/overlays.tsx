@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import {
-  Banner, Form, GlassActionSheet, GlassAlert, GlassButton, GlassDialog, GlassIconButton, GlassMenu, GlassPopover,
-  Card, ContextMenu, GlassMenuButton, GlassSegmentedControl, GlassSheet, GlassSlider, LibraryIcon, List, ListRow, ListSection,
+  Banner, CommandPalette, Form, GlassActionSheet, GlassAlert, GlassButton, GlassDialog, GlassIconButton, GlassMenu, GlassPopover,
+  Card, ContextMenu, GlassMenuButton, GlassSegmentedControl, GlassSheet, GlassSlider, LibraryIcon, List, ListRow, ListSection, MenuBar,
   Text, TextField, Tooltip, useToast, type SheetDetent,
 } from '@ttqtt/liquid-glass-react';
 import { Icon } from '../icons.js';
@@ -217,6 +217,7 @@ export const overlayDocs: ComponentDoc[] = [
       { name: 'checked', type: 'boolean', description: '带勾选状态的项。' },
       { name: 'shortcut', type: 'string', description: '快捷键提示。' },
       { name: 'destructive', type: 'boolean', description: '标红。危险操作仍然需要确认或撤销。' },
+      { name: 'alternate', type: 'GlassMenuAlternate', description: '按住 Option 时这一行换成的样子。原地替换，不是多一行。' },
       { name: 'aria-label', type: 'string', required: true, description: '这个菜单是做什么的。' },
       { name: 'selection', type: "'multiple' | 'single'", default: "'multiple'", description: '勾在这里表示什么。single 让带勾的项变成 menuitemradio。' },
       { name: 'align', type: "'start' | 'center' | 'end'", default: "'end'", description: '相对按钮的对齐方式。' },
@@ -1159,5 +1160,129 @@ toast({
       '关闭按钮有 44×44 的点击范围。',
     ],
     related: ['toast', 'alert', 'sheet'],
+  },
+  {
+    slug: 'command-palette', name: 'CommandPalette', title: '命令面板', group: '浮层',
+    summary: '一个输入框和一张列表：按一下快捷键，打字，回车。',
+    when: [
+      '应用的命令多到菜单栏也翻不快，而用户已经知道自己要找什么。',
+      '它是快的那条路，不是唯一那条路——面板里的每个命令都应该在菜单或工具栏里有位置。',
+      '和菜单栏一起用：菜单栏负责让人认识命令，面板负责让熟手不用去翻。',
+    ],
+    examples: [
+      {
+        id: 'palette-basic', title: '基础用法',
+        description: '这个例子绑的是 ⌘J（Windows / Linux 上是 Ctrl-J），因为本站的 ⌘K 已经归文档搜索了——两个命令抢同一组键的时候，赢的是先挂上去的那个，开发模式下库会直接说出来。默认值就是 mod k。焦点一直在输入框里：上下键移动的是高亮，不是焦点，否则下一个字就打不进去了。',
+        backdrop: 'both', height: 220,
+        knobs: [
+          { name: 'limit', label: '最多显示', type: 'number', value: 6, min: 1, max: 6, step: 1 },
+          { name: 'bind', label: '绑定 ⌘K', type: 'boolean', value: true },
+        ],
+        render: function PaletteBasic({ knobs }) {
+          const [last, setLast] = useState('还没执行命令');
+          const run = (label: string) => () => setLast(label);
+          return <div style={{ display: 'grid', gap: 16, justifyItems: 'center' }}>
+            <CommandPalette title="命令" limit={Number(knobs.limit)}
+              shortcut={knobs.bind === true ? 'mod j' : null} commands={[
+              { id: 'new', label: '新建文稿', group: '文件', shortcut: 'mod n', onSelect: run('新建文稿') },
+              { id: 'open', label: '打开…', group: '文件', shortcut: 'mod o', keywords: 'open file', onSelect: run('打开') },
+              { id: 'export', label: '导出为 PDF', group: '文件', detail: '当前文稿', onSelect: run('导出为 PDF') },
+              { id: 'sidebar', label: '显示侧边栏', group: '显示', shortcut: 'mod ctrl s', onSelect: run('显示侧边栏') },
+              { id: 'theme', label: '切换深色外观', group: '显示', keywords: 'dark theme 主题', onSelect: run('切换深色外观') },
+              { id: 'publish', label: '发布', group: '协作', detail: '需要先连接账户', disabled: true, onSelect: () => {} },
+            ]} trigger={<GlassButton>打开命令面板</GlassButton>} />
+            <Text id="palette-last" variant="caption1" tone="secondary" role="status">{last}</Text>
+          </div>;
+        },
+        code: `<CommandPalette title="命令" commands={[
+  { id: 'new', label: '新建文稿', group: '文件', shortcut: 'mod n', onSelect: create },
+  { id: 'theme', label: '切换深色外观', group: '显示', keywords: 'dark 主题', onSelect: toggleTheme },
+  { id: 'publish', label: '发布', detail: '需要先连接账户', disabled: true, onSelect: publish },
+]} />
+
+{/* 不传 shortcut 就是 'mod k'；传 null 表示由应用自己决定怎么打开 */}`,
+      },
+      {
+        id: 'palette-filter', title: '匹配规则可以换掉',
+        description: '默认规则是：输入的每个词都要在命令的名字、分组、说明或 keywords 里出现过，顺序和大小写都不管。已经自己排过序或者问过服务端的，传 filter={false}，面板就照着给的顺序画。',
+        height: 200,
+        render: function PaletteFilter() {
+          const [open, setOpen] = useState(false);
+          const [query, setQuery] = useState('');
+          const all = ['对齐左边', '对齐右边', '两端对齐', '加粗', '倾斜'];
+          const hit = all.filter(name => name.includes(query.trim()));
+          return <div id="palette-filter-demo" style={{ display: 'grid', gap: 12, justifyItems: 'center' }}>
+            <CommandPalette title="段落命令" placeholder="试试「对齐」" filter={false}
+              open={open} onOpenChange={setOpen} query={query} onQueryChange={setQuery}
+              shortcut={null}
+              emptyLabel="没有这个命令。"
+              commands={hit.map(name => ({ id: name, label: name, onSelect: () => {} }))}
+              trigger={<GlassButton variant="gray">自己过滤</GlassButton>} />
+            <Text variant="caption1" tone="secondary">这个例子没有绑快捷键：shortcut={'{null}'}。</Text>
+          </div>;
+        },
+        code: `<CommandPalette
+  title="段落命令"
+  filter={false}                 {/* 列表已经是答案了 */}
+  query={query} onQueryChange={setQuery}
+  commands={matched.map(name => ({ id: name, label: name, onSelect: … }))}
+/>`,
+      },
+      {
+        id: 'palette-with-menubar', title: '它是快的那条路，不是唯一那条路',
+        description: '同一批命令，菜单栏里有，面板里也有。菜单栏负责让人第一次认识这些命令并看到它们的快捷键；面板负责让已经认识的人不用再去翻。只住在面板里的命令，等于只对已经知道它存在的人存在。',
+        height: 260,
+        render: function PaletteWithMenuBar() {
+          const [last, setLast] = useState('还没执行命令');
+          const run = (label: string) => () => setLast(label);
+          const commands = [
+            { id: 'new', label: '新建文稿', group: '文件', shortcut: 'mod n', onSelect: run('新建文稿') },
+            { id: 'save', label: '存储', group: '文件', shortcut: 'mod s', onSelect: run('存储') },
+            { id: 'sidebar', label: '显示侧边栏', group: '显示', onSelect: run('显示侧边栏') },
+          ];
+          return <div id="palette-menubar-demo" style={{ display: 'grid', gap: 16, justifyItems: 'center' }}>
+            <MenuBar aria-label="示例应用菜单" menus={[
+              { key: 'file', title: '文件', items: commands.filter(command => command.group === '文件')
+                .map(command => ({ key: command.id, label: command.label, shortcut: command.shortcut, onSelect: command.onSelect })) },
+              { key: 'view', title: '显示', items: commands.filter(command => command.group === '显示')
+                .map(command => ({ key: command.id, label: command.label, shortcut: command.shortcut, onSelect: command.onSelect })) },
+            ]} />
+            <CommandPalette title="命令" commands={commands} shortcut={null}
+              trigger={<GlassButton variant="gray" controlSize="small">同样的命令，在面板里</GlassButton>} />
+            <Text id="palette-menubar-last" variant="caption1" tone="secondary" role="status">{last}</Text>
+          </div>;
+        },
+        code: `const commands = [
+  { id: 'new', label: '新建文稿', group: '文件', shortcut: 'mod n', onSelect: create },
+  { id: 'save', label: '存储', group: '文件', shortcut: 'mod s', onSelect: save },
+];
+
+<MenuBar aria-label="应用菜单" menus={menusFrom(commands)} />
+<CommandPalette title="命令" commands={commands} />`,
+      },
+    ],
+    props: [
+      { name: 'commands', type: 'PaletteCommand[]', required: true, description: '所有命令。每个至少要有 id、label 和 onSelect。' },
+      { name: 'title', type: 'string', required: true, description: '这个面板搜的是什么。只念不画。' },
+      { name: 'group', type: 'string', description: '分组标题。同一组的命令保持传入的顺序。' },
+      { name: 'detail', type: 'string', description: '第二行：它在哪儿，或者它会做什么。' },
+      { name: 'shortcut', type: 'string', description: '打开面板的快捷键，写法和 Kbd 一样。传 null 表示不绑。', default: "'mod k'" },
+      { name: 'keywords', type: 'string', description: '参与匹配但不显示的词：别名、旧名字。' },
+      { name: 'filter', type: '((command, query) => boolean) | false', description: '换掉匹配规则。false 表示列表已经是答案。' },
+      { name: 'query', type: 'string', description: '输入框的内容，由应用控制时传。' },
+      { name: 'defaultQuery', type: 'string', default: "''", description: '非受控时的初始内容。面板关上时会清空。' },
+      { name: 'onQueryChange', type: '(query: string) => void', description: '输入框内容变了。' },
+      { name: 'placeholder', type: 'string', description: '空着时的提示。不传就用 GlassProvider 的 strings 表。' },
+      { name: 'emptyLabel', type: 'ReactNode', description: '什么都没匹配上时说什么。' },
+      { name: 'limit', type: 'number', default: '50', description: '最多画多少条。没画出来的仍然能搜到。' },
+    ],
+    notes: [
+      '输入框是 combobox，列表是 listbox，高亮用 aria-activedescendant——焦点始终在输入框里，所以打字一直有效。',
+      '上下键移动高亮并跳过不可用的命令，Home/End 到两端，回车执行，Escape 关闭并把焦点还回原处。',
+      '面板不记任何东西：没有历史、没有“最近使用”。要这些的话由应用自己排序，并给一个清除的入口。',
+      '打开它的快捷键在有模态窗时不生效——这是 useShortcut 的规则；关闭它的那个绑在面板内部，所以是例外。',
+    ],
+    related: ['menu-bar', 'search-field', 'menu', 'dialog'],
+    imports: ['CommandPalette', 'MenuBar', 'GlassButton', 'Text'],
   },
 ];

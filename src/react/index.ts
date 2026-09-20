@@ -47,6 +47,7 @@ export * from './navigation/nav-bar.js';
 export * from './navigation/tabs.js';
 export * from './navigation/scroll-edge.js';
 export * from './navigation/page-control.js';
+export * from './navigation/menu-bar.js';
 
 /* Layout containers: the skeleton the bars and the content are arranged in. */
 export * from './layout/screen.js';
@@ -64,7 +65,8 @@ export * from './overlays/popover.js';
 /* Named rather than `export *`: `menuKeyboard` is how `GlassMenu` and `ContextMenu` share one
    keyboard model, and it writes to a panel element it assumes the shape of. It belongs with
    `usePopover` and `lockScroll` — assembly, not API — and an `export *` had been publishing it. */
-export { GlassMenu, type GlassMenuItem, type GlassMenuProps } from './overlays/menu.js';
+export { GlassMenu, useOptionHeld, type GlassMenuItem, type GlassMenuAlternate, type GlassMenuProps } from './overlays/menu.js';
+export * from './overlays/command-palette.js';
 export * from './overlays/menu-button.js';
 export * from './overlays/tooltip.js';
 export * from './overlays/context-menu.js';

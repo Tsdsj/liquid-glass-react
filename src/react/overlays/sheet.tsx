@@ -6,7 +6,8 @@ import { splitSurface } from '../system/props.js';
 import { useGlassPolicy } from '../system/provider.js';
 import { SharedSurface } from '../system/surface.js';
 import { cx, useControllable } from '../system/utils.js';
-import { lockScroll, triggerElement, type OpenProps } from './anchor.js';
+import { triggerElement, type OpenProps } from './anchor.js';
+import { useModalDialog } from './modal.js';
 import { useGlassStrings } from '../system/strings.js';
 
 export type SheetDetent = 'medium' | 'large';
@@ -44,7 +45,7 @@ export function GlassSheet({
   const [surface, props] = splitSurface(rest);
   const strings = useGlassStrings();
   if (detents.length === 0) throw new Error('GlassSheet requires at least one detent');
-  const generated = useId(); const id = providedId ?? generated; const triggerRef = useRef<HTMLButtonElement>(null); const restoreRef = useRef<HTMLElement | null>(null);
+  const generated = useId(); const id = providedId ?? generated; const triggerRef = useRef<HTMLButtonElement>(null);
   const [open, setOpen] = useControllable(controlled, defaultOpen, onOpenChange);
   const [detent, setDetent] = useControllable(undefined, defaultDetent ?? detents[0], onDetentChange);
   const policy = useGlassPolicy();
@@ -60,18 +61,9 @@ export function GlassSheet({
     setFull(fraction >= FULL);
   }, [glass.root]);
 
-  useEffect(() => {
-    const node = glass.root.current; if (!node) return;
-    if (!open) { if (node.open) node.close(); return; }
-    restoreRef.current = document.activeElement as HTMLElement | null;
-    if (!node.open) node.showModal();
-    paint(DETENT_FRACTION[detent]);
-    const unlock = lockScroll();
-    return () => { if (node.open) node.close(); unlock(); const target = triggerRef.current ?? restoreRef.current; if (target?.isConnected) target.focus({ preventScroll: true }); };
-    // `detent` is intentionally not a dependency: re-running this on every detent change would
-    // close and reopen the dialog mid-drag.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [open, glass.root, paint]);
+  /* `detent` is read through the callback rather than taken as a dependency: re-running the
+     open sequence on every detent change would close and reopen the dialog mid-drag. */
+  useModalDialog(open, glass.root, triggerRef, () => paint(DETENT_FRACTION[detent]));
 
   useEffect(() => { if (open) paint(DETENT_FRACTION[detent]); }, [detent, open, paint]);
 

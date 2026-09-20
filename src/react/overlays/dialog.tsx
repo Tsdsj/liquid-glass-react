@@ -1,12 +1,13 @@
 'use client';
-import { useCallback, useEffect, useId, useRef, type DialogHTMLAttributes, type ReactNode, type RefAttributes } from 'react';
+import { useCallback, useId, useRef, type DialogHTMLAttributes, type ReactNode, type RefAttributes } from 'react';
 import { useGlassSurface, type GlassSurfaceOptions } from '../system/material.js';
 import { splitSurface } from '../system/props.js';
 import { GlassIconButton } from '../controls/button.js';
 import { SharedSurface } from '../system/surface.js';
 import { LibraryIcon } from '../system/icon.js';
 import { cx, useControllable } from '../system/utils.js';
-import { lockScroll, triggerElement, type OpenProps } from './anchor.js';
+import { triggerElement, type OpenProps } from './anchor.js';
+import { useModalDialog } from './modal.js';
 import { useGlassStrings } from '../system/strings.js';
 
 /** `open` is the controlled state, not the `<dialog>` attribute — the element is opened with `showModal`. */
@@ -26,17 +27,10 @@ export function GlassDialog({ trigger, open: controlled, defaultOpen = false, on
   const [surface, props] = splitSurface(rest);
   const strings = useGlassStrings();
   const generated = useId(); const id = providedId ?? generated; const triggerRef = useRef<HTMLButtonElement>(null);
-  const restoreRef = useRef<HTMLElement | null>(null); const downOutside = useRef(false);
+  const downOutside = useRef(false);
   const [open, setOpen] = useControllable(controlled, defaultOpen, onOpenChange);
   const glass = useGlassSurface<HTMLDialogElement>({ ...surface, material: 'regular', size: 'large', radius: surface.radius ?? 28 }, ref);
-  useEffect(() => {
-    const node = glass.root.current; if (!node) return;
-    if (!open) { if (node.open) node.close(); return; }
-    restoreRef.current = document.activeElement as HTMLElement | null;
-    if (!node.open) node.showModal();
-    const unlock = lockScroll();
-    return () => { if (node.open) node.close(); unlock(); const target = triggerRef.current ?? restoreRef.current; if (target?.isConnected) target.focus({ preventScroll: true }); };
-  }, [open, glass.root]);
+  useModalDialog(open, glass.root, triggerRef);
   const outside = useCallback((x: number, y: number) => {
     const rect = glass.root.current?.getBoundingClientRect();
     return !!rect && (x < rect.left || x > rect.right || y < rect.top || y > rect.bottom);
