@@ -78,7 +78,8 @@
     "verify:package": "node scripts/verify-package.mjs",
     "prepublishOnly": "node scripts/verify-package.mjs",
     "test:warnings": "playwright test --project=dev",
-    "test:matrix": "playwright test --project=matrix"
+    "test:matrix": "playwright test --project=matrix",
+    "test:motion": "playwright test --project=motion"
   },
   "devDependencies": {
     "@playwright/test": "^1.57.0",

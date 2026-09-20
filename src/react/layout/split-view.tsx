@@ -6,6 +6,7 @@ import {
 import { useGlassStrings } from '../system/strings.js';
 import { cx, useControllable } from '../system/utils.js';
 import { useSizeClass } from '../system/size-class.js';
+import { useToggling } from '../system/leave.js';
 import { NavigationStack, type NavigationPage } from './navigation-stack.js';
 
 export interface SplitViewProps extends Omit<HTMLAttributes<HTMLDivElement>, 'title'>, RefAttributes<HTMLDivElement> {
@@ -87,6 +88,10 @@ export function SplitView({
   const [width, setWidth] = useControllable(controlledWidth, DEFAULT_SIDEBAR, onSidebarWidthChange);
   const [sidebarOn] = useControllable(controlledSidebar, defaultSidebarVisible, onSidebarVisibleChange);
   const [inspectorOn] = useControllable(controlledInspector, defaultInspectorVisible, onInspectorVisibleChange);
+  /* Only a show or a hide animates the column's width. Resizing it — by drag or by arrow key —
+     has to be exactly as fast as the input, and an animated `flex-basis` made both feel broken. */
+  const sidebarToggling = useToggling(sidebarOn);
+  const inspectorToggling = useToggling(inspectorOn);
 
   /**
    * How wide the view itself is, so the range can be bounded by the room there actually is.
@@ -180,8 +185,23 @@ export function SplitView({
     /* The clamped width, not the requested one: a controlled caller may ask for more than the
        view can give, and what is drawn and what is announced have to be the same number. */
     style={{ '--lg-split-sidebar': `${clamp(width)}px`, '--lg-split-inspector': `${inspectorWidth}px`, ...style } as CSSProperties}>
+    {/**
+      * The columns stay in the tree when they are hidden, so that hiding one can be watched.
+      *
+      * A column that is simply not rendered goes from 260px to nothing between two frames, and
+      * the reader is left to work out whether it collapsed, moved, or was never there. The
+      * stylesheet closes it to nothing and then turns its visibility off, which is what takes
+      * it off the tab order and out of the accessibility tree once it is gone.
+      *
+      * The cost, and it is a real one: the content you pass as `sidebar` or `inspector` stays
+      * mounted while hidden. Its effects keep running. Anything expensive enough to mind about
+      * should be unmounted by the caller, which is the only place that knows.
+      */}
+    <div className="lg-split-column" data-column="sidebar" data-hidden={sidebarOn ? undefined : 'true'}
+      data-toggling={sidebarToggling ? 'true' : undefined}>
+      <div className="lg-split-inner">{sidebar}</div>
+    </div>
     {sidebarOn && <>
-      <div className="lg-split-column" data-column="sidebar">{sidebar}</div>
       {/**
         * "Make the divider always visible" and "let people resize". Both, and the keyboard
         * equivalent: a width that can only be set by dragging cannot be set without a pointer.
@@ -210,9 +230,14 @@ export function SplitView({
         }} />
     </>}
 
-    <div className="lg-split-column" data-column="content" id={`${generated}-sidebar`}>{children}</div>
+    <div className="lg-split-column" data-column="content" id={`${generated}-sidebar`}>
+      <div className="lg-split-inner">{children}</div>
+    </div>
 
-    {inspector && inspectorOn && <div className="lg-split-column" data-column="inspector">{inspector}</div>}
+    {inspector && <div className="lg-split-column" data-column="inspector" data-hidden={inspectorOn ? undefined : 'true'}
+      data-toggling={inspectorToggling ? 'true' : undefined}>
+      <div className="lg-split-inner">{inspector}</div>
+    </div>}
   </div>;
 }
 

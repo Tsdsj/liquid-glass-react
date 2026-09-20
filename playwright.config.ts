@@ -25,9 +25,9 @@ export default defineConfig({
      * ran nowhere. A file that is silently never run is worse than one that fails.
      */
     { name: 'chrome', use: { ...devices['Desktop Chrome'], channel: 'chrome' },
-      testIgnore: /[/\\](fallback|warnings|strict-mode|hydration|matrix)\.spec\.ts$/ },
+      testIgnore: /[/\\](fallback|warnings|strict-mode|hydration|matrix|motion-inventory)\.spec\.ts$/ },
     { name: 'chromium', use: { ...devices['Desktop Chrome'], ...(process.env.CHROMIUM_PATH ? { launchOptions: { executablePath: process.env.CHROMIUM_PATH } } : {}) },
-      testIgnore: /[/\\](fallback|warnings|strict-mode|hydration|matrix)\.spec\.ts$/ },
+      testIgnore: /[/\\](fallback|warnings|strict-mode|hydration|matrix|motion-inventory)\.spec\.ts$/ },
     /* The development-mode warnings only exist before `process.env.NODE_ENV` is replaced, so
        they have to be read from the dev server rather than from the built site. */
     { name: 'dev', use: { ...devices['Desktop Chrome'], channel: 'chrome', baseURL: `http://127.0.0.1:${DEV_PORT}` }, testMatch: /[/\\](warnings|strict-mode|hydration)\.spec\.ts$/ },
@@ -40,6 +40,14 @@ export default defineConfig({
        asserts: `pnpm test:matrix` writes reports/matrix.json, and what it finds becomes a
        dedicated test in one of the projects above. */
     { name: 'matrix', use: { ...devices['Desktop Chrome'], channel: 'chrome' }, testMatch: /[/\\]matrix\.spec\.ts$/, timeout: 20 * 60_000 },
+    /* The motion sweep, on the same terms: reports what moves and what does not, and every
+       gap it finds becomes a named test in `chrome`. */
+    /* No trace: this one run performs several thousand actions on one page, and the trace
+       collector gives up partway through ("file data stream has unexpected number of bytes"),
+       taking the browser with it. There is nothing to replay here anyway — the answer is the
+       report. */
+    { name: 'motion', use: { ...devices['Desktop Chrome'], channel: 'chrome', trace: 'off', screenshot: 'off' },
+      testMatch: /[/\\]motion-inventory\.spec\.ts$/, timeout: 20 * 60_000 },
   ],
   webServer: process.env.TEST_URL ? undefined : [
     { command: `node scripts/serve-preview.mjs --root site/dist`, port: PREVIEW_PORT, env: { PORT: String(PREVIEW_PORT) }, reuseExistingServer: false, timeout: 10_000 },

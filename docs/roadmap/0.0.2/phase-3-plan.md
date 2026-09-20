@@ -150,6 +150,21 @@ HIG motion：「**Let people cancel motion.** 不要让人等动画播完才能�
 | `GlassTabs` 面板切换 | 只有进场淡入 | 进出成对 |
 | 所有透镜控件 | 不可打断（见一） | 「interruptible」 |
 
+### 已完成（2026-09-20，第 2 周）
+
+清单脚本按计划做出来了，但它是在第 2 周而不是第 1 周跑的——第 1 周只做了可打断。落点：
+
+- `tests/browser/motion-inventory.spec.ts`（project `motion`，`pnpm test:motion`，不进 `pnpm check`），产出 `reports/motion.json`。
+- `tests/browser/motion.spec.ts`，11 条具名用例，五处缺口每一处都撤掉修复验证过会红。
+- `src/react/system/leave.ts`：`EXIT_MS` / `LAYOUT_MS` 两个常量与 `useLeave` / `useToggling` 两个钩子。JS 里的毫秒数和 `--lg-duration-exit` / `--lg-duration-layout` 必须相等，`tests/core/stylesheet.test.mjs` 断言它们一致——CSS 没法告诉 JS「播完了」，两个数不一致就是提示闪一半没了或者空着不动等一会儿。
+
+补上的五处：轻提示退场、横幅进场与退场、标签面板离场、徽标数字变化、分栏侧栏与检查器的收起展开。细节见更新日志「来去成对」一节。
+
+两条写在计划里但实际做法不同的：
+
+1. 计划说「补完之后每一条变成 `pnpm check` 里的一条具名用例」。做到了，但顺序反过来了——清单脚本第一版二十分钟跑不完、什么都没写出来，所以是先按读代码找出来的缺口补的，脚本随后才拿来交叉验证。**跑不完的清单等于没有清单**，现在它每扫完一页就重写一次报告。
+2. 分栏那条过渡第一版无条件挂在列上，于是也抓住了每一次改宽：拖分隔线时侧栏落后指针 280ms，方向键看起来没反应。`pnpm check` 里 `split-view.spec.ts` 的两条既有用例当场变红，这是它们该做的事。改成只在显示/隐藏那一次切换期间挂上。
+
 ### 方法：先量，再补
 
 第 1 周做一个 `tests/browser/motion-inventory.spec.ts`（`pnpm test:motion`，产出 `reports/motion.json`，不进 `pnpm check`）：对每个组件页，逐个触发它的状态变化——按下、悬停、聚焦、打开、关闭、选中、切换值、展开、数量变化、布局切换——在变化后的一帧读 `element.getAnimations()`（含过渡），**有状态变化而没有动画的就是一条发现**。它和 440 格矩阵是同一种东西：机器负责问「有没有」，人负责看「好不好」。
@@ -173,7 +188,7 @@ HIG motion：「**Let people cancel motion.** 不要让人等动画播完才能�
 | --- | --- | --- |
 | 1 | 一：可打断（`pull.ts` / `useSelectionLens` 一层修完五个控件） | `interruptible.spec.ts`；`motion-inventory` 脚本跑第一轮 |
 | 2 | 三：退场（toast / banner / tabs 面板）、徽标数字、分栏与检查器 | 每条一个具名用例 |
-| 3 | 三：morph（菜单按钮、气泡、右键菜单从触发点长出）、行按压、颜色井 | 减少动效反向断言；`motion.json` 清零 |
+| 3 | 三：morph（菜单按钮、气泡、右键菜单从触发点长出）、行按压、颜色井；**并且先把清单收窄**——`activate` 那一维现在恒真（页面上总有一个进度条在转），`hover` / `focus` 要按「这一层该不该动」分开问，否则 1271 条读数里绝大多数是噪音 | 减少动效反向断言 |
 | 4 | 二 A：`platform` 策略、桌面度量与文字表、命中区按平台 | 矩阵加 desktop 行；对比度用例在 13px 正文上重跑 |
 | 5 | `Checkbox`、`RadioGroup`、`useShortcut` + 菜单快捷键 | 三个组件页 |
 | 6 | `MenuBar`、`CommandPalette` | 站点 ⌘K 改用库组件 |

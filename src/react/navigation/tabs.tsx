@@ -63,6 +63,16 @@ export function GlassTabs({ items, value, defaultValue, onValueChange, 'aria-lab
           }}>{item.label}</button>)}
       </div>
     </GlassSurface>
-    {items.map((item, index) => <div key={item.value} role="tabpanel" id={`${id}-panel-${index}`} aria-labelledby={`${id}-tab-${index}`} hidden={selected !== item.value} tabIndex={0} className="lg-tab-panel">{item.content}</div>)}
+    {/**
+      * One cell, all the panels in it.
+      *
+      * The outgoing panel has to still be displayed to animate out, and two displayed panels
+      * in normal flow would stack vertically — the page would grow to twice the height for the
+      * length of the swap and then collapse. Stacked in a single grid cell they overlap
+      * instead, and the container is as tall as the taller of the two while they cross.
+      */}
+    <div className="lg-tab-panels">
+      {items.map((item, index) => <div key={item.value} role="tabpanel" id={`${id}-panel-${index}`} aria-labelledby={`${id}-tab-${index}`} hidden={selected !== item.value} tabIndex={0} className="lg-tab-panel">{item.content}</div>)}
+    </div>
   </div>;
 }

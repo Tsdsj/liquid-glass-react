@@ -8,6 +8,7 @@ import { LibraryIcon, type LibraryIconName } from '../system/icon.js';
 import { useGlassStrings } from '../system/strings.js';
 import { attachPull } from '../system/pull.js';
 import { useGlassPolicy } from '../system/provider.js';
+import { useLeave } from '../system/leave.js';
 import { cx } from '../system/utils.js';
 
 /**
@@ -38,6 +39,12 @@ export interface BannerProps extends Omit<HTMLAttributes<HTMLDivElement>, 'title
    * Called when the reader dismisses it, by the close button or by flicking it upwards.
    * Passing this is what makes the banner dismissible: without it there is no close button,
    * which is right only for a banner the application itself takes down.
+   *
+   * It arrives **after** the exit has played, not when the button was pressed — the banner has
+   * to still be in the tree to animate out of it, and the caller is what takes it out. Under
+   * reduced motion there is nothing to play and it arrives immediately. A banner the caller
+   * removes for its own reasons simply disappears; nothing here can animate a render that has
+   * already happened.
    */
   onDismiss?: () => void;
   /** The close button's name. Defaults to the provider's `close`. */
@@ -83,6 +90,8 @@ export function Banner({
    * applies to anyone who has not been told the gesture exists.
    */
   const latest = useRef(onDismiss); latest.current = onDismiss;
+  const { leaving, close } = useLeave(reduceMotion, () => latest.current?.());
+  const closeRef = useRef(close); closeRef.current = close;
   useEffect(() => {
     const node = glass.root.current;
     if (!node || !onDismiss) return;
@@ -91,7 +100,7 @@ export function Banner({
       targets: () => [node],
       // Downwards is nothing: it has nowhere to go and an elastic sag is not an affordance.
       range: () => ({ y: [-9999, 0] }),
-      onRelease: ({ dy, cancelled }) => { if (!cancelled && dy < -DISMISS_TRAVEL) latest.current?.(); },
+      onRelease: ({ dy, cancelled }) => { if (!cancelled && dy < -DISMISS_TRAVEL) closeRef.current(); },
     }));
   }, [glass.root, onDismiss, reduceMotion]);
 
@@ -100,7 +109,7 @@ export function Banner({
 
   return <div {...props} ref={glass.ref} {...glass.attributes}
     className={cx('lg-root lg-banner', className)} style={{ ...glass.style, ...style }}
-    data-tone={tone} data-placement={placement}
+    data-tone={tone} data-placement={placement} data-leaving={leaving ? 'true' : undefined}
     /* Polite: a banner reports, it does not interrupt. Something that must be answered before
        the reader goes on is an alert, and saying so here would not make this one. */
     role="status" aria-live="polite">
@@ -114,7 +123,7 @@ export function Banner({
       {action && <GlassButton className="lg-banner-action" controlSize="small"
         onClick={action.onSelect}>{action.label}</GlassButton>}
       {onDismiss && <GlassIconButton className="lg-banner-dismiss" variant="plain" controlSize="small"
-        aria-label={dismissLabel ?? strings.close} onClick={onDismiss}>
+        aria-label={dismissLabel ?? strings.close} onClick={close}>
         <LibraryIcon name="close" size={15} />
       </GlassIconButton>}
     </SharedSurface></div>

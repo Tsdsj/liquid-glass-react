@@ -5,6 +5,8 @@ import { SharedSurface } from '../system/surface.js';
 import { GlassButton, GlassIconButton } from '../controls/button.js';
 import { LibraryIcon, type LibraryIconName } from '../system/icon.js';
 import { useGlassStrings } from '../system/strings.js';
+import { useGlassPolicy } from '../system/provider.js';
+import { EXIT_MS } from '../system/leave.js';
 import { cx } from '../system/utils.js';
 
 /**
@@ -39,6 +41,8 @@ interface ToastRecord extends Required<Pick<ToastOptions, 'message' | 'duration'
   dismissLabel?: string | null;
   tone: ToastTone;
   icon?: ReactNode | null;
+  /** On its way out: still in the tree so the exit can play, no longer counted as on screen. */
+  leaving?: boolean;
 }
 
 /** The glyph each tone carries, so the tone is never only a colour. */
@@ -69,7 +73,30 @@ export interface ToastProviderProps {
 export function ToastProvider({ children, limit = 3 }: ToastProviderProps) {
   const [toasts, setToasts] = useState<ToastRecord[]>([]);
   const nextId = useRef(0);
-  const dismiss = useCallback((id: number) => setToasts(list => list.filter(toast => toast.id !== id)), []);
+  const reduceMotion = useGlassPolicy().reduceMotion;
+
+  /**
+   * Going away is a state, not an event.
+   *
+   * Every route out — the close button, Escape, the timer running down, being pushed off the
+   * end by a newer one — comes through here, so all four look the same on screen. Holding the
+   * record in the list with `leaving` set is what gives the exit something to animate: React
+   * cannot animate a node it has already removed, and neither can CSS.
+   */
+  const leaving = useRef(new Set<number>());
+  const list = useRef<ToastRecord[]>([]); list.current = toasts;
+  const remove = useCallback((id: number) => {
+    leaving.current.delete(id);
+    setToasts(current => current.filter(toast => toast.id !== id));
+  }, []);
+  const dismiss = useCallback((id: number) => {
+    if (reduceMotion) return remove(id);
+    if (leaving.current.has(id)) return;
+    leaving.current.add(id);
+    setToasts(current => current.map(toast => toast.id === id ? { ...toast, leaving: true } : toast));
+    setTimeout(() => remove(id), EXIT_MS);
+  }, [reduceMotion, remove]);
+  const dismissRef = useRef(dismiss); dismissRef.current = dismiss;
 
   /**
    * Escape closes the newest one.
@@ -86,14 +113,21 @@ export function ToastProvider({ children, limit = 3 }: ToastProviderProps) {
     if (!toasts.length) return;
     const onKey = (event: KeyboardEvent) => {
       if (event.key !== 'Escape' || event.defaultPrevented) return;
-      setToasts(list => list.slice(0, -1));
+      // The newest one still on screen — one already leaving is not the one they meant.
+      const newest = list.current.filter(toast => !toast.leaving).at(-1);
+      if (newest) dismissRef.current(newest.id);
     };
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
   }, [toasts.length]);
   const show = useCallback((options: ToastOptions) => {
     const record: ToastRecord = { id: nextId.current++, message: options.message, duration: options.duration ?? 6000, action: options.action, dismissLabel: options.dismissLabel, tone: options.tone ?? 'neutral', icon: options.icon };
-    setToasts(list => [...list, record].slice(-limit));
+    setToasts(current => [...current, record]);
+    /* Over the limit, the oldest goes — through `dismiss`, so it leaves the way the others do
+       rather than being cut. Counted against the ones actually on screen: a toast that is
+       already playing its exit must not push a live one off the end. */
+    const live = list.current.filter(toast => !toast.leaving);
+    for (const extra of live.slice(0, live.length + 1 - limit)) dismissRef.current(extra.id);
   }, [limit]);
   return <ToastContext.Provider value={show}>
     {children}
@@ -110,13 +144,14 @@ function Toast({ toast, onDismiss }: { toast: ToastRecord; onDismiss: () => void
   const [paused, setPaused] = useState(false);
   const dismissRef = useRef(onDismiss); dismissRef.current = onDismiss;
   useEffect(() => {
-    if (paused || toast.duration === Infinity) return;
+    if (paused || toast.leaving || toast.duration === Infinity) return;
     const timer = setTimeout(() => dismissRef.current(), toast.duration);
     return () => clearTimeout(timer);
-  }, [paused, toast.duration]);
+  }, [paused, toast.leaving, toast.duration]);
   const glyph = toast.icon === null ? null
     : toast.icon ?? (TONE_ICON[toast.tone] && <LibraryIcon name={TONE_ICON[toast.tone]!} size={16} />);
-  return <div ref={glass.ref} {...glass.attributes} className={cx('lg-root lg-toast')} data-tone={toast.tone} style={glass.style}
+  return <div ref={glass.ref} {...glass.attributes} className={cx('lg-root lg-toast')} data-tone={toast.tone}
+    data-leaving={toast.leaving ? 'true' : undefined} style={glass.style}
     // Hovering or focusing holds the toast so the undo window is not lost while reaching for it.
     onPointerEnter={() => setPaused(true)} onPointerLeave={() => setPaused(false)}
     onFocusCapture={() => setPaused(true)} onBlurCapture={() => setPaused(false)}>

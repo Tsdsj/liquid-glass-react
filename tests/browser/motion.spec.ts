@@ -1,0 +1,259 @@
+import { test, expect, type Locator, type Page } from '@playwright/test';
+
+/**
+ * Things that go away are supposed to be seen going away.
+ *
+ * "Materialize, not fade" is usually read as a rule about arriving, and the library had taken
+ * it that way: a toast sprang in and then stopped existing between two frames, a banner had no
+ * entrance at all and no exit either, the outgoing tab panel was simply `hidden`. An interface
+ * where things appear with care and vanish without it teaches the reader that disappearing is
+ * an error state.
+ *
+ * Measured the same way as `interruptible.spec.ts`, and for the same reason: `getAnimations()`
+ * answers "is anything actually running" without depending on catching a particular frame, and
+ * it does not care whether the motion came from a transition, a keyframe animation or
+ * `element.animate()`. Where the point is that the reader can *see* a difference, there is a
+ * measurement in pixels next to it.
+ *
+ * Each of these came out of `motion-inventory.spec.ts` (`pnpm test:motion`), which reports and
+ * does not assert. These are the guards; the sweep is free to move without breaking them.
+ */
+
+/** Everything running on this element or inside it, named. */
+const running = (locator: Locator) => locator.evaluate(node => node.getAnimations({ subtree: true })
+  .map(animation => {
+    const css = animation as CSSTransition & CSSAnimation;
+    return css.transitionProperty ? `transition:${css.transitionProperty}` : `animation:${css.animationName ?? '?'}`;
+  }));
+
+/**
+ * Reduce Motion, as the operating system reports it.
+ *
+ * Not the `data-lg-motion` attribute: that is the stylesheet's half of the preference, and the
+ * first version of these tests set it and then measured behaviour that lives in script. The
+ * component reads the policy, the policy reads `prefers-reduced-motion`, so this is the input
+ * that actually reaches both halves.
+ */
+const reduceMotion = (page: Page) => page.emulateMedia({ reducedMotion: 'reduce' });
+
+/* =========================================================================================
+ * Toast — the exit that was missing entirely.
+ * ======================================================================================= */
+
+test('a dismissed toast plays its exit before it is taken out of the tree', async ({ page }) => {
+  await page.goto('/#/components/toast');
+  await page.waitForTimeout(600);
+  await page.locator('#toast-dismiss-demo button').click();
+  const toast = page.locator('.lg-toast');
+  await expect(toast).toBeVisible();
+
+  await toast.locator('.lg-toast-dismiss').click();
+  // Still there, and moving: the record is held in the list for the length of the exit.
+  await expect(toast).toHaveAttribute('data-leaving', 'true');
+  const moving = await running(toast);
+  expect(moving, 'the toast was removed with nothing playing').not.toHaveLength(0);
+
+  // Part-way through, rather than on the first frame — an exit is not over when it starts.
+  await page.waitForTimeout(110);
+  const faded = await toast.evaluate(node => Number(getComputedStyle(node).opacity));
+  expect(faded, `the toast was still fully opaque at ${faded} halfway through leaving`).toBeLessThan(1);
+
+  // And it does leave. An exit that never finishes is a toast that never goes away.
+  await expect(toast).toHaveCount(0, { timeout: 2000 });
+});
+
+test('Escape closes the newest toast through the same exit', async ({ page }) => {
+  await page.goto('/#/components/toast');
+  await page.waitForTimeout(600);
+  await page.locator('#toast-dismiss-demo button').click();
+  await expect(page.locator('.lg-toast')).toBeVisible();
+
+  await page.keyboard.press('Escape');
+  await expect(page.locator('.lg-toast')).toHaveAttribute('data-leaving', 'true');
+  await expect(page.locator('.lg-toast')).toHaveCount(0, { timeout: 2000 });
+});
+
+test('under reduced motion a dismissed toast goes at once, with no waiting', async ({ page }) => {
+  await reduceMotion(page);
+  await page.goto('/#/components/toast');
+  await page.waitForTimeout(600);
+  await page.locator('#toast-dismiss-demo button').click();
+  const toast = page.locator('.lg-toast');
+  await expect(toast).toBeVisible();
+
+  const started = Date.now();
+  await toast.locator('.lg-toast-dismiss').click();
+  await expect(toast).toHaveCount(0);
+  /* The whole point of the preference. Holding the element for the length of an animation
+     that is not running would turn "no motion" into "the same interface, slower". */
+  expect(Date.now() - started, 'the dismissal waited out an animation that was switched off')
+    .toBeLessThan(180);
+});
+
+/* =========================================================================================
+ * Banner — no entrance and no exit; now both.
+ * ======================================================================================= */
+
+test('a banner arrives with an entrance and leaves with an exit', async ({ page }) => {
+  await page.goto('/#/components/banner');
+  await page.waitForTimeout(600);
+  const demo = page.locator('#banner-tones-demo');
+  const banner = demo.locator('.lg-banner');
+
+  await banner.locator('.lg-banner-dismiss').click();
+  await expect(banner).toHaveAttribute('data-leaving', 'true');
+  expect(await running(banner), 'the banner vanished with nothing playing').not.toHaveLength(0);
+  // `onDismiss` is what removes it, and it is deliberately deferred until the exit is over.
+  await expect(banner).toHaveCount(0, { timeout: 2000 });
+
+  await demo.getByRole('button', { name: '再放一条' }).click();
+  const returned = demo.locator('.lg-banner');
+  await expect(returned).toBeVisible();
+  expect(await running(returned), 'the banner appeared with nothing playing').not.toHaveLength(0);
+});
+
+/* =========================================================================================
+ * Tab panels — the incoming one faded in, the outgoing one was cut.
+ * ======================================================================================= */
+
+test('the outgoing tab panel is still displayed while it fades', async ({ page }) => {
+  await page.goto('/#/components/tabs');
+  await page.waitForTimeout(600);
+  const tabs = page.locator('#tabs-basic .lg-tabs').first();
+  const panels = tabs.locator('.lg-tab-panel');
+  const leaving = panels.first();
+
+  await tabs.getByRole('tab').nth(1).click();
+  const state = await leaving.evaluate(node => ({
+    display: getComputedStyle(node).display,
+    opacity: Number(getComputedStyle(node).opacity),
+    moving: node.getAnimations().length,
+  }));
+  expect(state.display, 'the panel that was left went straight to display:none').not.toBe('none');
+  expect(state.moving, 'the outgoing panel was cut rather than faded').toBeGreaterThan(0);
+
+  // And it really does end up gone, rather than sitting invisibly on top of the new one.
+  await page.waitForTimeout(500);
+  await expect(leaving).toHaveCSS('display', 'none');
+});
+
+test('the two tab panels overlap instead of stacking, so the page does not double in height', async ({ page }) => {
+  await page.goto('/#/components/tabs');
+  await page.waitForTimeout(600);
+  const tabs = page.locator('#tabs-basic .lg-tabs').first();
+  const region = tabs.locator('.lg-tab-panels');
+
+  const before = (await region.boundingBox())!.height;
+  await tabs.getByRole('tab').nth(1).click();
+  await page.waitForTimeout(60);
+  const during = (await region.boundingBox())!.height;
+  /* Both panels are displayed for the length of the swap. In normal flow that is the height of
+     one plus the height of the other; in a single grid cell it is the taller of the two. */
+  expect(during, `the panel area went from ${before} to ${during} mid-swap`).toBeLessThan(before * 1.8 + 10);
+});
+
+/* =========================================================================================
+ * Badge — a number that changed between frames.
+ * ======================================================================================= */
+
+/**
+ * Nudge the example's count knob up by one.
+ *
+ * Page-scoped, not scoped to `#badge-basic`: the adjustable controls live in the example's
+ * side panel, which is a sibling of the example itself rather than inside it.
+ */
+async function bumpCount(page: Page) {
+  const knob = page.getByRole('slider', { name: '数量' });
+  await knob.focus();
+  await knob.press('ArrowRight');
+}
+
+test('a badge whose count changes says so', async ({ page }) => {
+  await page.goto('/#/components/badge');
+  await page.waitForTimeout(600);
+  const badge = page.locator('#badge-basic .lg-badge').first();
+  await expect(badge).toHaveText('3');
+
+  // Nothing is running while it just sits there.
+  expect(await running(badge), 'the badge was animating before anything changed').toHaveLength(0);
+
+  const watch = badge.evaluate(node => new Promise<number>(resolve => {
+    const start = performance.now();
+    const tick = () => {
+      if (node.getAnimations().length) return resolve(performance.now() - start);
+      if (performance.now() - start > 1500) return resolve(-1);
+      requestAnimationFrame(tick);
+    };
+    tick();
+  }));
+  await bumpCount(page);
+  expect(await watch, 'the count changed and nothing moved').toBeGreaterThanOrEqual(0);
+  await expect(badge).toHaveText('4');
+});
+
+test('under reduced motion the badge changes number without moving', async ({ page }) => {
+  await reduceMotion(page);
+  await page.goto('/#/components/badge');
+  await page.waitForTimeout(600);
+  const badge = page.locator('#badge-basic .lg-badge').first();
+  await bumpCount(page);
+  await expect(badge).toHaveText('4');
+  /* `element.animate()` is script, and the blanket `animation: none` in the stylesheet does
+     not reach it — the component has to ask. This is the assertion that says it does. */
+  expect(await running(badge), 'the bump ran with Reduce Motion on').toHaveLength(0);
+});
+
+/* =========================================================================================
+ * Split view — a column that was there and then was not.
+ * ======================================================================================= */
+
+test('hiding the sidebar closes it rather than deleting it', async ({ page }) => {
+  await page.goto('/#/components/split-view');
+  await page.waitForTimeout(700);
+  const demo = page.locator('#split-hide-demo');
+  const sidebar = demo.locator('.lg-split-column[data-column="sidebar"]');
+  const wide = (await sidebar.boundingBox())!.width;
+  expect(wide, 'the sidebar was not showing to begin with').toBeGreaterThan(100);
+
+  await demo.getByRole('button', { name: '收起侧栏' }).click();
+  await page.waitForTimeout(70);
+  const mid = await sidebar.evaluate(node => ({ width: node.getBoundingClientRect().width, moving: node.getAnimations().length }));
+  expect(mid.moving, 'the sidebar was removed with nothing playing').toBeGreaterThan(0);
+  expect(mid.width, `the sidebar went from ${wide} to ${mid.width} in one step`).toBeGreaterThan(0);
+  expect(mid.width).toBeLessThan(wide);
+
+  await expect(sidebar).toHaveCSS('visibility', 'hidden', { timeout: 2000 });
+});
+
+test('showing the inspector opens it from nothing', async ({ page }) => {
+  await page.goto('/#/components/split-view');
+  await page.waitForTimeout(700);
+  const demo = page.locator('#split-hide-demo');
+  const inspector = demo.locator('.lg-split-column[data-column="inspector"]');
+  await expect(inspector).toHaveCSS('visibility', 'hidden');
+
+  await demo.getByRole('button', { name: '显示检查器' }).click();
+  await page.waitForTimeout(70);
+  const mid = await inspector.evaluate(node => ({ width: node.getBoundingClientRect().width, moving: node.getAnimations().length }));
+  expect(mid.moving, 'the inspector appeared with nothing playing').toBeGreaterThan(0);
+  expect(mid.width, 'the inspector was already at its full width one frame in').toBeLessThan(290);
+
+  await page.waitForTimeout(500);
+  expect((await inspector.boundingBox())!.width).toBeGreaterThan(200);
+});
+
+test('a column closing does not re-wrap its own contents on the way out', async ({ page }) => {
+  await page.goto('/#/components/split-view');
+  await page.waitForTimeout(700);
+  const demo = page.locator('#split-hide-demo');
+  const inner = demo.locator('.lg-split-column[data-column="sidebar"] > .lg-split-inner');
+  const before = (await inner.boundingBox())!.width;
+
+  await demo.getByRole('button', { name: '收起侧栏' }).click();
+  await page.waitForTimeout(70);
+  const during = await inner.evaluate(node => node.getBoundingClientRect().width);
+  /* The clip moves, the content does not. A sidebar whose text reflows on every frame of its
+     own collapse reads as something going wrong, not as a column closing. */
+  expect(during, `the contents narrowed from ${before} to ${during} while the column closed`)
+    .toBeCloseTo(before, 0);
+});

@@ -86,3 +86,25 @@ test('nothing claims a compositing layer up front', () => {
   // A blanket will-change on glass promotes every surface whether or not it ever animates.
   assert.equal(/will-change/.test(css), false);
 });
+
+/**
+ * The exit duration exists twice, and the two copies have to agree.
+ *
+ * CSS animates the element out; JavaScript is what takes it out of the tree afterwards, and
+ * nothing in CSS can tell it when. If the number in `leave.ts` is the smaller of the two, a
+ * toast is removed part-way through fading and blinks out; if it is the larger, the element
+ * sits finished and invisible for the difference. Neither is visible in a test that only
+ * checks that *something* animated, which is why this is checked here instead.
+ */
+test('the duration tokens and their JavaScript copies are the same numbers', () => {
+  const tokens = readFileSync(new URL('../../src/styles/tokens.css', import.meta.url), 'utf8');
+  const leave = readFileSync(new URL('../../src/react/system/leave.ts', import.meta.url), 'utf8');
+  for (const [token, constant] of [['exit', 'EXIT_MS'], ['layout', 'LAYOUT_MS']]) {
+    const fromCss = tokens.match(new RegExp(`--lg-duration-${token}:\\s*(\\d+)ms`));
+    const fromJs = leave.match(new RegExp(`export const ${constant} = (\\d+)`));
+    assert.ok(fromCss, `--lg-duration-${token} is not declared in tokens.css`);
+    assert.ok(fromJs, `${constant} is not exported from leave.ts`);
+    assert.equal(Number(fromJs[1]), Number(fromCss[1]),
+      `leave.ts waits ${fromJs[1]}ms for something the stylesheet plays over ${fromCss[1]}ms`);
+  }
+});

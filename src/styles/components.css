@@ -206,9 +206,23 @@
    selected, so it borrows the same capsule rather than a fainter one of its own. */
 .lg-tab-list:not(:has(.lg-selection-lens)) .lg-tab[aria-selected="true"] { background: var(--lg-lens-bg); box-shadow: var(--lg-lens-shadow); }
 .lg-tab:disabled { opacity: .45; cursor: not-allowed; }
-.lg-tab-panel { margin-top: 18px; animation: lg-panel-in var(--lg-duration-overlay) var(--lg-ease-out); }
-.lg-tab-panel[hidden] { display: none; }
-@keyframes lg-panel-in { from { opacity: 0; transform: translateY(4px); } }
+.lg-tab-panels { display: grid; margin-top: 18px; }
+/**
+ * Both directions, on one property that can carry the panel out of `display: none`.
+ *
+ * `hidden` is what tells assistive technology the panel is gone, and it resolves to
+ * `display: none`, which normally ends any animation on the spot. `allow-discrete` moves that
+ * switch to the end of the transition instead, so the outgoing panel fades and settles before
+ * it stops existing — and `@starting-style` gives the incoming one somewhere to come from.
+ * Where `allow-discrete` is not supported the swap is instant, which is what it was before.
+ */
+.lg-tab-panel { grid-area: 1 / 1; opacity: 1; transform: none;
+  transition: opacity var(--lg-duration-exit) var(--lg-ease), transform var(--lg-duration-exit) var(--lg-ease),
+    display var(--lg-duration-exit) allow-discrete; }
+/* `pointer-events` because for the length of the exit it is still displayed and still on top
+   of the panel arriving underneath it — a click landing on the panel you just left. */
+.lg-tab-panel[hidden] { display: none; opacity: 0; transform: translateY(4px); pointer-events: none; }
+@starting-style { .lg-tab-panel:not([hidden]) { opacity: 0; transform: translateY(4px); } }
 
 /* ---------- Slider: the knob is quiet at rest and lifts into glass only while dragged ---------- */
 .lg-slider { display: flex; align-items: center; gap: var(--lg-space-3); min-width: 120px; }
@@ -732,6 +746,12 @@
 .lg-toast-message { font: var(--lg-weight-regular) var(--lg-text-subhead-size)/1.35 var(--lg-font-text); color: var(--lg-glass-fg); }
 .lg-toast-action { margin-inline-start: auto; flex-shrink: 0; }
 @keyframes lg-toast-in { from { opacity: 0; transform: translateY(12px) scale(.96); } }
+/* Back the way it came, and quicker. `forwards` matters: the record stays in the list for the
+   length of the exit, and without it the toast would snap back to full opacity for the last
+   frame before React removes it. */
+.lg-toast[data-leaving="true"] { pointer-events: none;
+  animation: lg-toast-out var(--lg-duration-exit) var(--lg-ease) forwards; }
+@keyframes lg-toast-out { to { opacity: 0; transform: translateY(10px) scale(.97); } }
 
 /* ---------- Menu rows gained an icon column and a checked state ---------- */
 .lg-menu-icon { display: inline-flex; align-items: center; flex-shrink: 0; color: var(--lg-glass-fg-secondary); }
@@ -979,7 +999,17 @@
 
 /* ---------- SplitView: columns in a regular environment, a stack in a compact one ---------- */
 .lg-split { display: flex; align-items: stretch; min-width: 0; min-height: 0; }
-.lg-split-column { min-width: 0; min-height: 0; overflow: auto; }
+/**
+ * Scrolling moved inside, so a column can be closed without its contents reflowing.
+ *
+ * While the width animates to zero the text inside would otherwise re-wrap on every frame —
+ * a column that rearranges itself on the way out reads as a bug, not as a column closing. The
+ * inner box keeps the width the column was given and is clipped by it; only the clip moves.
+ */
+.lg-split-column { min-width: 0; min-height: 0; overflow: hidden; }
+.lg-split-inner { height: 100%; overflow: auto; }
+.lg-split-column[data-column="sidebar"] > .lg-split-inner { width: var(--lg-split-sidebar, 260px); }
+.lg-split-column[data-column="inspector"] > .lg-split-inner { width: var(--lg-split-inspector, 300px); }
 /* `0 1`, not `0 0`: the columns keep their widths until there is nothing left to give, and
    then they give. With a rigid basis a split view narrower than sidebar + inspector overflowed
    its own box — measured at 161px inside a 320px container — which is the one thing a layout
@@ -993,6 +1023,35 @@
    width it was given until there is genuinely nothing left. */
 .lg-split-column[data-column="content"] { flex: 1 1 0%; }
 .lg-split-column[data-column="inspector"] { flex: 0 1 var(--lg-split-inspector, 300px); }
+/**
+ * Closing and opening a column.
+ *
+ * `flex-basis` is a layout property and animating one is normally the thing not to do — but
+ * here the layout change *is* the message ("the column went that way"), and no transform gives
+ * the other columns their space back.
+ *
+ * `visibility` rather than `display: none`, and that choice is the whole design: a visibility
+ * transition holds `visible` for the full duration on the way out and flips to `visible`
+ * immediately on the way in, so both directions animate with no `@starting-style` — and
+ * without one, the first paint is not an entrance. A split view that unfolds itself every time
+ * the page loads would be motion nobody asked for. `visibility: hidden` is also what takes the
+ * closed column out of the tab order and out of the accessibility tree; a zero-width column
+ * whose buttons could still be tabbed into would be a trap with nothing visible in it.
+ *
+ * After the per-column `flex` shorthands above, because `flex` sets `flex-basis` too and the
+ * later rule of equal specificity is the one that wins — the first version of this sat before
+ * them and animated an opacity nobody could see while the width never moved.
+ *
+ * And gated on `data-toggling`, which the component sets only while a column is being shown or
+ * hidden. Declared unconditionally, the same transition also caught every *resize*: the
+ * sidebar chased the divider a quarter of a second behind the pointer, and the arrow keys
+ * looked like they did nothing. A width the reader is setting has to be exactly as fast as
+ * they are; a column appearing or going away is the only part that is worth watching.
+ */
+.lg-split-column[data-toggling="true"] {
+  transition: flex-basis var(--lg-duration-layout) var(--lg-ease),
+    opacity var(--lg-duration-exit) var(--lg-ease), visibility var(--lg-duration-layout); }
+.lg-split-column[data-hidden="true"] { flex-basis: 0; opacity: 0; visibility: hidden; }
 /* "Keep the divider visible": a hairline that is always there, with a grab region around it
    wider than the line — the line is 1px and a pointer target is not. */
 .lg-split-divider { position: relative; flex: 0 0 1px; background: var(--lg-separator);
@@ -1129,7 +1188,15 @@
   /* Springs back when a flick did not go far enough. While the finger is down
      `.lg-root[data-pulling="true"]` drops `translate` from the transition list, which is what
      keeps the banner under the finger instead of chasing it. */
-  transition: translate var(--lg-duration-spring) var(--lg-spring); }
+  transition: translate var(--lg-duration-spring) var(--lg-spring);
+  /* Arrives and leaves from above, because that is where it came from and where it goes.
+     `transform` rather than `translate`: the flick gesture owns `translate`, and a banner that
+     stopped tracking the finger the moment it appeared would be worse than not animating. */
+  animation: lg-banner-in var(--lg-duration-overlay) var(--lg-ease-out); }
+@keyframes lg-banner-in { from { opacity: 0; transform: translateY(-10px) scale(.98); } }
+.lg-banner[data-leaving="true"] { pointer-events: none;
+  animation: lg-banner-out var(--lg-duration-exit) var(--lg-ease) forwards; }
+@keyframes lg-banner-out { to { opacity: 0; transform: translateY(-10px) scale(.98); } }
 .lg-banner[data-placement="top"] { position: fixed; z-index: var(--lg-z-toast);
   inset-block-start: calc(env(safe-area-inset-top, 0px) + var(--lg-space-2));
   inset-inline: var(--lg-space-4); margin-inline: auto; max-width: 520px; }

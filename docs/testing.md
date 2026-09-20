@@ -35,11 +35,11 @@ pnpm test:e2e --project=chromium
 
 ## 各层测什么
 
-**核心（`tests/core/`，71 项）** —— 不碰浏览器的那部分：有符号距离场的方向与中性值、非法输入的拒绝、贴图尺寸预算、LRU 的字节记账、弹簧积分器（收敛、过冲幅度、大 dt 钳制、非有限输入）、同心圆角（含掐角与喇叭口的边界）。另有四项是对样式表本身的静态检查：hover 规则必须带指针门、颜色必须来自 token、不得有 will-change，以及两份「增强对比度」调色板——媒体查询那份和 `data-lg-contrast` 那份——声明逐字相同。CSS 没法让一个媒体查询和一个选择器共用声明，所以重复是有意的，这一项是让它不腐烂的那半。
+**核心（`tests/core/`，72 项）** —— 不碰浏览器的那部分：有符号距离场的方向与中性值、非法输入的拒绝、贴图尺寸预算、LRU 的字节记账、弹簧积分器（收敛、过冲幅度、大 dt 钳制、非有限输入）、同心圆角（含掐角与喇叭口的边界）。另有四项是对样式表本身的静态检查：hover 规则必须带指针门、颜色必须来自 token、不得有 will-change，以及两份「增强对比度」调色板——媒体查询那份和 `data-lg-contrast` 那份——声明逐字相同。CSS 没法让一个媒体查询和一个选择器共用声明，所以重复是有意的，这一项是让它不腐烂的那半。
 
 **SSR（`tests/ssr.test.mjs`，3 项）** —— 服务端导入不需要 DOM，多个渲染根的 id 不冲突，默认打开的对话框在服务端输出安全标记。它导入的是 `dist/`，因此测的是真正发布的产物。
 
-**浏览器（`tests/browser/`，307 项，真实 Google Chrome）**：
+**浏览器（`tests/browser/`，318 项，真实 Google Chrome）**：
 
 | 文件 | 覆盖 |
 | --- | --- |
@@ -63,11 +63,16 @@ pnpm test:e2e --project=chromium
 | `appearance.spec.ts` | 两种外观各自欠读者的东西：深色下的光晕强度远低于浅色、浅色没有一个满亮度纯白的表面、次级文字压在它真正所在的面板上过 4.5:1、折叠区展开有中间帧、选中胶囊与轨道的亮度差 ≥ 12/255、首页演示铺满整列、`tinted` 按钮的标签压在自己的淡底上过 4.5:1 |
 | `layout-matrix.spec.ts` | 布局容器 × 四个宽度 × LTR/RTL × 默认/AX5：页面不横向滚动、容器不溢出自己、不塌成零；分栏视图在 RTL 下是镜像；AX5 下标签不被挤成一列一个字 |
 | `interruptible.spec.ts` | 动效可以被打断：按下不移动透镜、不取消正在跑的过渡（直接读 `getAnimations()` 的 `currentTime`，被取消的过渡会从列表里消失）、连点两下改道而不是从终点重来（逐帧比对一次顺畅滑行自己的最高速度）、没落在胶囊上的拖动只改选中项不搬胶囊 |
+| `motion.spec.ts` | 来去成对：轻提示与横幅在被移出 DOM 之前先播完退场（`data-leaving` 期间仍在树上、仍在动、不透明度已经掉下来），Escape 走同一条路；减少动效下当场消失，不是「同样的界面，只是慢一点」；离场的标签面板还在 display 上淡出，两块面板叠在同一个网格格子里所以高度不会翻倍；徽标数字变了会弹一下、减少动效下不弹；侧栏与检查器是收起来而不是被删掉，且收起过程中内容不重排 |
 | `outline.spec.ts` | 窄屏目录菜单：滚动后不被工具栏吞掉、是跳转项不是复选框、按钮名就是可见文字 |
 
 **开发模式（`tests/browser/{warnings,strict-mode,hydration}.spec.ts`，13 项）** —— 这三件只存在于开发构建里，所以跑的是 Vite dev server 而不是 `site/dist`：三条设计规则的告警（生产构建里必须一条都没有）、Strict Mode 下闲置页面不排帧、八棵树 `renderToString` 之后 `hydrateRoot` 没有不匹配。用 `pnpm test:warnings` 跑（project 名为 `dev`）。
 
 **跨引擎（`tests/browser/fallback.spec.ts`，WebKit 与 Firefox 各 9 项）** —— 没有 SVG 折射时剩下的东西还算不算材质：模糊、着色、边线、投影都在；布局、语义、键盘路径都不依赖折射分支；浮层没有入场动画也要能开能关；系统偏好照样生效。用 `pnpm test:fallback` 跑。
+
+**动效清单（`tests/browser/motion-inventory.spec.ts`，`pnpm test:motion`）** —— 和审计矩阵同一种东西，问的是另一个问题：每个组件页上逐个控件做悬停、按下、激活、聚焦，然后问 `getAnimations({ subtree: true })` 有没有东西在动。**有状态变化而什么都没动的就是一条发现**，写进 `reports/motion.json`。它报告，不断言；找到的每条缺口变成 `motion.spec.ts` 里一条有名有姓的用例。
+
+它每扫完一页就重写一次报告：第一版只在最后写，二十分钟跑不完，于是什么都没留下。**跑不完的清单等于没有清单。** 每类元素最多探 3 个、每页最多 24 个，也是同一个理由。
 
 **审计矩阵（`tests/browser/matrix.spec.ts`，`pnpm test:matrix`）** —— 把上一次人眼过 27 页的全面审计变成机器跑的东西，产出 `reports/matrix.json`。
 

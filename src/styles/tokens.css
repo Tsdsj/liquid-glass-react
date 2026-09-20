@@ -106,6 +106,11 @@
   --lg-duration-layout: 280ms;
   --lg-duration-spring: 520ms;
   --lg-duration-overlay: 360ms;
+  /* Leaving is quicker than arriving — the thing is already understood, so the exit only has
+     to say "it is going", not introduce anything. Anything that has to be taken out of the
+     tree by JavaScript afterwards reads the same number from `EXIT_MS` in `leave.ts`; the two
+     are asserted equal in `tests/core/stylesheet.test.mjs`. */
+  --lg-duration-exit: 220ms;
   --lg-ease: cubic-bezier(.2,.8,.2,1);
   --lg-ease-out: cubic-bezier(.16,1,.3,1);
   --lg-spring: linear(0, .008 1.1%, .03 2.2%, .118 4.6%, .43 9.6%, .657 13.4%, .84 17.4%, .94 20.7%, 1.006 23.9%, 1.05 27.5%, 1.072 31.5%, 1.07 35.9%, 1.05 41.4%, 1.011 51.3%, .995 61.4%, .994 70.3%, 1.001 87.4%, 1);
