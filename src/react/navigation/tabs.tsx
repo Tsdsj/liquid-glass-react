@@ -34,6 +34,8 @@ export function GlassTabs({ items, value, defaultValue, onValueChange, 'aria-lab
     origin: () => lensOrigin(lensRef.current),
     range: () => trackSpan(list.current, lensRef.current),
     disabled: event => !!(event.target as HTMLElement).closest('button:disabled'),
+    // The indicator is carried only from the tab it is on; see `GlassSegmentedControl`.
+    grab: event => !!(event.target as HTMLElement).closest('.lg-tab[aria-selected="true"]'),
     onPress: event => pick(event), onMove: event => pick(event),
     onRelease: ({ event, cancelled }) => { if (!cancelled) (elementAt(event, '.lg-tab') as HTMLButtonElement | null)?.focus({ preventScroll: true }); },
   }, !policy.reduceMotion);

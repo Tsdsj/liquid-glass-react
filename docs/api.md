@@ -193,6 +193,10 @@ import '@ttqtt/liquid-glass-react/styles.css';
 `items: GlassChoice[]`（2–5 项，文字或图标不混用）、`value`/`defaultValue`/`onValueChange`、`name`、`disabled`、`aria-label`(必填)。
 底层是原生 radio。**可拖动**：按住选中分段滑动，选择在拖动过程中即时更新。
 
+「按住**选中**分段」是字面意思：胶囊是你拖的那个东西，按在它上面才会被带走。按别的分段是一次点击——胶囊留在选中项上，松手后滑过去；按住再横着划过去，选中项会跟着走，胶囊仍然是在两个槽位之间滑，不会被扯到手指底下。同样的规则用在 `GlassTabs` 和 `TabBar` 的高亮上。
+
+**动效可以被打断。** 滑行途中再点一下，它从当前位置改道，不会先跳到终点再重新开始。一次点击自始至终不会碰正在跑的过渡：手势要到指针真的移动了 4px 才算数。
+
 ### `GlassSwitch`
 `checked`/`defaultChecked`/`onCheckedChange`、`label`、`aria-label`(必填，描述**打开后**的状态)。
 底层是 `input[type=checkbox][role=switch]`。**可甩**：拖动方向决定结果。打开态为系统绿。

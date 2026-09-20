@@ -85,6 +85,8 @@ export function TabBar({
     targets: () => lensRef.current ? [lensRef.current] : [],
     origin: () => lensOrigin(lensRef.current),
     range: () => trackSpan(list.current, lensRef.current, asSidebar ? 'y' : 'x'),
+    // The highlight is carried only from the item it is on; see `GlassSegmentedControl`.
+    grab: event => !!(event.target as HTMLElement).closest('.lg-tab-link[aria-current="page"]'),
     onMove: pick,
   }, !policy.reduceMotion);
 

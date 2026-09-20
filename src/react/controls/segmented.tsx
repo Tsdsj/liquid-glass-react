@@ -140,10 +140,17 @@ export function GlassSegmentedControl({ items, value, defaultValue, onValueChang
     range: () => trackSpan(root.current, lensRef.current),
     disabled: event => !!disabled || !!(event.target as HTMLElement).closest('[data-disabled="true"]'),
     /**
+     * The capsule is what you drag, so the press has to land on it. Pressing another segment is
+     * a click; the lens stays where the selection is and slides over once the click resolves.
+     * Letting any press carry it meant the capsule jumped under the finger before the click had
+     * even happened, which is the single most visible way this control can look broken.
+     */
+    grab: event => !!(event.target as HTMLElement).closest('.lg-segment')?.querySelector('input:checked'),
+    /**
      * Only a move picks. Selecting on the press as well would mean a plain tap on another segment
-     * teleports the lens under the finger — the carry has the transform transition switched off,
-     * so there is nothing left to glide. Left to the label's own click, which lands after the
-     * gesture has ended, the lens slides across the way the system control does.
+     * changes the selection before the reader has let go, so there is no way to slide off and
+     * change your mind. Left to the label's own click, which lands after the gesture has ended,
+     * the lens slides across the way the system control does.
      */
     onMove: event => pick(event),
   }, !policy.reduceMotion && !disabled);

@@ -124,13 +124,28 @@ test('sliding the sidebar lens changes section as it crosses each one', async ({
   await expect(links.locator('a[aria-current="page"]')).toHaveCount(1);
 });
 
+/**
+ * Still to the pixel, and it costs the drag threshold nothing.
+ *
+ * A press is not a drag until the pointer has gone somewhere (`pull.ts`), and the lens starts
+ * from where it was rather than jumping to the finger — so for a few frames it is behind by
+ * however far the finger travelled before the gesture was recognised. That debt is paid back
+ * over the next ~50ms instead of being kept or dropped in one frame, which is why this number
+ * did not have to move when the recogniser went in.
+ */
+const CARRY_ERROR = 2;
+
 test('the lens is carried by the pointer, not merely leaning toward it', async ({ page }) => {
   await page.goto('/#/components/segmented-control');
   const track = page.locator('#segmented-basic .lg-segmented-track');
   const lens = track.locator('.lg-selection-lens');
   const trackBox = (await track.boundingBox())!;
-  // From the first segment, so the whole span to the right is still inside the track.
+  // From the first segment, so the whole span to the right is still inside the track — and
+  // selected first, because the capsule is what you drag and a press has to land on it. Pressing
+  // a segment it is not on used to bring it to the finger; see `interruptible.spec.ts`.
   const start = centre((await track.getByText('日', { exact: true }).boundingBox())!);
+  await page.mouse.click(...start);
+  await restingCentre(lens);
 
   await page.mouse.move(...start);
   await page.mouse.down();
@@ -140,7 +155,7 @@ test('the lens is carried by the pointer, not merely leaning toward it', async (
     await page.mouse.move(start[0] + offset, start[1], { steps: 3 });
     await page.waitForTimeout(60); // the offset is applied on the next frame, not in the event
     const box = (await lens.boundingBox())!;
-    expect(Math.abs(box.x + box.width / 2 - (start[0] + offset))).toBeLessThan(2);
+    expect(Math.abs(box.x + box.width / 2 - (start[0] + offset))).toBeLessThan(CARRY_ERROR);
   }
 
   // Past the end it resists instead of following: it stays inside the track and squashes.
@@ -159,6 +174,10 @@ test('following the pointer freely deforms the glass far less than pulling again
   const trackBox = (await track.boundingBox())!;
   const start = centre((await track.getByText('日', { exact: true }).boundingBox())!);
   const read = () => lens.evaluate(node => parseFloat(node.style.getPropertyValue('--lg-stretch-x') || '1'));
+  // Selected first: only a press that lands on the capsule carries it, and nothing that is not
+  // being carried deforms.
+  await page.mouse.click(...start);
+  await restingCentre(lens);
 
   await page.mouse.move(...start);
   await page.mouse.down();

@@ -39,7 +39,7 @@ pnpm test:e2e --project=chromium
 
 **SSR（`tests/ssr.test.mjs`，3 项）** —— 服务端导入不需要 DOM，多个渲染根的 id 不冲突，默认打开的对话框在服务端输出安全标记。它导入的是 `dist/`，因此测的是真正发布的产物。
 
-**浏览器（`tests/browser/`，299 项，真实 Google Chrome）**：
+**浏览器（`tests/browser/`，307 项，真实 Google Chrome）**：
 
 | 文件 | 覆盖 |
 | --- | --- |
@@ -62,6 +62,7 @@ pnpm test:e2e --project=chromium
 | `second-batch.spec.ts` | `Picker` 的形态随尺寸类别切换而选择不变、标签只念一遍；`ColorWell` 是真 `<input type="color">`、色值可读、快捷色有名字；`Banner` 客气播报、关闭按钮 44、上滑关闭 |
 | `appearance.spec.ts` | 两种外观各自欠读者的东西：深色下的光晕强度远低于浅色、浅色没有一个满亮度纯白的表面、次级文字压在它真正所在的面板上过 4.5:1、折叠区展开有中间帧、选中胶囊与轨道的亮度差 ≥ 12/255、首页演示铺满整列、`tinted` 按钮的标签压在自己的淡底上过 4.5:1 |
 | `layout-matrix.spec.ts` | 布局容器 × 四个宽度 × LTR/RTL × 默认/AX5：页面不横向滚动、容器不溢出自己、不塌成零；分栏视图在 RTL 下是镜像；AX5 下标签不被挤成一列一个字 |
+| `interruptible.spec.ts` | 动效可以被打断：按下不移动透镜、不取消正在跑的过渡（直接读 `getAnimations()` 的 `currentTime`，被取消的过渡会从列表里消失）、连点两下改道而不是从终点重来（逐帧比对一次顺畅滑行自己的最高速度）、没落在胶囊上的拖动只改选中项不搬胶囊 |
 | `outline.spec.ts` | 窄屏目录菜单：滚动后不被工具栏吞掉、是跳转项不是复选框、按钮名就是可见文字 |
 
 **开发模式（`tests/browser/{warnings,strict-mode,hydration}.spec.ts`，13 项）** —— 这三件只存在于开发构建里，所以跑的是 Vite dev server 而不是 `site/dist`：三条设计规则的告警（生产构建里必须一条都没有）、Strict Mode 下闲置页面不排帧、八棵树 `renderToString` 之后 `hydrateRoot` 没有不匹配。用 `pnpm test:warnings` 跑（project 名为 `dev`）。
