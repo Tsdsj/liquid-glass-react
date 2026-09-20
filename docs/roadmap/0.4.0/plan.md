@@ -32,7 +32,7 @@
 
 | 组件 | 原因 |
 | --- | --- |
-| Combobox / TokenField | 自动完成的无障碍模型（`aria-activedescendant` + 虚拟焦点）是一整期的工作量，做半截比不做差 |
+| Combobox / TokenField | 自动完成的无障碍模型（`aria-activedescendant` + 虚拟焦点）是一整期的工作量，做半截比不做差。**2026-09-20 改判**：0.0.3 转向桌面后 `CommandPalette` 会先付掉这套模型的成本，之后再评估——见 [`../0.0.3/plan.md`](../0.0.3/plan.md) 二 B |
 | DatePicker | 平台差异太大；web 上原生 `<input type="date">` 加样式是更诚实的答案 |
 | 数据表格 | 内容层、和玻璃无关、体量是整个库的一半 |
 | 滚轮选择器 | 触摸专属，web 上没有好的键盘模型。菜单式的 `Picker` 已经覆盖这个需求 |
@@ -41,4 +41,4 @@
 | 图像视图 / 图像井 | `<img>` + `aspect-ratio` 足够 |
 | activity-rings、charts、digit-entry-views、lockups、ornaments | 平台专属，或体量是整个库的一半 |
 | `Grid` 虚拟化 | 另一期的事，且和「内容层不做玻璃」无关 |
-| 大纲视图（Tree） | 键盘模型自成一体，值得单独一期 |
+| 大纲视图（Tree） | 键盘模型自成一体，值得单独一期。**已排进 0.0.3 第 8 周**（桌面方向下它就是那一期） |
