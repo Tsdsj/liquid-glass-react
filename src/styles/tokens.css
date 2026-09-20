@@ -100,6 +100,10 @@
   /* Text inside a field. Its own token because the floor under it is iOS Safari's zoom-on-focus
      rule, not a design decision — see `.lg-field-input`. */
   --lg-field-font: max(16px, var(--lg-text-body-size));
+  /* A control's label. Subhead on touch; on desktop macOS puts a push button's label at the
+     body size, and reading the size straight off `subhead` would have made it 11px — smaller
+     than the platform's own table and smaller than the text beside it. */
+  --lg-control-font: var(--lg-text-subhead-size);
   /* Air above and below the text in a field. On desktop the control is 22px tall in total, so
      8px each side is more than the box has; without this the three field sizes came out
      30/32/32 — a content floor wearing three names. */
@@ -262,6 +266,7 @@
     --lg-text-caption2-leading: calc(14px * var(--lg-text-scale));
     --lg-field-font: var(--lg-text-body-size);
     --lg-field-padding-block: 3px;
+    --lg-control-font: var(--lg-text-body-size);
     --lg-margin: 20px;
     --lg-press-scale: 1.03;
     --lg-press-scale-shared: 1.035;
@@ -301,6 +306,7 @@
   --lg-text-caption2-leading: calc(14px * var(--lg-text-scale));
   --lg-field-font: var(--lg-text-body-size);
   --lg-field-padding-block: 3px;
+  --lg-control-font: var(--lg-text-body-size);
   --lg-margin: 20px;
   --lg-press-scale: 1.03;
   --lg-press-scale-shared: 1.035;

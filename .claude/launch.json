@@ -1,11 +1,18 @@
 {
   "version": "0.0.1",
+  "autoPort": true,
   "configurations": [
     {
       "name": "docs",
       "runtimeExecutable": "pnpm",
       "runtimeArgs": ["run", "dev"],
       "port": 5173
+    },
+    {
+      "name": "docs-built",
+      "runtimeExecutable": "node",
+      "runtimeArgs": ["scripts/serve-preview.mjs", "--root", "site/dist"],
+      "port": 4180
     }
   ]
 }

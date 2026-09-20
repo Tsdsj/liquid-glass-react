@@ -185,3 +185,14 @@ test('a code block never follows the type scale below reading size', async ({ pa
      took another 8% off that — 10.1px, on every page of the site. */
   expect(smallest, `the smallest text in a code block is ${smallest}px`).toBeGreaterThanOrEqual(12);
 });
+
+test("a button's label follows the platform's own table, not a size below it", async ({ page }) => {
+  await withPointer(page, '/#/components/button');
+  const label = await page.locator('#button-variants .lg-button').first()
+    .evaluate(node => parseFloat(getComputedStyle(node).fontSize));
+  const body = await pxOf(page, '--lg-text-body-size');
+  /* macOS puts a push button's label at the body size. Reading it straight off the `subhead`
+     style — which is what the touch table wants — made it 11px on desktop: smaller than the
+     platform's own table, and smaller than the prose next to it. */
+  expect(label, `the label is ${label}px against a ${body}px body`).toBe(body);
+});

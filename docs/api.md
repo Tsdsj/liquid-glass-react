@@ -58,6 +58,7 @@ import '@ttqtt/liquid-glass-react/styles.css';
 | 命中区下限 | 44（HIG） | 24（WCAG 2.2 指针下限） |
 | 正文 | 17/22 | 13/16 |
 | 大标题 … 标注 | iOS 表 | macOS 表 |
+| 控件标签 | subhead 15 | 正文 13（macOS 的按钮标签是正文） |
 | 输入框里的字 | 至少 16（否则 iOS Safari 聚焦时缩放页面） | 跟随正文 |
 | 拖动时的形变 | 全量 | 55% |
 
