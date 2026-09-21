@@ -1,9 +1,10 @@
 import { useState } from 'react';
 import {
   Card, Concentric, DisclosureGroup, Divider, Form, FormRow, FormSection, GlassButton, GroupBox,
-  GlassStepper, GlassSwitch, Grid, Kbd, LibraryIcon, TextField, List, ListRow, ListSection, MaterialView, Text,
-  useShortcut,
+  GlassStepper, GlassSwitch, Grid, Kbd, LibraryIcon, TextField, List, ListRow, ListSection, MaterialView,
+  OutlineView, type OutlineNode, Text, useShortcut,
 } from '@ttqtt/liquid-glass-react';
+import { Icon } from '../icons.js';
 import { demoLink } from '../site/demo.js';
 import type { ComponentDoc } from './types.js';
 
@@ -856,4 +857,163 @@ useShortcut('/', () => setBare(n => n + 1));   // 不带修饰键，打字时不
     ],
     related: ['card', 'form', 'list'],
   },
+  {
+    slug: 'outline-view', name: 'OutlineView', title: '大纲视图', group: '内容',
+    summary: '有层级的数据，能一层层展开收起，键盘可以整棵树走完。',
+    when: [
+      '数据本身是嵌套的——文件夹、章节、图层、组织架构。',
+      '不嵌套就别用。并排的一堆东西用 List，它更轻、也不会让人去找不存在的三角形。',
+      '通常放在分栏视图的左列，右边放选中的那一项。',
+      '需要多列（大小、修改日期、种类各占一列）时这个组件不够用，见下面最后一个示例。',
+    ],
+    examples: [
+      {
+        id: 'outline-basic', title: '展开和收起',
+        description: '点三角形开合一层，按住 Option 再点会把这一支整个展开。点名字是选中，两件事互不干扰。',
+        height: 400,
+        knobs: [
+          { name: 'defaultExpanded', label: '初始展开', type: 'select', value: 'top', options: [
+            { value: 'none', label: '全部收起' }, { value: 'top', label: '第一层' }, { value: 'all', label: '全部' },
+          ] },
+        ],
+        render: function OutlineBasic({ knobs }) {
+          const preset = knobs.defaultExpanded as string;
+          const expanded = preset === 'none' ? [] : preset === 'top' ? ['docs'] : ['docs', 'drafts', 'images'];
+          /* `defaultExpanded` 只在挂载时读一次，所以换档位时让它重新挂载——这正是这个属性的
+             语义，用 state 假装它会跟着变反而会骗人。 */
+          return <div id="outline-basic-demo" style={{ width: 300 }}>
+            <OutlineView key={preset} aria-label="项目文件" items={projectTree}
+              defaultExpanded={expanded} defaultSelected="proposal" />
+          </div>;
+        },
+        code: knobs => `<OutlineView
+  aria-label="项目文件"
+  items={items}
+  defaultExpanded={${knobs.defaultExpanded === 'none' ? '[]'
+    : knobs.defaultExpanded === 'top' ? "['docs']" : "['docs', 'drafts', 'images']"}}
+  defaultSelected="proposal"
+/>`,
+      },
+      {
+        id: 'outline-keyboard', title: '键盘走完整棵树',
+        description: '整棵树在 Tab 顺序里只占一个位置，进去之后：↑ ↓ 逐行，→ 展开再进去，← 收起再退回上一层，Home / End 到头，直接打字跳到对应的名字，Enter 或空格选中。',
+        height: 400,
+        render: function OutlineKeyboard() {
+          const [open, setOpen] = useState<string[]>(['docs', 'images']);
+          const [picked, setPicked] = useState<string | null>('cover');
+          return <div id="outline-keyboard-demo" style={{ display: 'grid', gridTemplateColumns: '240px 1fr', gap: 16, width: '100%', maxWidth: 460 }}>
+            <OutlineView aria-label="项目文件" items={projectTree}
+              expanded={open} onExpandedChange={setOpen}
+              selected={picked} onSelect={key => setPicked(key)} />
+            <Card radius={14} padding={16}>
+              <Text variant="caption1" tone="tertiary">当前选中</Text>
+              <Text variant="body" id="outline-picked">{picked ?? '什么都没选'}</Text>
+            </Card>
+          </div>;
+        },
+        code: `const [open, setOpen] = useState(['docs', 'images']);
+const [picked, setPicked] = useState<string | null>('cover');
+
+<OutlineView
+  aria-label="项目文件"
+  items={items}
+  expanded={open} onExpandedChange={setOpen}
+  selected={picked} onSelect={key => setPicked(key)}
+/>`,
+      },
+      {
+        id: 'outline-remember', title: '记住展开到哪里',
+        description: '哪些文件夹是开着的由你来存。库里不替你存：它不知道该存到哪，而悄悄放在组件自己的 state 里，看起来是好的，下次进来全没了。',
+        height: 380,
+        render: function OutlineRemember() {
+          const [open, setOpen] = useState<string[]>(['docs', 'drafts']);
+          return <div id="outline-remember-demo" style={{ display: 'grid', gap: 12, width: 300 }}>
+            <OutlineView aria-label="项目文件" items={projectTree} expanded={open} onExpandedChange={setOpen} />
+            <Text variant="caption1" tone="tertiary" id="outline-open-keys">
+              开着的：{open.length ? open.join('、') : '（没有）'}
+            </Text>
+          </div>;
+        },
+        code: `const [open, setOpen] = useState(
+  () => JSON.parse(localStorage.getItem('open') ?? '[]'),
+);
+
+<OutlineView
+  aria-label="项目文件"
+  items={items}
+  expanded={open}
+  onExpandedChange={next => {
+    setOpen(next);
+    localStorage.setItem('open', JSON.stringify(next));
+  }}
+/>`,
+      },
+      {
+        id: 'outline-not-a-table', title: '一列，不是一张表',
+        description: '层级只出现在第一列，右边那串数字是同一行上的读数，不是第二列。真正的多列大纲（可排序的列头、可拖的列宽、方向键在单元格之间走）是另一种东西，这个组件不是它——做一半的话，它对谁都不像表格。数据本来就不嵌套的，用 List。',
+        height: 360,
+        render: () => <div id="outline-not-a-table-demo" style={{ display: 'grid', gap: 16, width: 320 }}>
+          <OutlineView aria-label="有层级的" items={projectTree} defaultExpanded={['images']} />
+          <Divider />
+          <List variant="insetGrouped">
+            <ListSection header="没有层级的">
+              <ListRow label="封面.png" value="1.2 MB" />
+              <ListRow label="图表.png" value="640 KB" />
+            </ListSection>
+          </List>
+        </div>,
+        code: `{/* 嵌套的 */}
+<OutlineView aria-label="项目文件" items={items} />
+
+{/* 并排的 */}
+<List>
+  <ListRow label="封面.png" value="1.2 MB" />
+</List>`,
+      },
+    ],
+    props: [
+      { name: 'items', type: 'OutlineNode[]', description: '整棵树。每个节点要 key 和 label，可选 icon（前导图形）、value（同一行右侧的读数）、disabled；children 为 undefined 是叶子，为空数组是一个空的容器。' },
+      { name: 'aria-label', type: 'string', description: '这棵树叫什么。单列大纲没有列头替它说。' },
+      { name: 'expanded', type: 'string[]', description: '展开着的容器的 key。受控。' },
+      { name: 'defaultExpanded', type: 'string[]', default: '[]', description: '非受控时的初始展开。' },
+      { name: 'onExpandedChange', type: '(keys: string[]) => void', description: '展开收起时回调，参数是新的全集。' },
+      { name: 'selected', type: 'string | null', description: '选中行的 key。受控。' },
+      { name: 'defaultSelected', type: 'string | null', default: 'null', description: '非受控时的初始选中。' },
+      { name: 'onSelect', type: '(key: string, node: OutlineNode) => void', description: '选中变化时回调。' },
+    ],
+    notes: [
+      'role="tree"，行是 treeitem，子列表是 group；每行带 aria-level，所以读屏会报"第几层"。',
+      '整棵树在 Tab 顺序里只占一个位置：进去之后用方向键走，出来按 Tab。一个文件夹一个 Tab 位会让一棵树变成几十次 Tab。',
+      '三角形不是按钮。treeitem 里再塞一个按钮，键盘模型里没有任何一个键能走到它，却要在每一行多按一次 Tab；开合状态由行自己的 aria-expanded 播报。',
+      '收起的那一层用 content-visibility: hidden，不是 display: none——既留下一个可以做高度动画的盒子，又真的把里面的行移出无障碍树和页内查找。收起就是对所有人收起。',
+      '打字跳转匹配的是按键直接产生的字符。经输入法组字打出来的中文不会以单字符按键的形式到达，所以中文名字请用方向键走——这一条对库里所有打字跳转的地方（菜单、命令面板）都一样。',
+      '名字太长时末尾省略。HIG 更希望省略号在中间，CSS 没有这个能力，所以这里是末尾——不假装。',
+    ],
+    related: ['list', 'split-view', 'disclosure'],
+  },
+];
+
+/** The tree the outline demos share, so the page reads as one file hierarchy rather than four. */
+const folder = <Icon name="folder" size={15} />;
+const doc = <Icon name="doc" size={15} />;
+const projectTree: OutlineNode[] = [
+  {
+    key: 'docs', label: '文稿', icon: folder, children: [
+      { key: 'proposal', label: '提案.pages', icon: doc, value: '248 KB' },
+      { key: 'drafts', label: '草稿', icon: folder, children: [
+        { key: 'proposal-old', label: '提案 旧.pages', icon: doc, value: '240 KB' },
+        { key: 'notes', label: '会议记录.md', icon: doc, value: '12 KB' },
+      ] },
+    ],
+  },
+  {
+    key: 'images', label: '图片', icon: folder, children: [
+      { key: 'cover', label: '封面.png', icon: doc, value: '1.2 MB' },
+      { key: 'chart', label: '图表.png', icon: doc, value: '640 KB' },
+    ],
+  },
+  { key: 'archive', label: '归档', icon: folder, children: [] },
+  { key: 'readme', label: 'README.md', icon: doc, value: '4 KB' },
+  { key: 'report', label: 'report.csv', icon: doc, value: '88 KB' },
+  { key: 'locked', label: '不可用.key', icon: doc, value: '—', disabled: true },
 ];

@@ -59,7 +59,7 @@ https://tsdsj.github.io/liquid-glass-react/ 。
 
 | 工作流 | 触发 | 做什么 |
 | --- | --- | --- |
-| `ci.yml` | push main、PR、手动 | 类型检查 → 构建 → 65 单元 → 3 SSR → 站点构建 → 84 真实 Chrome → 16 WebKit/Firefox → 核对 tarball → 体积报告 |
+| `ci.yml` | push main、PR、手动 | 类型检查 → 构建 → 74 单元 → 7 SSR → 站点构建 → 421 真实 Chrome → 13 开发模式 → 18 WebKit/Firefox → 核对 tarball → 体积报告 |
 | `pages.yml` | push main、手动 | 构建文档站并部署 |
 | `release.yml` | push `v*` 标签 | 先整个跑一遍 `ci.yml`，再发 npm，再建 GitHub Release |
 

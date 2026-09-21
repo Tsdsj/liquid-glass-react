@@ -18,7 +18,7 @@ import {
   GlassSlider, GlassStepper, GlassSwitch, GlassSurface, GlassGroup, LibraryIcon, Picker, ColorWell, Banner,
   GlassCheckbox, RadioGroup,
   SearchField, TextField,
-  GroupBox, Inspector, MenuBar, NavigationBar, PathBar, Panel, NavigationStack, PageControl, Screen, ScrollEdge, Sidebar, SplitView, TabBar, GlassTabs, GlassToolbar, ToolbarGroup, ToolbarSpacer,
+  GroupBox, OutlineView, Inspector, MenuBar, NavigationBar, PathBar, Panel, NavigationStack, PageControl, Screen, ScrollEdge, Sidebar, SplitView, TabBar, GlassTabs, GlassToolbar, ToolbarGroup, ToolbarSpacer,
   CommandPalette, GlassActionSheet, GlassAlert, GlassDialog, GlassMenu, GlassMenuButton, GlassMenuDescription, GlassPopover, GlassSheet, ContextMenu, Tooltip,
 } from '@ttqtt/liquid-glass-react';
 
@@ -98,6 +98,8 @@ const entries: Array<[string, (p: Probe) => ReactNode]> = [
     menus={[{ key: 'a', title: 'A', items: [{ key: 'x', label: 'X', onSelect: () => {} }] }]} />],
   ['PathBar', p => <PathBar {...p} aria-label="path" items={[{ label: 'root', onSelect: () => {} }, { label: 'here' }]} />],
   ['GroupBox', p => <GroupBox {...p} title="box">body</GroupBox>],
+  ['OutlineView', p => <OutlineView {...p} aria-label="outline"
+    items={[{ key: 'a', label: 'A', children: [{ key: 'b', label: 'B' }] }]} />],
   ['SplitView', p => <SplitView {...p} title="split" sidebar={<span>side</span>}>content</SplitView>],
   ['Inspector', p => <Inspector {...p} title="inspector">body</Inspector>],
   ['Sidebar', p => <Sidebar {...p} aria-label="sidebar">side</Sidebar>],
@@ -187,6 +189,7 @@ const _contract = {
   MenuBar: null as unknown as Gap<typeof MenuBar>,
   PathBar: null as unknown as Gap<typeof PathBar>,
   GroupBox: null as unknown as Gap<typeof GroupBox>,
+  OutlineView: null as unknown as Gap<typeof OutlineView>,
   SplitView: null as unknown as Gap<typeof SplitView>,
   Inspector: null as unknown as Gap<typeof Inspector>,
   Sidebar: null as unknown as Gap<typeof Sidebar>,

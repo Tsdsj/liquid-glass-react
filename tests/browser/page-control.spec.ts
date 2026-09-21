@@ -94,6 +94,31 @@ test('a custom page name replaces the default', async ({ page }) => {
   await expect(control.getByRole('tab').first()).toHaveAttribute('aria-label', '第 1 张，共 6 张');
 });
 
+/**
+ * And the same question for a cursor, which has a floor of its own: 24px, WCAG 2.2.
+ *
+ * The hit region used to be declared inside `@media (pointer: coarse)` — a hit region read as
+ * a touch affair — so with a mouse the 18px of artwork *was* the target. The band is the fix
+ * on the cross axis; along the row the dots stay 18px apart and are adjacent targets, which is
+ * stated on the page rather than quietly not measured.
+ */
+test('and with a cursor it owns a 24px band, which it did not before', async ({ page }) => {
+  await page.goto(PAGE);
+  const control = page.locator(CONTROL);
+  await control.evaluate(node => node.scrollIntoView({ block: 'center' }));
+  await page.waitForTimeout(150);
+  const band = await control.evaluate(node => {
+    const dots = [...node.querySelectorAll<HTMLElement>('.lg-page-dot')];
+    const owner = (dot: HTMLElement, dy: number) => {
+      const box = dot.getBoundingClientRect();
+      const hit = document.elementFromPoint(box.left + box.width / 2, box.top + box.height / 2 + dy);
+      return dots.indexOf((hit?.closest('.lg-page-dot') ?? hit) as HTMLElement);
+    };
+    return dots.map((dot, index) => [owner(dot, -11), owner(dot, 0), owner(dot, 11)].every(hit => hit === index));
+  });
+  expect(band, 'a dot does not own the 22px band over its own centre').toEqual([true, true, true, true]);
+});
+
 test.describe('on a touch device', () => {
   test.use({ hasTouch: true, isMobile: true });
 

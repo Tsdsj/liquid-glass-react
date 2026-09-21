@@ -19,6 +19,7 @@ export * from './content/list.js';
 export * from './content/material-view.js';
 export * from './content/divider.js';
 export * from './content/group-box.js';
+export * from './content/outline-view.js';
 
 /* Controls */
 export * from './controls/button.js';

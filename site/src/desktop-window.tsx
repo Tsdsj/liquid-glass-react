@@ -1,14 +1,34 @@
 import { useState } from 'react';
 import {
-  GlassButton, GlassIconButton, GlassSlider, GlassToolbar, Inspector, List, ListRow, ListSection,
-  MenuBar, Panel, PathBar, SplitView, Text, ToolbarGroup, ToolbarSpacer, useSizeClass,
+  GlassButton, GlassIconButton, GlassSlider, GlassToolbar, Inspector,
+  MenuBar, OutlineView, type OutlineNode, Panel, PathBar, SplitView, Text,
+  ToolbarGroup, ToolbarSpacer, useSizeClass,
 } from '@ttqtt/liquid-glass-react';
 import { Icon } from './icons.js';
 
-const SHOTS = [
-  { key: 'ridge', name: '山脊 01', kind: 'RAW · 6000 × 4000' },
-  { key: 'lake', name: '湖面 04', kind: 'RAW · 6000 × 4000' },
-  { key: 'pines', name: '松林 12', kind: 'JPEG · 4032 × 3024' },
+/** One shot per leaf of the tree, with the folders it lives in — the path bar reads the same. */
+const SHOTS: Record<string, { name: string; kind: string; path: string[] }> = {
+  ridge: { name: '山脊 01', kind: 'RAW · 6000 × 4000', path: ['资料库', '2026', '山间'] },
+  lake: { name: '湖面 04', kind: 'RAW · 6000 × 4000', path: ['资料库', '2026', '山间'] },
+  pines: { name: '松林 12', kind: 'JPEG · 4032 × 3024', path: ['资料库', '2026', '山间'] },
+  night: { name: '夜色 03', kind: 'JPEG · 4032 × 3024', path: ['资料库', '2026', '城市'] },
+};
+
+const folder = <Icon name="folder" size={15} />;
+const photo = <Icon name="layer" size={15} />;
+const LIBRARY: OutlineNode[] = [
+  { key: 'library', label: '资料库', icon: folder, children: [
+    { key: '2026', label: '2026', icon: folder, children: [
+      { key: 'hills', label: '山间', icon: folder, children: [
+        { key: 'ridge', label: SHOTS.ridge.name, icon: photo },
+        { key: 'lake', label: SHOTS.lake.name, icon: photo },
+        { key: 'pines', label: SHOTS.pines.name, icon: photo },
+      ] },
+      { key: 'city', label: '城市', icon: folder, children: [
+        { key: 'night', label: SHOTS.night.name, icon: photo },
+      ] },
+    ] },
+  ] },
 ];
 
 /**
@@ -16,8 +36,11 @@ const SHOTS = [
  *
  * Every page on this site shows a component on its own, which is the right way to look one up
  * and the wrong way to answer "what does an application made of these look like". This is the
- * answer: a menu bar, a toolbar, a split view with an inspector, a path bar along the bottom
- * of the content, and a panel floating over it — six components that only make sense together.
+ * answer: a menu bar, a toolbar, a split view with an outline of the library down its leading
+ * side and an inspector down the other, a path bar along the bottom of the content, and a panel
+ * floating over it — seven components that only make sense together. The outline and the path
+ * bar are the same hierarchy read from its two ends, which is the arrangement the HIG's
+ * outline-views page describes and the reason it names the split view by name.
  *
  * It is a **drawn** window, not the site's own chrome. The documentation site is a
  * documentation site and stopped pretending otherwise two rounds ago; this is a specimen
@@ -30,7 +53,9 @@ const SHOTS = [
  * question about what exists, not about how it is drawn.
  */
 export function DesktopWindow() {
-  const [selected, setSelected] = useState(SHOTS[0]);
+  const [pick, setPick] = useState('ridge');
+  const [open, setOpen] = useState(['library', '2026', 'hills']);
+  const selected = SHOTS[pick];
   const [detail, setDetail] = useState(false);
   const [inspector, setInspector] = useState(true);
   const [panel, setPanel] = useState(true);
@@ -58,22 +83,21 @@ export function DesktopWindow() {
     ] },
   ];
 
-  const sidebar = <div className="window-sidebar"><List aria-label="照片库">
-    <ListSection header="最近">
-      {SHOTS.map(shot => <ListRow key={shot.key} label={shot.name} secondaryLabel={shot.kind}
-        onSelect={() => { setSelected(shot); setDetail(true); }}
-        aria-current={shot.key === selected.key ? 'true' : undefined} />)}
-    </ListSection>
-  </List></div>;
+  /* "Outline views work well … in the leading side of a split view, with related content on
+     the opposite side" — the HIG's own placement, and the path bar under the canvas reads the
+     same hierarchy from the other end. */
+  const sidebar = <div className="window-sidebar">
+    <OutlineView aria-label="照片库" items={LIBRARY}
+      expanded={open} onExpandedChange={setOpen}
+      selected={pick} onSelect={key => { if (SHOTS[key]) { setPick(key); setDetail(true); } }} />
+  </div>;
 
   const content = <div className="window-content">
     <div className="window-canvas" role="img" aria-label={`${selected.name} 的预览`}>
       <Text variant="caption1" className="window-canvas-name">{selected.name}</Text>
     </div>
     <PathBar aria-label="位置" items={[
-      { label: '资料库', onSelect: () => setLast('资料库') },
-      { label: '2026', onSelect: () => setLast('2026') },
-      { label: '山间', onSelect: () => setLast('山间') },
+      ...selected.path.map(name => ({ label: name, onSelect: () => setLast(name) })),
       { label: selected.name },
     ]} />
   </div>;
@@ -105,7 +129,7 @@ export function DesktopWindow() {
     {/* `headingLevel`: this window is a specimen inside a page that already has an `<h1>`, and
         the compact stack's title would otherwise be a second one. */}
     <SplitView className="window-split" title="照片" sidebar={sidebar} headingLevel={3}
-      sidebarWidth={200} minSidebarWidth={160} maxSidebarWidth={260}
+      sidebarWidth={216} minSidebarWidth={176} maxSidebarWidth={280}
       inspectorVisible={inspector} inspectorWidth={188}
       compact={detail ? { title: selected.name, content } : undefined}
       onCompactBack={() => setDetail(false)}

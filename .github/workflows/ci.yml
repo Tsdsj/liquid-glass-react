@@ -53,6 +53,13 @@ jobs:
       - name: Browser tests
         run: pnpm test:chrome
 
+      # The three things that only exist in a development build — the design-rule warnings,
+      # Strict Mode double-invocation, hydration — run against the Vite dev server rather than
+      # `site/dist`, so `pnpm test:chrome` cannot reach them. `pnpm check` has run these all
+      # along and CI never did: a gate that is weaker than the one on the desk is not a gate.
+      - name: Development-build tests
+        run: pnpm test:warnings
+
       # Safari and Firefox have no SVG-backdrop lensing. These check that what is left is
       # still a material and that nothing else quietly depended on the refraction.
       - name: Install WebKit and Firefox

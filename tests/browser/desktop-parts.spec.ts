@@ -1,4 +1,5 @@
 import { test, expect } from '@playwright/test';
+import { expectReachable } from './hit-floor.js';
 
 /**
  * The five things week 7 added, each checked at the thing it promises rather than at the
@@ -46,6 +47,16 @@ test('a path too long for its box folds in the middle and keeps the ends', async
   /* And what folded is still reachable, which is the difference between collapsing and losing. */
   await more.click();
   await expect(page.getByRole('menuitem', { name: '用户' })).toBeVisible();
+});
+
+test('a path level is big enough to click with whatever you are pointing with', async ({ page }) => {
+  await page.goto('/#/components/path-bar');
+  const level = page.locator('#path-basic-demo .lg-path-level[href]').first();
+  await level.scrollIntoViewIfNeeded();
+  /* Footnote type in 2px of padding came to 22px — a hair under the 24 a cursor needs. It was
+     the "More" button that carried a floor and the levels themselves that did not, which is
+     backwards: the levels are what people aim at. */
+  await expectReachable(page, level, 'a path level');
 });
 
 test('a path that fits does not fold', async ({ page }) => {

@@ -1327,17 +1327,23 @@
      it. It grows instead — it is the dot the gesture is carried from. */
   .lg-page-dot[aria-selected="true"]:hover > span { scale: 1.35; }
 }
-/* The touch region grows on the **cross** axis only.
-   Growing it on both, the way a standalone button does, makes each dot's 44px square overlap
-   its neighbours': the dots are 18px apart, so dot 2's region covers dot 1's centre entirely,
-   and being later in the DOM it wins the hit test. Measured: tapping the first dot selected
-   the second. Along the row the dots are adjacent targets and share the axis between them —
-   which is fine, because the row is draggable and nobody has to hit one exactly. */
-@media (pointer: coarse) {
-  .lg-page-dot::after { content: ''; position: absolute; inset-block-start: 50%; inset-inline-start: 50%;
-    translate: -50% -50%; width: 100%; height: var(--lg-hit-min); }
-  .lg-page-control[data-orientation="vertical"] .lg-page-dot::after { width: var(--lg-hit-min); height: 100%; }
-}
+/**
+ * The hit region grows on the **cross** axis only.
+ *
+ * Growing it on both, the way a standalone button does, makes each dot's region overlap its
+ * neighbours': the dots are 18px apart, so dot 2's region covers dot 1's centre entirely, and
+ * being later in the DOM it wins the hit test. Measured: tapping the first dot selected the
+ * second. Along the row the dots are adjacent targets and share the axis between them — which
+ * the row being draggable makes liveable, and which is the same compromise the system control
+ * makes, but it does mean a dot is 18px wide and the cursor floor is 24. Said, not hidden.
+ *
+ * This used to be inside `@media (pointer: coarse)`, on the reading that a hit region is a
+ * touch affair. A cursor has a floor too — 24px, WCAG 2.2 — and 18x18 of artwork was the whole
+ * target for it. The size comes from `--lg-hit-min`, so each pointer gets its own answer.
+ */
+.lg-page-dot::after { content: ''; position: absolute; inset-block-start: 50%; inset-inline-start: 50%;
+  translate: -50% -50%; width: 100%; height: var(--lg-hit-min); }
+.lg-page-control[data-orientation="vertical"] .lg-page-dot::after { width: var(--lg-hit-min); height: 100%; }
 @media (forced-colors: active) {
   .lg-page-dot > span { background: ButtonText; opacity: 1; }
   .lg-page-dot[aria-selected="true"] > span { background: Highlight; }
@@ -1645,7 +1651,12 @@
   border-inline-end: 1.5px solid var(--lg-label-tertiary); border-block-start: 1.5px solid var(--lg-label-tertiary);
   rotate: 45deg; margin-inline-end: var(--lg-space-1); }
 [dir="rtl"] .lg-path-item + .lg-path-item::before { rotate: 225deg; }
+/* `min-height`, not a hit pseudo-element: a path level is a word you click, so the target is
+   the box itself and making the box the target is the whole fix. Footnote type in 2px of
+   padding came to 22 — a hair under the 24 a cursor needs, which is exactly the kind of miss
+   that only turns up when someone measures. */
 .lg-path-level { display: inline-flex; align-items: center; gap: var(--lg-space-1); min-width: 0;
+  min-height: var(--lg-hit-min);
   padding: 2px var(--lg-space-2); border-radius: var(--lg-radius-xs); border: 0; background: transparent;
   color: var(--lg-label-secondary); text-decoration: none; cursor: default;
   font-size: var(--lg-text-footnote-size); line-height: var(--lg-text-footnote-leading);
@@ -1659,8 +1670,13 @@ a.lg-path-level, button.lg-path-level { cursor: pointer; }
 /* Where you are, not where you could go: the current level is the only one at full weight. */
 .lg-path-level[aria-current="page"] { color: var(--lg-label); font-weight: var(--lg-weight-semibold); }
 .lg-path-label { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+/* Its height comes from `.lg-path-level` with everything else; its width does not, because the
+   ellipsis is one glyph and a glyph plus 8px of padding is 31px. Wide enough for a cursor,
+   under a fingertip — and it took the levels around it growing for `pnpm test:matrix` to
+   notice, because until then two of its corners happened to land on the level next door and
+   the sweep's "a neighbouring control is not a miss" rule absorbed it. */
+.lg-path-more { min-width: var(--lg-hit-min); justify-content: center; }
 .lg-path-icon { display: inline-flex; flex-shrink: 0; color: var(--lg-label-tertiary); }
-.lg-path-more { min-height: var(--lg-hit-min); }
 
 
 /* ==========================================================================
@@ -1712,4 +1728,81 @@ a.lg-path-level, button.lg-path-level { cursor: pointer; }
 .lg-panel[data-moving="true"] { transition: none; }
 @media (prefers-reduced-motion: reduce) {
   .lg-panel-chevron { transition: none; }
+}
+
+/* ---------- OutlineView: hierarchy you can open and close ---------- */
+/**
+ * Content layer. An outline is data, not a floating control, and it usually sits in the leading
+ * column of a split view with the thing it points at on the other side.
+ *
+ * `interpolate-size` is what makes a height of `auto` animatable, the same route the disclosure
+ * group takes. A closed group is `content-visibility: hidden` rather than `display: none`: that
+ * keeps a box for the height to animate and — this is the part that matters — takes the rows
+ * inside out of the accessibility tree and out of find-in-page, so a closed folder is closed to
+ * everyone rather than merely invisible.
+ */
+.lg-outline { list-style: none; margin: 0; padding: var(--lg-space-1) 0; interpolate-size: allow-keywords;
+  font-family: var(--lg-font-text); color: var(--lg-label); }
+.lg-outline-group { list-style: none; margin: 0; padding: 0;
+  block-size: 0; overflow: clip; content-visibility: hidden;
+  transition: block-size var(--lg-duration-layout) var(--lg-ease-out),
+    content-visibility var(--lg-duration-layout) allow-discrete; }
+/**
+ * Note what is *not* here: `content-visibility` is left out of the open state's transition on
+ * purpose, and leaving it in was a real defect. A transition is read from the style the element
+ * is arriving at, so listing a discrete property in both states makes it flip halfway through
+ * the animation in both directions — which meant a folder you had just opened stayed
+ * `content-visibility: hidden` for the first 140ms: drawn, growing, and in that time not
+ * focusable and not in the accessibility tree. Two presses of Right in quick succession opened
+ * a folder and then did nothing, and `outline-view.spec.ts` is what caught it.
+ *
+ * Closing still lists it, because there the delay is the point: the rows stay until the box has
+ * finished shrinking over them.
+ */
+.lg-outline-item[aria-expanded="true"] > .lg-outline-group {
+  block-size: auto; content-visibility: visible;
+  transition: block-size var(--lg-duration-layout) var(--lg-ease-out); }
+.lg-outline-item { display: block; }
+/* The row, not the item, carries the shape: the item also contains its children, and a
+   selection highlight drawn on it would cover the whole open folder. */
+.lg-outline-row { display: flex; align-items: center; gap: var(--lg-space-2);
+  /* A row is both a control and the thing you press, so it takes whichever of the two is
+     larger: a compact control on a machine with a cursor, a 44pt target on a touchscreen.
+     Outline views are a desktop idiom — the HIG lists them as unsupported on iOS — but a
+     desktop idiom on a web page still gets opened on a phone, and 36px there is under the
+     floor. Not `--lg-hit-min` alone: that is a floor under a target, never a control height. */
+  min-height: max(var(--lg-height-compact), var(--lg-hit-min)); border-radius: var(--lg-radius-s);
+  /* Logical, so the indent starts on the reading side rather than always on the left. */
+  padding-inline: calc(var(--lg-space-2) + var(--lg-outline-depth, 0) * 16px) var(--lg-space-3);
+  font-size: var(--lg-text-subhead-size); line-height: var(--lg-text-subhead-leading);
+  cursor: default; user-select: none; -webkit-user-select: none;
+  transition: background var(--lg-duration-press) var(--lg-ease); }
+@media (hover: hover) {
+  .lg-outline-item:not([data-disabled="true"]):hover > .lg-outline-row { background: var(--lg-fill-quaternary); }
+}
+.lg-outline-item[data-selected="true"] > .lg-outline-row { background: var(--lg-accent); color: var(--lg-accent-contrast); }
+.lg-outline-item[data-selected="true"] > .lg-outline-row .lg-outline-value { color: inherit; opacity: .8; }
+.lg-outline-item[data-disabled="true"] > .lg-outline-row { opacity: .45; }
+.lg-outline-item:focus { outline: none; }
+.lg-outline-item:focus-visible > .lg-outline-row {
+  outline: var(--lg-focus-width) solid var(--lg-focus); outline-offset: calc(var(--lg-focus-offset) * -1); }
+/* Always the same width, container or not, so the names line up down a level. */
+.lg-outline-twist { flex: 0 0 auto; display: grid; place-items: center; width: 16px; height: 16px;
+  color: var(--lg-label-tertiary);
+  transition: rotate var(--lg-duration-spring) var(--lg-spring); }
+.lg-outline-item[data-selected="true"] > .lg-outline-row .lg-outline-twist { color: inherit; }
+.lg-outline-twist[data-container="true"] { cursor: pointer; }
+.lg-outline-item[aria-expanded="true"] > .lg-outline-row .lg-outline-twist { rotate: 90deg; }
+[dir="rtl"] .lg-outline-twist { scale: -1 1; }
+[dir="rtl"] .lg-outline-item[aria-expanded="true"] > .lg-outline-row .lg-outline-twist { rotate: -90deg; }
+.lg-outline-icon { flex: 0 0 auto; display: grid; place-items: center; color: var(--lg-label-secondary); }
+.lg-outline-item[data-selected="true"] > .lg-outline-row .lg-outline-icon { color: inherit; }
+/* One line, clipped with an ellipsis at the end. The HIG prefers a centred ellipsis, which CSS
+   has no way to draw — saying so beats faking it with a measured substring that breaks the
+   moment the column is resized. */
+.lg-outline-label { flex: 1 1 auto; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.lg-outline-value { flex: 0 0 auto; color: var(--lg-label-secondary);
+  font-size: var(--lg-text-caption1-size); font-variant-numeric: tabular-nums; }
+@media (prefers-reduced-motion: reduce) {
+  .lg-outline-group, .lg-outline-row, .lg-outline-twist { transition: none; }
 }

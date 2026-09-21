@@ -101,7 +101,7 @@ export function OverviewPage({ go }: { go: (path: string) => void }) {
         are the reasons. Reading it the other way round asks someone to take three claims on
         trust before they have seen anything made out of them. */}
     <Section title="一扇窗口"
-      description="菜单栏、工具栏、分栏、检查器、路径栏和一块浮动面板——六个组件拼在一起才是一个应用的样子。把窗口拖窄，分栏会折成一摞页面，菜单栏退场。">
+      description="菜单栏、工具栏、分栏、大纲视图、检查器、路径栏和一块浮动面板——七个组件拼在一起才是一个应用的样子。左边的树和下面的路径栏是同一个层级的两头。把窗口拖窄，分栏会折成一摞页面，菜单栏退场。">
       <DesktopWindow />
     </Section>
 

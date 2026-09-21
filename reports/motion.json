@@ -1,36 +1,55 @@
 {
-  "generated": "2026-09-21T15:39:19.258Z",
-  "pages": 47,
-  "swept": 47,
-  "probes": 2912,
-  "asked": 663,
-  "still": 3,
+  "generated": "2026-09-21T17:11:20.509Z",
+  "pages": 48,
+  "swept": 48,
+  "probes": 2972,
+  "asked": 672,
+  "still": 5,
   "byPage": {
-    "grid": 2,
-    "divider": 1
+    "divider": 1,
+    "page-control": 1,
+    "menu-bar": 1,
+    "alert": 1,
+    "panel": 1
   },
   "byKind": {
-    "activate lg-stepper-button": 3
+    "activate lg-stepper-button": 3,
+    "activate button": 1,
+    "press lg-panel-action": 1
   },
   "sample": [
-    {
-      "slug": "grid",
-      "trigger": "activate",
-      "target": "lg-stepper-button #0",
-      "owed": true,
-      "moved": []
-    },
-    {
-      "slug": "grid",
-      "trigger": "activate",
-      "target": "lg-stepper-button #1",
-      "owed": true,
-      "moved": []
-    },
     {
       "slug": "divider",
       "trigger": "activate",
       "target": "lg-stepper-button #0",
+      "owed": true,
+      "moved": []
+    },
+    {
+      "slug": "page-control",
+      "trigger": "activate",
+      "target": "lg-stepper-button #0",
+      "owed": true,
+      "moved": []
+    },
+    {
+      "slug": "menu-bar",
+      "trigger": "activate",
+      "target": "lg-stepper-button #0",
+      "owed": true,
+      "moved": []
+    },
+    {
+      "slug": "alert",
+      "trigger": "activate",
+      "target": "button #1",
+      "owed": true,
+      "moved": []
+    },
+    {
+      "slug": "panel",
+      "trigger": "press",
+      "target": "lg-panel-action #2",
       "owed": true,
       "moved": []
     }
