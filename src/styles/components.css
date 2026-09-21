@@ -557,11 +557,29 @@
 .lg-palette-field { display: flex; align-items: center; gap: var(--lg-space-3); flex: 0 0 auto;
   padding: var(--lg-space-4) var(--lg-space-5); border-bottom: 1px solid var(--lg-edge); }
 .lg-palette-icon { flex: 0 0 auto; color: var(--lg-glass-fg-secondary); }
-/* The ring goes on the row, not on the input: the input has no box of its own, so a ring
-   around it is a rectangle floating in the middle of the panel with nothing inside it. Same
-   rule the text field and the search field already follow — the container wears the ring. */
-.lg-palette-field:has(:focus-visible) { outline: var(--lg-focus-width) solid var(--lg-focus);
-  outline-offset: calc(var(--lg-focus-offset) * -1); }
+/**
+ * The ring goes round the **panel**, and this took two goes.
+ *
+ * First it was on the input, which has no box of its own — a rectangle floating in the middle
+ * of a panel with nothing inside it. Then it moved to the field row, on the rule the text
+ * field and the search field follow: the container wears the ring. But the row is not a
+ * container a reader perceives either; it is the top slab of the panel, full width and no
+ * radius. So the ring came out as a hard rectangle whose top two corners were clipped away by
+ * the panel's own `overflow: hidden` and whose bottom edge was a bright line straight across
+ * the middle of the panel.
+ *
+ * The same rule, one level further up. Here the panel *is* the control: it is modal, the field
+ * is its only focus stop, and "this palette has the keyboard" is exactly what the ring means.
+ * It is therefore on from the moment it opens until it closes — which is honest, because that
+ * is also how long the field is focused.
+ *
+ * The offset is **positive**, and that is not a detail. Drawn inside, the ring was computed
+ * exactly as it is now and never reached the screen: the panel's own glass layers are
+ * positioned children and paint over their parent's outline. A box that owns its edge wears
+ * the ring outside it, the way the search field already does.
+ */
+.lg-palette:has(.lg-palette-input:focus-visible) { outline: var(--lg-focus-width) solid var(--lg-focus);
+  outline-offset: var(--lg-focus-offset); }
 /* 16px on touch or the browser zooms the page when the field takes focus; the desktop tier
    settles it back onto the system's own control size. */
 .lg-palette-input { flex: 1; min-width: 0; border: 0; background: none; color: inherit;

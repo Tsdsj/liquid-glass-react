@@ -51,7 +51,7 @@ export const contentDocs: ComponentDoc[] = [
         render: function TextTone({ knobs }) {
           return <div style={{ display: 'grid', gap: 8, textAlign: 'start' }}>
             <Text variant={knobs.variant as 'body'} tone={knobs.tone as 'primary'} emphasized={knobs.emphasized === true}>
-              调上面的旋钮看这一行
+              调下面的旋钮看这一行
             </Text>
             <Text variant="body" tone="secondary">次要</Text>
             {/* tertiary 不是"更次要的正文"，是占位符和停用态的颜色——它在设计上就不到 4.5:1。
@@ -114,7 +114,7 @@ export const contentDocs: ComponentDoc[] = [
           return <div style={{ display: 'grid', gap: 12, width: 280 }}>
             <Card fill={knobs.fill as 'grouped'} radius={Number(knobs.radius)} padding={Number(knobs.padding)}
               raised={knobs.raised === true}>
-              <Text variant="subhead">调上面的旋钮看这张卡片</Text>
+              <Text variant="subhead">调下面的旋钮看这张卡片</Text>
             </Card>
             <Card radius={20} padding={16} fill="secondary"><Text variant="subhead">次级背景</Text></Card>
           </div>;

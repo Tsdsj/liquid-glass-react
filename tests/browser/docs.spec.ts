@@ -246,6 +246,63 @@ test('the refraction switch turns refraction on where the browser can do it', as
   await expect(page.locator('.lg-tabbar[data-renderer="svg"]')).toHaveCount(0);
 });
 
+/**
+ * And it has to make a difference you can see.
+ *
+ * The test above asks whether the attribute flipped, which is a question about wiring. The
+ * reader's question is different and it went unasked: **does the picture change?** Refraction
+ * bends whatever is behind the glass, so over a flat wash of colour it bends nothing and the
+ * switch appears broken — reported by the owner in exactly those words. The fix is in the
+ * scene, not in the renderer, so the measurement is of the scene: photograph the bar with the
+ * switch off and again with it on, and require the two to differ.
+ *
+ * The floor is low on purpose. It is not "refraction looks good", a judgement no assertion can
+ * make; it is "something happened", which is the part that was silently false. Over the flat
+ * water it measured 0.97/255 per channel and over the reworked lake it measures 4.8, so 3 sits
+ * between the two with room on both sides.
+ */
+test('turning refraction on changes the picture, not just an attribute', async ({ page, browserName }) => {
+  await page.goto('/#/overview');
+  const toggle = page.getByRole('switch', { name: '边缘折射' });
+  const capable = await page.evaluate(() => CSS.supports('backdrop-filter', 'url("#glass-probe")'));
+  test.skip(!capable, `${browserName} cannot refract`);
+
+  const bar = page.locator('.media-viewer .lg-toolbar-group').first();
+  await bar.scrollIntoViewIfNeeded();
+  await page.waitForTimeout(500);
+  const before = (await bar.screenshot()).toString('base64');
+  await toggle.click();
+  await page.waitForTimeout(700);
+  const after = (await bar.screenshot()).toString('base64');
+
+  const change = await page.evaluate(async ([a, b]) => {
+    /* Decoded from bytes rather than fetched: the preview server's CSP has no `connect-src
+       data:`. Same route `scripts/measure-contrast.mjs` takes. */
+    const pixels = async (data: string) => {
+      const binary = atob(data);
+      const bytes = new Uint8Array(binary.length);
+      for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
+      const bitmap = await createImageBitmap(new Blob([bytes], { type: 'image/png' }));
+      const canvas = new OffscreenCanvas(bitmap.width, bitmap.height);
+      const ctx = canvas.getContext('2d')!;
+      ctx.drawImage(bitmap, 0, 0);
+      return ctx.getImageData(0, 0, bitmap.width, bitmap.height);
+    };
+    const one = await pixels(a), two = await pixels(b);
+    if (one.width !== two.width || one.height !== two.height) return 255;
+    let sum = 0, n = 0;
+    for (let i = 0; i < one.data.length; i += 4) {
+      sum += Math.abs(one.data[i] - two.data[i]) + Math.abs(one.data[i + 1] - two.data[i + 1])
+        + Math.abs(one.data[i + 2] - two.data[i + 2]);
+      n += 3;
+    }
+    return sum / n;
+  }, [before, after] as const);
+
+  expect(change, `the bar changed by ${change.toFixed(2)}/255 per channel — nothing behind it to bend`)
+    .toBeGreaterThan(3);
+});
+
 
 /* ---------- The demo audit: the page has to do what the page says ----------
  *
@@ -281,6 +338,44 @@ test('the field sizes a page prints are the sizes it renders, on both platforms'
     }
   }
   await asPlatform(page, null);
+});
+
+/**
+ * "Turn the knob above" is a claim about the layout, and the layout moved.
+ *
+ * The adjustable demo used to carry its panel above the example; two rounds of re-laying out
+ * the site put the panel underneath, and two demos went on telling the reader to look up. A
+ * direction printed on the page is the cheapest possible thing to get wrong, because it stays
+ * true-looking in the source forever.
+ */
+test('a demo that points at the knobs points the right way', async ({ page }) => {
+  const pages = ['text', 'card'];
+  let claims = 0;
+  for (const slug of pages) {
+    await page.goto(`/#/components/${slug}`);
+    const card = page.locator('.demo-card[data-adjustable="true"]');
+    await card.scrollIntoViewIfNeeded();
+    const found = await card.evaluate(node => {
+      const knobs = node.querySelector('.knob-panel')?.getBoundingClientRect();
+      if (!knobs) return [];
+      const out: { said: string; text: string; right: boolean }[] = [];
+      const walker = document.createTreeWalker(node, NodeFilter.SHOW_TEXT);
+      for (let n = walker.nextNode(); n; n = walker.nextNode()) {
+        const text = n.textContent ?? '';
+        const said = /上面的旋钮/.test(text) ? '上' : /下面的旋钮/.test(text) ? '下' : '';
+        if (!said) continue;
+        const box = (n.parentElement as HTMLElement).getBoundingClientRect();
+        out.push({ said, text: text.trim(), right: said === '下' ? knobs.top > box.top : knobs.bottom < box.top });
+      }
+      return out;
+    });
+    claims += found.length;
+    for (const claim of found) {
+      expect(claim.right, `"${claim.text}" says the knobs are ${claim.said}面 and they are not`).toBe(true);
+    }
+  }
+  expect(claims, 'no demo points at the knobs any more — drop this test or find the new wording')
+    .toBeGreaterThanOrEqual(2);
 });
 
 test('every overlay page can be seen over a photograph', async ({ page }) => {
