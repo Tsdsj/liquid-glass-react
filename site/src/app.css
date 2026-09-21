@@ -101,6 +101,11 @@ code { font-family: var(--lg-font-mono); font-size: .92em; }
 .md-h { margin-block: var(--lg-space-8) var(--lg-space-3); }
 .md-h[data-level="2"] { padding-block-start: var(--lg-space-6); border-block-start: 1px solid var(--lg-separator); }
 .md-h:first-child { margin-block-start: 0; padding-block-start: 0; border-block-start: 0; }
+/* The changelog has no sibling pages, so it has no rail, so it gets the whole column — and at
+   1728px that was 1480px of 17px text, about ninety characters before the eye has to find the
+   next line. The box may have the column; the line takes the measure. Code blocks are exempt:
+   a wrapped line of code is worse than a long one. */
+.md-p, .md-list { max-width: var(--lg-readable); }
 .md-p { margin-block: 0 var(--lg-space-3); }
 .md-list { margin-block: 0 var(--lg-space-4); padding-inline-start: var(--lg-space-5);
   display: flex; flex-direction: column; gap: var(--lg-space-2); color: var(--lg-label); }
@@ -127,7 +132,9 @@ code { font-family: var(--lg-font-mono); font-size: .92em; }
    「分段控件 GlassSegmentedControl」 is wider than the whole sidebar, and a line that cannot
    break pushes the sidebar wide, which pushes the page wide. Measured at AX5: the document
    scrolled 57px sideways on every page whose label was long enough. The matrix found it. */
-.subnav-link { display: flex; align-items: center; min-height: 34px; padding-block: var(--lg-space-1);
+/* On the control scale rather than near it: a rail row is a target, and 34 was two pixels off
+   the regular control height for no reason anybody could state. */
+.subnav-link { display: flex; align-items: center; min-height: var(--lg-height-comfortable); padding-block: var(--lg-space-1);
   padding-inline: var(--lg-space-3); overflow-wrap: anywhere;
   border-radius: var(--lg-radius-s); text-decoration: none; color: var(--lg-label-secondary);
   font-size: var(--lg-text-footnote-size); line-height: var(--lg-text-footnote-leading);
@@ -152,8 +159,11 @@ code { font-family: var(--lg-font-mono); font-size: .92em; }
   padding-block: var(--lg-space-1); margin-block: var(--lg-space-4); max-width: var(--lg-readable); }
 /* The box takes the column and the **line** inside it takes the measure. Capping the box
    instead left a card that stopped 250px short of the code block above it, which reads as a
-   card that failed to load rather than as a line that knows when to stop. */
-.when-card > .plain-list { max-width: var(--lg-readable); }
+   card that failed to load rather than as a line that knows when to stop.
+   Every card, not just「何时使用」: the landing page's boundaries card is the same shape, and
+   at 1990px its lines ran 1470px — about sixty Chinese characters before the eye has to find
+   the next line. */
+.lg-card > .plain-list { max-width: var(--lg-readable); }
 /* Same reason as the sidebar labels above, found at 390px/AX5 by the layout sweep: these
    sentences quote export names and attribute values — `NavigationStack`, `role="separator"` —
    and a Latin token that long has nowhere to break inside Chinese prose. At AX5 on a phone one
@@ -183,12 +193,16 @@ code { font-family: var(--lg-font-mono); font-size: .92em; }
    says so. */
 .lg-text.overview-title { font-size: clamp(var(--lg-text-title1-size), 4.2vw, calc(var(--lg-text-largetitle-size) * 2));
   line-height: 1.12; letter-spacing: -.02em; max-width: 18ch; }
-.lg-text.overview-lede { max-width: var(--lg-readable); font-size: var(--lg-text-body-size);
-  line-height: var(--lg-text-body-leading); }
+/* One step above body, because it is the only line between a 68px headline and the buttons:
+   at body size it read as a caption that had drifted up the page. */
+.lg-text.overview-lede { max-width: var(--lg-readable); font-size: var(--lg-text-title3-size);
+  line-height: var(--lg-text-title3-leading);
+  /* Two lines is fine for a lede; two lines where the second one is 「到位。」 is not. */
+  text-wrap: balance; }
 .hero-actions { display: flex; flex-wrap: wrap; gap: var(--lg-space-3); margin-block-start: var(--lg-space-2); }
 /* A short row of numbers, separated by rules rather than by boxes: three cards here would
    compete with the three principle cards further down for the same kind of attention. */
-.overview-facts { display: flex; flex-wrap: wrap; gap: var(--lg-space-6); margin: var(--lg-space-4) 0 0;
+.overview-facts { display: flex; flex-wrap: wrap; gap: var(--lg-space-10); margin: var(--lg-space-4) 0 0;
   padding-block-start: var(--lg-space-5); border-block-start: 1px solid var(--lg-separator);
   align-self: stretch; }
 .overview-fact { display: flex; flex-direction: column; gap: 2px; }
@@ -236,8 +250,10 @@ code { font-family: var(--lg-font-mono); font-size: .92em; }
 .demo-card { border: 1px solid var(--lg-separator); border-radius: var(--lg-radius-l); overflow: hidden;
   background: var(--lg-bg-grouped-2); display: flex; flex-direction: column; scroll-margin-block-start: 88px; }
 .demo-card-body { padding: var(--lg-space-4) var(--lg-space-4) var(--lg-space-2); display: grid; gap: var(--lg-space-1); }
+/* `--lg-hit-min` is the floor under a target, not a control height — it is 24px for a cursor,
+   and a strip that runs the width of the example is a row, not a 24px chip. */
 .demo-code-toggle { display: flex; align-items: center; gap: var(--lg-space-2); width: 100%;
-  min-height: var(--lg-hit-min); padding-inline: var(--lg-space-4); border: 0; border-block-start: 1px solid var(--lg-separator);
+  min-height: var(--lg-height-comfortable); padding-inline: var(--lg-space-4); border: 0; border-block-start: 1px solid var(--lg-separator);
   background: transparent; color: var(--lg-label-secondary); text-align: start;
   transition: background var(--lg-duration-press) var(--lg-ease), color var(--lg-duration-press) var(--lg-ease); }
 .demo-code-toggle:hover { background: var(--lg-fill-quaternary); color: var(--lg-label); }
@@ -371,8 +387,16 @@ code { font-family: var(--lg-font-mono); font-size: .92em; }
 .type-row:last-child { border-block-end: 0; padding-block-end: 0; }
 .type-sample { min-width: 0; overflow-wrap: anywhere; }
 
-.catalog-groups { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: var(--lg-space-4); align-items: start; }
-.catalog-card { overflow: hidden; }
+/**
+ * Columns, not a grid.
+ *
+ * The five groups hold 2 to 12 components each. In a row-major grid every card in a row is as
+ * tall as the tallest one in it, so「输入」— two components — sat next to a card with eleven
+ * and left a 600px hole under itself at 1990px. Columns pack the cards instead, and the only
+ * thing that changes for a screen reader is nothing: the DOM order is the order it reads.
+ */
+.catalog-groups { columns: 300px 3; column-gap: var(--lg-space-4); }
+.catalog-card { overflow: hidden; break-inside: avoid; margin-block-end: var(--lg-space-4); }
 .catalog-card-head { display: flex; align-items: baseline; justify-content: space-between;
   padding: var(--lg-space-4) var(--lg-space-4) var(--lg-space-2); }
 
@@ -392,7 +416,9 @@ code { font-family: var(--lg-font-mono); font-size: .92em; }
   font-size: var(--lg-text-subhead-size); font-weight: var(--lg-weight-semibold); color: var(--lg-label); }
 .field-heading { display: flex; align-items: center; justify-content: space-between;
   margin: var(--lg-space-5) 0 var(--lg-space-2); font-size: var(--lg-text-subhead-size); }
-.text-input { appearance: auto; display: block; width: 100%; min-height: var(--lg-hit-min);
+/* The same height as the library's own large field, so the export dialog's one native input
+   does not sit four pixels short of the buttons beside it. */
+.text-input { appearance: auto; display: block; width: 100%; min-height: var(--lg-height-field-large);
   padding: var(--lg-space-2) var(--lg-space-3); border: 1px solid var(--lg-separator); border-radius: var(--lg-radius-s);
   background: var(--lg-bg); color: var(--lg-label); font-size: max(16px, var(--lg-text-subhead-size)); }
 .micro-note { font-size: var(--lg-text-caption1-size); line-height: 1.8; color: var(--lg-label-secondary); margin: var(--lg-space-3) 0; }

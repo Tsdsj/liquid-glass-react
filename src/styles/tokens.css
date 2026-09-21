@@ -82,6 +82,21 @@
   --lg-margin-regular: 20px;    /* regular, kept for anything that wants the value explicitly */
   --lg-hit-min: 44px;           /* minimum hit region, 44x44pt */
   /**
+   * How wide that region is allowed to grow — a question about the pointer, and the one metric
+   * here that is *not* answered by the table below.
+   *
+   * A fingertip is round and imprecise, so it needs both axes. A cursor is one pixel and needs
+   * the block axis only: `layout-matrix.spec.ts` measured five layout pages scrolling 53–244px
+   * sideways in RTL when every button carried a 44px-wide absolutely positioned region, and a
+   * horizontal scrollbar is a real defect where an invisible hit region is not.
+   *
+   * The two questions come apart at phone width with a mouse: the *heights* are the touch ones
+   * there, because a 390px window is a phone-shaped layout — but the thing pointing at it is
+   * still a cursor. So this follows `(pointer: coarse)`, with `platform` able to override it in
+   * both directions like everything else. Default 0: growing sideways is the exception.
+   */
+  --lg-hit-width: 0px;
+  /**
    * Control heights, as tokens rather than as numbers in the components.
    *
    * They are here and not in the stylesheet's own rules because the desktop block below has to
@@ -100,13 +115,11 @@
   /* Text inside a field. Its own token because the floor under it is iOS Safari's zoom-on-focus
      rule, not a design decision — see `.lg-field-input`. */
   --lg-field-font: max(16px, var(--lg-text-body-size));
-  /* A control's label. Subhead on touch; on desktop macOS puts a push button's label at the
-     body size, and reading the size straight off `subhead` would have made it 11px — smaller
-     than the platform's own table and smaller than the text beside it. */
+  /* A control's label: one step down from the text around it, on both platforms. 15px against
+     a 36px desktop button is what Ant Design, MUI, Radix and Chakra all draw at 14 against a
+     32–36px one, and it leaves the box room to be a box. */
   --lg-control-font: var(--lg-text-subhead-size);
-  /* Air above and below the text in a field. On desktop the control is 22px tall in total, so
-     8px each side is more than the box has; without this the three field sizes came out
-     30/32/32 — a content floor wearing three names. */
+  /* Air above and below the text in a field, for the sizes whose height is not pinned. */
   --lg-field-padding-block: var(--lg-space-2);
   --lg-readable: 672px;         /* readable content guide */
   --lg-sidebar-width: 260px;
@@ -196,28 +209,36 @@
 /* --------------------------------------------------------------------------
    Desktop metrics
    --------------------------------------------------------------------------
-   Everything above this line is the iOS table, because that is what the library was built
-   from. On a machine with a mouse it is the wrong table, and not by a little: a 44px control
-   and 17px body text are sized for a fingertip and for a screen held at arm's length.
+   Everything above this line is the iOS table. On a machine with a mouse, one half of it is
+   the wrong table and the other half is right, and this block used to get that backwards.
 
-   The HIG's own macOS numbers, which is what this block is:
-   - Controls: regular 22pt, small 19, mini 16 (`toggles` / `buttons`, macOS).
-   - Text: Large Title 26/32 · Title 1 22/26 · Title 2 17/22 · Title 3 15/20 ·
-     Headline 13/16 Bold · **Body 13/16** · Callout 12/15 · Subheadline 11/14 ·
-     Footnote 10/13 · Caption 10/13.
-   - `pointing-devices`: "make a distinction between a pointer and a fingertip only where it
-     brings value" — stretching every control to 44px under a 1px cursor is drawing a phone
-     interface on a desktop.
+   It held the AppKit numbers — regular control 22pt, Body 13/16, Large Title 26/32 — on the
+   reasoning that a cursor is not a fingertip. That much is true, and the control heights below
+   still say so. Applying it to the *type* was the mistake, for two reasons that are checkable
+   rather than a matter of taste:
 
-   Two deliberate departures, both stated rather than quietly applied:
+   1. **A browser page is not an AppKit window.** 13pt Body is the size of a table row in a
+      native inspector, next to a native menu bar, in a window the person sized themselves. A
+      documentation page or a web application is read the way a web page is read, and the
+      browser's own default body size is 16px — the AppKit table starts three pixels under the
+      floor every other page on the machine is using.
+   2. **Apple does not use it on the web either.** developer.apple.com, on a desktop with a
+      mouse, draws Body at 17/25, its section-navigation rows at 44 and 30, and the page title
+      at 48/52 — the iOS-sized table, not the AppKit one. Measured, not remembered.
 
-   1. **The floor stays at 11px.** macOS puts Footnote at 10 and both Captions at 10; the web
-      does not. This library already refuses to draw text below 11px and the audit matrix
-      checks for it on every page. The reader's eyes do not get better because the platform's
-      table got smaller, so Subheadline down to Caption 2 are clamped at 11/14.
-   2. **Dynamic Type keeps working.** macOS has no Dynamic Type; browsers do have a user
-      font size and a zoom level, and `data-lg-text-size` stays live on desktop. A macOS-sized
-      table is a starting point, not a cap on how large someone may need text to be.
+   So does everyone else. Eleven component-library documentation sites at 1600px, measured the
+   same way: body text 16px at nine of them (Ant Design and Naive UI use 14); the default
+   button 32–36px tall with a 14px label (Ant 32, MUI 36.5, Radix 32, shadcn 30, Chakra 36–40,
+   Primer 28–32, Element Plus 32, Naive 34); a call-to-action button 40–42; page titles 30–44.
+   A 22px button carrying a 12px label — which is what this block used to produce — is not in
+   the range, and at a desk it reads as an interface that failed to finish loading.
+
+   What stays, and why the split is where it is: **size the hand, not the eye.** A pointer is
+   more precise than a fingertip, so the *controls* come down from the 44px touch floor to a
+   pointer-sized 36. Eyesight does not improve when a mouse is plugged in, so the *type scale*
+   is left exactly as it is — one table, no desktop copy of it, nothing to keep in step. That
+   also makes Dynamic Type's behaviour the same on both platforms instead of something this
+   block had to promise separately.
 
    Written twice on purpose — once for the media query, once for `[data-lg-platform]` — for
    the same reason the Increase Contrast palette is, and with the same guard:
@@ -228,45 +249,30 @@
    of the table is to let the one override turn the query off.
 
    `(min-width: 768px)` as well as `(pointer: fine)`: a Surface or an iPad with a trackpad
-   reports a fine pointer at phone width, and a 22px control there is the wrong answer to the
-   right question. */
+   reports a fine pointer at phone width, and a 36px control there is the wrong answer to the
+   right question.
+
+   The heights themselves: **36** regular / **32** compact / **28** small is the range the web
+   has settled on for a pointer, and it is also the range a 15px control label fits in without
+   the box gripping the text. 44 and 52 are the two sizes above it — a call to action and a
+   hero — which is where the measured 40–42px buttons on Mantine and Radix land. A field is
+   the same height as a button of the same name, because a form row that mixes the two and
+   misses by four pixels is the most visible kind of wrong. */
 @media (pointer: fine) and (min-width: 768px) {
   :root:not([data-lg-platform="touch"]) {
-    --lg-height-compact: 19px;
-    --lg-height-comfortable: 22px;
-    --lg-height-small: 19px;
-    --lg-height-large: 28px;
-    --lg-height-extra-large: 36px;
-    --lg-height-field-small: 22px;
-    --lg-height-field-large: 32px;
-    /* WCAG 2.2 Target Size (Minimum) is 24×24 for a pointer. The 22px control keeps a hit
-       region two pixels taller than itself; `components.css` draws it. */
+    --lg-height-compact: 32px;
+    --lg-height-comfortable: 36px;
+    --lg-height-small: 28px;
+    --lg-height-large: 44px;
+    --lg-height-extra-large: 52px;
+    --lg-height-field-small: 32px;
+    --lg-height-field-large: 44px;
+    /* WCAG 2.2 Target Size (Minimum) is 24×24 for a pointer. Every height above clears it, so
+       the region `components.css` draws is enforcement rather than rescue — which is the point
+       of writing the floor down: it goes on holding when a caller sets a smaller height. */
     --lg-hit-min: 24px;
-    --lg-text-largetitle-size: calc(26px * var(--lg-text-scale));
-    --lg-text-largetitle-leading: calc(32px * var(--lg-text-scale));
-    --lg-text-title1-size: calc(22px * var(--lg-text-scale));
-    --lg-text-title1-leading: calc(26px * var(--lg-text-scale));
-    --lg-text-title2-size: calc(17px * var(--lg-text-scale));
-    --lg-text-title2-leading: calc(22px * var(--lg-text-scale));
-    --lg-text-title3-size: calc(15px * var(--lg-text-scale));
-    --lg-text-title3-leading: calc(20px * var(--lg-text-scale));
-    --lg-text-headline-size: calc(13px * var(--lg-text-scale));
-    --lg-text-headline-leading: calc(16px * var(--lg-text-scale));
-    --lg-text-body-size: calc(13px * var(--lg-text-scale));
-    --lg-text-body-leading: calc(16px * var(--lg-text-scale));
-    --lg-text-callout-size: calc(12px * var(--lg-text-scale));
-    --lg-text-callout-leading: calc(15px * var(--lg-text-scale));
-    --lg-text-subhead-size: calc(11px * var(--lg-text-scale));
-    --lg-text-subhead-leading: calc(14px * var(--lg-text-scale));
-    --lg-text-footnote-size: calc(11px * var(--lg-text-scale));
-    --lg-text-footnote-leading: calc(14px * var(--lg-text-scale));
-    --lg-text-caption1-size: calc(11px * var(--lg-text-scale));
-    --lg-text-caption1-leading: calc(14px * var(--lg-text-scale));
-    --lg-text-caption2-size: calc(11px * var(--lg-text-scale));
-    --lg-text-caption2-leading: calc(14px * var(--lg-text-scale));
-    --lg-field-font: var(--lg-text-body-size);
-    --lg-field-padding-block: 3px;
-    --lg-control-font: var(--lg-text-body-size);
+    /* 8px each side would make a small field 38px tall — taller than the large one was. */
+    --lg-field-padding-block: 5px;
     --lg-margin: 20px;
     --lg-press-scale: 1.03;
     --lg-press-scale-shared: 1.035;
@@ -274,44 +280,28 @@
   }
 }
 :root[data-lg-platform="desktop"] {
-  --lg-height-compact: 19px;
-  --lg-height-comfortable: 22px;
-  --lg-height-small: 19px;
-  --lg-height-large: 28px;
-  --lg-height-extra-large: 36px;
-  --lg-height-field-small: 22px;
-  --lg-height-field-large: 32px;
+  --lg-height-compact: 32px;
+  --lg-height-comfortable: 36px;
+  --lg-height-small: 28px;
+  --lg-height-large: 44px;
+  --lg-height-extra-large: 52px;
+  --lg-height-field-small: 32px;
+  --lg-height-field-large: 44px;
   --lg-hit-min: 24px;
-  --lg-text-largetitle-size: calc(26px * var(--lg-text-scale));
-  --lg-text-largetitle-leading: calc(32px * var(--lg-text-scale));
-  --lg-text-title1-size: calc(22px * var(--lg-text-scale));
-  --lg-text-title1-leading: calc(26px * var(--lg-text-scale));
-  --lg-text-title2-size: calc(17px * var(--lg-text-scale));
-  --lg-text-title2-leading: calc(22px * var(--lg-text-scale));
-  --lg-text-title3-size: calc(15px * var(--lg-text-scale));
-  --lg-text-title3-leading: calc(20px * var(--lg-text-scale));
-  --lg-text-headline-size: calc(13px * var(--lg-text-scale));
-  --lg-text-headline-leading: calc(16px * var(--lg-text-scale));
-  --lg-text-body-size: calc(13px * var(--lg-text-scale));
-  --lg-text-body-leading: calc(16px * var(--lg-text-scale));
-  --lg-text-callout-size: calc(12px * var(--lg-text-scale));
-  --lg-text-callout-leading: calc(15px * var(--lg-text-scale));
-  --lg-text-subhead-size: calc(11px * var(--lg-text-scale));
-  --lg-text-subhead-leading: calc(14px * var(--lg-text-scale));
-  --lg-text-footnote-size: calc(11px * var(--lg-text-scale));
-  --lg-text-footnote-leading: calc(14px * var(--lg-text-scale));
-  --lg-text-caption1-size: calc(11px * var(--lg-text-scale));
-  --lg-text-caption1-leading: calc(14px * var(--lg-text-scale));
-  --lg-text-caption2-size: calc(11px * var(--lg-text-scale));
-  --lg-text-caption2-leading: calc(14px * var(--lg-text-scale));
-  --lg-field-font: var(--lg-text-body-size);
-  --lg-field-padding-block: 3px;
-  --lg-control-font: var(--lg-text-body-size);
+  --lg-field-padding-block: 5px;
   --lg-margin: 20px;
   --lg-press-scale: 1.03;
   --lg-press-scale-shared: 1.035;
   --lg-stretch-gain: .55;
 }
+
+/* The one metric keyed to the pointer rather than to the table above — see `--lg-hit-width`.
+   Two rules and not one block per platform, because there is only one declaration to switch
+   and the default is already the answer for a cursor. */
+@media (pointer: coarse) {
+  :root:not([data-lg-platform="desktop"]) { --lg-hit-width: var(--lg-hit-min); }
+}
+:root[data-lg-platform="touch"] { --lg-hit-width: var(--lg-hit-min); }
 
 /* --------------------------------------------------------------------------
    2. Light appearance

@@ -50,19 +50,31 @@ const numberOf = (page: Page, property: string) => page.evaluate(name =>
   Number(getComputedStyle(document.documentElement).getPropertyValue(name)), property);
 
 test.describe('with a mouse on a wide window', () => {
-  test('a regular button is the macOS height, not the iOS one', async ({ page }) => {
+  test('a regular button comes down from the touch height without leaving the range', async ({ page }) => {
     await withPointer(page, '/#/components/button');
     const height = await heightOf(page, '#button-variants .lg-button');
-    expect(height, `the button rendered at ${height}px`).toBeGreaterThanOrEqual(21);
-    expect(height, `the button rendered at ${height}px — that is the touch metric`).toBeLessThan(30);
+    expect(height, `the button rendered at ${height}px — that is the touch metric`).toBeLessThan(44);
+    /* The band eleven component-library documentation sites sit in, measured at 1600px: Ant
+       Design 32, shadcn 30, Radix 32, Naive 34, MUI 36.5, Chakra 36–40, Primer 28–32. A button
+       under 28 is the AppKit table this used to hold, and it reads as chrome rather than as a
+       control on a page. */
+    expect(height, `the button rendered at ${height}px`).toBeGreaterThanOrEqual(32);
   });
 
-  test('body text is 13/16', async ({ page }) => {
+  /**
+   * The type scale does not know what is pointing at it.
+   *
+   * This used to assert 13/16, the AppKit body size, and the whole reason it is now 17 is that
+   * 13 was the wrong table for a page in a browser — the browser's own default is 16, Apple
+   * draws 17/25 on developer.apple.com, and nine of eleven documentation sites measured at
+   * 1600px draw 16. Sizing the hand is a fact about the hand; the eye is the same eye.
+   */
+  test('body text is the same 17/22 it is under a finger', async ({ page }) => {
     await withPointer(page, '/#/components/text');
     const size = await pxOf(page, '--lg-text-body-size');
     const leading = await pxOf(page, '--lg-text-body-leading');
-    expect(size, `body is ${size}px`).toBe(13);
-    expect(leading, `body leading is ${leading}px`).toBe(16);
+    expect(size, `body is ${size}px`).toBe(17);
+    expect(leading, `body leading is ${leading}px`).toBe(22);
   });
 
   test('nothing in the text table goes under the readable floor', async ({ page }) => {
@@ -74,26 +86,44 @@ test.describe('with a mouse on a wide window', () => {
   });
 
   /**
-   * The point of the whole exercise, stated as the thing a reader would notice: a 22px control
-   * still has to be as easy to hit as WCAG 2.2 asks. 24×24 is the pointer minimum, and the
-   * control is two pixels short of it — which is exactly the kind of gap that gets waved
-   * through because nobody can see it.
+   * A control that comes down for a cursor still has to be as easy to hit as the floor asks.
+   *
+   * Asked of the *small* button rather than the regular one, because the regular one clears
+   * both floors on its own now and proves nothing. `controlSize="small"` is 28px under a
+   * cursor — over the 24px WCAG minimum — and 32px under a finger, which is twelve pixels
+   * under the HIG's 44 and is where the region has to do real work. The library reaches for
+   * that size itself: a banner's dismiss button, a toast's, a navigation stack's back arrow.
    */
-  test('a 22px button still answers to a 24px hit region', async ({ page }) => {
+  test('a small button is reachable at whichever floor is in force', async ({ page }) => {
     await withPointer(page, '/#/components/button');
-    const button = page.locator('#button-variants .lg-button').first();
-    const box = (await button.boundingBox())!;
-    const region = await button.evaluate(node => {
-      const after = getComputedStyle(node, '::after');
-      return { height: parseFloat(after.minHeight), width: parseFloat(after.minWidth) };
-    });
-    expect(region.height, 'the hit region is not drawn for a fine pointer').toBeGreaterThanOrEqual(24);
-    // And it really is reachable two pixels above the artwork.
-    const hit = await page.evaluate(([x, y]) => {
-      const node = document.elementFromPoint(x, y);
-      return !!node?.closest('.lg-button');
-    }, [box.x + box.width / 2, box.y - 1] as const);
-    expect(hit, 'a pixel just above the button belongs to nothing').toBe(true);
+    const button = page.getByRole('button', { name: '小', exact: true }).first();
+    for (const platform of ['desktop', 'touch'] as const) {
+      await asPlatform(page, platform);
+      const floor = await pxOf(page, '--lg-hit-min');
+      /* Centred, and after the platform switch: switching it changes every control height on
+         the page, so anything measured before it has moved by the time it is probed — and a
+         button parked at the top of the viewport puts `y - 1` outside the document, where
+         `elementFromPoint` returns null and the failure reads like a missing hit region. */
+      await button.evaluate(node => node.scrollIntoView({ block: 'center' }));
+      const box = (await button.boundingBox())!;
+      const region = await button.evaluate(node => {
+        const after = getComputedStyle(node, '::after');
+        return { height: parseFloat(after.minHeight), width: parseFloat(after.minWidth) || 0 };
+      });
+      expect(Math.max(box.height, region.height),
+        `on ${platform} the reach is ${Math.max(box.height, region.height)}px against a ${floor}px floor`)
+        .toBeGreaterThanOrEqual(floor);
+      expect(Math.max(box.width, region.width), `on ${platform} the reach is too narrow`)
+        .toBeGreaterThanOrEqual(floor);
+      /* And the region is really there, not merely declared: one pixel above the artwork has
+         to belong to the button whenever the floor is taller than the artwork. */
+      if (floor > box.height) {
+        const hit = await page.evaluate(([x, y]) => !!document.elementFromPoint(x, y)?.closest('.lg-button'),
+          [box.x + box.width / 2, box.y - 1] as const);
+        expect(hit, `on ${platform} a pixel just above the button belongs to nothing`).toBe(true);
+      }
+    }
+    await asPlatform(page, null);
   });
 
   test('the elastic stretch is gentler under a cursor', async ({ page }) => {
@@ -129,8 +159,26 @@ test('platform="desktop" reaches a touchscreen that asked for it', async ({ brow
   await withPointer(page, '/#/components/button');
   await page.evaluate(() => document.documentElement.setAttribute('data-lg-platform', 'desktop'));
   const height = await pxOf(page, '--lg-height-comfortable');
-  expect(height, `the control height is ${height}px`).toBe(22);
+  expect(height, `the control height is ${height}px`).toBe(36);
   await context.close();
+});
+
+/**
+ * And the reach follows the override, not the media query.
+ *
+ * The hit region used to live in two `@media` blocks, so an application that declared a
+ * touchscreen on a machine reporting a mouse got the 44px *metrics* with the 24px *reach*: a
+ * `controlSize="small"` dismiss button was 32px wide against the floor it had just asked for.
+ * The override has to win in both directions or it is half a switch.
+ */
+test('declaring a touchscreen widens the hit region too, not just the metrics', async ({ page }) => {
+  await withPointer(page, '/#/components/button');
+  const region = () => page.locator('#button-variants .lg-button').first()
+    .evaluate(node => parseFloat(getComputedStyle(node, '::after').minWidth) || 0);
+  expect(await region(), 'a cursor got a 44px-wide region it never needed').toBeLessThan(24);
+  await asPlatform(page, 'touch');
+  expect(await region(), 'the region stayed at the pointer width under platform="touch"').toBe(44);
+  await asPlatform(page, null);
 });
 
 /**
@@ -186,13 +234,20 @@ test('a code block never follows the type scale below reading size', async ({ pa
   expect(smallest, `the smallest text in a code block is ${smallest}px`).toBeGreaterThanOrEqual(12);
 });
 
-test("a button's label follows the platform's own table, not a size below it", async ({ page }) => {
+/**
+ * A button's label is one step under the prose around it, and no further.
+ *
+ * It was `subhead` against the AppKit table, which made it 11px — smaller than that table's
+ * own button label and smaller than the sentence beside it, so the desktop override pushed it
+ * up to the body size. With one type scale, `subhead` is 15 against a 17px body: the same step
+ * down that Ant Design, MUI, Radix and Chakra all draw as 14 against 16.
+ */
+test("a button's label is one step under the prose, never two", async ({ page }) => {
   await withPointer(page, '/#/components/button');
   const label = await page.locator('#button-variants .lg-button').first()
     .evaluate(node => parseFloat(getComputedStyle(node).fontSize));
   const body = await pxOf(page, '--lg-text-body-size');
-  /* macOS puts a push button's label at the body size. Reading it straight off the `subhead`
-     style — which is what the touch table wants — made it 11px on desktop: smaller than the
-     platform's own table, and smaller than the prose next to it. */
-  expect(label, `the label is ${label}px against a ${body}px body`).toBe(body);
+  const subhead = await pxOf(page, '--lg-text-subhead-size');
+  expect(label, `the label is ${label}px against a ${body}px body`).toBe(subhead);
+  expect(body - label, `the label is ${body - label}px under the body size`).toBeLessThanOrEqual(2);
 });

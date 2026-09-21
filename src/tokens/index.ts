@@ -58,7 +58,7 @@ export const materialTokens = {
 
 /**
  * Touch metrics. The heights here are the iOS ones and are what the stylesheet's
- * `--lg-height-*` tokens hold by default; on desktop CSS substitutes the macOS table, so
+ * `--lg-height-*` tokens hold by default; on a pointer CSS substitutes the table below, so
  * `controlHeight` is the number to reason about in TypeScript rather than the number that will
  * necessarily be drawn. `radius` is not switched by platform: it feeds the refraction geometry,
  * and changing the lens's shape by pointer kind is a different decision from changing its size.
@@ -68,10 +68,10 @@ export const densityTokens = {
   comfortable: { controlHeight: 44, radius: 18, gap: 8 },
 } as const;
 
-/** The same two, as macOS draws them: regular 22pt, small 19. See `tokens.css`. */
+/** The same two for a pointer, which needs less of a target than a fingertip. See `tokens.css`. */
 export const desktopDensityTokens = {
-  compact: { controlHeight: 19, radius: 12, gap: 6 },
-  comfortable: { controlHeight: 22, radius: 18, gap: 8 },
+  compact: { controlHeight: 32, radius: 12, gap: 6 },
+  comfortable: { controlHeight: 36, radius: 18, gap: 8 },
 } as const;
 
 export const motionTokens = { press: 90, release: 220, layout: 280, spring: 520, overlay: 360 } as const;

@@ -13,6 +13,30 @@ test('buttons carry real semantics for disabled, loading and press state', async
 });
 
 /**
+ * `controlSize` changes the size of the control.
+ *
+ * It did not. Every glass surface carried `--lg-control-height` as an *inline* style, written
+ * from its density, and an inline custom property beats any stylesheet rule — so
+ * `.lg-button[data-control-size="large"]`, which sets that same property, never applied. The
+ * four sizes on this page came out with four different labels and four different paddings in
+ * four boxes of exactly the same height, and the prop looked like it worked.
+ *
+ * Found by measuring the landing page's call to action against the reference sites: 36px tall
+ * with a 16px label and 22px of side padding is the large button's type in the regular
+ * button's box.
+ */
+test('the four button sizes are four different sizes', async ({ page }) => {
+  await page.goto('/#/components/button');
+  const heights: number[] = [];
+  for (const label of ['小', '默认', '大', '超大']) {
+    const box = await page.getByRole('button', { name: label, exact: true }).first().boundingBox();
+    heights.push(Math.round(box!.height));
+  }
+  expect(new Set(heights).size, `the four sizes are ${heights.join(' / ')}px tall`).toBe(4);
+  expect([...heights].sort((a, b) => a - b), 'the sizes are not in order').toEqual(heights);
+});
+
+/**
  * One preferred action per view — and a demo stage is a view. Counted per stage rather than
  * per page: the page holds a dozen independent examples, and the first version of this summed
  * them, so it read "1" only while the page happened to have a single prominent button

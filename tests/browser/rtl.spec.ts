@@ -76,3 +76,28 @@ test('the same alignment holds in LTR, so the fix is a swap and not a flip', asy
   // LTR trailing edge is the right one.
   expect(Math.abs((menuBox.x + menuBox.width) - (triggerBox.x + triggerBox.width))).toBeLessThan(2);
 });
+
+/**
+ * A hit region is geometry, and geometry does not mirror.
+ *
+ * The region is centred on the control with `translate: -50% -50%`, and `translate` is
+ * physical. Pinning it with `inset-inline-start: 50%` therefore only centred it in LTR: in RTL
+ * that resolves to `right: 50%`, the translate still moves it left, and the region landed a
+ * full control-width to the side of the control it belongs to — reachable air next to the
+ * button, nothing over the button itself, and 53–244px of sideways scroll on the layout pages.
+ *
+ * Asked under touch metrics because that is when the region is wider than the control and the
+ * displacement has something to show; with a cursor it is exactly the control's own box.
+ */
+test('a touch hit region is centred on its control in RTL, not pushed off to one side', async ({ page }) => {
+  await goRtl(page, '/#/components/button');
+  await page.evaluate(() => document.documentElement.setAttribute('data-lg-platform', 'touch'));
+  const button = page.getByRole('button', { name: '小', exact: true }).first();
+  await button.evaluate(node => node.scrollIntoView({ block: 'center' }));
+  const box = (await button.boundingBox())!;
+  const reach = await page.evaluate(([left, right, y]) => [left, right]
+    .map(x => !!document.elementFromPoint(x, y)?.closest('.lg-button')),
+  [box.x - 3, box.x + box.width + 3, box.y + box.height / 2] as const);
+  expect(reach, `the region reaches ${reach.filter(Boolean).length}/2 sides of the button`).toEqual([true, true]);
+  await page.evaluate(() => document.documentElement.removeAttribute('data-lg-platform'));
+});

@@ -114,7 +114,7 @@ test('the duration tokens and their JavaScript copies are the same numbers', () 
  *
  * Exactly the Increase Contrast situation, one level up: the media query answers a machine
  * with a mouse, the attribute answers `platform="desktop"` from an application, and CSS has no
- * way to share the declarations between them. Drift here would mean a control that is 22px
+ * way to share the declarations between them. Drift here would mean a control that is 36px
  * tall when the browser decides and 44px when the application asks for the same thing.
  */
 test('the opt-in desktop metrics match the media-query ones', () => {
@@ -129,25 +129,31 @@ test('the opt-in desktop metrics match the media-query ones', () => {
   };
   const fromMedia = block(':root:not([data-lg-platform="touch"])');
   const fromAttribute = block(':root[data-lg-platform="desktop"]');
-  assert.ok(fromMedia.length > 20, `the desktop table has only ${fromMedia.length} declarations`);
+  assert.ok(fromMedia.length > 8, `the desktop table has only ${fromMedia.length} declarations`);
   assert.deepEqual(fromAttribute, fromMedia, 'the desktop metrics have drifted apart');
 });
 
 /**
- * Nothing in the desktop table goes below the library's own readable floor.
+ * There is one type scale, and a pointer does not get its own.
  *
- * macOS puts Footnote and both Captions at 10pt. This is a web library, the audit matrix
- * checks every page for text under 11px, and the reader's eyes do not improve because the
- * platform's table got smaller — so the small end of the table is clamped, deliberately, and
- * this is the assertion that says it was deliberate.
+ * This block used to hold the AppKit text table — Body 13/16, Large Title 26/32 — and it was
+ * the wrong table for a page in a browser: the browser's own default body size is 16px, Apple
+ * draws 17/25 on developer.apple.com, and nine of eleven component-library documentation sites
+ * measured at 1600px draw 16. A pointer is more precise than a fingertip, which is a fact
+ * about the *hand*; the control heights above are the whole of what follows from it.
+ *
+ * Asserted rather than left as a comment because the tempting fix for "this desktop layout
+ * feels loose" is to shave two points off the type, and that is how the 13px came back.
  */
-test('the desktop text table keeps the 11px floor', () => {
+test('the desktop metrics size the controls and leave the type alone', () => {
   const tokens = readFileSync(new URL('../../src/styles/tokens.css', import.meta.url), 'utf8');
   const at = tokens.indexOf(':root[data-lg-platform="desktop"]');
   const block = tokens.slice(at, tokens.indexOf('}', at));
-  const sizes = [...block.matchAll(/--lg-text-([\w-]+)-size:\s*calc\((\d+)px/g)];
-  assert.ok(sizes.length >= 11, `only ${sizes.length} text sizes in the desktop table`);
-  for (const [, style, px] of sizes) {
-    assert.ok(Number(px) >= 11, `${style} is ${px}px on desktop, below the 11px floor`);
+  const text = [...block.matchAll(/(--lg-text-[\w-]+)\s*:/g)].map(([, name]) => name);
+  assert.deepEqual(text, [], `the desktop block re-declares ${text.join(', ')}`);
+  const heights = [...block.matchAll(/--lg-height-[\w-]+:\s*(\d+)px/g)].map(([, px]) => Number(px));
+  assert.ok(heights.length >= 7, `only ${heights.length} control heights on desktop`);
+  for (const height of heights) {
+    assert.ok(height >= 24, `a ${height}px control is under the 24px pointer target floor`);
   }
 });

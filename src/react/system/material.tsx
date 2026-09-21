@@ -201,12 +201,6 @@ export function useGlassSurface<T extends HTMLElement>(options: GlassSurfaceOpti
   const resolvedRenderer = shared ? 'shared' : policy.reduceTransparency ? 'opaque' : active ? 'svg' : 'css';
   const style = {
     '--lg-radius': radius === 'pill' ? '9999px' : `${Math.max(0, Number.isFinite(radius) ? radius : 18)}px`,
-    /* A reference, not a number. Written as `22px` here it would be JavaScript deciding a
-       metric that CSS has to decide: a server-rendered page would arrive with touch heights
-       and re-lay itself out on hydration, and `platform="desktop"` in a stylesheet could
-       never win against an inline style. `densityTokens` keeps the number for anything in
-       TypeScript that needs to reason about it. */
-    '--lg-control-height': `var(--lg-height-${density})`,
     '--lg-blur': `${spec.blur}px`,
     /**
      * The blur is a CSS function even on the lensing path, and the SVG filter only displaces.

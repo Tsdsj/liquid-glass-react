@@ -40,6 +40,23 @@
    the drag both shows a URL ghost under the pointer and cancels the pointer stream the gesture
    needs, which reads as "this component cannot be dragged at all". */
 .lg-root, .lg-root :is(a,img,svg) { -webkit-user-drag: none; }
+/**
+ * How tall a control is, before it says otherwise.
+ *
+ * `data-density` is already on every glass surface, so the height is read from an attribute
+ * here rather than written onto each surface as an inline `--lg-control-height`. That is not a
+ * tidying: an inline custom property beats every stylesheet rule, so while it was inline the
+ * `[data-control-size]` rules further down — which set the same property — never applied to a
+ * glass control at all, and `controlSize="large"` drew the large button's label and padding
+ * inside a regular-sized box. Four of them side by side came out 36/36/36/36.
+ *
+ * Still CSS deciding the number, which is the part that has to stay: a server-rendered page
+ * would otherwise arrive with touch heights and re-lay itself out on hydration, and
+ * `platform="desktop"` in a stylesheet cannot win against an inline style. `densityTokens`
+ * keeps the number for anything in TypeScript that needs to reason about it.
+ */
+[data-density="compact"] { --lg-control-height: var(--lg-height-compact); }
+[data-density="comfortable"] { --lg-control-height: var(--lg-height-comfortable); }
 /* Selection is disabled on the control shells only; prose inside a card or an overlay stays selectable. */
 .lg-button, .lg-tab-link, .lg-tab, .lg-segment, .lg-sheet-grabber, .lg-selection-lens,
 .lg-switch, .lg-slider, .lg-stepper, .lg-menu-item,
@@ -705,32 +722,33 @@
  * Both pointer kinds, because both have a floor and they are different floors: 44×44 for a
  * finger (HIG), 24×24 for a cursor (WCAG 2.2 Target Size (Minimum)). It used to be drawn only
  * for coarse pointers, which was right while every control was 44px tall anyway. A desktop
- * regular button is 22px, and 22 is below 24 — the two pixels nobody would notice looking at
- * it, and the difference between meeting the criterion and not.
- */
-@media (pointer: coarse) {
-  .lg-button::after { content: ''; position: absolute;
-    inset-block-start: 50%; inset-inline-start: 50%; translate: -50% -50%;
-    width: 100%; height: 100%; min-width: var(--lg-hit-min); min-height: var(--lg-hit-min); }
-}
-/**
- * For a cursor, the block axis only.
+ * small button is 28px, and `controlSize="small"` on a touchscreen is 32 against a floor of
+ * 44 — the difference between meeting the criterion and not.
  *
- * An absolutely positioned region that sticks out past its container still counts towards the
- * page's scrollable overflow, and the first version of this widened every button on both axes
- * for fine pointers too: `layout-matrix.spec.ts` came back with "390px rtl: the page scrolls
- * 82px sideways" on five layout pages. A horizontal scrollbar is a real defect and an
- * invisible hit region is a poor reason to have one.
+ * **The block axis always; the inline axis only for a fingertip.** An absolutely positioned
+ * region that sticks out past its container still counts towards the page's scrollable
+ * overflow, and the first version of this widened every button on both axes for fine pointers
+ * too: `layout-matrix.spec.ts` came back with "390px rtl: the page scrolls 82px sideways" on
+ * five layout pages. A horizontal scrollbar is a real defect and an invisible hit region is a
+ * poor reason to have one. Nothing is lost by it — the 44px-wide region exists because a
+ * fingertip is round and imprecise, and a cursor is one pixel.
  *
- * Nothing is lost by it. The 44px-wide region exists because a fingertip is round and
- * imprecise; a cursor is one pixel, and every control that could be narrower than 24px —
- * icon buttons, dots — already carries `min-width: var(--lg-hit-min)` in its own rule.
+ * Which axis that is comes from `--lg-hit-width` in `tokens.css`, alongside `--lg-hit-min`
+ * itself, rather than from a media query here. A media query cannot see `platform="touch"`,
+ * so while this was two `@media` blocks an application that declared a touchscreen on a
+ * machine reporting a mouse got the 44px metrics with the 24px reach: the override won in one
+ * direction, which is half a switch. It is one rule now because the two only ever differed in
+ * that floor.
  */
-@media (pointer: fine) {
-  .lg-button::after { content: ''; position: absolute; z-index: -1;
-    inset-block-start: 50%; inset-inline-start: 0; translate: 0 -50%;
-    width: 100%; height: 100%; min-height: var(--lg-hit-min); }
-}
+/* `top`/`left`, physical, in a stylesheet that is otherwise logical throughout — because
+   `translate` is physical and these two have to agree. `inset-inline-start: 50%` resolves to
+   `right: 50%` in RTL while `translate: -50%` still moves left, so the region lands a full
+   width to the side of the control instead of centred on it: measured as 53–244px of sideways
+   scroll on five layout pages, in RTL only. A hit region is geometry, not content; there is
+   nothing here for a mirrored layout to mirror. */
+.lg-button::after { content: ''; position: absolute; z-index: -1;
+  top: 50%; left: 50%; translate: -50% -50%;
+  width: 100%; height: 100%; min-width: var(--lg-hit-width); min-height: var(--lg-hit-min); }
 /* The one prominent action: the *background* is tinted and the label goes white. Tinting the
    label instead, or tinting several controls, means nothing stands out. */
 .lg-button[data-variant="glassProminent"] { --lg-fg: var(--lg-accent-contrast); color: var(--lg-accent-contrast); }
@@ -873,7 +891,12 @@
    ========================================================================== */
 .lg-field { display: flex; flex-direction: column; gap: var(--lg-space-2); font-family: var(--lg-font-text); }
 .lg-field-label { color: var(--lg-label); }
-.lg-field-box { display: flex; align-items: center; gap: var(--lg-space-2); min-height: var(--lg-hit-min);
+/* The regular field's height, named. It used to be `--lg-hit-min` — the floor under a target,
+   not a size — and a floor is what it behaved like: with a cursor the regular field and the
+   small field both came out on the content height and were the same box with two names. A
+   field also has to match the button beside it in a form row, and `--lg-height-comfortable` is
+   what that button is. */
+.lg-field-box { display: flex; align-items: center; gap: var(--lg-space-2); min-height: var(--lg-height-comfortable);
   padding-inline: var(--lg-space-3); border-radius: var(--lg-radius-s); background: var(--lg-fill-tertiary);
   transition: background var(--lg-duration-release) var(--lg-ease), outline-color var(--lg-duration-press) var(--lg-ease);
   outline: var(--lg-focus-width) solid transparent; outline-offset: var(--lg-focus-offset); }
