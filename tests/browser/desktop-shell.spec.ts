@@ -140,6 +140,40 @@ test.describe('wide', () => {
     expect(card.w, 'the callout box stops short of the column').toBeGreaterThan(list.w + 40);
     expect(list.w, `the line inside it is ${list.w}px`).toBeLessThanOrEqual(700);
   });
+
+  /**
+   * A control and the sentence beside it line up with each other.
+   *
+   * The landing page's refraction row set `align-items: baseline`, which is right for two runs
+   * of text and wrong the moment one of the items is a control. A flex container's baseline is
+   * taken from its first flex item that has one, and a switch's first in-flow child is its
+   * track — an empty block with no text — so the baseline it hands upward is synthesised from
+   * the *bottom edge of the track*. The sentence was aligned to that edge and sat 9.5px below
+   * the switch's own label.
+   *
+   * Measured on the text rather than on the boxes: the boxes are different heights and lining
+   * those up is not what anyone is looking at.
+   */
+  test('the switch label and the sentence beside it sit on the same line', async ({ page }) => {
+    await page.goto('/#/overview');
+    const centres = await page.evaluate(() => {
+      const middle = (node: Element | null) => {
+        if (!node) return null;
+        const range = document.createRange();
+        range.selectNodeContents(node);
+        const rect = range.getBoundingClientRect();
+        return rect.top + rect.height / 2;
+      };
+      return {
+        label: middle(document.querySelector('.refraction-switch .lg-switch-label')),
+        note: middle(document.querySelector('.refraction-note')),
+      };
+    });
+    expect(centres.label, 'the refraction row is gone').not.toBeNull();
+    expect(centres.note).not.toBeNull();
+    const drift = Math.abs(centres.label! - centres.note!);
+    expect(drift, `the sentence sits ${drift.toFixed(1)}px off the label`).toBeLessThanOrEqual(2);
+  });
 });
 
 test.describe('laptop', () => {

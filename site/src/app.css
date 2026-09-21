@@ -536,5 +536,10 @@ code { font-family: var(--lg-font-mono); font-size: .92em; }
    `flex`, not `grid`: the viewer has an aspect-ratio and a max-height, and as a grid item it
    sizes its width from that capped height — which is why it stopped filling the column. */
 .refraction-demo { display: flex; flex-direction: column; gap: var(--lg-space-3); }
-.refraction-switch { display: flex; flex-wrap: wrap; align-items: baseline; gap: var(--lg-space-2) var(--lg-space-4); }
+/* Centred, not `baseline`. Baseline is the right answer for two runs of text and the wrong one
+   as soon as an item is a control: a flex container hands its parent the baseline of its first
+   flex item that has one, and a switch's first in-flow child is the track — an empty block with
+   no text — so what it hands up is synthesised from the bottom edge of that track. The sentence
+   was being aligned to the underside of the capsule, 9.5px below the switch's own label. */
+.refraction-switch { display: flex; flex-wrap: wrap; align-items: center; gap: var(--lg-space-2) var(--lg-space-4); }
 .refraction-note { flex: 1 1 320px; min-width: 0; }
