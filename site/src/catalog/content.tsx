@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import {
-  Card, Concentric, DisclosureGroup, Divider, Form, FormRow, FormSection, GlassButton,
+  Card, Concentric, DisclosureGroup, Divider, Form, FormRow, FormSection, GlassButton, GroupBox,
   GlassStepper, GlassSwitch, Grid, Kbd, LibraryIcon, TextField, List, ListRow, ListSection, MaterialView, Text,
   useShortcut,
 } from '@ttqtt/liquid-glass-react';
@@ -762,5 +762,98 @@ useShortcut('/', () => setBare(n => n + 1));   // 不带修饰键，打字时不
     ],
     notes: ['读屏会把它识别为分隔符，并知道是横是竖。'],
     related: ['list', 'toolbar'],
+  },
+  {
+    slug: 'group-box', name: 'GroupBox', title: '分组框', group: '内容',
+    summary: '把相关的内容圈在一起，上面可以有一个小标题。',
+    when: [
+      '几个控件属于同一件事，但还不到单独开一页的程度——导出设置、一组开关。',
+      '相对容器要小。一个和窗口一样大的框已经不再"把内容分出来"了，它只是又画了一层边。',
+      '不要嵌套。里面还要分组就用留白和对齐，框里再套框会让界面看起来又挤又碎。',
+    ],
+    examples: [
+      {
+        id: 'groupbox-basic', title: '标题在框外面',
+        description: 'macOS 把分组框的标题画在框的上方，这里也一样。标题用正常大小写，末尾不加标点。',
+        height: 260,
+        knobs: [
+          { name: 'variant', label: '分隔方式', type: 'select', value: 'fill', options: [
+            { value: 'fill', label: '底色' }, { value: 'outline', label: '描边' },
+          ] },
+          { name: 'description', label: '加一行说明', type: 'boolean', value: false },
+        ],
+        render: function GroupBoxBasic({ knobs }) {
+          const [wifi, setWifi] = useState(true);
+          const [roam, setRoam] = useState(false);
+          return <div style={{ width: 320 }}>
+            <GroupBox title="网络" variant={knobs.variant as 'fill'}
+              description={knobs.description === true ? '只影响这台设备' : undefined}>
+              <GlassSwitch aria-label="Wi-Fi" label="Wi-Fi" checked={wifi} onCheckedChange={setWifi} />
+              <GlassSwitch aria-label="数据漫游" label="数据漫游" checked={roam} onCheckedChange={setRoam} />
+            </GroupBox>
+          </div>;
+        },
+        code: knobs => `<GroupBox title="网络"${knobs.variant === 'fill' ? '' : `\n  variant="outline"`}${knobs.description ? `\n  description="只影响这台设备"` : ''}>
+  <GlassSwitch label="Wi-Fi" … />
+  <GlassSwitch label="数据漫游" … />
+</GroupBox>`,
+      },
+      {
+        id: 'groupbox-vs-card', title: '和卡片的区别',
+        description: '卡片是一块承载内容的面，它有底色、圆角和阴影，是你在信息流里点的那个东西。分组框是一圈边界，说明这几样东西是一伙的，标题属于这个分组而不属于内容。',
+        height: 300,
+        render: () => <div id="groupbox-vs-card-demo" style={{ display: 'grid', gap: 16, width: 340 }}>
+          <GroupBox title="导出" variant="outline">
+            <Text variant="subhead">这三项一起决定导出的结果。</Text>
+          </GroupBox>
+          <Card radius={16} padding={16}>
+            <Text variant="subhead">这是一张卡片：一条动态、一份文档、一个可以点进去的东西。</Text>
+          </Card>
+        </div>,
+        code: `{/* 一圈边界，说明这几样是一伙的 */}
+<GroupBox title="导出">…</GroupBox>
+
+{/* 一块承载内容的面 */}
+<Card>…</Card>`,
+      },
+      {
+        id: 'groupbox-nesting', title: '不要框里套框',
+        description: '框的边是一个很明确的视觉元素，套两层之后读者要数边才知道自己在第几层。里面还要分组，用留白和对齐。',
+        height: 340,
+        render: () => <div id="groupbox-nesting-demo" style={{ display: 'grid', gap: 16, width: 320 }}>
+          <GroupBox title="用留白分组" variant="outline">
+            <Text variant="caption1" tone="tertiary">尺寸</Text>
+            <Text variant="subhead">宽 1200 · 高 720</Text>
+            <div style={{ height: 8 }} />
+            <Text variant="caption1" tone="tertiary">格式</Text>
+            <Text variant="subhead">PNG · 2 倍</Text>
+          </GroupBox>
+          <GroupBox title="不要这样" variant="outline">
+            <GroupBox title="尺寸" variant="outline"><Text variant="subhead">宽 1200 · 高 720</Text></GroupBox>
+          </GroupBox>
+        </div>,
+        code: `{/* 好：一层框，里面靠留白分 */}
+<GroupBox title="导出">
+  <Text variant="caption1" tone="tertiary">尺寸</Text>
+  …
+</GroupBox>
+
+{/* 不好：框里套框 */}
+<GroupBox title="导出"><GroupBox title="尺寸">…</GroupBox></GroupBox>`,
+      },
+    ],
+    props: [
+      { name: 'title', type: 'ReactNode', description: '画在框上方的小标题，同时作为这个分组的无障碍名称。' },
+      { name: 'description', type: 'ReactNode', description: '标题下面的一行说明，标题说不完的时候用。' },
+      { name: 'variant', type: "'fill' | 'outline'", default: "'fill'", description: '用底色还是描边来分隔。两样一起用就是框里套框。' },
+      { name: 'radius', type: 'number', default: '14', description: '圆角，单位 px。里面的 Concentric 会据此算自己的圆角。' },
+      { name: 'padding', type: 'number', default: '16', description: '内边距，单位 px。' },
+    ],
+    notes: [
+      '框本身是 role="group"，标题通过 aria-labelledby 绑上去——读屏会先说这个分组叫什么，再读里面的内容。',
+      '没有标题时不会硬造一个名字：一个没名字的分组，读屏当作普通容器带过，这比念一句"组"有用。',
+      '内容层，永远不是玻璃。它是页面的一块区域，不是浮在页面上的东西。',
+    ],
+    related: ['card', 'form', 'list'],
   },
 ];

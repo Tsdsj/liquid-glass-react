@@ -1,6 +1,9 @@
 import { test, expect } from '@playwright/test';
 
 test('a sheet settles at its detents and goes opaque at full height', async ({ page }) => {
+  /* The detents, the grabber and the drag exist in a phone-shaped window; on a desk the
+     sheet is a centred card with none of them. See `desktop-parts.spec.ts` for that one. */
+  await page.setViewportSize({ width: 390, height: 844 });
   await page.goto('/#/components/sheet');
   await page.getByRole('button', { name: '打开面板' }).click();
   const sheet = page.getByRole('dialog', { name: '分享这一刻' });
@@ -25,6 +28,9 @@ test('a sheet settles at its detents and goes opaque at full height', async ({ p
 });
 
 test('dragging the grabber tracks the pointer and snaps to the nearest detent', async ({ page }) => {
+  /* The detents, the grabber and the drag exist in a phone-shaped window; on a desk the
+     sheet is a centred card with none of them. See `desktop-parts.spec.ts` for that one. */
+  await page.setViewportSize({ width: 390, height: 844 });
   await page.goto('/#/components/sheet');
   await page.getByRole('button', { name: '打开面板' }).click();
   const sheet = page.getByRole('dialog', { name: '分享这一刻' });

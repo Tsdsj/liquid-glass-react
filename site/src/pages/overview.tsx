@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Card, GlassButton, GlassProvider, GlassSwitch, LibraryIcon, Text, supportsSvgBackdrop } from '@ttqtt/liquid-glass-react';
 import { Section } from '../site/page.js';
 import { MediaViewer } from '../media-viewer.js';
+import { DesktopWindow } from '../desktop-window.js';
 import { componentDocs } from '../catalog/index.js';
 import { Icon } from '../icons.js';
 
@@ -94,6 +95,14 @@ export function OverviewPage({ go }: { go: (path: string) => void }) {
 
     <Section title="先看一眼" description="玻璃承载操作，照片保持清晰。按住工具栏上的按钮，感受它从玻璃里浮起来再落回去。">
       <RefractionDemo />
+    </Section>
+
+    {/* The composite goes above the principles: it is the argument, and the three principles
+        are the reasons. Reading it the other way round asks someone to take three claims on
+        trust before they have seen anything made out of them. */}
+    <Section title="一扇窗口"
+      description="菜单栏、工具栏、分栏、检查器、路径栏和一块浮动面板——六个组件拼在一起才是一个应用的样子。把窗口拖窄，分栏会折成一摞页面，菜单栏退场。">
+      <DesktopWindow />
     </Section>
 
     <Section title="三条原则">

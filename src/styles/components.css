@@ -150,6 +150,22 @@
 .lg-toolbar { display: flex; align-items: center; gap: var(--lg-space-2); width: fit-content; max-width: 100%; }
 .lg-toolbar[data-orientation="vertical"] { flex-direction: column; align-items: stretch; }
 .lg-toolbar-group { padding: 6px; width: fit-content; }
+/**
+ * A group that owns its items is allowed to be narrower than they are.
+ *
+ * A flex item will not shrink past its content unless it is told it may, so without this the
+ * group kept its full natural width in a bar too narrow for it, the row it measures was never
+ * short of room, and the overflow menu never appeared — the feature was correct and unreachable.
+ * Only groups given `items`: a group of arbitrary children has nowhere to put what does not
+ * fit, so letting that one shrink would just clip its buttons.
+ *
+ * The floor is one control plus the group's padding, because a group that has collapsed
+ * everything still has to be able to draw the button that opens it again. Written as a plain
+ * `min-width: 0` first, and at 430px the whole group squeezed to a ten-pixel sliver: every item
+ * in the menu and no way to reach the menu.
+ */
+.lg-toolbar-group[data-overflow="true"] { min-width: calc(var(--lg-control-height, 44px) + 12px); }
+.lg-toolbar-group[data-overflow="true"] > .lg-content { min-width: 0; overflow: hidden; }
 .lg-toolbar-group[data-density="compact"] { padding: 4px; }
 .lg-toolbar[data-orientation="vertical"] .lg-toolbar-group > .lg-content { flex-direction: column; }
 /* The gap between two glass surfaces is the separator; there is no drawn rule. */
@@ -979,6 +995,42 @@
 .lg-sheet[open]::backdrop { opacity: 1; }
 .lg-sheet:not([open])::backdrop { opacity: 0; }
 @starting-style { .lg-sheet[open]::backdrop { opacity: 0; } }
+
+/**
+ * The card form, on a pointer: "a cardlike view with rounded corners that floats on top of its
+ * parent window", centred, with the parent dimmed.
+ *
+ * It arrives from above rather than from below. A sheet on a phone rises from the edge nearest
+ * the hand; there is no such edge on a desk, and the window's own title bar is the top, so
+ * dropping in from it is the direction that says "this belongs to that window". A short travel,
+ * not a full screen height: it is already where it is going.
+ *
+ * `height: auto` with a ceiling rather than a detent: the HIG asks for "a reasonable default
+ * size" for the content, and the content is the only thing that knows what that is.
+ */
+/* `fit-content`, not `auto`. An absolutely positioned box with both block insets set and an
+   `auto` height stretches to fill them, so `margin: auto` has nothing left to centre and the
+   card sat 35px off centre — the classic over-constrained case. `fit-content` gives the box a
+   height of its own again, which is what `margin: auto` needs on both axes. */
+.lg-sheet[data-form="card"] { inset-block: 0; inset-inline: 0; margin: auto;
+  width: min(560px, calc(100vw - 96px)); height: fit-content; max-height: min(78dvh, 720px);
+  border-radius: var(--lg-radius); }
+.lg-sheet[data-form="card"][open] { translate: none;
+  transition: opacity var(--lg-duration-overlay) var(--lg-ease-out),
+    translate var(--lg-duration-overlay) var(--lg-ease-out),
+    display var(--lg-duration-overlay) allow-discrete,
+    overlay var(--lg-duration-overlay) allow-discrete; }
+@starting-style { .lg-sheet[data-form="card"][open] { translate: 0 -24px; opacity: 0; } }
+.lg-sheet[data-form="card"]:not([open]) { translate: 0 -12px; opacity: 0;
+  transition: opacity var(--lg-duration-exit) var(--lg-ease),
+    translate var(--lg-duration-exit) var(--lg-ease),
+    display var(--lg-duration-exit) allow-discrete,
+    overlay var(--lg-duration-exit) allow-discrete; }
+.lg-sheet[data-form="card"] .lg-sheet-scroll { padding-block: var(--lg-space-5) var(--lg-space-5); }
+@media (prefers-reduced-motion: reduce) {
+  @starting-style { .lg-sheet[data-form="card"][open] { translate: none; opacity: 1; } }
+  .lg-sheet[data-form="card"]:not([open]) { translate: none; }
+}
 .lg-alert { width: min(360px, calc(100vw - 32px)); padding: var(--lg-space-6); text-align: start; }
 /* Bold and left-aligned. Centred alert text is the previous design. */
 .lg-alert-title { font-size: var(--lg-text-title3-size); line-height: var(--lg-text-title3-leading); font-weight: var(--lg-weight-bold); text-align: start; padding-inline-end: 0; }
@@ -1558,4 +1610,106 @@
 @media (hover: hover) { .lg-color-well-quick:hover > span { transform: scale(1.1); } }
 @media (forced-colors: active) {
   .lg-color-well-quick[aria-pressed="true"] > span { outline: 2px solid ButtonText; outline-offset: 2px; }
+}
+
+
+/* ==========================================================================
+   Group box · Path bar
+   Both content layer. A box is a boundary around related content and a path
+   bar belongs "in the window body, not the window frame" — neither floats, so
+   neither is glass.
+   ========================================================================== */
+.lg-groupbox { display: flex; flex-direction: column; gap: var(--lg-space-2); }
+/* Above the box, which is where macOS puts it. Headline weight at body size: it is a label for
+   a region, not a heading in the document, and giving it a heading's size would make the page's
+   outline read as though a box were a section. */
+.lg-groupbox-title { font: var(--lg-weight-semibold) var(--lg-text-subhead-size)/var(--lg-text-subhead-leading) var(--lg-font-text);
+  color: var(--lg-label); }
+.lg-groupbox-description { font: var(--lg-text-footnote-size)/var(--lg-text-footnote-leading) var(--lg-font-text);
+  color: var(--lg-label-secondary); margin-block-start: calc(var(--lg-space-1) * -1); }
+/* Stacked, because a box holds things that belong together and things that belong together are
+   read one after another. Inline children would otherwise sit in a row — two switches in a
+   settings box came out side by side, touching, which is the opposite of grouping them. */
+.lg-groupbox-body { display: grid; gap: var(--lg-space-3); }
+/* A background **or** a border. Two devices for one job reads as a box inside a box. */
+.lg-groupbox[data-variant="fill"] > .lg-groupbox-body { background: var(--lg-bg-grouped-2); }
+.lg-groupbox[data-variant="outline"] > .lg-groupbox-body { border: 1px solid var(--lg-separator); }
+
+.lg-path { min-width: 0; font-family: var(--lg-font-text); }
+.lg-path-list { display: flex; align-items: center; flex-wrap: nowrap; gap: var(--lg-space-1);
+  margin: 0; padding: 0; list-style: none; min-width: 0; overflow: hidden; }
+.lg-path-item { display: flex; align-items: center; gap: var(--lg-space-1); min-width: 0; flex-shrink: 0; }
+/* Drawn, not written. A chevron between two names is not a word, and a screen reader that reads
+   one out between every level is reading punctuation aloud. */
+.lg-path-item + .lg-path-item::before { content: ''; width: 6px; height: 6px; flex-shrink: 0;
+  border-inline-end: 1.5px solid var(--lg-label-tertiary); border-block-start: 1.5px solid var(--lg-label-tertiary);
+  rotate: 45deg; margin-inline-end: var(--lg-space-1); }
+[dir="rtl"] .lg-path-item + .lg-path-item::before { rotate: 225deg; }
+.lg-path-level { display: inline-flex; align-items: center; gap: var(--lg-space-1); min-width: 0;
+  padding: 2px var(--lg-space-2); border-radius: var(--lg-radius-xs); border: 0; background: transparent;
+  color: var(--lg-label-secondary); text-decoration: none; cursor: default;
+  font-size: var(--lg-text-footnote-size); line-height: var(--lg-text-footnote-leading);
+  outline: var(--lg-focus-width) solid transparent; outline-offset: var(--lg-focus-offset);
+  transition: background var(--lg-duration-press) var(--lg-ease), color var(--lg-duration-press) var(--lg-ease); }
+a.lg-path-level, button.lg-path-level { cursor: pointer; }
+.lg-path-level:focus-visible { outline-color: var(--lg-focus); }
+@media (hover: hover) {
+  :is(a, button).lg-path-level:hover { background: var(--lg-fill-quaternary); color: var(--lg-label); }
+}
+/* Where you are, not where you could go: the current level is the only one at full weight. */
+.lg-path-level[aria-current="page"] { color: var(--lg-label); font-weight: var(--lg-weight-semibold); }
+.lg-path-label { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.lg-path-icon { display: inline-flex; flex-shrink: 0; color: var(--lg-label-tertiary); }
+.lg-path-more { min-height: var(--lg-hit-min); }
+
+
+/* ==========================================================================
+   Panel
+   A small window floating above the content: glass, large, non-modal.
+   ========================================================================== */
+/* No shadow of its own: `[data-glass-size="large"]` already carries the one every large glass
+   surface uses, and a second one on top of it is how a panel ends up looking heavier than the
+   sheet it sits beside. */
+.lg-panel { position: absolute; z-index: var(--lg-z-sidebar); display: flex; flex-direction: column;
+  border-radius: var(--lg-radius); font-family: var(--lg-font-text); color: var(--lg-fg); isolation: isolate; }
+/* The whole title bar is the handle, so the cursor says so over all of it — except on the two
+   buttons at its trailing end, which are buttons. */
+.lg-panel-bar { position: relative; z-index: 1; display: flex; align-items: center; gap: var(--lg-space-2);
+  padding: var(--lg-space-2) var(--lg-space-2) var(--lg-space-2) var(--lg-space-4);
+  cursor: grab; touch-action: none; user-select: none; -webkit-user-select: none;
+  border-radius: var(--lg-radius) var(--lg-radius) 0 0;
+  outline: var(--lg-focus-width) solid transparent; outline-offset: calc(var(--lg-focus-offset) * -1);
+  transition: outline-color var(--lg-duration-press) var(--lg-ease); }
+.lg-panel-bar:focus-visible { outline-color: var(--lg-focus); }
+.lg-panel[data-moving="true"] .lg-panel-bar { cursor: grabbing; }
+.lg-panel-title { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  font-size: var(--lg-text-subhead-size); line-height: var(--lg-text-subhead-leading);
+  font-weight: var(--lg-weight-semibold); }
+.lg-panel-accessory { display: inline-flex; align-items: center; gap: var(--lg-space-1); }
+.lg-panel-action { display: inline-flex; align-items: center; justify-content: center;
+  width: var(--lg-hit-min); height: var(--lg-hit-min); min-width: 24px; min-height: 24px;
+  padding: 0; border: 0; background: transparent; color: inherit; cursor: pointer;
+  border-radius: var(--lg-radius-xs); opacity: .7;
+  outline: var(--lg-focus-width) solid transparent; outline-offset: calc(var(--lg-focus-offset) * -1);
+  transition: opacity var(--lg-duration-press) var(--lg-ease), background var(--lg-duration-press) var(--lg-ease),
+    outline-color var(--lg-duration-press) var(--lg-ease); }
+.lg-panel-action:focus-visible { outline-color: var(--lg-focus); opacity: 1; }
+@media (hover: hover) { .lg-panel-action:hover { opacity: 1; background: var(--lg-hover); } }
+/* Points down when the body is showing and up when it is rolled away — the same chevron the
+   disclosure group turns, for the same reason. */
+.lg-panel-chevron { transition: rotate var(--lg-duration-layout) var(--lg-ease); }
+.lg-panel[data-collapsed="true"] .lg-panel-chevron { rotate: -90deg; }
+[dir="rtl"] .lg-panel[data-collapsed="true"] .lg-panel-chevron { rotate: 90deg; }
+.lg-panel-body { position: relative; z-index: 1; padding: 0 var(--lg-space-4) var(--lg-space-4);
+  display: flex; flex-direction: column; gap: var(--lg-space-3); }
+/* `hidden` is a presentation hint and any `display` beats it. Collapsing the panel set the
+   attribute — so the body left the accessibility tree — and the `display: flex` above kept
+   drawing it: a rolled-up panel the same height as an open one, with its controls visible and
+   unreachable by a screen reader. The worst of both. */
+.lg-panel-body[hidden] { display: none; }
+/* A panel is moved by a drag, so it must not animate its own position — the pointer is the
+   clock. Only the collapse changes size, and only when nothing is being dragged. */
+.lg-panel[data-moving="true"] { transition: none; }
+@media (prefers-reduced-motion: reduce) {
+  .lg-panel-chevron { transition: none; }
 }

@@ -54,16 +54,16 @@ export function App() {
 
 ## 有什么
 
-62 个组件，分成两层——这个分层本身就是这套设计的核心：
+65 个组件，分成两层——这个分层本身就是这套设计的核心：
 
 | 层 | 组件 |
 | --- | --- |
-| **内容**（实色，不透明） | Text、Card、Concentric、List、MaterialView、Divider、Kbd、DisclosureGroup |
+| **内容**（实色，不透明） | Text、Card、Concentric、GroupBox、List、MaterialView、Divider、Kbd、DisclosureGroup |
 | **控件** | GlassButton、GlassSegmentedControl、GlassSwitch、GlassCheckbox、RadioGroup、GlassSlider、GlassStepper、GlassProgress、GlassBadge、Picker、ColorWell |
 | **输入** | TextField、SearchField |
-| **导航** | GlassToolbar、MenuBar、TabBar、Sidebar、NavigationBar、GlassTabs、ScrollEdge、PageControl |
+| **导航** | GlassToolbar、MenuBar、PathBar、TabBar、Sidebar、NavigationBar、GlassTabs、ScrollEdge、PageControl |
 | **布局**（骨架） | Screen、NavigationStack、SplitView、Inspector、Grid、Form |
-| **浮层** | GlassPopover、GlassMenu、GlassMenuButton、ContextMenu、CommandPalette、Tooltip、GlassSheet、GlassAlert、GlassActionSheet、GlassDialog、ToastProvider、Banner |
+| **浮层** | GlassPopover、GlassMenu、GlassMenuButton、ContextMenu、CommandPalette、Tooltip、GlassSheet、GlassAlert、GlassActionSheet、GlassDialog、Panel、ToastProvider、Banner |
 
 玻璃只用在浮起来的那一层。正文、列表、卡片保持不透明——如果满屏都是半透明的，就没有东西真的浮起来了。
 
@@ -121,7 +121,7 @@ docs/        设计系统、API、无障碍、迁移、架构、测试口径
 ## 验证到什么程度
 
 ```text
-74 单元 · 7 SSR · 396 真实 Google Chrome · 13 开发模式 · 18 WebKit + Firefox
+74 单元 · 7 SSR · 406 真实 Google Chrome · 13 开发模式 · 18 WebKit + Firefox
 ```
 
 SSR 那三项跑的是 `dist/`，也就是真正发出去的那份。玻璃压在真实场景上的文字对比度是从**合成后的像素**上量的——把两个色值填进计算器不算数，因为玻璃的最终颜色取决于它背后是什么。三个引擎上最差的一块 7.83:1。

@@ -43,6 +43,15 @@ export interface GlassStrings {
    * the label says which sheet it resizes when more than one has been open.
    */
   sheetHeight: (title: string) => string;
+  /** The ellipsis in a path bar, holding the levels that did not fit. */
+  morePathLevels: string;
+  /** A toolbar's overflow menu, holding the items that did not fit. */
+  moreToolbarItems: string;
+  /** A panel's collapse control. Takes the panel's title, because several can be open at once. */
+  collapsePanel: (title: string) => string;
+  expandPanel: (title: string) => string;
+  /** A panel's title bar, which is also the handle it is moved by. */
+  movePanel: (title: string) => string;
 }
 
 export const defaultStrings: GlassStrings = {
@@ -56,6 +65,11 @@ export const defaultStrings: GlassStrings = {
   back: 'Back to',
   resizeSidebar: 'Resize sidebar',
   sheetHeight: title => `${title} height`,
+  morePathLevels: 'More levels',
+  moreToolbarItems: 'More',
+  collapsePanel: title => `Collapse ${title}`,
+  expandPanel: title => `Expand ${title}`,
+  movePanel: title => `Move ${title}`,
 };
 
 const StringsContext = createContext<GlassStrings>(defaultStrings);

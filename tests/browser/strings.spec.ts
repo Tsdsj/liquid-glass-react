@@ -33,6 +33,9 @@ test('the search field clear button does too', async ({ page }) => {
 });
 
 test('the sheet drag handle names the sheet it resizes', async ({ page }) => {
+  /* The detents, the grabber and the drag exist in a phone-shaped window; on a desk the
+     sheet is a centred card with none of them. See `desktop-parts.spec.ts` for that one. */
+  await page.setViewportSize({ width: 390, height: 844 });
   await page.goto('/#/components/sheet');
   await page.getByRole('button', { name: '打开面板' }).first().click();
   await expect(page.getByRole('dialog')).toBeVisible();

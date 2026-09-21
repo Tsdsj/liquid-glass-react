@@ -8,7 +8,20 @@ import { test, expect } from '@playwright/test';
  *
  * Measured before the fix: dragging from the content area eight steps left
  * `--lg-sheet-offset` at exactly 50% — the panel did not move at all.
+ *
+ * In a phone-shaped window, all of it, because that is the only window where this object
+ * exists. On a desk a sheet is a card that falls from the top and is not dragged at all, and
+ * which one it is comes from the provider answering `(pointer: fine) and (min-width: 768px)`
+ * — a *width*, which a test can set, and not `data-lg-platform`, which only the stylesheet
+ * reads. Setting the attribute used to look like enough; it switched the metrics and left the
+ * component exactly as it was.
  */
+/* 390×667 rather than a taller phone: `.lg-sheet` is the full height of the window and is
+   *translated* down to its detent, so whether its scroll view scrolls is a question about the
+   whole window against the content, not about the half of the sheet you can see. At 844 the
+   sixteen-row list fitted, and the one test that needs a scrolled sheet said so out loud
+   instead of passing while proving nothing. */
+test.use({ viewport: { width: 390, height: 667 } });
 
 /** The visible fraction, read the way the component writes it. */
 async function offset(page: import('@playwright/test').Page) {
@@ -18,12 +31,6 @@ async function offset(page: import('@playwright/test').Page) {
 
 async function openSheet(page: import('@playwright/test').Page, trigger = '打开面板') {
   await page.goto('/#/components/sheet');
-  /* The touch metrics, because this is a touch gesture. A sheet that docks at heights and is
-     dragged by its whole surface is the iPhone idiom; the desktop form is a card that falls
-     from the top of the window and is not dragged at all. With the desktop metrics the rows in
-     the long-list demo are short enough that the list no longer scrolls, and the test's own
-     guard said so rather than quietly passing. */
-  await page.evaluate(() => document.documentElement.setAttribute('data-lg-platform', 'touch'));
   await page.getByRole('button', { name: trigger }).first().click();
   const sheet = page.locator('.lg-sheet[open]');
   await expect(sheet).toBeVisible();

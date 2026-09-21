@@ -164,6 +164,18 @@ HIG motion：「**Let people cancel motion.** 不要让人等动画播完才能�
 
 四条记在 [`../../../reports/hig-review.md`](../../../reports/hig-review.md)：站点写的字号被库静默忽略、我把手机端的分区导航整个藏掉了、凭印象加的行宽上限两次都加错了位置、以及又一条没有证据的守卫。
 
+#### 插入：有鼠标时的度量全部重定（2026-09-21，第 6 周之后）
+
+所有者第三次退回宽屏效果：「主页和组件页里的按钮都仍然是过于扁平」。问题不在站点样式里，在第 4 周定下的那张桌面度量表——它装的是 macOS AppKit 的一套（控件 22、正文 13/16）。量了十一个主流组件库文档站和 developer.apple.com 之后换成：**控件按指针缩小（44 → 36），字号表两个平台通用**。顺带查出 `controlSize` 对玻璃按钮从来没生效过、常规输入框没有自己的高度、命中区宽度跟错了开关、以及它在 RTL 下整体偏移一个控件宽。全部记在 [`../../../reports/hig-review.md`](../../../reports/hig-review.md)。
+
+#### 已完成（2026-09-21，第 7 周）
+
+`GroupBox`、`PathBar`、`Panel`、`ToolbarGroup.items` 的溢出菜单、`GlassSheet` 的卡片形态，以及首页那扇**画出来的**窗口（菜单栏 + 工具栏 + 分栏 + 检查器 + 路径栏 + 面板）。`tests/browser/desktop-parts.spec.ts`，10 条。
+
+三个只有把它们拼起来才会露出来的缺陷：收起的面板和展开的一样高（`hidden` 压不过 `display: flex`），面板会开在容器外面并且被裁掉的正是能拖它回来的标题栏，溢出的工具栏组要么不缩、要么缩到连「更多」按钮都没地方。
+
+`OutlineView` 留在第 8 周。
+
 #### 排期里的其余各项
 
 | 组件 | 为什么是它 | HIG |
@@ -172,11 +184,11 @@ HIG motion：「**Let people cancel motion.** 不要让人等动画播完才能�
 | ~~`useShortcut` + `GlassMenuItem.shortcut`~~ **已完成** | 快捷键从「能显示」变成「能用」；菜单项右侧显示 `Kbd`；冲突与作用域（对话框打开时外层失效）有规则 | keyboards「Standard keyboard shortcuts」 |
 | ~~`MenuBar`~~ **已完成** | 桌面应用的命令面；已有 `GlassMenu` 的键盘模型，缺的是横向一排、悬停时在已打开的菜单间滑动、⌥ 显示替代项 | the-menu-bar |
 | ~~`CommandPalette`（⌘K）~~ **已完成** | 桌面网页的通用惯用语；文档站 `search.tsx` 已经是一个，抽成组件而不是让每个应用重写。a11y 模型是 combobox + listbox 的虚拟焦点——正是 0.4.0 判「Combobox 做半截比不做差」的那一套，**做完这个就顺手有了 Combobox 的骨架** | searching |
-| `PathBar`（面包屑） | 0.4.0 顺延项；桌面导航层级的标准表示 | path-controls |
-| `GroupBox` | 0.4.0 顺延项（`Box`） | boxes |
-| `Panel`（浮动面板） | 「悬浮在其他窗口之上的补充控件」，有标题栏可拖、非模态、可收起；`Inspector` 可以住进去 | panels |
-| `GlassSheet` 的桌面形态 | 同一个 API，在 `desktop` 下从容器顶部落下、居中、不可拖、父级压暗；停靠点无效 | sheets · macOS |
-| `GlassToolbar` 溢出菜单 | 量宽度，放不下的项自动进「更多」；不让调用方手动做 | toolbars |
+| ~~`PathBar`（面包屑）~~ **已完成** | 0.4.0 顺延项；桌面导航层级的标准表示 | path-controls |
+| ~~`GroupBox`~~ **已完成** | 0.4.0 顺延项（`Box`） | boxes |
+| ~~`Panel`（浮动面板）~~ **已完成** | 「悬浮在其他窗口之上的补充控件」，有标题栏可拖、非模态、可收起 | panels |
+| ~~`GlassSheet` 的桌面形态~~ **已完成** | 同一个 API，在指针平台下从窗口顶部落下、居中、不可拖、父级压暗；停靠点无效 | sheets · macOS |
+| ~~`GlassToolbar` 溢出菜单~~ **已完成** | 量宽度，放不下的项自动进「更多」；不让调用方手动做 | toolbars |
 | `OutlineView`（树） | 0.4.0 记为「值得单独一期」；桌面方向下它就是那一期。`role="tree"` 的键盘模型：← → 折叠展开、↑ ↓ 行、Home/End、打字跳转；第一列露层级 | outline-views |
 
 **明确仍不做**：表格（体量是整个库一半）、日期选择（原生更诚实）。`Combobox` 从「不做」改为「`CommandPalette` 之后评估」——理由变了：桌面方向下它是最常被要的控件，而 palette 已经付掉了那套 a11y 模型的成本。
@@ -186,7 +198,7 @@ HIG motion：「**Let people cancel motion.** 不要让人等动画播完才能�
 - 列表行与侧边栏行：悬停显示行内操作、双击打开、打字跳转（菜单已有）。
 - 分栏视图：侧栏折叠/展开有动画，检查器切换有动画；分隔线双击复位宽度。
 - 溢出的文字带 `title` 提示。
-- 文档站首页加一个**桌面组合演示**：菜单栏 + 工具栏 + 分栏 + 检查器 + 面板拼成一个窗口——库最想证明的东西现在没有一页在证明。
+- ~~文档站首页加一个**桌面组合演示**~~ **已完成（第 7 周）**：菜单栏 + 工具栏 + 分栏 + 检查器 + 路径栏 + 面板拼成一扇画出来的窗口，窄屏下分栏折成页面栈、工具栏那一组收进「更多」、菜单栏与面板退场。
 
 ---
 
@@ -272,7 +284,7 @@ HIG motion：「**Let people cancel motion.** 不要让人等动画播完才能�
 
 - 工具栏 roving focus 进分段控件：仍在 0.3.0（改既有键盘行为）。`suspicions.spec.ts` 那条反向断言不动。
 - `GlassSlider` 双滑块：仍在 0.4.0。
-- 人做的事不变：VoiceOver 走查（R1）、iPhone 实机、**Windows Chrome**——转向桌面之后这一条从「有机器再说」变成**发版门槛**：Windows 上的经典滚动条（0.0.2 的 P7）、Segoe UI 下 13px 正文的可读性、关硬件加速的 `backdrop-filter`，三样都只在 Windows 上能看。
+- 人做的事不变：VoiceOver 走查（R1）、iPhone 实机、**Windows Chrome**——转向桌面之后这一条从「有机器再说」变成**发版门槛**：Windows 上的经典滚动条（0.0.2 的 P7）、Segoe UI 下整套字号的观感（正文现在是 17px，不再是 13px）、关硬件加速的 `backdrop-filter`，三样都只在 Windows 上能看。
 - 性能预算：桌面组合里玻璃面会多（菜单栏 + 工具栏 + 面板 + 检查器同屏），`measure-performance.mjs` 在首页桌面演示上再量一次，≤20 个折射面的预算写进指南。
 
 ### 疑点（有人看见但没量，不排期）

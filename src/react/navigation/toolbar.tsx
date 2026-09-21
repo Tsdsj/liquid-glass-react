@@ -1,9 +1,14 @@
 'use client';
-import { useEffect, type HTMLAttributes, type KeyboardEvent, type RefAttributes } from 'react';
+import { useCallback, useEffect, type HTMLAttributes, type KeyboardEvent, type ReactNode, type RefAttributes } from 'react';
 import { useFusion } from '../system/fusion.js';
 import { GlassSurface, SharedSurface, type GlassSurfaceProps } from '../system/surface.js';
 import { inDevelopment, warnOnce } from '../system/warn.js';
 import { cx, useMergedRef } from '../system/utils.js';
+import { useOverflow } from '../system/overflow.js';
+import { useGlassStrings } from '../system/strings.js';
+import { LibraryIcon } from '../system/icon.js';
+import { GlassButton, GlassIconButton } from '../controls/button.js';
+import { GlassMenu } from '../overlays/menu.js';
 
 export interface GlassToolbarProps extends HTMLAttributes<HTMLDivElement>, RefAttributes<HTMLDivElement> {
   orientation?: 'horizontal' | 'vertical';
@@ -53,9 +58,31 @@ export function GlassToolbar(
   </div>;
 }
 
+export interface ToolbarItem {
+  key: string;
+  /** The name of the action. Visible on a text item, the accessible name on an icon one. */
+  label: string;
+  /** A monochrome symbol. Present means an icon button; absent means a text button. */
+  icon?: ReactNode;
+  onSelect: () => void;
+  disabled?: boolean;
+  /** Shown in the overflow menu, where there is room for it. */
+  shortcut?: string;
+}
+
 export interface ToolbarGroupProps extends GlassSurfaceProps {
   /** Set on the single primary action so it reads as separate from the rest of the bar. */
   prominent?: boolean;
+  /**
+   * The group's items as data, which is what lets the group collapse the ones that do not fit
+   * into a "More" menu at its trailing end.
+   *
+   * Children can do everything else a group does, and cannot do this: to put a button in a
+   * menu the group has to know what that button is *called*, and reading a name back out of an
+   * arbitrary child is guesswork that fails silently on the day someone passes an icon with no
+   * label. So the overflow lives behind the one shape that carries names.
+   */
+  items?: ToolbarItem[];
 }
 /**
  * One shared glass background for a set of related items — group by function and frequency,
@@ -66,10 +93,12 @@ export interface ToolbarGroupProps extends GlassSurfaceProps {
  * Text buttons get their own container, and the primary action stands alone.
  */
 export function ToolbarGroup(
-  { className, children, prominent = false, radius = 'pill', ref, ...props }: ToolbarGroupProps,
+  { className, children, prominent = false, radius = 'pill', items, ref, ...props }: ToolbarGroupProps,
 ) {
   const [root, merged] = useMergedRef<HTMLDivElement>(ref);
   const fusion = useFusion(root, { itemSelector: ':scope > .lg-content > .lg-button' });
+  const strings = useGlassStrings();
+  const { containerRef, itemRef, triggerRef, hidden, measuring } = useOverflow(items?.length ?? 0);
   useEffect(() => {
     if (!inDevelopment()) return;
     const node = root.current; if (!node) return;
@@ -80,9 +109,44 @@ export function ToolbarGroup(
       warnOnce(node, 'mixed-group', 'ToolbarGroup mixes icon-only and text buttons in one shared background; a mixed group reads as a single button. Split them into separate groups.');
     }
   }, [root, children]);
-  return <GlassSurface {...props} ref={merged} radius={radius} data-prominent={prominent ? 'true' : undefined}
+
+  /**
+   * The group's own row is what gets measured, and it is `.lg-content` — the element the
+   * surface puts its children in. Resolved from the root here rather than exposed as a second
+   * ref on `GlassSurface`: one internal element, one place that knows about it.
+   */
+  const attach = useCallback((node: HTMLDivElement | null) => {
+    merged(node);
+    containerRef(node?.querySelector<HTMLElement>(':scope > .lg-content') ?? null);
+  }, [merged, containerRef]);
+
+  const folded = items && !measuring ? items.slice(items.length - Math.min(hidden, items.length)) : [];
+  const shown = items ? items.slice(0, items.length - folded.length) : [];
+
+  return <GlassSurface {...props} ref={items ? attach : merged} radius={radius} data-prominent={prominent ? 'true' : undefined}
+    data-overflow={items ? 'true' : undefined}
     className={cx('lg-toolbar-group', className)}>
-    <SharedSurface value={true}>{fusion}{children}</SharedSurface>
+    <SharedSurface value={true}>
+      {fusion}
+      {items
+        ? <>
+          {shown.map((item, index) => (item.icon
+            ? <GlassIconButton key={item.key} ref={itemRef(index)} aria-label={item.label}
+              disabled={item.disabled} onClick={item.onSelect}>{item.icon}</GlassIconButton>
+            : <GlassButton key={item.key} ref={itemRef(index)} disabled={item.disabled}
+              onClick={item.onSelect}>{item.label}</GlassButton>))}
+          {folded.length > 0 && <GlassMenu
+            aria-label={strings.moreToolbarItems}
+            items={folded.map(item => ({
+              key: item.key, label: item.label, icon: item.icon, shortcut: item.shortcut,
+              disabled: item.disabled, onSelect: item.onSelect,
+            }))}
+            trigger={<GlassIconButton ref={triggerRef} aria-label={strings.moreToolbarItems}>
+              <LibraryIcon name="ellipsis" size={18} />
+            </GlassIconButton>} />}
+        </>
+        : children}
+    </SharedSurface>
   </GlassSurface>;
 }
 

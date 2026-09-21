@@ -18,6 +18,7 @@ export * from './content/card.js';
 export * from './content/list.js';
 export * from './content/material-view.js';
 export * from './content/divider.js';
+export * from './content/group-box.js';
 
 /* Controls */
 export * from './controls/button.js';
@@ -48,6 +49,7 @@ export * from './navigation/tabs.js';
 export * from './navigation/scroll-edge.js';
 export * from './navigation/page-control.js';
 export * from './navigation/menu-bar.js';
+export * from './navigation/path-bar.js';
 
 /* Layout containers: the skeleton the bars and the content are arranged in. */
 export * from './layout/screen.js';
@@ -76,6 +78,7 @@ export * from './overlays/alert.js';
 export * from './overlays/action-sheet.js';
 export * from './overlays/toast.js';
 export * from './overlays/banner.js';
+export * from './overlays/panel.js';
 
 export type * from '../tokens/index.js';
 export {

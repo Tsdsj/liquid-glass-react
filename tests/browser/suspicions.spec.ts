@@ -109,6 +109,9 @@ test('an RTL slider is the mirror of an LTR one', async ({ page }) => {
  * lines, and the suspicion was that it grows upwards into the drag handle.
  * ------------------------------------------------------------------------------------- */
 test('the sheet title clears the grabber at the largest text size', async ({ page }) => {
+  /* The detents, the grabber and the drag exist in a phone-shaped window; on a desk the
+     sheet is a centred card with none of them. See `desktop-parts.spec.ts` for that one. */
+  await page.setViewportSize({ width: 390, height: 844 });
   await page.goto('/#/components/sheet');
   await page.evaluate(() => { document.documentElement.dataset.lgTextSize = 'ax5'; });
   await page.getByRole('button', { name: '打开面板' }).first().click();

@@ -2,7 +2,7 @@ import { useState } from 'react';
 import {
   Banner, CommandPalette, Form, GlassActionSheet, GlassAlert, GlassButton, GlassDialog, GlassIconButton, GlassMenu, GlassPopover,
   Card, ContextMenu, GlassMenuButton, GlassSegmentedControl, GlassSheet, GlassSlider, LibraryIcon, List, ListRow, ListSection, MenuBar,
-  Text, TextField, Tooltip, useToast, type SheetDetent,
+  Panel, Text, TextField, Tooltip, useToast, type SheetDetent,
 } from '@ttqtt/liquid-glass-react';
 import { Icon } from '../icons.js';
 import type { ComponentDoc } from './types.js';
@@ -539,15 +539,17 @@ export const overlayDocs: ComponentDoc[] = [
   },
   {
     slug: 'sheet', name: 'GlassSheet', title: '底部面板', group: '浮层',
-    summary: '从屏幕底部升起的面板，可以拖到不同高度。',
+    summary: '一个需要专注完成的小任务。手指下是从底部升起、可以拖高度的面板；鼠标下是居中落下的一张卡片。',
     when: [
       '一个需要专注完成、但又不值得跳转整页的任务：分享、筛选、快速编辑。',
-      '内容可多可少时给两个停靠高度，让用户自己决定要看多少。',
+      '内容可多可少时给两个停靠高度，让用户自己决定要看多少——这一条只在触摸下成立。',
       '拖到最顶时它会变成不透明并贴住屏幕边缘——这时它已经是一整屏了。',
+      '有光标的宽窗口下它换一种形态：从窗口顶部落下、居中、按内容定大小、不能拖，背后压暗。这时 detents 不起作用。',
     ],
     examples: [
       {
-        id: 'sheet-basic', title: '基础用法', description: '按住顶部的横条上下拖动，松手会停在最近的高度。往下拖到底就是关闭。',
+        id: 'sheet-basic', title: '基础用法',
+        description: '在手机上：按住顶部的横条上下拖动，松手会停在最近的高度，往下拖到底就是关闭。在有鼠标的宽窗口上：它是居中的一张卡片，没有横条，也没有高度可拖——把浏览器窗口拖到 768px 以下再打开，能看到同一段代码换成另一种形态。',
         backdrop: 'both',
         height: 220,
         knobs: [
@@ -629,9 +631,9 @@ export const overlayDocs: ComponentDoc[] = [
       },
     ],
     props: [
-      { name: 'detents', type: "SheetDetent[]", default: "['medium', 'large']", description: '可以停靠的高度，从小到大。' },
+      { name: 'detents', type: "SheetDetent[]", default: "['medium', 'large']", description: '可以停靠的高度，从小到大。有光标的宽窗口下不起作用——那里它是一张按内容定大小的卡片。' },
       { name: 'defaultDetent', type: 'SheetDetent', description: '打开时停在哪一档。' },
-      { name: 'grabber', type: 'boolean', default: 'true', description: '顶部的拖动横条。只有一个高度时才关掉。' },
+      { name: 'grabber', type: 'boolean', default: 'true', description: '顶部的拖动横条。只有一个高度时才关掉；卡片形态下本来就没有。' },
       { name: 'description', type: 'string', description: '标题下面的一句说明。' },
       { name: 'onDetentChange', type: '(detent: SheetDetent) => void', description: '停靠高度变了。' },
       { name: 'title', type: 'string', required: true, description: '面板标题。' },
@@ -640,8 +642,9 @@ export const overlayDocs: ComponentDoc[] = [
       '打开时焦点被限制在面板里，按 Escape 关闭，关掉后焦点回到原来的按钮。',
       '横条对键盘用户是一个可调节的控件：上下方向键换高度，在最低档再往下就关闭。',
       '拖动全程跟手，松手后弹回最近的高度；开启“减少动效”后直接切换，不做动画。',
+      '卡片形态下没有横条，也没有那个滑块：没有可调的高度，就不该有调它的控件。其余（焦点、Escape、压暗）两种形态一样。',
     ],
-    related: ['dialog', 'action-sheet'],
+    related: ['dialog', 'action-sheet', 'panel'],
   },
   {
     slug: 'alert', name: 'GlassAlert', title: '警告框', group: '浮层',
@@ -1284,5 +1287,112 @@ toast({
     ],
     related: ['menu-bar', 'search-field', 'menu', 'dialog'],
     imports: ['CommandPalette', 'MenuBar', 'GlassButton', 'Text'],
+  },
+  {
+    slug: 'panel', name: 'Panel', title: '浮动面板', group: '浮层',
+    summary: '浮在内容上方的一扇小窗：有标题栏，可以拖着走，可以收起来，不挡住下面的操作。',
+    when: [
+      '要一边调、一边看结果：字体、颜色、查找替换、检查器。',
+      '非模态。背后的东西照常能点——这正是它和对话框的分界。',
+      '里面放滑块、步进器这类能直接拧的控件，少放要打字、要多步选择的东西。',
+      '内容不随选中项变化的话，那是一扇普通窗口，不是面板。',
+    ],
+    examples: [
+      {
+        id: 'panel-basic', title: '拖着走，收起来',
+        description: '按住标题栏拖动，或者选中标题栏后用方向键移动（按住 Shift 走大步）。右边的箭头把面板收成一条标题栏，位置不变。',
+        height: 340,
+        knobs: [
+          { name: 'closable', label: '带关闭按钮', type: 'boolean', value: true },
+          { name: 'width', label: '宽度', type: 'number', value: 240, min: 180, max: 320, step: 20 },
+        ],
+        render: function PanelBasic({ knobs }) {
+          const [open, setOpen] = useState(true);
+          const [size, setSize] = useState(60);
+          const [blur, setBlur] = useState(20);
+          return <div id="panel-basic-demo" style={{ position: 'relative', width: '100%', height: 300, borderRadius: 12, overflow: 'hidden' }}>
+            <div style={{ position: 'absolute', inset: 0, display: 'grid', placeItems: 'center' }}>
+              <Text variant="subhead" tone="secondary">面板下面的内容照常能点</Text>
+            </div>
+            {!open && <div style={{ position: 'absolute', insetInlineStart: 16, insetBlockStart: 16 }}>
+              <GlassButton variant="gray" controlSize="small" onClick={() => setOpen(true)}>显示检查器</GlassButton>
+            </div>}
+            <Panel title="检查器" open={open} width={Number(knobs.width)}
+              onClose={knobs.closable === true ? () => setOpen(false) : undefined}
+              defaultPosition={{ x: 16, y: 16 }}>
+              <GlassSlider aria-label="大小" value={size} onValueChange={setSize} />
+              <GlassSlider aria-label="模糊" value={blur} onValueChange={setBlur} />
+              <Text variant="caption1" tone="secondary" role="status">大小 {Math.round(size)} · 模糊 {Math.round(blur)}</Text>
+            </Panel>
+          </div>;
+        },
+        code: knobs => `<Panel title="检查器"${knobs.width === 240 ? '' : `\n  width={${knobs.width}}`}${knobs.closable ? '\n  onClose={() => setOpen(false)}' : ''}
+  defaultPosition={{ x: 16, y: 16 }}>
+  <GlassSlider aria-label="大小" … />
+  <GlassSlider aria-label="模糊" … />
+</Panel>`,
+      },
+      {
+        id: 'panel-vs-dialog', title: '和对话框的分界',
+        description: '对话框要你现在回答，它压暗背景、扣住焦点。面板不要你回答任何事，它只是待在那儿等你用。同一件事用错了形态，代价是读者被拦住。',
+        height: 260,
+        render: () => <div style={{ display: 'grid', gap: 12, width: 320 }}>
+          <Card fill="secondary" radius={14} padding={14}>
+            <Text variant="subhead" emphasized>对话框</Text>
+            <Text variant="footnote" tone="secondary">一次性的决定，答完就走。背景压暗，焦点关在里面。</Text>
+          </Card>
+          <Card fill="secondary" radius={14} padding={14}>
+            <Text variant="subhead" emphasized>面板</Text>
+            <Text variant="footnote" tone="secondary">反复调整、随时看结果。背景照常能用，面板留在那儿。</Text>
+          </Card>
+        </div>,
+        code: `{/* 要一个答案 */}
+<GlassDialog title="放弃修改？" … />
+
+{/* 要一直调 */}
+<Panel title="检查器">…</Panel>`,
+      },
+      {
+        id: 'panel-over-media', title: '压在画面上',
+        description: '面板是浮动层，所以它是玻璃——底下的画面从它身上透出来，而它上面的字仍然读得清。这也是"一边调一边看"能成立的原因：它没有把要看的东西盖死。',
+        backdrop: 'both', height: 320,
+        render: function PanelOverMedia() {
+          const [exposure, setExposure] = useState(45);
+          return <div id="panel-over-media-demo" style={{ position: 'relative', width: '100%', height: 280 }}>
+            <Panel title="调整" defaultPosition={{ x: 12, y: 12 }} width={220} collapsed={false}>
+              <GlassSlider aria-label="曝光" value={exposure} onValueChange={setExposure} />
+              <Text variant="caption1" role="status">曝光 {Math.round(exposure)}</Text>
+            </Panel>
+          </div>;
+        },
+        code: `<Panel title="调整" defaultPosition={{ x: 12, y: 12 }} width={220}>
+  <GlassSlider aria-label="曝光" … />
+</Panel>`,
+      },
+    ],
+    props: [
+      { name: 'title', type: 'string', required: true, description: '一个短名词，标题式大小写。它同时是面板的无障碍名称和标题栏上的字。' },
+      { name: 'open', type: 'boolean', description: '在不在屏幕上。' },
+      { name: 'defaultOpen', type: 'boolean', default: 'true', description: '非受控时的初始状态。' },
+      { name: 'onOpenChange', type: '(open: boolean) => void', description: '显示状态变化。' },
+      { name: 'collapsed', type: 'boolean', description: '是否收成一条标题栏。' },
+      { name: 'defaultCollapsed', type: 'boolean', default: 'false', description: '非受控时的初始状态。' },
+      { name: 'onCollapsedChange', type: '(collapsed: boolean) => void', description: '收起或展开。' },
+      { name: 'position', type: '{ x: number; y: number }', description: '相对于最近的定位祖先的偏移。' },
+      { name: 'defaultPosition', type: '{ x: number; y: number }', default: '{ x: 24, y: 24 }', description: '非受控时的初始位置。' },
+      { name: 'onPositionChange', type: '(position: PanelPoint) => void', description: '被拖动或用方向键移动之后。' },
+      { name: 'width', type: 'number', default: '280', description: '宽度，单位 px。面板不支持拖动改大小。' },
+      { name: 'onClose', type: '() => void', description: '给了就在标题栏上加一个关闭按钮。不给就没有关闭的办法。' },
+      { name: 'accessory', type: 'ReactNode', description: '标题栏尾部、收起与关闭之前的额外控件。' },
+    ],
+    notes: [
+      'role="dialog" 且 aria-modal="false"：它是一扇窗，但不拦着你——焦点不会被关在里面，背后也没有 inert。',
+      '标题栏可以聚焦，方向键移动面板，Shift + 方向键走大步。只能用鼠标摆位置的面板，等于有些人没法摆。',
+      '位置会被限制在容器里，拖不出去也找不回不来。容器需要 position: relative。',
+      '没有最小化：HIG 说面板一般不需要它。收起是收成标题栏，不是收进 Dock。',
+      'HUD（深色半透明）那一种没有做。系统自己的控件大多不配它，它也不跟随浅深色设置——需要的话用 material="clear" 压在图片上。',
+    ],
+    related: ['dialog', 'popover', 'split-view', 'sheet'],
+    imports: ['Panel', 'GlassSlider', 'GlassButton', 'Card', 'Text'],
   },
 ];

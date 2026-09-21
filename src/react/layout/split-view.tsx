@@ -48,6 +48,16 @@ export interface SplitViewProps extends Omit<HTMLAttributes<HTMLDivElement>, 'ti
    * caller hears about it, so their selection state can follow.
    */
   onCompactBack?: () => void;
+  /**
+   * The heading level the compact stack's title takes.
+   *
+   * `1` is right when the split view *is* the screen, which is the usual case and the default.
+   * It is wrong for a split view embedded in a page that already has a heading — a specimen in
+   * a document, a preview inside a settings pane — where an `<h1>` of its own gives the page
+   * two level-one headings and a reader moving by heading a second "top of the page". In the
+   * wide form there is no such heading at all: the columns carry no title element.
+   */
+  headingLevel?: 1 | 2 | 3 | 4 | 5 | 6;
 }
 
 const DEFAULT_SIDEBAR = 260, MIN_SIDEBAR = 180, MAX_SIDEBAR = 400, DEFAULT_INSPECTOR = 300;
@@ -78,7 +88,7 @@ export function SplitView({
   sidebarVisible: controlledSidebar, defaultSidebarVisible = true, onSidebarVisibleChange,
   inspectorVisible: controlledInspector, defaultInspectorVisible = true, onInspectorVisibleChange,
   inspectorWidth = DEFAULT_INSPECTOR,
-  compact, onCompactBack, className, style, ref, ...props
+  compact, onCompactBack, headingLevel = 1, className, style, ref, ...props
 }: SplitViewProps) {
   const compactEnvironment = useSizeClass() === 'compact';
   const strings = useGlassStrings();
@@ -166,6 +176,7 @@ export function SplitView({
       ? [{ key: 'detail', title: compact.title, content: compact.content }]
       : [];
     return <NavigationStack {...props} className={cx('lg-split', className)} root={rootPage} pages={detail}
+      headingLevel={headingLevel}
       onPagesChange={next => {
         if (next.length) return;
         /* Back has to actually go back. Driving the stack purely from `compact` made it a

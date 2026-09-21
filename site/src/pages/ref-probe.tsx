@@ -18,7 +18,7 @@ import {
   GlassSlider, GlassStepper, GlassSwitch, GlassSurface, GlassGroup, LibraryIcon, Picker, ColorWell, Banner,
   GlassCheckbox, RadioGroup,
   SearchField, TextField,
-  Inspector, MenuBar, NavigationBar, NavigationStack, PageControl, Screen, ScrollEdge, Sidebar, SplitView, TabBar, GlassTabs, GlassToolbar, ToolbarGroup, ToolbarSpacer,
+  GroupBox, Inspector, MenuBar, NavigationBar, PathBar, Panel, NavigationStack, PageControl, Screen, ScrollEdge, Sidebar, SplitView, TabBar, GlassTabs, GlassToolbar, ToolbarGroup, ToolbarSpacer,
   CommandPalette, GlassActionSheet, GlassAlert, GlassDialog, GlassMenu, GlassMenuButton, GlassMenuDescription, GlassPopover, GlassSheet, ContextMenu, Tooltip,
 } from '@ttqtt/liquid-glass-react';
 
@@ -96,6 +96,8 @@ const entries: Array<[string, (p: Probe) => ReactNode]> = [
   ['PageControl', p => <PageControl {...p} aria-label="pages" count={3} />],
   ['MenuBar', p => <MenuBar {...p} aria-label="menu bar"
     menus={[{ key: 'a', title: 'A', items: [{ key: 'x', label: 'X', onSelect: () => {} }] }]} />],
+  ['PathBar', p => <PathBar {...p} aria-label="path" items={[{ label: 'root', onSelect: () => {} }, { label: 'here' }]} />],
+  ['GroupBox', p => <GroupBox {...p} title="box">body</GroupBox>],
   ['SplitView', p => <SplitView {...p} title="split" sidebar={<span>side</span>}>content</SplitView>],
   ['Inspector', p => <Inspector {...p} title="inspector">body</Inspector>],
   ['Sidebar', p => <Sidebar {...p} aria-label="sidebar">side</Sidebar>],
@@ -118,6 +120,7 @@ const entries: Array<[string, (p: Probe) => ReactNode]> = [
   ['GlassMenuButton', p => <GlassMenuButton {...p} label="menu button" items={[{ key: 'a', label: 'A', onSelect: () => {} }]} />],
   ['GlassMenuDescription', p => <GlassMenuDescription {...p}>description</GlassMenuDescription>],
   ['GlassPopover', p => <GlassPopover {...p} title="popover">body</GlassPopover>],
+  ['Panel', p => <Panel {...p} title="panel">body</Panel>],
   /* The ref lands on the tooltip panel. Rendered only where there is a hover, so the probe
      reports it as absent on a touch device — which is the component working as documented. */
   ['Tooltip', p => <Tooltip {...p} content="tip"><button type="button">anchor</button></Tooltip>],
@@ -182,6 +185,8 @@ const _contract = {
   NavigationStack: null as unknown as Gap<typeof NavigationStack>,
   PageControl: null as unknown as Gap<typeof PageControl>,
   MenuBar: null as unknown as Gap<typeof MenuBar>,
+  PathBar: null as unknown as Gap<typeof PathBar>,
+  GroupBox: null as unknown as Gap<typeof GroupBox>,
   SplitView: null as unknown as Gap<typeof SplitView>,
   Inspector: null as unknown as Gap<typeof Inspector>,
   Sidebar: null as unknown as Gap<typeof Sidebar>,
@@ -198,6 +203,7 @@ const _contract = {
   GlassMenuButton: null as unknown as Gap<typeof GlassMenuButton>,
   GlassMenuDescription: null as unknown as Gap<typeof GlassMenuDescription>,
   GlassPopover: null as unknown as Gap<typeof GlassPopover>,
+  Panel: null as unknown as Gap<typeof Panel>,
   Tooltip: null as unknown as Gap<typeof Tooltip>,
   ContextMenu: null as unknown as Gap<typeof ContextMenu>,
   GlassSheet: null as unknown as Gap<typeof GlassSheet>,

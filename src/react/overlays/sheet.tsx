@@ -37,6 +37,15 @@ export interface GlassSheetProps extends Omit<DialogHTMLAttributes<HTMLDialogEle
  * The drag is the point: the sheet tracks the finger 1:1 and settles on a spring at the
  * nearest detent, and it is interruptible mid-flight. Only `transform` moves, never `height`,
  * so the drag stays on the compositor.
+ *
+ * **On a pointer it is a different object with the same API.** The HIG's sheets page describes
+ * the macOS form in one sentence — "a cardlike view with rounded corners that floats on top of
+ * its parent window", with the parent dimmed — and none of the paragraph above survives it:
+ * there is no edge to rise from, no finger to track, and no reason to drag something that is
+ * already the size it should be. So on desktop the sheet drops in from the top of the window,
+ * sits centred at a size taken from its content, and has no grabber. `detents` is then inert,
+ * and that is written down rather than silently true: a caller who passes `['medium','large']`
+ * has expressed a preference the platform has no way to honour.
  */
 export function GlassSheet({
   trigger, open: controlled, defaultOpen = false, onOpenChange, title, description, children,
@@ -49,7 +58,10 @@ export function GlassSheet({
   const [open, setOpen] = useControllable(controlled, defaultOpen, onOpenChange);
   const [detent, setDetent] = useControllable(undefined, defaultDetent ?? detents[0], onDetentChange);
   const policy = useGlassPolicy();
-  const glass = useGlassSurface<HTMLDialogElement>({ ...surface, material: 'regular', size: 'large', radius: surface.radius ?? 38 }, ref);
+  /* The card form. Everything below that talks about detents, dragging or the display edge is
+     skipped when this is true, rather than being drawn and then disabled. */
+  const card = policy.resolvedPlatform === 'desktop';
+  const glass = useGlassSurface<HTMLDialogElement>({ ...surface, material: 'regular', size: 'large', radius: surface.radius ?? (card ? 20 : 38) }, ref);
   const fractions = detents.map(name => DETENT_FRACTION[name]);
   const [full, setFull] = useState(DETENT_FRACTION[detent] >= FULL);
   const spring = useRef<ReturnType<typeof createSpring> | null>(null);
@@ -84,7 +96,7 @@ export function GlassSheet({
    */
   useEffect(() => {
     const node = glass.root.current;
-    if (!node || !open) return;
+    if (!node || !open || card) return;
     const handle = node.querySelector<HTMLElement>('.lg-sheet-grabber');
     const scroller = node.querySelector<HTMLElement>('.lg-sheet-scroll');
     /** Movement, in px, before a gesture is called vertical or horizontal. */
@@ -163,19 +175,20 @@ export function GlassSheet({
       node.removeEventListener('pointerdown', onBody);
       end(); spring.current?.stop();
     };
-  }, [open, glass.root, detents.join(), fractions.join(), policy.reduceMotion, paint, setDetent, setOpen]);
+  }, [open, card, glass.root, detents.join(), fractions.join(), policy.reduceMotion, paint, setDetent, setOpen]);
 
   return <>
     {triggerElement(trigger, triggerRef, id, open, 'dialog', setOpen)}
     <dialog {...props} id={id} ref={glass.ref} aria-labelledby={`${id}-title`} aria-describedby={description ? `${id}-desc` : undefined}
-      {...glass.attributes} className={cx('lg-root lg-sheet', className)} data-full={full ? 'true' : undefined}
+      {...glass.attributes} className={cx('lg-root lg-sheet', className)}
+      data-form={card ? 'card' : 'edge'} data-full={!card && full ? 'true' : undefined}
       style={{ '--lg-sheet-offset': `${(1 - DETENT_FRACTION[detent]) * 100}%`, ...glass.style, ...style } as CSSProperties}
       onCancel={event => { event.preventDefault(); setOpen(false); }}
       onClose={() => { if (!glass.root.current?.open) setOpen(false); }}>
       {glass.decoration}
       <div className="lg-content">
         <SharedSurface value={true}>
-          {grabber && detents.length > 1 && <div className="lg-sheet-grabber" role="slider" tabIndex={0}
+          {!card && grabber && detents.length > 1 && <div className="lg-sheet-grabber" role="slider" tabIndex={0}
             aria-label={strings.sheetHeight(title)} aria-valuetext={detent}
             aria-valuenow={fractions.indexOf(DETENT_FRACTION[detent])} aria-valuemin={0} aria-valuemax={detents.length - 1}
             onKeyDown={event => {

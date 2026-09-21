@@ -1,6 +1,6 @@
 {
-  "generated": "2026-09-21T12:16:24.175Z",
-  "pages": 44,
+  "generated": "2026-09-21T15:34:13.405Z",
+  "pages": 47,
   "variants": [
     "base",
     "touch",
@@ -16,7 +16,7 @@
     "rtl+ax5",
     "dark+ax5"
   ],
-  "cells": 572,
+  "cells": 611,
   "failing": 0,
   "byRule": {},
   "findings": []

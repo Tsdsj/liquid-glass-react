@@ -1,17 +1,16 @@
 {
-  "generated": "2026-09-21T12:29:53.142Z",
-  "pages": 44,
-  "swept": 44,
-  "probes": 2720,
-  "asked": 619,
+  "generated": "2026-09-21T15:39:19.258Z",
+  "pages": 47,
+  "swept": 47,
+  "probes": 2912,
+  "asked": 663,
   "still": 3,
   "byPage": {
     "grid": 2,
-    "toast": 1
+    "divider": 1
   },
   "byKind": {
-    "activate lg-stepper-button": 2,
-    "activate button": 1
+    "activate lg-stepper-button": 3
   },
   "sample": [
     {
@@ -29,9 +28,9 @@
       "moved": []
     },
     {
-      "slug": "toast",
+      "slug": "divider",
       "trigger": "activate",
-      "target": "button #0",
+      "target": "lg-stepper-button #0",
       "owed": true,
       "moved": []
     }

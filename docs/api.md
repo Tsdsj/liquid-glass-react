@@ -1,6 +1,6 @@
 # API
 
-`@ttqtt/liquid-glass-react` 共 101 个导出：63 个组件与 Provider、14 个 Hook、24 个常量表、纯函数与诊断工具。所有组件都是 `'use client'`。
+`@ttqtt/liquid-glass-react` 共 104 个导出：66 个组件与 Provider、14 个 Hook、24 个常量表、纯函数与诊断工具。所有组件都是 `'use client'`。
 
 样式必须引入一次，顺序不能颠倒：
 
@@ -93,6 +93,10 @@ import '@ttqtt/liquid-glass-react/styles.css';
 | `back` | `'Back to'` | `NavigationStack` 的返回按钮 |
 | `resizeSidebar` | `'Resize sidebar'` | `SplitView` 的分隔线 |
 | `sheetHeight` | `` title => `${title} height` `` | `GlassSheet` 的拖动手柄 |
+| `morePathLevels` | `'More levels'` | `PathBar` 折起来的那几级 |
+| `moreToolbarItems` | `'More'` | `ToolbarGroup` 的溢出菜单 |
+| `collapsePanel` / `expandPanel` | `` title => `Collapse ${title}` `` | `Panel` 的收起按钮 |
+| `movePanel` | `` title => `Move ${title}` `` | `Panel` 的标题栏（也是把手） |
 
 ```tsx
 <GlassProvider strings={{ close: '关闭', cancel: '取消' }}>
@@ -123,6 +127,7 @@ import '@ttqtt/liquid-glass-react/styles.css';
 | `onCompactBack` | `() => void` | — | 紧凑模式按了返回 |
 | `sidebarWidth` / `min` / `max` | `number` | 260 / 180 / 400 | 宽度与拖动范围 |
 | `sidebarVisible` / `inspectorVisible` | `boolean` | `true` | 栏的显隐。收起和展开有动画；改宽没有 |
+| `headingLevel` | `1…6` | `1` | 折叠成栈之后那个标题的层级。嵌在已经有 `h1` 的页面里时调低 |
 
 分隔线是 `role="separator"` 且可聚焦：← → 调宽（Shift 走 40px），Home/End 到两端，双击复位。**只能拖的宽度是键盘用户设不了的宽度。**
 
@@ -228,6 +233,15 @@ useShortcut('mod k', () => setPaletteOpen(true));
 
 ### `Divider`
 `orientation` `inset`（逻辑属性，RTL 自动翻转）。
+
+### `GroupBox`
+`title` `description` `variant`(`fill`/`outline`) `radius`(14) `padding`(16)。
+
+一圈把相关内容框起来的边界，**标题画在框的外面**（macOS 的画法），并用 `aria-labelledby` 绑到框上——框自己是 `role="group"`，读屏会先说这个分组叫什么。
+
+背景**或**描边，不是两样一起：两个装置做一件事，看起来就是框里套了框。HIG 的 boxes 页还有两条是调用方的事，写在这里因为没别的地方可写：**相对容器要小**（和窗口一样大的框已经分不出任何东西），**不要嵌套**（里面还要分组就用留白和对齐）。
+
+和 `Card` 的分别：卡片是一块**承载**内容的面，有底色、圆角、阴影，是信息流里你会去点的那个东西；分组框是一圈**边界**，它的标题属于这个分组而不属于内容。
 
 ## 控件
 
@@ -349,8 +363,23 @@ useShortcut('mod k', () => setPaletteOpen(true));
 ### `GlassToolbar` / `ToolbarGroup` / `ToolbarSpacer`
 工具栏本身**没有背景**；每个 `ToolbarGroup` 才是玻璃。
 `GlassToolbar`: `orientation` `aria-label`(必填)。整条是一个 Tab 停靠点，方向键跨分组移动。
-`ToolbarGroup`: 继承全部 `GlassSurfaceOptions`，外加 `prominent`。开发模式下同组混排图标与文字会给出警告。
+`ToolbarGroup`: 继承全部 `GlassSurfaceOptions`，外加 `prominent` 和 `items`。开发模式下同组混排图标与文字会给出警告。
 `ToolbarSpacer`: `variant`(`fixed`/`flexible`)。
+
+**`items` 是溢出菜单的入口。** 把这一组的按钮作为数据（`{ key, label, icon?, onSelect, disabled?, shortcut? }`）交给它，组就会量自己的宽度，把放不下的从后往前收进尾部的「更多」菜单。HIG 说系统在 macOS 和 iPadOS 上会自动这么做，并且明确要求**不要手工加一个溢出菜单**；同一页还说尾侧的项在任何窗口宽度下都保持可见，所以会折叠的是你给了 `items` 的那些组，不是整条工具栏。
+
+给 `children` 就没有这个能力，这是有意的：要把一个按钮放进菜单，组件得先知道它**叫什么**，而从任意子节点里把名字读回来是一种会在"有人传了一个没有标签的图标"那天悄悄失败的猜测。
+
+收起来的项在菜单里，不是没了——键盘和读屏照样够得到。
+
+### `PathBar`
+`items: PathComponent[]`(必填) `aria-label`(必填)。`PathComponent` = `{ key?, label, icon?, onSelect?, href? }`。
+
+根在前、当前项在最后。最后一项不给 `onSelect` / `href`：你已经在那儿了，它带 `aria-current="page"` 而不是一个指向自己的链接。
+
+**中间放不下就折。** HIG 的 path-controls 页说路径控件"在列表太长装不下时，会隐藏首尾之间的名字"——所以这是量出来的，不是一个层数上限；折起来的几级进「…」菜单，首尾两级永远不折。层级之间的箭头由样式表画，不在无障碍树里，因为读屏在每两级之间念一次"箭头"是在念标点。
+
+**放在窗体里，不要放进工具栏**：这条也是 HIG 的原话。所以它是内容层，不是玻璃。
 
 ### `TabBar`
 `items: TabBarItem[]`(必填，3–5 项) `current` `search` `minimizeOnScroll` `sidebarBreakpoint`(1024) `sidebarHeader` `accessory` `aria-label`(必填)。
@@ -463,6 +492,19 @@ useShortcut('mod k', () => setPaletteOpen(true));
 可拖动，松手弹簧停在最近停靠点；满高时变不透明并贴住边缘。只动 `transform`。
 
 **整块面板都是把手**，不只是顶部那条横条。判据是滚动位置而不是碰到了哪个元素：内容滚到顶时，往下拖是收起；往上拖只有在还有更高一档可长时才归面板，到了最高一档往上拖就是在读内容。横向拖动不接管。在方向定下来之前不 `preventDefault`、不捕获指针，所以面板里的按钮和输入框照常可用。
+
+**在指针平台上它是另一个东西，API 不变。** HIG 的 sheets 页对 macOS 的描述只有一句："一张浮在父窗口之上、带圆角的卡片"，父窗口压暗。上面那一整段没有一句还成立：没有可以升起的边缘，没有要跟的手指，也没有理由去拖一个本来就该是这个大小的东西。所以有光标的宽窗口下，面板从窗口顶部落下、居中、按内容定大小、没有横条。**`detents` 这时不起作用**，写在这里而不是让它悄悄为真。
+
+### `Panel`
+`title`(必填) `open` `defaultOpen`(true) `onOpenChange` `collapsed` `defaultCollapsed` `onCollapsedChange` `position` `defaultPosition`(`{x:24,y:24}`) `onPositionChange` `width`(280) `onClose` `accessory`，外加全部 `GlassSurfaceOptions`。
+
+浮在内容之上的一扇小窗，非模态：没有遮罩、没有焦点陷阱，背后照常能用——这正是它和 `GlassDialog` 的分界，也是 `role="dialog"` + `aria-modal="false"` 的由来。用它来"一边调一边看"：字体、颜色、查找替换、检查器。
+
+**标题栏就是把手。** HIG 说面板"需要一条标题栏，好让人把它放到想要的位置"；只能用鼠标摆的位置是有些人摆不了的位置，所以标题栏可以聚焦，方向键移动，Shift 走大步。位置会被夹在最近的定位祖先里——包括**打开的那一刻**，不只是拖动时：`defaultPosition` 是在任何东西被量之前的一个猜测，容器比它窄的时候，面板会开在框外面被裁掉，而被裁掉的正是能把它拖回来的那条标题栏。
+
+没有最小化（HIG：一般不要提供），`collapsed` 是把它卷成一条标题栏。**HUD 那一种没有做**：HIG 允许深色半透明的面板，然后用一整段讲什么时候别用——系统自己的控件大多不配它，它也不跟随浅深色设置。那会是一个文档大半是警告的属性；需要的话，`material="clear"` 压在图片上是同一个意思，而且自带压暗规则。
+
+容器需要 `position: relative`。
 
 ### `ToastProvider` / `useToast`
 `ToastOptions`: `message`(必填) `action` `duration`(6000) `dismissLabel`。

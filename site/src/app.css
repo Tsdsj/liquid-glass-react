@@ -543,3 +543,40 @@ code { font-family: var(--lg-font-mono); font-size: .92em; }
    was being aligned to the underside of the capsule, 9.5px below the switch's own label. */
 .refraction-switch { display: flex; flex-wrap: wrap; align-items: center; gap: var(--lg-space-2) var(--lg-space-4); }
 .refraction-note { flex: 1 1 320px; min-width: 0; }
+
+/* --------------------------------------------------------------------------
+   The composite on the landing page: a drawn window, not the site's chrome.
+   -------------------------------------------------------------------------- */
+/* `position: relative` because the panel inside is positioned against it — a panel belongs to
+   a region of an application, and this frame is that region. */
+.window-frame { position: relative; overflow: hidden; isolation: isolate;
+  border-radius: var(--lg-radius-window); border: 1px solid var(--lg-separator);
+  background: var(--lg-bg-grouped); box-shadow: var(--lg-glass-shadow-large);
+  display: flex; flex-direction: column; min-height: 460px; }
+/* The window's own top edge. Not a `ScrollEdge`: nothing scrolls under it here, and a scroll
+   edge that never has anything behind it is decoration wearing a mechanism's name. */
+.window-bar { display: flex; align-items: center; gap: var(--lg-space-3); min-width: 0;
+  padding: var(--lg-space-3) var(--lg-space-4);
+  border-block-end: 1px solid var(--lg-separator); background: var(--lg-bg-secondary); }
+.window-dots { display: inline-flex; gap: 6px; flex-shrink: 0; }
+.window-dots i { width: 11px; height: 11px; border-radius: 50%; background: var(--lg-fill-secondary); }
+/* The bar does not wrap and the toolbar may be narrower than its contents want to be: that is
+   the pressure the overflow group measures itself against. Without it the row simply grows and
+   the「更多」menu never has a reason to exist. */
+.window-toolbar { flex: 1; min-width: 0; justify-content: flex-end; }
+.window-split { flex: 1; min-height: 0; }
+.window-content { display: flex; flex-direction: column; gap: var(--lg-space-2); height: 100%; min-height: 240px;
+  padding: var(--lg-space-3); }
+/* Drawn rather than photographed, like everything else on this site: a gradient and a label.
+   A stock photograph here would be the one asset in the repository nobody could account for. */
+.window-canvas { flex: 1; min-height: 160px; border-radius: var(--lg-radius-m); display: flex;
+  align-items: flex-end; padding: var(--lg-space-3);
+  background: linear-gradient(150deg, #7f9d8f 0%, #4e6f66 42%, #2f4a45 100%); }
+.window-canvas-name { color: #fff; opacity: .9; }
+@media (max-width: 767px) {
+  /* A drawn window on a phone is still a window; it just holds one column. */
+  .window-frame { min-height: 420px; }
+}
+/* The split view gives its columns the whole column; the inset list inside wants a margin to
+   be inset *from*, or its rounded corners are clipped by the divider. */
+.window-sidebar { padding: var(--lg-space-2); }

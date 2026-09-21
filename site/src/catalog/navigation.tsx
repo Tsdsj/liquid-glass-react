@@ -2,7 +2,7 @@ import { useRef, useState, type MouseEvent } from 'react';
 import {
   GlassButton, GlassIconButton, GlassSegmentedControl, GlassTabs, GlassToolbar, LibraryIcon, List, ListRow, ListSection,
   Inspector, MenuBar, NavigationBar, NavigationStack, PageControl, ScrollEdge, Sidebar, SplitView, useNavigationStack,
-  TabBar, Text, ToolbarGroup, ToolbarSpacer,
+  PathBar, TabBar, Text, ToolbarGroup, ToolbarSpacer,
 } from '@ttqtt/liquid-glass-react';
 import { Icon } from '../icons.js';
 import { demoLink } from '../site/demo.js';
@@ -87,6 +87,36 @@ export const navigationDocs: ComponentDoc[] = [
 </GlassToolbar>`,
       },
       {
+        id: 'toolbar-overflow', title: '放不下的自动收进「更多」',
+        description: '把宽度拖窄，看着按钮一个个走进菜单里。收进去的顺序是从后往前——排在前面的是更常用的那些。',
+        height: 280,
+        render: function ToolbarOverflow() {
+          const [width, setWidth] = useState('320');
+          const [last, setLast] = useState('还没执行命令');
+          const tools = ['加粗', '倾斜', '下划线', '列表', '引用', '链接', '代码'];
+          const icons = ['grid', 'layer', 'tune', 'expand', 'shrink', 'more', 'code'] as const;
+          return <div style={{ display: 'grid', gap: 12, justifyItems: 'center' }}>
+            <GlassSegmentedControl aria-label="可用宽度" value={width} onValueChange={setWidth}
+              items={[{ value: '160', label: '窄' }, { value: '320', label: '中' }, { value: '520', label: '宽' }]} />
+            <div id="toolbar-overflow-demo" style={{ width: Number(width), maxWidth: '100%' }}>
+              <GlassToolbar aria-label="格式工具栏">
+                <ToolbarGroup items={tools.map((label, index) => ({
+                  key: label, label, icon: <Icon name={icons[index]} />, onSelect: () => setLast(label),
+                }))} />
+              </GlassToolbar>
+            </div>
+            <Text variant="caption1" tone="secondary" role="status">最近一次：{last}</Text>
+          </div>;
+        },
+        code: `<GlassToolbar aria-label="格式工具栏">
+  {/* 放不下的自动进「更多」，从后往前收 */}
+  <ToolbarGroup items={[
+    { key: 'bold', label: '加粗', icon: <BoldIcon />, onSelect: bold },
+    …
+  ]} />
+</GlassToolbar>`,
+      },
+      {
         id: 'toolbar-vertical', title: '竖向', description: '贴在侧边时改成竖向，方向键也跟着换成上下。',
         backdrop: 'both', height: 260,
         render: () => <GlassToolbar aria-label="竖向工具栏" orientation="vertical">
@@ -108,12 +138,14 @@ export const navigationDocs: ComponentDoc[] = [
       { name: 'orientation', type: "'horizontal' | 'vertical'", default: "'horizontal'", description: '方向，同时决定方向键走哪个轴。' },
       { name: 'aria-label', type: 'string', required: true, description: '这条工具栏是做什么的。' },
       { name: 'prominent', type: 'boolean', default: 'false', description: 'ToolbarGroup：标记唯一的主操作分组。' },
+      { name: 'items', type: 'ToolbarItem[]', description: 'ToolbarGroup：把这一组的按钮作为数据交给它，放不下的会自动收进「更多」菜单。给 children 就没有这个能力——要把按钮放进菜单，得先知道它叫什么。' },
       { name: 'variant', type: "'fixed' | 'flexible'", default: "'fixed'", description: 'ToolbarSpacer：固定间距，或把两组推到两端。' },
     ],
     notes: [
       '整条工具栏只占一个 Tab 位，进去之后用方向键在所有分组之间移动。',
       '从右到左的语言里左右方向键会自动对调。',
       '开发时如果把图标和文字放进同一组，控制台会提醒一次。',
+      '收进「更多」的项仍然在菜单里，键盘和读屏都够得到——它们是被折起来，不是被拿走。',
     ],
     related: ['button', 'navigation-bar', 'menu'],
     imports: ['GlassToolbar', 'ToolbarGroup', 'ToolbarSpacer'],
@@ -763,6 +795,7 @@ push({ key: 'general', title: '通用', content: <General /> });`,
       { name: 'onSidebarVisibleChange / onInspectorVisibleChange', type: '(visible: boolean) => void', description: '栏的显隐变化。' },
       { name: 'inspectorWidth', type: 'number', default: '300', description: '尾侧栏宽度。' },
       { name: 'onCompactBack', type: '() => void', description: '紧凑模式下按了返回。详情无论如何都会关掉，这只是让调用方的选中态能跟上。' },
+      { name: 'headingLevel', type: '1 | 2 | 3 | 4 | 5 | 6', default: '1', description: '窄屏折叠成栈之后，那个标题的标题层级。分栏视图本身就是一屏时用 1；嵌在一个已经有 h1 的页面里时调低，否则这一页会有两个一级标题。' },
       { name: 'Inspector', type: '{ title?, children }', description: '尾侧栏的容器。内容层，密集控件用圆角矩形而不是胶囊。' },
     ],
     notes: [
@@ -1012,6 +1045,98 @@ push({ key: 'general', title: '通用', content: <General /> });`,
     ],
     related: ['menu', 'menu-button', 'command-palette', 'toolbar'],
     imports: ['MenuBar', 'GlassButton', 'Text'],
+  },
+  {
+    slug: 'path-bar', name: 'PathBar', title: '路径栏', group: '导航',
+    summary: '从根到当前位置的一条路径，中间放不下的会折进一个菜单。',
+    when: [
+      '内容有层级，而读者需要知道自己在第几层、怎么回去。',
+      '放在窗体里，不要放进工具栏——Finder 的路径栏也在窗口底部的内容区，不在状态栏。',
+      '最后一级是"你在这里"，它不是链接。',
+    ],
+    examples: [
+      {
+        id: 'path-basic', title: '一条路径',
+        description: '把宽度拖窄，中间几级会折成一个「…」。第一级和最后一级永远不折——这两级说明了这是什么。',
+        height: 230,
+        knobs: [
+          { name: 'width', label: '可用宽度', type: 'number', value: 420, min: 140, max: 640, step: 20 },
+          { name: 'depth', label: '层级数', type: 'number', value: 5, min: 2, max: 7, step: 1 },
+        ],
+        render: function PathBasic({ knobs }) {
+          const [at, setAt] = useState('设计稿 v7.sketch');
+          const all = ['Macintosh HD', '用户', 'tt', '项目', '2026', '设计', '设计稿 v7.sketch'];
+          const depth = Number(knobs.depth);
+          const levels = [...all.slice(0, depth - 1), all[all.length - 1]];
+          return <div style={{ display: 'grid', gap: 12, justifyItems: 'center' }}>
+            <div id="path-basic-demo" style={{ width: Number(knobs.width), maxWidth: '100%' }}>
+              <PathBar aria-label="位置" items={levels.map((label, index) => ({
+                key: label, label,
+                icon: index === 0 ? <Icon name="layer" size={14} /> : undefined,
+                onSelect: index === levels.length - 1 ? undefined : () => setAt(label),
+              }))} />
+            </div>
+            <Text variant="caption1" tone="secondary" role="status">最近一次跳到：{at}</Text>
+          </div>;
+        },
+        code: knobs => `<PathBar aria-label="位置" items={[
+  { label: 'Macintosh HD', onSelect: open },
+  …
+  { label: '设计稿 v7.sketch' },   {/* 最后一级不给 onSelect：你已经在这儿了 */}
+]} />
+{/* 可用宽度 ${knobs.width}px */}`,
+      },
+      {
+        id: 'path-short', title: '短路径不折',
+        description: '放得下就一级不少地摊开。折叠是量出来的结果，不是一个层数上限。',
+        height: 160,
+        render: () => <PathBar aria-label="短路径" items={[
+          { label: '资料库', onSelect: () => {} },
+          { label: '最近项目' },
+        ]} />,
+        code: `<PathBar aria-label="位置" items={[
+  { label: '资料库', onSelect: open },
+  { label: '最近项目' },
+]} />`,
+      },
+      {
+        id: 'path-where', title: '放在窗体里，不是窗框上',
+        description: 'HIG 说得很直白：路径栏不是给工具栏和状态栏用的。Finder 自己的那一条也在窗口内容区的底部。它是内容层，不是玻璃——它不浮在任何东西上面。',
+        height: 260,
+        render: () => <div id="path-where-demo" style={{ width: 360, display: 'grid', gap: 0,
+          border: '1px solid var(--lg-separator)', borderRadius: 12, overflow: 'hidden' }}>
+          <div style={{ padding: 10, borderBlockEnd: '1px solid var(--lg-separator)', display: 'flex', justifyContent: 'center' }}>
+            <Text variant="caption1" tone="secondary">窗框（工具栏在这儿）</Text>
+          </div>
+          <div style={{ padding: 24, display: 'grid', placeItems: 'center', minHeight: 90 }}>
+            <Text variant="subhead" tone="secondary">内容</Text>
+          </div>
+          <div style={{ padding: '6px 10px', borderBlockStart: '1px solid var(--lg-separator)' }}>
+            <PathBar aria-label="位置" items={[
+              { label: '项目', onSelect: () => {} },
+              { label: '设计', onSelect: () => {} },
+              { label: '导出' },
+            ]} />
+          </div>
+        </div>,
+        code: `<Window>
+  <GlassToolbar … />        {/* 窗框 */}
+  <Content>…</Content>
+  <PathBar aria-label="位置" … />  {/* 窗体底部 */}
+</Window>`,
+      },
+    ],
+    props: [
+      { name: 'items', type: 'PathComponent[]', required: true, description: '根在前，当前项在最后。每一项可以带 icon；不给 onSelect / href 的那一项不是链接。' },
+      { name: 'aria-label', type: 'string', required: true, description: '这条路径是什么的路径，例如「位置」。' },
+    ],
+    notes: [
+      '最后一级带 aria-current="page"，读屏会说出"当前页"，而不是让人从字重去猜。',
+      '层级之间的箭头是画出来的，不在无障碍树里——读屏不会在每两级之间念一次"箭头"。',
+      '折起来的几级仍然在「…」菜单里，键盘和读屏都够得到。',
+      '从右到左的语言里箭头会跟着翻。',
+    ],
+    related: ['navigation-bar', 'navigation-stack', 'menu'],
   },
 ];
 
