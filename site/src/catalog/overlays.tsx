@@ -1323,6 +1323,9 @@ toast({
               <GlassSlider aria-label="大小" value={size} onValueChange={setSize} />
               <GlassSlider aria-label="模糊" value={blur} onValueChange={setBlur} />
               <Text variant="caption1" tone="secondary" role="status">大小 {Math.round(size)} · 模糊 {Math.round(blur)}</Text>
+              {/* 按钮放在玻璃上不会再长出第二层玻璃——面板把自己的面借给里面的控件。 */}
+              <GlassButton variant="gray" controlSize="small"
+                onClick={() => { setSize(60); setBlur(20); }}>恢复默认</GlassButton>
             </Panel>
           </div>;
         },

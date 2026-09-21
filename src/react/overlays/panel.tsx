@@ -6,6 +6,7 @@ import {
 import { cx, useControllable, useMeasureEffect } from '../system/utils.js';
 import { useGlassStrings } from '../system/strings.js';
 import { useGlassSurface, type GlassSurfaceOptions } from '../system/material.js';
+import { SharedSurface } from '../system/surface.js';
 import { splitSurface } from '../system/props.js';
 import { LibraryIcon } from '../system/icon.js';
 
@@ -203,6 +204,16 @@ export function Panel({
         <LibraryIcon name="close" size={14} />
       </button>}
     </div>
-    <div className="lg-panel-body" hidden={collapsed}>{children}</div>
+    {/**
+      * The body shares the panel's glass, the way every other glass container that holds a
+      * caller's content already did — dialog, sheet, popover, alert, toast, banner, palette.
+      * The panel was the one that did not, and nothing had caught it because the only panel in
+      * the repository held sliders, whose tracks are content layer. Put a button in one and it
+      * grew a second pane of glass on top of the first, which is the rule the material breaks
+      * first and most visibly.
+      */}
+    <SharedSurface value={true}>
+      <div className="lg-panel-body" hidden={collapsed}>{children}</div>
+    </SharedSurface>
   </div>;
 }

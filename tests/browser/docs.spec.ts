@@ -267,6 +267,14 @@ test('turning refraction on changes the picture, not just an attribute', async (
   const capable = await page.evaluate(() => CSS.supports('backdrop-filter', 'url("#glass-probe")'));
   test.skip(!capable, `${browserName} cannot refract`);
 
+  /* A capsule 40px tall has a few pixels of rim, which is why "turn it on and look" used to
+     fail even once the scene had something in it to bend. The demo puts a large clear panel on
+     the picture as well: a long rim, a material you can see through, and the tree line behind
+     it. If that goes, the page is back to asking people to squint. */
+  const panel = page.locator('.media-viewer .lg-panel');
+  await expect(panel, 'no large surface left on the scene to show the effect at').toBeVisible();
+  await expect(panel).toHaveAttribute('data-material', 'clear');
+
   const bar = page.locator('.media-viewer .lg-toolbar-group').first();
   await bar.scrollIntoViewIfNeeded();
   await page.waitForTimeout(500);

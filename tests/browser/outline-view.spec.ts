@@ -195,6 +195,11 @@ test('hovering a row lights that row, not every folder above it', async ({ page 
   await open(page);
   await twist(page, 'drafts').click();
   await expect(row(page, 'drafts')).toHaveAttribute('aria-expanded', 'true');
+  /* After the folder has finished opening. Hovering while it is still growing aims the pointer
+     at where the row was a moment ago and lands it on a neighbour — a flake that only showed up
+     in a full run, where the machine is busy enough for the timing to matter. */
+  await tree(page).evaluate(node => Promise.all(node.getAnimations({ subtree: true })
+    .map(animation => animation.finished.catch(() => undefined))));
 
   await page.locator('#outline-basic-demo [data-key="proposal-old"] > .lg-outline-row').hover();
   const lit = await page.locator('#outline-basic-demo .lg-outline-row').evaluateAll(nodes => nodes
@@ -205,6 +210,66 @@ test('hovering a row lights that row, not every folder above it', async ({ page 
     })
     .map(node => (node.parentElement as HTMLElement).dataset.key));
   expect(lit, `${lit.length} rows are lit: ${lit.join(', ')}`).toEqual(['proposal-old']);
+});
+
+/**
+ * Hover is feedback, not a replacement for the selection.
+ *
+ * `…:not([data-disabled="true"]) > .lg-outline-row:hover` is four class-ish parts and the
+ * selected rule was three, so the hover fill won on specificity wherever they met and the blue
+ * simply went away under the pointer. Asked as "is the selected row still the accent colour",
+ * which is the thing a reader would say out loud.
+ */
+test('hovering the selected row does not take the selection away', async ({ page }) => {
+  await open(page);
+  const accent = await page.evaluate(() =>
+    getComputedStyle(document.documentElement).getPropertyValue('--lg-accent').trim());
+  const painted = () => page.locator('#outline-basic-demo .lg-outline-lens').evaluate(node =>
+    ({ background: getComputedStyle(node).backgroundColor, shown: node.dataset.shown }));
+
+  const before = await painted();
+  expect(before.shown, 'nothing is drawing the selection').toBe('true');
+  await page.locator('#outline-basic-demo [data-key="proposal"] > .lg-outline-row').hover();
+  const after = await painted();
+  expect(after, `the selection was ${before.background} and became ${after.background} under the pointer`)
+    .toEqual(before);
+  expect(after.background.replace(/\s/g, ''), `the selection is not the accent (${accent})`)
+    .toMatch(/^rgba?\(0,136,255/);
+});
+
+/**
+ * And moving the selection is a move.
+ *
+ * The highlight used to be a background on each row, so changing rows was a 90ms cross-fade
+ * between two boxes — which reads as an instant jump, and was reported as "no animation". It is
+ * one element now, and it travels; the same thing the tab bar's sidebar form does, for the same
+ * reason.
+ */
+test('the selection slides from one row to the next', async ({ page }) => {
+  await open(page);
+  const lens = page.locator('#outline-basic-demo .lg-outline-lens');
+  const where = () => lens.evaluate(node => node.getBoundingClientRect().top);
+
+  const from = await where();
+  await page.locator('#outline-basic-demo [data-key="readme"] > .lg-outline-row').click();
+  const moving = await lens.evaluate(node =>
+    node.getAnimations().map(animation => (animation as CSSTransition).transitionProperty));
+  expect(moving, 'the highlight arrived without travelling').toContain('translate');
+
+  /* And it really is between the two rows part-way through, not merely "an animation exists". */
+  const mid = await where();
+  const to = await lens.evaluate(node => new Promise<number>(resolve =>
+    Promise.all(node.getAnimations().map(a => a.finished.catch(() => undefined)))
+      .then(() => resolve(node.getBoundingClientRect().top))));
+  expect(mid, `it went ${from} → ${mid} → ${to}`).toBeGreaterThan(from);
+  expect(mid).toBeLessThan(to);
+
+  await page.emulateMedia({ reducedMotion: 'reduce' });
+  await page.reload();
+  await tree(page).scrollIntoViewIfNeeded();
+  await page.locator('#outline-basic-demo [data-key="readme"] > .lg-outline-row').click();
+  expect(await lens.evaluate(node => node.getAnimations().length),
+    'the highlight still travels under Reduce Motion').toBe(0);
 });
 
 test('a row is big enough to hit with whatever you are pointing with', async ({ page }) => {

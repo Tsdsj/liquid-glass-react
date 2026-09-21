@@ -1,6 +1,6 @@
 'use client';
 import { useCallback, useRef, useState, type HTMLAttributes, type KeyboardEvent, type MouseEvent, type ReactNode, type RefAttributes } from 'react';
-import { cx, useControllable } from '../system/utils.js';
+import { cx, useControllable, useMeasureEffect } from '../system/utils.js';
 import { LibraryIcon } from '../system/icon.js';
 
 export interface OutlineNode {
@@ -117,6 +117,42 @@ export function OutlineView({
 
   const list = useRef<HTMLUListElement>(null);
   const search = useRef({ text: '', time: 0 });
+
+  /**
+   * The selection is one element that travels, not a background on whichever row happens to
+   * own it.
+   *
+   * Two things were wrong with the background. Changing rows was a cross-fade between two
+   * boxes over 90ms, which reads as an instant jump — the tab bar's sidebar form has carried a
+   * sliding highlight since the beginning and a tree that jumps is the odd one out. And the
+   * hover fill, being a longer selector, simply won against it: putting the pointer on the
+   * selected row took the selection away.
+   *
+   * Measured rather than derived from the data, because a row's position depends on how many
+   * folders above it are open and on how far through their opening animation they are. The
+   * observer is what follows that: a group animating its height resizes the tree on every
+   * frame, so the highlight keeps up with rows that are still moving.
+   */
+  const lens = useRef<HTMLDivElement>(null);
+  useMeasureEffect(() => {
+    const tree = list.current, node = lens.current;
+    if (!tree || !node) return;
+    const place = () => {
+      const row = active === null ? null
+        : tree.querySelector<HTMLElement>(`[data-key="${CSS.escape(active)}"] > .lg-outline-row`);
+      /* A selected row inside a closed folder is not on screen, and `content-visibility` is
+         what says so — the same answer the keyboard and the screen reader get. */
+      if (!row || !row.checkVisibility()) { node.dataset.shown = 'false'; return; }
+      node.style.height = `${row.offsetHeight}px`;
+      node.style.translate = `0 ${row.offsetTop}px`;
+      node.dataset.shown = 'true';
+    };
+    place();
+    if (typeof ResizeObserver === 'undefined') return;
+    const observer = new ResizeObserver(place);
+    observer.observe(tree);
+    return () => observer.disconnect();
+  });
 
   /**
    * Focus moves now and the tab stop follows on the next render. Both are needed: the element
@@ -241,6 +277,7 @@ export function OutlineView({
     className={cx('lg-outline', className)} role="tree" aria-label={label}
     onKeyDown={keys} onClick={press}
     onFocus={event => { const row = rowAt(event); if (row) setRemembered(row.node.key); }}>
+    <div ref={lens} className="lg-outline-lens" data-shown="false" aria-hidden="true" />
     {items.map(node => render(node, 0))}
   </ul>;
 }

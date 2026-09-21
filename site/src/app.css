@@ -447,6 +447,8 @@ code { font-family: var(--lg-font-mono); font-size: .92em; }
 .media-control-wrap { position: absolute; inset-inline-start: 50%; inset-block-end: var(--lg-space-6);
   translate: -50% 0; max-width: calc(100% - 32px); }
 .media-toolbar { --lg-tint-opacity: .12; }
+/* Where the adjust panel went, so it can come back. Top-trailing, under the fullscreen button. */
+.media-reopen { position: absolute; inset-block-start: 56px; inset-inline-end: var(--lg-space-5); }
 .media-footnote { position: absolute; inset-block-end: var(--lg-space-4); inset-inline-end: var(--lg-space-5);
   color: #e1ede0; font: var(--lg-text-caption2-size) var(--lg-font-mono); }
 

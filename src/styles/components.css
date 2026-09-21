@@ -68,8 +68,20 @@
    shadow and stronger lensing than a button, and it deliberately does not flip light/dark
    as content scrolls beneath it (WWDC25/219). */
 .lg-root[data-glass-size="large"] { box-shadow: var(--lg-glass-shadow-large); }
-[data-lg-theme="light"].lg-root[data-glass-size="large"] > .lg-decoration .lg-tint { --lg-tint-opacity: .86; }
-[data-lg-theme="dark"].lg-root[data-glass-size="large"] > .lg-decoration .lg-tint { --lg-tint-opacity: .9; }
+/**
+ * …but not when the caller asked for `clear`, and leaving that out was a real defect.
+ *
+ * These two are aimed at the tint element itself, so they outranked the rule above that gives
+ * clear-over-light-media its 35% — and `material="clear"` on any large surface therefore
+ * rendered as regular with extra steps. A sheet, a popover, an alert, a panel: none of them
+ * could be clear, while the documentation said they could. The same shape as the `controlSize`
+ * bug, an inner declaration quietly beating the caller's intent.
+ *
+ * `clear` is defined as the variant you see through, and it only exists over media, which is
+ * the one case where a big surface is *supposed* to let the picture read.
+ */
+[data-lg-theme="light"].lg-root[data-glass-size="large"]:not([data-material="clear"]) > .lg-decoration .lg-tint { --lg-tint-opacity: .86; }
+[data-lg-theme="dark"].lg-root[data-glass-size="large"]:not([data-material="clear"]) > .lg-decoration .lg-tint { --lg-tint-opacity: .9; }
 .lg-root[data-renderer="shared"] { box-shadow: none; background: transparent; }
 /* A control that has given up its own glass to sit on someone else's surface still has to read as
    a control. These are the filled forms the system uses inside a sheet or a popover: a tinted
@@ -1759,7 +1771,7 @@ a.lg-path-level, button.lg-path-level { cursor: pointer; }
  * inside out of the accessibility tree and out of find-in-page, so a closed folder is closed to
  * everyone rather than merely invisible.
  */
-.lg-outline { list-style: none; margin: 0; padding: var(--lg-space-1) 0; interpolate-size: allow-keywords;
+.lg-outline { position: relative; list-style: none; margin: 0; padding: var(--lg-space-1) 0; interpolate-size: allow-keywords;
   font-family: var(--lg-font-text); color: var(--lg-label); }
 .lg-outline-group { list-style: none; margin: 0; padding: 0;
   block-size: 0; overflow: clip; content-visibility: hidden;
@@ -1789,6 +1801,8 @@ a.lg-path-level, button.lg-path-level { cursor: pointer; }
      Outline views are a desktop idiom — the HIG lists them as unsupported on iOS — but a
      desktop idiom on a web page still gets opened on a phone, and 36px there is under the
      floor. Not `--lg-hit-min` alone: that is a floor under a target, never a control height. */
+  /* Above the travelling highlight. */
+  position: relative; z-index: 1;
   min-height: max(var(--lg-height-compact), var(--lg-hit-min)); border-radius: var(--lg-radius-s);
   /* Logical, so the indent starts on the reading side rather than always on the left. */
   padding-inline: calc(var(--lg-space-2) + var(--lg-outline-depth, 0) * 16px) var(--lg-space-3);
@@ -1802,7 +1816,24 @@ a.lg-path-level, button.lg-path-level { cursor: pointer; }
 @media (hover: hover) {
   .lg-outline-item:not([data-disabled="true"]) > .lg-outline-row:hover { background: var(--lg-fill-quaternary); }
 }
-.lg-outline-item[data-selected="true"] > .lg-outline-row { background: var(--lg-accent); color: var(--lg-accent-contrast); }
+/**
+ * One highlight for the whole tree, and it travels.
+ *
+ * It used to be a background on whichever row was selected, which got two things wrong at
+ * once. Changing rows cross-faded two boxes in 90ms and read as a jump. And the hover rule
+ * above is a longer selector, so it won wherever the two met: the pointer took the selection
+ * away. A highlight that is one element cannot be outspecified by a state of a different one,
+ * and it has somewhere to travel from.
+ *
+ * Behind the rows, so the labels stay on top and the hover fill — which is translucent —
+ * composites over it rather than replacing it.
+ */
+.lg-outline-lens { position: absolute; inset-inline: 0; inset-block-start: 0; height: 0; z-index: 0;
+  background: var(--lg-accent); border-radius: var(--lg-radius-s); pointer-events: none;
+  transition: translate var(--lg-duration-spring) var(--lg-spring),
+    height var(--lg-duration-release) var(--lg-ease); }
+.lg-outline-lens[data-shown="false"] { opacity: 0; }
+.lg-outline-item[data-selected="true"] > .lg-outline-row { color: var(--lg-accent-contrast); }
 .lg-outline-item[data-selected="true"] > .lg-outline-row .lg-outline-value { color: inherit; opacity: .8; }
 .lg-outline-item[data-disabled="true"] > .lg-outline-row { opacity: .45; }
 .lg-outline-item:focus { outline: none; }
@@ -1826,5 +1857,8 @@ a.lg-path-level, button.lg-path-level { cursor: pointer; }
 .lg-outline-value { flex: 0 0 auto; color: var(--lg-label-secondary);
   font-size: var(--lg-text-caption1-size); font-variant-numeric: tabular-nums; }
 @media (prefers-reduced-motion: reduce) {
-  .lg-outline-group, .lg-outline-row, .lg-outline-twist { transition: none; }
+  .lg-outline-group, .lg-outline-row, .lg-outline-twist, .lg-outline-lens { transition: none; }
 }
+/* Forced colours paint over `background`, so the highlight has to name a system colour or the
+   selection is simply gone. Same shape the page control's selected dot uses. */
+@media (forced-colors: active) { .lg-outline-lens { background: Highlight; } }

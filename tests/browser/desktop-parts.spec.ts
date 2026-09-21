@@ -79,6 +79,24 @@ test('a panel floats without taking the page hostage', async ({ page }) => {
   await expect(page.getByRole('link', { name: /按钮 GlassButton/ }).first()).toBeEnabled();
 });
 
+/**
+ * "Never glass on glass" — and the panel was the one container that broke it.
+ *
+ * Every other glass surface that holds a caller's content shares its own pane with whatever
+ * goes inside: dialog, sheet, popover, alert, toast, banner, command palette. The panel did
+ * not, and nothing noticed because the only panel in the repository held sliders, whose tracks
+ * are content layer. A button in one grew a second sheet of glass on top of the first.
+ */
+test('a control on a panel sits on the panel\'s glass, not on a second pane', async ({ page }) => {
+  await page.goto('/#/components/panel');
+  const inside = page.locator('#panel-basic-demo .lg-panel .lg-button');
+  await expect(inside).toHaveAttribute('data-renderer', 'shared');
+  /* And the same button outside a panel keeps its own glass, so this is a statement about
+     being inside one rather than about that button. */
+  const outside = page.getByRole('button', { name: '打开命令面板' }).first();
+  if (await outside.count()) await expect(outside).not.toHaveAttribute('data-renderer', 'shared');
+});
+
 test('a panel can be moved without a pointer', async ({ page }) => {
   await page.goto('/#/components/panel');
   const panel = page.locator('#panel-basic-demo .lg-panel');

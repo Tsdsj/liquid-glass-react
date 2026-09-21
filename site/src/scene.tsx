@@ -26,13 +26,41 @@ const REFLECT = 0.92;
  * Integer mixing, not `Math.sin`: the only thing these must not do is come out differently in
  * Node and in the browser, and every step here is exact in 32 bits.
  */
+/** Deterministic everywhere. Node and the browser have to draw the same lake, to the pixel. */
+const mix = (n: number) => {
+  let h = Math.imul(n + 1, 2654435761) >>> 0;
+  h ^= h >>> 15; h = Math.imul(h, 2246822519) >>> 0; h ^= h >>> 13;
+  return (h >>> 0) / 4294967296;
+};
+const round = (value: number) => Math.round(value * 10) / 10;
+
+/**
+ * The conifers along the far shore, as one path.
+ *
+ * Alpine lakes have them and the scene did not — it had five, in the right-hand corner. They
+ * are also the sharpest thing in the picture and they sit exactly on the waterline, which is
+ * the band the floating glass crosses. Fifty thin dark triangles against a pale lake is the
+ * kind of backdrop that makes refraction legible: a rim passing over them visibly kinks the
+ * trunks, where over a gradient it has nothing to kink.
+ */
+const TREES = (() => {
+  let d = '';
+  let x = -14;
+  for (let i = 0; x < 1214; i++) {
+    const wide = mix(i * 5 + 1), tall = mix(i * 5 + 2), gap = mix(i * 5 + 3);
+    /* Taller and denser toward the middle distance, thinning out at the two headlands where
+       the rock comes down to the water. */
+    const middle = 1 - Math.min(1, Math.abs(x - 560) / 760);
+    const w = round(3.4 + wide * 5.2 + middle * 2.4);
+    const h = round(13 + tall * 34 + middle * 20);
+    const base = round(439 + mix(i * 5 + 4) * 2);
+    d += `M${round(x - w)} ${base}L${round(x)} ${round(base - h)}L${round(x + w)} ${base}Z`;
+    x = round(x + w * (0.85 + gap * 1.5) + 2);
+  }
+  return d;
+})();
+
 const SWELL = (() => {
-  const mix = (n: number) => {
-    let h = Math.imul(n + 1, 2654435761) >>> 0;
-    h ^= h >>> 15; h = Math.imul(h, 2246822519) >>> 0; h ^= h >>> 13;
-    return (h >>> 0) / 4294967296;
-  };
-  const round = (value: number) => Math.round(value * 10) / 10;
   const out: { x: number; y: number; w: number; h: number; lit: boolean; o: number }[] = [];
   /* Laid out in rows so that every part of the near water gets some, then jittered in both
      axes and bent by the filter. Purely random placement left whole stretches empty — including,
@@ -114,6 +142,9 @@ export function AlpineScene({ warm = false, className = '' }: { warm?: boolean; 
         <path d={RIDGE_B} fill="#849f94" opacity=".66"/>
         <path d={PEAK_LEFT} fill={`url(#${id}-mountain)`} opacity=".6"/>
         <path d={PEAK_RIGHT} fill={`url(#${id}-rock)`} opacity=".58"/>
+        {/* Upside down with everything else, and the ripple takes them apart into the band of
+            broken dark just under the shore. */}
+        <path d={TREES} fill="#1e4740" opacity=".7"/>
       </g>
     </g>
     <g clipPath={`url(#${id}-lake)`} filter={`url(#${id}-ripple)`}>
@@ -126,8 +157,11 @@ export function AlpineScene({ warm = false, className = '' }: { warm?: boolean; 
     <path d="M762 443L820 474 899 524 966 545 1037 592 1091 700 1200 720V444Z" fill="#ccceb2" opacity=".12"/>
     <path d="M0 426Q94 405 172 429T315 439L450 448 0 471Z" fill="#245348"/>
     <path d="M1200 399Q1165 410 1129 409T1016 429L831 444 1200 467Z" fill="#385f4c"/>
-    <g fill="#3a604d"><path d="M1026 435l10-40 10 40h-20M1064 430l14-64 14 64h-28M1114 422l15-72 15 72h-30M1155 419l13-59 13 59h-26M1178 415l18-85 18 85h-36"/></g>
     <rect y="357" width="1200" height="147" fill={`url(#${id}-mist)`}/>
+    {/* After the mist, not before it. Atmosphere would be the honest order and it costs the one
+        thing this line is here for: the tree line is the crispest edge in the picture, and a
+        crisp edge is what a glass rim has to bend for anyone to see that it bends at all. */}
+    <path d={TREES} fill="#1c4239"/>
     <path d="M0 694L53 677 118 689 141 681 215 708 235 720H0Z" fill="#173f38"/>
     <path d="M837 720L960 696 1021 708 1064 682 1128 699 1200 658V720Z" fill="#204c3e"/>
   </svg>;
