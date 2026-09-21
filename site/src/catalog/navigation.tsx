@@ -62,7 +62,7 @@ export const navigationDocs: ComponentDoc[] = [
       },
       {
         id: 'toolbar-segmented', title: '放一个分段控件进去',
-        description: '分段控件有自己的键盘模型（方向键在选项之间走）。放进工具栏后，工具栏的方向键遍历走到它这里会停——这是已知限制，修复会改变既有键盘行为，排在 0.3.0。',
+        description: '分段控件有自己的方向键操作（在选项之间走）。放进工具栏之后，工具栏的方向键遍历走到这一组就停下来，要按 Tab 才能继续——目前是这样。',
         height: 250,
         render: function ToolbarSegmented() {
           const [view, setView] = useState('map');
@@ -138,7 +138,7 @@ export const navigationDocs: ComponentDoc[] = [
       { name: 'orientation', type: "'horizontal' | 'vertical'", default: "'horizontal'", description: '方向，同时决定方向键走哪个轴。' },
       { name: 'aria-label', type: 'string', required: true, description: '这条工具栏是做什么的。' },
       { name: 'prominent', type: 'boolean', default: 'false', description: 'ToolbarGroup：标记唯一的主操作分组。' },
-      { name: 'items', type: 'ToolbarItem[]', description: 'ToolbarGroup：把这一组的按钮作为数据交给它，放不下的会自动收进「更多」菜单。给 children 就没有这个能力——要把按钮放进菜单，得先知道它叫什么。' },
+      { name: 'items', type: 'ToolbarItem[]', description: 'ToolbarGroup：把这一组的按钮当成数据交给它，放不下的会自动收进「更多」菜单。直接写成子元素就没有这个能力：要把按钮收进菜单，得先知道它叫什么。' },
       { name: 'variant', type: "'fixed' | 'flexible'", default: "'fixed'", description: 'ToolbarSpacer：固定间距，或把两组推到两端。' },
     ],
     notes: [
@@ -197,7 +197,7 @@ export const navigationDocs: ComponentDoc[] = [
       },
       {
         id: 'tabbar-sidebar', title: '同一个元素，宽屏变侧边栏',
-        description: '不是两套导航。超过 sidebarBreakpoint 之后，同一个 TabBar 展开成侧边栏，当前项还是那一项——这也是为什么它和尺寸类别的 768 是两条不同的轴。',
+        description: '不是两套导航。宽度超过 sidebarBreakpoint 之后，同一个标签栏展开成侧边栏，当前项还是那一项。',
         height: 340,
         render: function TabBarSidebar() {
           const [current, setCurrent] = useState('library');
@@ -257,11 +257,11 @@ export const navigationDocs: ComponentDoc[] = [
       { name: 'aria-label', type: 'string', required: true, description: '这条导航是做什么的。' },
       { name: 'sidebarHeader', type: 'ReactNode', description: '变成侧边栏之后顶部放什么——通常是应用名。标签栏形态下不显示。' },
       { name: 'sidebarBreakpoint', type: 'number', default: '1024', description: '超过这个宽度就变成侧边栏。' },
-      { name: 'accessory', type: 'ReactNode', description: '常驻的附加内容，比如“正在播放”。不要放页面专属的操作。' },
+      { name: 'accessory', type: 'ReactNode', description: '常驻的附加内容，比如「正在播放」。不要放页面专属的操作。' },
     ],
     notes: [
-      '是一组真正的链接，读屏会报出当前所在项，而不是把它当成会就地换内容的标签页。',
-      '底部会自动避开 iPhone 的home 指示条。',
+      '是一组真正的链接：读屏会报出你现在在哪一项，而不是把它当成会就地换内容的标签页。',
+      '底部会自动避开 iPhone 底部那条横线。',
       '徽标必须带名字，否则读屏只会念出一个数字。',
     ],
     related: ['sidebar', 'badge', 'scroll-edge'],
@@ -412,7 +412,7 @@ export const navigationDocs: ComponentDoc[] = [
       { name: 'aria-label', type: 'string', required: true, description: '这组标签是在切什么。' },
     ],
     notes: [
-      '读屏会把它识别成“会就地换内容”的标签页，和页面导航区分得很清楚。',
+      '读屏会把它识别成「会就地换内容」的标签页，和页面导航区分得很清楚。',
       '方向键切换并立刻显示对应内容；内容区可以直接用键盘进入。',
     ],
     related: ['segmented-control', 'tab-bar'],
@@ -461,7 +461,7 @@ export const navigationDocs: ComponentDoc[] = [
       },
       {
         id: 'navbar-live', title: '真的一条导航栏',
-        description: '这是组件本身。大标题下面可以带一行副标题；两端放控件。整页只应该有一条，而且它的标题层级是 1——这一页已经有 h1 了，所以这里调到 3。',
+        description: '这是组件本身。大标题下面可以带一行副标题，两端放控件。整页只应该有一条。',
         height: 300,
         knobs: [
           { name: 'largeTitle', label: '大标题', type: 'boolean', value: true },
@@ -508,7 +508,7 @@ export const navigationDocs: ComponentDoc[] = [
     props: [
       { name: 'title', type: 'string', required: true, description: '页面标题，大标题和紧凑标题共用。' },
       { name: 'largeTitle', type: 'boolean', default: 'true', description: '关掉就直接使用紧凑标题。' },
-      { name: 'headingLevel', type: '1 | 2 | 3 | 4 | 5 | 6', default: '1', description: '大标题的标题层级。栏在页面顶部时是 1；嵌在已经有 h1 的页面里时调低——一页两个 h1 会毁掉读屏用户靠标题跳转的能力。这一页的示例用的是 4，因为示例自己的标题已经是 3。' },
+      { name: 'headingLevel', type: '1 | 2 | 3 | 4 | 5 | 6', default: '1', description: '大标题在页面里的层级。整页只有这一条栏时用 1；嵌在一个已经有主标题的页面里就调低——一页两个一级标题，靠标题跳转的人会迷路。' },
       { name: 'subtitle', type: 'ReactNode', description: '只出现在大标题下方。' },
       { name: 'leading / trailing', type: 'ReactNode', description: '两端的控件。' },
     ],
@@ -571,7 +571,7 @@ push({ key: 'general', title: '通用', content: <General /> });`,
 }} />`,
       },
       {
-        id: 'stack-chevron', title: '只要箭头', description: '上一页标题太长时，backLabel="chevron" 只画箭头。可读的名字仍然在 aria-label 里。',
+        id: 'stack-chevron', title: '只要箭头', description: '上一页标题太长时，backLabel="chevron" 只画一个箭头。读屏听到的仍然是完整的名字。',
         height: 340,
         render: function StackChevron() {
           return <div style={{ width: '100%', maxWidth: 420, border: '1px solid var(--lg-separator)', borderRadius: 20, overflow: 'hidden', padding: 12 }}>
@@ -593,10 +593,10 @@ push({ key: 'general', title: '通用', content: <General /> });`,
       { name: 'useNavigationStack()', type: '() => { push, pop, popToRoot, depth, canGoBack }', description: '在栈里的任意一层调用。不在栈里会抛错——静默失效的按钮更难找。' },
     ],
     notes: [
-      '压栈和弹栈都会把焦点移到新页面的 main 上。不这么做的话，键盘用户点了一行、页面换了，下一次 Tab 会从那一行原来的位置继续——而那一页已经不在了。',
+      '进一层和退一层，焦点都会跟到新的这一页上。否则键盘用户点完一行、页面换了，下一次 Tab 还停在那一行原来的位置。',
       '返回按钮可见的是上一页标题，读屏听到的是「返回 上一页标题」——只有标题的话，听不出这是往回走。',
-      '切换是交叉淡入加一点位移，弹栈时方向相反，RTL 下整体镜像。开启「减少动效」后只剩淡入：方向才是被读成「运动」的那一部分。',
-      '页面用 key 区分，切换时 React 会整棵替换——上一页的状态不会漏到下一页。',
+      '切换是淡入加一点位移，往回走时方向相反，从右到左的语言里整体镜像。开启「减少动效」后只剩淡入。',
+      '每一页用 key 区分，上一页的状态不会漏到下一页。',
     ],
     related: ['navigation-bar', 'tab-bar', 'sidebar'],
     imports: ['NavigationStack', 'useNavigationStack'],
@@ -659,9 +659,9 @@ push({ key: 'general', title: '通用', content: <General /> });`,
       { name: 'orientation', type: "'horizontal' | 'vertical'", default: "'horizontal'", description: '方向，同时决定方向键走哪个轴。' },
     ],
     notes: [
-      '是一个 tablist：整体一个 Tab 停靠点，方向键在内部移动，Home/End 跳到两端。',
+      '整体只占一个 Tab 停靠点，进去之后方向键移动，Home/End 跳到两端。',
       '每个点都是真正的按钮并且有自己的名字（「3 / 6」），所以拖动是键盘路径之外的补充，不是替代。',
-      '点画出来只有 7px，触摸时**竖直方向**的命中区撑到 44，横向只撑到相邻两点的中线——横向也撑到 44 的话，一排点的命中区会互相压住，按到隔壁比按不到更糟。',
+      '点画出来只有 7px，上下方向的可点范围撑到一整行高；左右方向只撑到相邻两点的中间——再宽就会压住隔壁，按错比按不到更糟。',
     ],
     related: ['tab-bar', 'tabs', 'segmented-control'],
   },
@@ -794,14 +794,14 @@ push({ key: 'general', title: '通用', content: <General /> });`,
       { name: 'defaultSidebarVisible / defaultInspectorVisible', type: 'boolean', default: 'true', description: '非受控时的初始显隐。' },
       { name: 'onSidebarVisibleChange / onInspectorVisibleChange', type: '(visible: boolean) => void', description: '栏的显隐变化。' },
       { name: 'inspectorWidth', type: 'number', default: '300', description: '尾侧栏宽度。' },
-      { name: 'onCompactBack', type: '() => void', description: '紧凑模式下按了返回。详情无论如何都会关掉，这只是让调用方的选中态能跟上。' },
-      { name: 'headingLevel', type: '1 | 2 | 3 | 4 | 5 | 6', default: '1', description: '窄屏折叠成栈之后，那个标题的标题层级。分栏视图本身就是一屏时用 1；嵌在一个已经有 h1 的页面里时调低，否则这一页会有两个一级标题。' },
+      { name: 'onCompactBack', type: '() => void', description: '窄屏下按了返回。详情一定会关掉，这只是让你的选中状态跟上。' },
+      { name: 'headingLevel', type: '1 | 2 | 3 | 4 | 5 | 6', default: '1', description: '窄屏折叠成一摞页面之后，那个标题在页面里的层级。分栏视图本身就是一屏时用 1；嵌在一个已经有主标题的页面里就调低。' },
       { name: 'Inspector', type: '{ title?, children }', description: '尾侧栏的容器。内容层，密集控件用圆角矩形而不是胶囊。' },
     ],
     notes: [
-      '分隔线是 `role="separator"`，能聚焦：左右方向键调宽（Shift 走 40px），Home/End 到两端，双击复位。只能拖的宽度是键盘用户设不了的宽度。',
-      '低于 768px 折叠成 NavigationStack：侧栏变成根页面，选中一项把详情压上去，返回按钮回到列表——这正是那两栏本来在表达的关系。',
-      '拖动按根容器测量，不按上一次指针位置累加，RTL 下方向镜像。',
+      '分隔线能用键盘：聚焦之后左右方向键调宽（按住 Shift 走大步），Home/End 到两端，双击复位。只能拖的宽度，键盘用户设不了。',
+      '低于 768px 折叠成一摞页面：侧栏变成第一页，选中一项把详情压上去，返回按钮回到列表。',
+      '拖动全程跟手，从右到左的语言里方向镜像。',
     ],
     related: ['sidebar', 'navigation-stack', 'tab-bar'],
     imports: ['SplitView', 'Inspector'],
@@ -887,7 +887,7 @@ push({ key: 'general', title: '通用', content: <General /> });`,
       { name: 'variant', type: "'soft' | 'hard'", default: "'soft'", description: '渐隐，或一条均匀的实边。' },
       { name: 'height', type: 'number', default: '44', description: '渐隐区域的高度。' },
     ],
-    notes: ['纯装饰，读屏会跳过。只有内容真的交叠时才出现。', '用户开启“减少透明度”后会变成一条实边。'],
+    notes: ['纯装饰，读屏会跳过。只有内容真的交叠时才出现。', '用户开启「减少透明度」后会变成一条实边。'],
     related: ['navigation-bar', 'tab-bar'],
   },
   {
@@ -996,8 +996,8 @@ push({ key: 'general', title: '通用', content: <General /> });`,
             </Text>
           </div>;
         },
-        code: `{ key: 'look', title: '外观', selection: 'single', items: [...] }   {/* menuitemradio */}
-{ key: 'show', title: '显示', items: [...] }                       {/* menuitemcheckbox */}`,
+        code: `{ key: 'look', title: '外观', selection: 'single', items: [...] }   {/* 一组互斥的值 */}
+{ key: 'show', title: '显示', items: [...] }                       {/* 三个各自独立的开关 */}`,
       },
       {
         id: 'menubar-disabled', title: '不适用的时候置灰，不要拿走',
@@ -1040,8 +1040,8 @@ push({ key: 'general', title: '通用', content: <General /> });`,
     notes: [
       '整排只占一个 Tab 位。左右方向键在标题之间走，下方向键打开，Escape 关闭并把焦点还给标题。',
       '菜单打开着的时候，左右方向键直接换菜单——不是先关再开。',
-      '菜单内部是 GlassMenu 的那套键盘模型：上下移动、Home/End 跳到两端、打字跳到匹配项。',
-      '角色是真的 menubar / menuitem，读屏会说「菜单栏，四项之中的第一项」。',
+      '菜单打开之后和普通菜单一样：上下移动、Home/End 跳到两端、打字跳到匹配项。',
+      '读屏会说「菜单栏，四项之中的第一项」。',
     ],
     related: ['menu', 'menu-button', 'command-palette', 'toolbar'],
     imports: ['MenuBar', 'GlassButton', 'Text'],
@@ -1052,7 +1052,7 @@ push({ key: 'general', title: '通用', content: <General /> });`,
     when: [
       '内容有层级，而读者需要知道自己在第几层、怎么回去。',
       '放在窗体里，不要放进工具栏——Finder 的路径栏也在窗口底部的内容区，不在状态栏。',
-      '最后一级是"你在这里"，它不是链接。',
+      '最后一级是「你在这里」，它不是链接。',
     ],
     examples: [
       {
@@ -1101,7 +1101,7 @@ push({ key: 'general', title: '通用', content: <General /> });`,
       },
       {
         id: 'path-where', title: '放在窗体里，不是窗框上',
-        description: 'HIG 说得很直白：路径栏不是给工具栏和状态栏用的。Finder 自己的那一条也在窗口内容区的底部。它是内容层，不是玻璃——它不浮在任何东西上面。',
+        description: '路径栏不该放进工具栏或状态栏。访达自己的那一条也在窗口内容区的底部。它不是玻璃，因为它不浮在任何东西上面。',
         height: 260,
         render: () => <div id="path-where-demo" style={{ width: 360, display: 'grid', gap: 0,
           border: '1px solid var(--lg-separator)', borderRadius: 12, overflow: 'hidden' }}>
@@ -1131,8 +1131,8 @@ push({ key: 'general', title: '通用', content: <General /> });`,
       { name: 'aria-label', type: 'string', required: true, description: '这条路径是什么的路径，例如「位置」。' },
     ],
     notes: [
-      '最后一级带 aria-current="page"，读屏会说出"当前页"，而不是让人从字重去猜。',
-      '层级之间的箭头是画出来的，不在无障碍树里——读屏不会在每两级之间念一次"箭头"。',
+      '最后一级读屏会说出「当前页」，而不是让人从字重去猜。',
+      '层级之间的箭头读屏不会念出来。',
       '折起来的几级仍然在「…」菜单里，键盘和读屏都够得到。',
       '从右到左的语言里箭头会跟着翻。',
     ],

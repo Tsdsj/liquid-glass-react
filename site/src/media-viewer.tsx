@@ -22,7 +22,7 @@ export function MediaViewer({ compact = false }: { compact?: boolean }) {
     const svg = canvas.current?.querySelector('svg'); if (!svg) return;
     const url = URL.createObjectURL(new Blob([svg.outerHTML], { type: 'image/svg+xml;charset=utf-8' }));
     const anchor = document.createElement('a'); anchor.href = url; anchor.download = `${fileName.trim().replace(/[^\w\u4e00-\u9fa5-]/g, '_') || 'alpine-study'}.svg`;
-    anchor.click(); setTimeout(() => URL.revokeObjectURL(url), 1500); setStatus('已导出原创 SVG 场景'); setExportOpen(false);
+    anchor.click(); setTimeout(() => URL.revokeObjectURL(url), 1500); setStatus('场景已导出'); setExportOpen(false);
   };
   return <div className={`media-viewer ${compact ? 'is-compact' : ''}`} data-testid="media-viewer">
     <div className={`scene-art ${zoom || view === 'fill' ? 'is-zoomed' : ''}`} ref={canvas} style={{ filter: grade }}><AlpineScene warm={warm}/></div>
@@ -30,7 +30,7 @@ export function MediaViewer({ compact = false }: { compact?: boolean }) {
     <div className="media-topline"><span className="scene-identity"><span className="scene-dot"/> FIELD NOTES <span className="muted-divider">/</span> 0{scene % 2 + 1}</span>
       <GlassIconButton material="clear" backdropTone="light" aria-label={zoom ? '还原场景大小' : '放大场景'} onClick={() => setZoom(!zoom)}><Icon name={zoom ? 'shrink' : 'expand'}/></GlassIconButton>
     </div>
-    <div className="scene-caption"><span className="eyebrow">A STUDY IN STILLNESS</span><h2>{scene % 2 ? '暮色，留在湖面。' : '山间，有回响。'}</h2><p>原创矢量场景 · 无外部图片依赖</p></div>
+    <div className="scene-caption"><span className="eyebrow">A STUDY IN STILLNESS</span><h2>{scene % 2 ? '暮色，留在湖面。' : '山间，有回响。'}</h2><p>矢量绘制 · 没有用任何外部图片</p></div>
     <div className="media-control-wrap">
       <GlassToolbar aria-label="媒体查看器操作" className="media-toolbar">
         {/* Transport and secondary actions are different jobs, so they get different glass groups.
@@ -46,8 +46,8 @@ export function MediaViewer({ compact = false }: { compact?: boolean }) {
         <GlassIconButton aria-label={favorite ? '取消收藏' : '收藏场景'} aria-pressed={favorite} onClick={() => setFavorite(!favorite)}><Icon name="heart" style={favorite ? { fill: 'currentColor' } : undefined}/></GlassIconButton>
         <GlassPopover title="查看设置" description="玻璃承载操作，内容保持清晰。" trigger={<GlassIconButton aria-label="打开查看设置"><Icon name="tune"/></GlassIconButton>}>
           <label className="field-label">显示方式</label><GlassSegmentedControl aria-label="显示方式" value={view} onValueChange={setView} density="compact" items={[{ value: 'fit', label: '适应' }, { value: 'fill', label: '填充' }]}/>
-          <div className="field-heading"><span>音量（界面演示）</span><output>{volume}%</output></div><GlassSlider aria-label="音量" value={volume} onValueChange={setVolume} formatValue={v => `${v}%`}/>
-          <p className="micro-note">动态背景是本地合成视频，无音轨。</p>
+          <div className="field-heading"><span>音量</span><output>{volume}%</output></div><GlassSlider aria-label="音量" value={volume} onValueChange={setVolume} formatValue={v => `${v}%`}/>
+          <p className="micro-note">动态背景在本地合成，没有声音。</p>
         </GlassPopover>
         <GlassMenu aria-label="媒体更多操作" trigger={<GlassIconButton aria-label="更多媒体操作"><Icon name="more"/></GlassIconButton>} items={[
           { key: 'export', label: '导出原创场景', onSelect: () => setExportOpen(true) },
@@ -86,11 +86,11 @@ export function MediaViewer({ compact = false }: { compact?: boolean }) {
     {regular && !adjust && <div className="media-reopen">
       <GlassButton material="clear" backdropTone="light" controlSize="small" onClick={() => setAdjust(true)}>调整</GlassButton>
     </div>}
-    <span className="media-footnote">{playing ? 'LIVE · 合成视频测试' : '1200 × 720 · VECTOR'}</span>
+    <span className="media-footnote">{playing ? 'LIVE · 动态背景' : '1200 × 720 · VECTOR'}</span>
     <span role="status" className="sr-only">{status}</span>
-    <GlassDialog title="导出这一刻" description="导出的是项目附带的原创 SVG 场景，可继续编辑或用于测试背景。" open={exportOpen} onOpenChange={setExportOpen}>
+    <GlassDialog title="导出这一刻" description="导出这个页面里的矢量场景。文件可以继续编辑，也可以拿去当测试背景。" open={exportOpen} onOpenChange={setExportOpen}>
       <form onSubmit={event => { event.preventDefault(); download(); }}><label className="field-label" htmlFor="export-name">文件名称</label><input id="export-name" className="text-input" value={fileName} onChange={event => setFileName(event.target.value)}/>
-        <p className="micro-note">格式：SVG · 无需网络 · 不包含工具栏</p><div className="dialog-actions"><GlassButton onClick={() => setExportOpen(false)}>取消</GlassButton><GlassButton type="submit" variant="glassProminent"><Icon name="download" size={16}/>导出 SVG</GlassButton></div>
+        <p className="micro-note">格式 SVG · 不含工具栏 · 不联网</p><div className="dialog-actions"><GlassButton onClick={() => setExportOpen(false)}>取消</GlassButton><GlassButton type="submit" variant="glassProminent"><Icon name="download" size={16}/>导出 SVG</GlassButton></div>
       </form>
     </GlassDialog>
   </div>;

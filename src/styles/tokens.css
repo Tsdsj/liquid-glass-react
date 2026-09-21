@@ -267,10 +267,6 @@
     --lg-height-extra-large: 52px;
     --lg-height-field-small: 32px;
     --lg-height-field-large: 44px;
-    /* WCAG 2.2 Target Size (Minimum) is 24×24 for a pointer. Every height above clears it, so
-       the region `components.css` draws is enforcement rather than rescue — which is the point
-       of writing the floor down: it goes on holding when a caller sets a smaller height. */
-    --lg-hit-min: 24px;
     /* 8px each side would make a small field 38px tall — taller than the large one was. */
     --lg-field-padding-block: 5px;
     --lg-margin: 20px;
@@ -287,7 +283,6 @@
   --lg-height-extra-large: 52px;
   --lg-height-field-small: 32px;
   --lg-height-field-large: 44px;
-  --lg-hit-min: 24px;
   --lg-field-padding-block: 5px;
   --lg-margin: 20px;
   --lg-press-scale: 1.03;
@@ -295,13 +290,34 @@
   --lg-stretch-gain: .55;
 }
 
-/* The one metric keyed to the pointer rather than to the table above — see `--lg-hit-width`.
-   Two rules and not one block per platform, because there is only one declaration to switch
-   and the default is already the answer for a cursor. */
-@media (pointer: coarse) {
+/**
+ * The floor under a target, which is a question about the pointer and not about the window.
+ *
+ * It used to live in the table above, keyed to `(pointer: fine) and (min-width: 768px)`. That
+ * is the right question for control *heights* — a 36px control on a 390px screen is the wrong
+ * answer whatever is pointing at it — and the wrong one for a floor. A browser window dragged
+ * narrow on a desktop came out asking both: `--lg-hit-min` read the width and said 44, while
+ * `--lg-hit-width` read the pointer and said 0, so a small icon button had a 32×44 hit region.
+ * Two floors on two axes of the same control. The audit measured it; half a switch again.
+ *
+ * Both halves ask `any-pointer: coarse` now, and that is deliberately not `pointer: coarse`: a
+ * laptop with a touchscreen and a tablet with a trackpad both report a *fine* primary pointer,
+ * and a fingertip is still going to arrive. WCAG 2.2 Target Size (Minimum) is 24×24 for a
+ * cursor; the HIG's 44×44 is for a finger. Every control height in the table above clears 24,
+ * so the region `components.css` draws is enforcement rather than rescue — which is the point
+ * of writing the floor down: it goes on holding when a caller sets a smaller height.
+ *
+ * Written twice, like the table above, because an explicit `platform` has to win in both
+ * directions.
+ */
+@media not all and (any-pointer: coarse) {
+  :root:not([data-lg-platform="touch"]) { --lg-hit-min: 24px; }
+}
+@media (any-pointer: coarse) {
   :root:not([data-lg-platform="desktop"]) { --lg-hit-width: var(--lg-hit-min); }
 }
-:root[data-lg-platform="touch"] { --lg-hit-width: var(--lg-hit-min); }
+:root[data-lg-platform="desktop"] { --lg-hit-min: 24px; --lg-hit-width: 0px; }
+:root[data-lg-platform="touch"] { --lg-hit-min: 44px; --lg-hit-width: var(--lg-hit-min); }
 
 /* --------------------------------------------------------------------------
    2. Light appearance
@@ -321,13 +337,18 @@
   --lg-accent: var(--lg-blue);
   --lg-accent-contrast: #fff;
   /**
-   * How to turn an accent into *ink* — a label painted in the accent, on a surface washed with
-   * that same accent. The `tinted` button is the only case so far.
+   * How to turn a system colour into *ink* — a label painted in it rather than a surface
+   * filled with it.
    *
-   * System blue is a background colour. As text on a light page it measures 3.4:1, and over the
-   * 16% wash the tinted variant paints under it, 2.75:1. Darkening the ink rather than
-   * deepening the wash keeps the variant quiet, which is the whole reason to reach for it
-   * instead of a prominent button.
+   * System blue is a background colour. As text on a light page it measures 3.4:1, and over
+   * the 16% wash the tinted button paints under it, 2.75:1. System red as a label on a light
+   * card measures 3.1:1. Both are under AA, and Increase Contrast only lifts them to about
+   * 4.0 — so the palette alone never gets there. Darkening the ink rather than deepening the
+   * surface keeps these treatments quiet, which is the whole reason to reach for them.
+   *
+   * This started as the tinted button's private fix and is the rule for every case: anywhere
+   * `--lg-accent` or `--lg-red` is a `color`, it goes through this mix. Anywhere it is a
+   * `background` or a graphic, it does not — a fill answers to 3:1, not 4.5:1.
    *
    * A recipe rather than a finished colour, deliberately: a custom property is substituted
    * where it is *declared*, so a `--lg-accent-ink` computed up here would keep resolving

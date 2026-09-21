@@ -34,7 +34,7 @@ function SecondaryNav({ path, go }: { path: string; go: (path: string) => void }
 
   if (section === 'components') return <nav className="subnav" aria-label="组件列表">
     {groupedDocs.map(({ group, docs }) => <div key={group} className="subnav-group">
-      <Text variant="caption1" emphasized tone="tertiary" className="subnav-title">{group}</Text>
+      <Text variant="caption1" emphasized tone="secondary" className="subnav-title">{group}</Text>
       {docs.map(doc => link(`components/${doc.slug}`, docLabel(doc)))}
     </div>)}
   </nav>;

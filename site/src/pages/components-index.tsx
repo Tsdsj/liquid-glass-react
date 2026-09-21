@@ -10,7 +10,7 @@ export function ComponentsIndex({ go }: { go: (path: string) => void }) {
         {groupedDocs.map(({ group, docs }) => <Card key={group} radius={20} padding={0} className="catalog-card">
           <div className="catalog-card-head">
             <Text as="h3" variant="headline">{group}</Text>
-            <Text variant="caption1" tone="tertiary">{docs.length} 个</Text>
+            <Text variant="caption1" tone="secondary">{docs.length} 个</Text>
           </div>
           <List variant="plain">
             <ListSection>

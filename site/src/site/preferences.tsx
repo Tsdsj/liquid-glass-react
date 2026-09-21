@@ -38,7 +38,7 @@ export function PreferencesButton({ value, onChange }: {
           comments there quote widths found at AX5 — and it is the one the HIG asks a layout to
           survive. Offering a gentler setting than the one the tests use invites a reader to
           conclude the layout holds up when the hard case was never on screen. */}
-      <Text variant="caption1" tone="secondary">Dynamic Type 的 Web 等价物。AX5 是最大的一档，用来检查布局是否还能回流。</Text>
+      <Text variant="caption1" tone="secondary">跟随系统文字大小设置的网页版。AX5 是最大的一档，用来看布局还能不能排得开。</Text>
     </div>
     {/*
       Each row is the switch and nothing else.

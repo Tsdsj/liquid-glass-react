@@ -182,19 +182,56 @@ test('declaring a touchscreen widens the hit region too, not just the metrics', 
 });
 
 /**
- * On a phone, none of it applies.
+ * On a phone, none of it applies — and the two questions are not the same question.
  *
- * A tablet with a trackpad reports a fine pointer at phone width, which is why the media query
- * asks about width as well — 22px controls on a 390px screen would be the wrong answer to the
- * right question.
+ * A tablet with a trackpad reports a fine pointer at phone width, which is why the metrics
+ * table asks about width as well: 22px controls on a 390px screen would be the wrong answer to
+ * the right question. The *floor under a target* is a different question, and it used to be
+ * bundled into that table anyway. A browser window dragged narrow on a desktop then came out
+ * asking both at once — `--lg-hit-min` read the width and said 44, `--lg-hit-width` read the
+ * pointer and said 0 — so a small icon button had a 32×44 hit region: two floors on two axes
+ * of one control. The audit measured it on the banner's dismiss button, whose own page
+ * promises 44×44.
+ *
+ * Both halves ask the pointer now, and they ask `any-pointer`, so the hybrid device the width
+ * was standing in for is answered directly rather than by proxy.
  */
-test('a narrow window keeps the touch metrics even with a mouse', async ({ page }) => {
+test('a narrow window keeps the touch metrics, and the target floor asks the pointer', async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 });
   await withPointer(page, '/#/components/button');
-  const hit = await pxOf(page, '--lg-hit-min');
   const body = await pxOf(page, '--lg-text-body-size');
-  expect(hit, `the hit floor is ${hit}px on a 390px screen`).toBe(44);
+  const height = await heightOf(page, '#button-variants .lg-button');
   expect(body, `body text is ${body}px on a 390px screen`).toBe(17);
+  expect(height, `a regular button is ${height}px on a 390px screen`).toBeGreaterThanOrEqual(44);
+  const hit = await pxOf(page, '--lg-hit-min');
+  const reach = await pxOf(page, '--lg-hit-width');
+  expect(hit, `the floor is ${hit}px for a cursor in a narrow window`).toBe(24);
+  expect(reach, `the two halves of the floor disagree: ${hit} tall, ${reach} wide`).toBe(0);
+});
+
+test('a touchscreen raises both halves of the floor, whatever the primary pointer is', async ({ browser }) => {
+  const context = await browser.newContext({ hasTouch: true, viewport: { width: 390, height: 844 } });
+  const page = await context.newPage();
+  await withPointer(page, '/#/components/banner');
+  const hit = await pxOf(page, '--lg-hit-min');
+  const reach = await pxOf(page, '--lg-hit-width');
+  expect(hit, `the floor is ${hit}px with a fingertip available`).toBe(44);
+  expect(reach, `the region is ${reach}px wide against a ${hit}px floor`).toBe(44);
+
+  /* The control the audit caught: 32px of artwork, and the page says 44×44. */
+  const dismiss = page.locator('.lg-banner-dismiss').first();
+  await dismiss.scrollIntoViewIfNeeded();
+  const region = await dismiss.evaluate(node => {
+    const after = getComputedStyle(node, '::after');
+    const box = node.getBoundingClientRect();
+    return {
+      width: Math.max(box.width, parseFloat(after.minWidth) || 0),
+      height: Math.max(box.height, parseFloat(after.minHeight) || 0),
+    };
+  });
+  expect(region.width, `the dismiss button reaches ${region.width}px across`).toBeGreaterThanOrEqual(44);
+  expect(region.height, `the dismiss button reaches ${region.height}px down`).toBeGreaterThanOrEqual(44);
+  await context.close();
 });
 
 /* =========================================================================================

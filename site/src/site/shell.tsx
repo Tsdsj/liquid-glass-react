@@ -141,7 +141,9 @@ export function Shell({ path, go, secondaryNav, children }: {
           </main>
         </div>
         <footer className="app-footer">
-          <Text variant="caption1" tone="tertiary">
+          {/* Secondary, not tertiary: tertiary is the colour of a placeholder and measures
+              2.3:1 on this canvas. This line is something to read. */}
+          <Text variant="caption1" tone="secondary">
             Liquid Glass UI · 独立设计研究，非 Apple 官方产品，不含 Apple 字体、SF Symbols 或壁纸素材。
           </Text>
           <div className="app-footer-links">

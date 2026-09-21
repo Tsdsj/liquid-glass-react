@@ -84,7 +84,7 @@ export const contentDocs: ComponentDoc[] = [
       { name: 'tabular', type: 'boolean', default: 'false', description: '等宽数字。' },
     ],
     notes: [
-      '标题层级需要你自己指定。组件不猜，是为了避免一个页面里出现好几个 h1，让读屏用户无法靠标题跳转。',
+      '标题层级要你自己写出来（`as="h2"`）。组件不替你猜，免得一页里冒出好几个一级标题，靠标题跳转的人会找不到路。',
       '所有字号跟随右上角的文字大小设置；调到最大时布局要能重新排开，不能截断。',
       '中文、日文、韩文下会自动关掉为拉丁字母设计的紧缩字距。',
     ],
@@ -124,7 +124,7 @@ export const contentDocs: ComponentDoc[] = [
 </Card>`,
       },
       {
-        id: 'card-concentric', title: '同心圆角', description: '内圆角 = 外圆角 − 内边距。左边是算对的，右边固定成 4px，角看起来就“喇叭口”了。',
+        id: 'card-concentric', title: '同心圆角', description: '内圆角 = 外圆角 − 内边距。左边是算对的，右边固定成 4px，角看起来就「喇叭口」了。',
         height: 260,
         render: () => <div style={{ display: 'flex', gap: 16, flexWrap: 'wrap', justifyContent: 'center' }}>
           <Card radius={26} padding={12} style={{ width: 150 }}>
@@ -174,7 +174,7 @@ export const contentDocs: ComponentDoc[] = [
       { name: 'raised', type: 'boolean', default: 'false', description: '一层很轻的投影。内容层的投影要克制。' },
       { name: 'minimum', type: 'number', default: '0', description: 'Concentric 专用：这个元素单独出现时的兜底圆角。' },
     ],
-    notes: ['卡片只是容器，本身没有语义角色，语义由里面的元素承担。'],
+    notes: ['卡片只是一块承载内容的面，它自己不表示任何东西——能点、能读的身份由里面的元素承担。'],
     related: ['material-view', 'list', 'text'],
     imports: ['Card', 'Concentric'],
   },
@@ -252,7 +252,7 @@ export const contentDocs: ComponentDoc[] = [
     props: [
       { name: 'variant', type: "'insetGrouped' | 'plain'", default: "'insetGrouped'", description: 'List：分组内嵌，或通栏铺满。' },
       { name: 'header / footer', type: 'ReactNode', description: 'ListSection：分区标题与下方说明。' },
-      { name: 'headingLevel', type: '1 | 2 | 3 | 4 | 5 | 6', default: '3', description: 'ListSection：分区标题的标题层级。它确实是个标题——读屏用户靠它找到这一组——所以不是取消，而是放到对的深度。' },
+      { name: 'headingLevel', type: '1 | 2 | 3 | 4 | 5 | 6', default: '3', description: 'ListSection：分区标题在页面里的层级。它确实是个标题，读屏用户靠它找到这一组，所以是调深浅、不是取消。' },
       { name: 'label', type: 'ReactNode', required: true, description: 'ListRow：这一行的主文字。' },
       { name: 'secondaryLabel', type: 'ReactNode', description: '第二行补充说明。' },
       { name: 'value', type: 'ReactNode', description: '行尾的只读值。' },
@@ -260,7 +260,7 @@ export const contentDocs: ComponentDoc[] = [
       { name: 'accessory', type: 'ReactNode', description: '行尾的控件。出现时自动隐藏箭头。' },
       { name: 'href / onSelect', type: 'string | (event) => void', description: '任一存在，这一行就是可点的。' },
       { name: 'destructive', type: 'boolean', default: 'false', description: '标红。危险操作还需要确认或撤销。' },
-      { name: 'disabled', type: 'boolean', default: 'false', description: '不可用。带 href 的行会改成不可点的按钮，而不是保留链接只加一个 aria-disabled——那样回车和点击还是会跳走。' },
+      { name: 'disabled', type: 'boolean', default: 'false', description: '不可用。带 `href` 的行会真的失去链接身份，不是只变灰——否则回车和点击还是会跳走。' },
     ],
     notes: [
       '可点的行是真正的链接或按钮，键盘能走到、读屏会报出类型，而不是一个绑了点击事件的方块。',
@@ -321,7 +321,7 @@ export const contentDocs: ComponentDoc[] = [
       },
       {
         id: 'kbd-bind', title: '把它接上',
-        description: '`useShortcut` 和 `Kbd` 读的是同一张表、用同一套规则解析 `mod`，所以印在屏幕上的和真正监听的不会是两回事。下面这个是活的：按一下试试。',
+        description: '屏幕上印的快捷键和真正监听的那一个是同一份写法，不会对不上。下面这个是活的，按一下试试。',
         height: 240,
         render: function KbdBind() {
           const [count, setCount] = useState(0);
@@ -357,12 +357,12 @@ useShortcut('/', () => setBare(n => n + 1));   // 不带修饰键，打字时不
       { name: 'useShortcut(keys, handler, options?)', type: 'Hook', description: '把同一个写法绑成真的快捷键。options：`enabled`、`scope`（限定在某个元素内）、`passive`（不拦截浏览器默认行为）。' },
     ],
     notes: [
-      '⌘ ⌥ ⇧ 这些符号读屏念不出来——有的直接跳过，有的念成「兴趣点符号」。所以元素自己带 aria-label，符号本身标了 aria-hidden。',
+      '⌘ ⌥ ⇧ 这些符号读屏念不出来，有的跳过、有的念成「兴趣点符号」。所以读屏听到的是「Command K」这样的说法。',
       '修饰键顺序由组件决定，不由传入顺序决定。',
       '`mod` 在苹果设备上是 ⌘，在别的机器上是 Ctrl——而且显示和绑定用的是同一次解析。屏幕上写着 ⌘K、实际监听 Ctrl+K，是一句印在界面上的假话。',
       '有模态对话框打开时，外层的快捷键全部失效，只有限定在对话框内的还响。否则 ⌘S 会去保存那张正在问你要不要保存的表单背后的文档。',
       '不带修饰键的快捷键在输入框里打字时不触发——那是字母。带修饰键的照常触发，因为输入框里的 ⌘F 仍然是查找。',
-      '开发模式下，两个同时存在的命令绑到同一组键会告警：先挂载的那个会赢，而那不是任何人做过的决定。',
+      '两个命令绑到同一组键时，开发模式会提醒你一次——先挂上去的那个会赢，而那通常不是你想要的结果。',
     ],
     related: ['text', 'menu'],
   },
@@ -443,8 +443,8 @@ useShortcut('/', () => setBare(n => n + 1));   // 不带修饰键，打字时不
       { name: 'open / defaultOpen / onOpenChange', type: 'boolean / (open) => void', description: '自己控制，或交给组件。' },
     ],
     notes: [
-      '底层是原生 `<details>`：浏览器的页内查找命中里面的文字会自动展开它，摘要本身对读屏就是一个带展开状态的按钮，回车和空格本来就能用。用 div 加 onClick 重做一遍，会把第一条悄悄丢掉。',
-      '高度动画在支持 `interpolate-size` 的浏览器上交给浏览器，否则量一次内容高度。开启「减少动效」后直接显示。',
+      '用的是浏览器自带的折叠元素：页内查找命中收起来的文字会自动展开，回车和空格都能开合，读屏会报出「已展开」或「已收起」。',
+      '展开和收起有高度动画。开启「减少动效」后直接显示。',
     ],
     related: ['list', 'card', 'text'],
   },
@@ -455,7 +455,7 @@ useShortcut('/', () => setBare(n => n + 1));   // 不带修饰键，打字时不
       '照片、卡片、图标这类同一种东西排在一起的时候。',
       '给 minItemWidth，不要给断点列表——网格被告知「一项最窄多少」，列数它自己算，所以放进侧栏、放进分栏的中间列、和铺满整宽都对。',
       '每项周围要留出它自己的选中和焦点效果的余地，否则焦点环会被画到下一项底下——只有用键盘的人看得见。',
-      '**不做虚拟化。** 那是另一个组件、另一组取舍，在这里做半截会让以后做真的那个更难。',
+      '**上千项的长列表它撑不住。** 那需要只渲染看得见的那一屏，是另一个组件的事。',
     ],
     examples: [
       {
@@ -504,7 +504,7 @@ useShortcut('/', () => setBare(n => n + 1));   // 不带修饰键，打字时不
       { name: 'gap', type: 'number', default: '16', description: '项之间的间距，下限 8——焦点环要有地方画。传更小的值开发模式会告警。' },
     ],
     notes: [
-      '用的是 auto-fill + minmax，容器比一项还窄时也不会溢出。',
+      '容器比一项还窄时也不会溢出，会把那一项压到容器的宽度。',
       '内容层。网格上的东西是内容；玻璃属于浮在它们上面的那一层。',
     ],
     related: ['card', 'list', 'form'],
@@ -552,7 +552,7 @@ useShortcut('/', () => setBare(n => n + 1));   // 不带修饰键，打字时不
 </Form>`,
       },
       {
-        id: 'form-stacked', title: '文本框用 stacked', description: '控件放到标签下面一行。错误文案挂在 aria-describedby 上，不是只标红。',
+        id: 'form-stacked', title: '文本框用 stacked', description: '控件放到标签下面一行。出错时读屏会把错误一起念出来，不是只把框标红。',
         height: 380,
         render: function FormStacked() {
           const [email, setEmail] = useState('not-an-email');
@@ -609,13 +609,13 @@ useShortcut('/', () => setBare(n => n + 1));   // 不带修饰键，打字时不
       { name: 'header / footer', type: 'ReactNode', description: 'FormSection：分区标题与下方说明。标题是真正的 heading。' },
       { name: 'label', type: 'ReactNode', required: true, description: 'FormRow：这个控件是做什么的。' },
       { name: 'description', type: 'ReactNode', description: 'FormRow：标签下面的第二行。' },
-      { name: 'error', type: 'ReactNode', description: 'FormRow：这一行的错误。挂在 aria-describedby 上。' },
+      { name: 'error', type: 'ReactNode', description: 'FormRow：这一行的错误。读屏会把它和这个字段一起念出来。' },
       { name: 'layout', type: "'inline' | 'stacked'", default: "'inline'", description: '控件和标签同行，还是在下一行。' },
     ],
     notes: [
-      '是真正的 `<form>`：回车提交、浏览器能自动填充、提交按钮名副其实。',
-      '行的标题是 span 不是 label。把控件包进 label 让那行字也能点，是想当然的写法——但 GlassSwitch 和 TextField 自己就渲染 label，而 HTML 不允许 label 套 label。浏览器不会报错：实测在 Chrome 里点外层那行字，开关照样会翻，所以这个写法看起来是成立的。它错在名字——里外两个 label 各给控件贴一个名，读屏把同一句话念两遍。想让文字也能点，用控件自己的可见标签槽（GlassSwitch 的 label、字段的 labelHidden），让它自己拥有那行字。',
-      '分区标题是真 heading，读屏可以在分区之间跳；分区说明挂在 aria-describedby 上。',
+      '在任何一个输入框里按回车都会提交，浏览器能自动填充，提交按钮就是提交按钮。',
+      '想让标签那行字也能点，用控件自己的标签——开关的 `label`、字段的 `label`。不要在外面再包一层：控件已经自带标签了，包两层的结果是读屏把同一句话念两遍。',
+      '分区标题是真正的标题，读屏可以在分区之间跳；分区下面那行说明会跟这一组一起念出来。',
     ],
     related: ['list', 'text-field', 'switch'],
     imports: ['Form', 'FormSection', 'FormRow'],
@@ -692,7 +692,7 @@ useShortcut('/', () => setBare(n => n + 1));   // 不带修饰键，打字时不
     ],
     notes: [
       '最薄的两档上不要用最淡的那级文字颜色，对比度不够。',
-      '用户打开“减少透明度”后会自动变成实色底。',
+      '用户打开「减少透明度」后会自动变成实色底。',
     ],
     related: ['card', 'sidebar'],
   },
@@ -769,7 +769,7 @@ useShortcut('/', () => setBare(n => n + 1));   // 不带修饰键，打字时不
     summary: '把相关的内容圈在一起，上面可以有一个小标题。',
     when: [
       '几个控件属于同一件事，但还不到单独开一页的程度——导出设置、一组开关。',
-      '相对容器要小。一个和窗口一样大的框已经不再"把内容分出来"了，它只是又画了一层边。',
+      '相对容器要小。一个和窗口一样大的框已经不再「把内容分出来」了，它只是又画了一层边。',
       '不要嵌套。里面还要分组就用留白和对齐，框里再套框会让界面看起来又挤又碎。',
     ],
     examples: [
@@ -851,8 +851,8 @@ useShortcut('/', () => setBare(n => n + 1));   // 不带修饰键，打字时不
       { name: 'padding', type: 'number', default: '16', description: '内边距，单位 px。' },
     ],
     notes: [
-      '框本身是 role="group"，标题通过 aria-labelledby 绑上去——读屏会先说这个分组叫什么，再读里面的内容。',
-      '没有标题时不会硬造一个名字：一个没名字的分组，读屏当作普通容器带过，这比念一句"组"有用。',
+      '读屏会先说这个分组叫什么，再读里面的内容。',
+      '没有标题时不会硬造一个名字——读屏直接带过，比念一句「组」有用。',
       '内容层，永远不是玻璃。它是页面的一块区域，不是浮在页面上的东西。',
     ],
     related: ['card', 'form', 'list'],
@@ -864,7 +864,7 @@ useShortcut('/', () => setBare(n => n + 1));   // 不带修饰键，打字时不
       '数据本身是嵌套的——文件夹、章节、图层、组织架构。',
       '不嵌套就别用。并排的一堆东西用 List，它更轻、也不会让人去找不存在的三角形。',
       '通常放在分栏视图的左列，右边放选中的那一项。',
-      '需要多列（大小、修改日期、种类各占一列）时这个组件不够用，见下面最后一个示例。',
+      '需要「大小」「修改日期」各占一列的表格，这个组件做不了。',
     ],
     examples: [
       {
@@ -950,7 +950,7 @@ const [picked, setPicked] = useState<string | null>('cover');
       },
       {
         id: 'outline-not-a-table', title: '一列，不是一张表',
-        description: '层级只出现在第一列，右边那串数字是同一行上的读数，不是第二列。真正的多列大纲（可排序的列头、可拖的列宽、方向键在单元格之间走）是另一种东西，这个组件不是它——做一半的话，它对谁都不像表格。数据本来就不嵌套的，用 List。',
+        description: '层级只出现在第一列，右边那串数字是同一行上的读数，不是第二列。要可排序的列头和能拖的列宽，那是表格，这个组件不做。数据本来就不嵌套的，用列表。',
         height: 360,
         render: () => <div id="outline-not-a-table-demo" style={{ display: 'grid', gap: 16, width: 320 }}>
           <OutlineView aria-label="有层级的" items={projectTree} defaultExpanded={['images']} />
@@ -982,12 +982,12 @@ const [picked, setPicked] = useState<string | null>('cover');
       { name: 'onSelect', type: '(key: string, node: OutlineNode) => void', description: '选中变化时回调。' },
     ],
     notes: [
-      'role="tree"，行是 treeitem，子列表是 group；每行带 aria-level，所以读屏会报"第几层"。',
+      '读屏把它当成一棵树来念，每一行都会报出自己在第几层。',
       '整棵树在 Tab 顺序里只占一个位置：进去之后用方向键走，出来按 Tab。一个文件夹一个 Tab 位会让一棵树变成几十次 Tab。',
-      '三角形不是按钮。treeitem 里再塞一个按钮，键盘模型里没有任何一个键能走到它，却要在每一行多按一次 Tab；开合状态由行自己的 aria-expanded 播报。',
-      '收起的那一层用 content-visibility: hidden，不是 display: none——既留下一个可以做高度动画的盒子，又真的把里面的行移出无障碍树和页内查找。收起就是对所有人收起。',
-      '打字跳转匹配的是按键直接产生的字符。经输入法组字打出来的中文不会以单字符按键的形式到达，所以中文名字请用方向键走——这一条对库里所有打字跳转的地方（菜单、命令面板）都一样。',
-      '名字太长时末尾省略。HIG 更希望省略号在中间，CSS 没有这个能力，所以这里是末尾——不假装。',
+      '三角形不是一个单独的按钮：那会让每一行都多一个 Tab 停靠点，而方向键又走不到它。是开是合，由这一行自己报出来。',
+      '收起来的文件夹对所有人都是收起的：键盘走不进去，读屏念不到，页内查找也找不到。收起有动画，不是一下子消失。',
+      '打字跳转认的是直接敲出来的字母和数字。中文经输入法组字打出来，键盘收不到单个字符，所以中文名字用方向键走——菜单和命令面板也一样。',
+      '名字太长时在末尾省略。',
     ],
     related: ['list', 'split-view', 'disclosure'],
   },

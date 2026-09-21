@@ -202,3 +202,30 @@ test('a sheet is an edge sheet in a phone-shaped window and a centred card in a 
   expect(edge.height, `the edge sheet is ${edge.height}px tall against the card's ${card.height}`)
     .toBeGreaterThan(card.height);
 });
+
+/**
+ * A path level is a word you click, so the word has to be big enough to click.
+ *
+ * `min-height` was there and `min-width` was not, which only shows up on a level with a short
+ * name: 「设计」 measured 42px across against a fingertip's 44. `--lg-hit-width` rather than
+ * `--lg-hit-min`, so a cursor — which clears 24 on every level already — gets nothing, and the
+ * bar, which folds on measured width, simply folds one level sooner on a touch screen.
+ */
+test('a path level is wide enough for a fingertip, and unchanged for a cursor', async ({ browser }) => {
+  for (const [what, options, floor] of [
+    ['a cursor', {}, 24],
+    ['a fingertip', { hasTouch: true }, 44],
+  ] as const) {
+    const context = await browser.newContext({ viewport: { width: 1280, height: 900 }, ...options });
+    const page = await context.newPage();
+    await page.goto('/#/components/path-bar');
+    await page.waitForTimeout(500);
+    const widths = await page.locator('#path-basic-demo').evaluate(node =>
+      [...node.querySelectorAll('.lg-path-level')].map(level => level.getBoundingClientRect().width));
+    expect(widths.length, 'no levels to measure').toBeGreaterThan(1);
+    for (const width of widths) {
+      expect(width, `a level is ${width.toFixed(0)}px wide for ${what}`).toBeGreaterThanOrEqual(floor);
+    }
+    await context.close();
+  }
+});

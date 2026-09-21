@@ -51,7 +51,7 @@ export const fieldDocs: ComponentDoc[] = [
 <TextField label="搜索词" labelHidden placeholder="搜索" />`,
       },
       {
-        id: 'field-multiline', title: '多行', description: '真正的 textarea：回车换行、浏览器自带的拉伸把手、拼写检查和语音输入都和别处一样。rows="auto" 会跟着内容长。',
+        id: 'field-multiline', title: '多行', description: '回车换行，右下角能拖着改大小，拼写检查和语音输入都和别处一样。rows="auto" 会跟着内容长高。',
         height: 300,
         render: function FieldMultiline() {
           const [note, setNote] = useState('');
@@ -106,7 +106,7 @@ export const fieldDocs: ComponentDoc[] = [
       { name: 'label', type: 'ReactNode', required: true, description: '可见标签，和输入框正式绑定。' },
       { name: 'hint', type: 'ReactNode', description: '下方的补充说明，会随输入框一起被读出来。' },
       { name: 'error', type: 'ReactNode', description: '有值就表示这个字段出错了，同时会告诉读屏。' },
-      { name: 'multiline', type: 'boolean', default: 'false', description: '渲染成 textarea。ref 随之指向 textarea——这是一个可辨识联合，不传时单行那一套完全不变。' },
+      { name: 'multiline', type: 'boolean', default: 'false', description: '换成多行输入框，ref 也跟着指向它。不传时单行的那一套完全不变。' },
       { name: 'rows', type: "number | 'auto'", default: '4', description: 'multiline 专用。auto 跟着内容长。' },
       { name: 'controlSize', type: "'small' | 'regular' | 'large'", default: "'regular'", description: '控件高度。文字大小不变。' },
       { name: 'labelHidden', type: 'boolean', default: 'false', description: '视觉上隐藏标签，但保留给读屏和语音控制。' },
@@ -115,7 +115,7 @@ export const fieldDocs: ComponentDoc[] = [
     notes: [
       '字号不小于 16px，否则在 iPhone 上一点击就会把整页放大。',
       '焦点框画在外层容器上，只有用键盘走到时才出现——鼠标点击不会亮。',
-      'autocomplete 和 inputmode 由你按字段用途传，这是表单用起来像原生的关键。',
+      '按字段的用途传 autoComplete 和 inputMode，手机键盘和浏览器的自动填充才会对。',
     ],
     related: ['search-field', 'list'],
   },
@@ -156,7 +156,7 @@ export const fieldDocs: ComponentDoc[] = [
 />`,
       },
       {
-        id: 'search-suggestions', title: '搜索建议', description: '传了 suggestions 之后它就是一个 combobox：上下键在列表里走，回车选中，Escape 只关列表不清空输入框。**筛选永远是你的**——只有应用知道自己的数据里「匹配」是什么意思。',
+        id: 'search-suggestions', title: '搜索建议', description: '传了 suggestions 就会出现一个建议列表：上下键在里面走，回车选中，Escape 只关列表、不清空输入框。**筛选是你的事**——只有你的应用知道自己的数据里什么算「匹配」。',
         height: 300,
         render: function SearchSuggestions() {
           const all = ['按钮 GlassButton', '徽标 GlassBadge', '开关 GlassSwitch', '滑块 GlassSlider', '搜索框 SearchField'];
@@ -213,13 +213,13 @@ export const fieldDocs: ComponentDoc[] = [
       { name: 'value / defaultValue', type: 'string', description: '当前的搜索词。' },
       { name: 'onValueChange', type: '(value: string) => void', description: '每次输入变化。' },
       { name: 'onSubmitQuery', type: '(value: string) => void', description: '按回车时触发。' },
-      { name: 'clearLabel', type: 'string', description: '清除按钮的名字。不传就用 GlassProvider 的 strings 表，再没有就是英文 “Clear search”。' },
-      { name: 'suggestions', type: 'SearchSuggestion[]', description: '建议列表（{ value, label?, icon? }）。传了就变成 combobox。筛选是调用方的事。' },
+      { name: 'clearLabel', type: 'string', description: '清除按钮的名字。不传就用 GlassProvider 的 strings 表，再没有就是英文 「Clear search」。' },
+      { name: 'suggestions', type: 'SearchSuggestion[]', description: '建议列表（{ value, label?, icon? }）。传了就出现下拉建议。筛选由你来做。' },
       { name: 'onSuggestionSelect', type: '(suggestion) => void', description: '选中了某条建议。' },
       { name: 'aria-label', type: 'string', required: true, description: '这个搜索框在搜什么。' },
     ],
     notes: [
-      '是一个真正的搜索表单，手机键盘上会出现“搜索”键，系统自带的清除手势也能用。',
+      '手机键盘上会出现「搜索」键，系统自带的清除手势也能用。',
       '框里有内容时按一次 Escape 会先清空，再按一次才关闭所在的弹层——这是浏览器的行为。',
     ],
     related: ['text-field', 'tab-bar'],

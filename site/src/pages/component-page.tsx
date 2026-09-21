@@ -123,7 +123,7 @@ export function ComponentPage({ doc }: { doc: ComponentDoc }) {
     </Page>
 
     <nav className="outline" aria-label="本页目录">
-      <Text variant="caption1" emphasized tone="tertiary" className="outline-title">本页内容</Text>
+      <Text variant="caption1" emphasized tone="secondary" className="outline-title">本页内容</Text>
       {sections.map(section => <a key={section.id} href={`#${section.id}`}
         className="outline-link" aria-current={active === section.id ? 'location' : undefined}
         onClick={event => { event.preventDefault(); jumpTo(section.id); }}>

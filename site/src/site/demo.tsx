@@ -77,12 +77,21 @@ export function DemoCard({ id, title, description, render: Render, code, backdro
   const [showCode, setShowCode] = useState(false);
   const { values, set, reset, changed } = useKnobs(knobs);
   const snippet = typeof code === 'function' ? code(values) : code;
+  /**
+   * The title comes first in the document and second on the screen.
+   *
+   * It reads better under the example, and written that way the example's own headings — a
+   * `Text as="h4"` inside the text or list demo, a navigation bar's title — were emitted
+   * before the `h3` that names the card. A screen reader walking the page by heading went
+   * `h2 代码演示 → h4 大标题 → h3 文本样式`, skipping a level and naming the example after its
+   * contents. Source order is the reading order; `order` moves the picture, not the outline.
+   */
   return <section className="demo-card" data-demo={id} data-adjustable={knobs ? 'true' : undefined}>
-    <Demo id={id} backdrop={backdrop} height={height}><Render knobs={values} /></Demo>
     <div className="demo-card-body">
       <Text as="h3" variant="headline">{title}</Text>
       {description && <Text variant="subhead" tone="secondary">{description}</Text>}
     </div>
+    <Demo id={id} backdrop={backdrop} height={height}><Render knobs={values} /></Demo>
     {knobs && <KnobPanel knobs={knobs} values={values} onChange={set} onReset={reset} changed={changed} />}
     <button type="button" className="demo-code-toggle" aria-expanded={showCode} aria-controls={`${id}-code`}
       onClick={() => setShowCode(value => !value)}>

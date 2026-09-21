@@ -77,7 +77,7 @@ export function OverviewPage({ go }: { go: (path: string) => void }) {
     <header className="overview-hero">
       <Text as="h1" variant="largeTitle" emphasized className="overview-title">轻盈有形，清晰如初。</Text>
       <Text variant="callout" tone="secondary" className="overview-lede">
-        一套 React 组件库。内容和操作分开，材质只用在该用的地方，交互细节做到位。
+        一套 React 组件库。内容和操作分两层，玻璃只用在浮起来的那一层，控件可以拖着调。
       </Text>
       <div className="hero-actions">
         <GlassButton variant="glassProminent" controlSize="large"
@@ -115,13 +115,13 @@ export function OverviewPage({ go }: { go: (path: string) => void }) {
       </div>
     </Section>
 
-    <Section title="先说清楚边界" description="把做不到的事写在前面，比把演示做得更炫有用。">
+    <Section title="先说清楚边界" description="这些是它现在做不到的事。">
       <Card fill="secondary" radius={20} padding={20}>
         <ul className="plain-list">
           <li><Text as="span" variant="subhead">这是一个独立项目，不是 Apple 官方产品，也不包含 Apple 的字体和图标素材。所有图标都是自己画的。</Text></li>
           <li><Text as="span" variant="subhead">玻璃需要你告诉它背后是深是浅，它不会去截屏猜测——这样行为可预期，也不碰用户的画面内容。</Text></li>
           <li><Text as="span" variant="subhead">默认是磨砂玻璃，所有浏览器一致。边缘折射要自己打开，而且只有 Chrome 和 Edge 能跑——上面那个开关就是它，在别的浏览器里会告诉你为什么按不了。</Text></li>
-          <li><Text as="span" variant="subhead">屏幕阅读器的实机验证还没做完，这一条写在这里，不藏着。</Text></li>
+          <li><Text as="span" variant="subhead">屏幕阅读器还没有在真机上完整跑过一遍。</Text></li>
         </ul>
       </Card>
     </Section>

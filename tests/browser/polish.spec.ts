@@ -164,3 +164,49 @@ test('and has none without it', async ({ page }) => {
   const width = await badge.evaluate(node => parseFloat(getComputedStyle(node).borderTopWidth));
   expect(width).toBe(0);
 });
+
+/**
+ * Two questions the audit had to ask on every page at once, and which no single component test
+ * would have caught: whether any id is claimed twice, and whether the headings step.
+ *
+ * Both are cheap to check and invisible to read for. The duplicate was a demo whose wrapper
+ * repeated the id the stage around it already had, so the outline's link to that example had
+ * two places to land. The skip was structural: the card's `h3` title was written *after* the
+ * example it names, so an example containing its own `h4` emitted it first.
+ */
+const PAGES_WITH_HEADINGS = ['text', 'list', 'navigation-bar', 'navigation-stack', 'form', 'split-view', 'outline-view'];
+
+for (const slug of PAGES_WITH_HEADINGS) {
+  test(`the headings on the ${slug} page step one level at a time`, async ({ page }) => {
+    await page.goto(`/#/components/${slug}`);
+    await page.waitForTimeout(400);
+    const outline = await page.evaluate(() =>
+      [...document.querySelectorAll<HTMLElement>('main :is(h1,h2,h3,h4,h5,h6)')]
+        .filter(node => node.getBoundingClientRect().height > 0)
+        .map(node => ({ level: Number(node.tagName[1]), text: (node.textContent ?? '').trim().slice(0, 20) })));
+
+    expect(outline.filter(entry => entry.level === 1).length, 'a page has exactly one h1').toBe(1);
+    let previous = 0;
+    for (const entry of outline) {
+      expect(entry.level,
+        `「${entry.text}」 is an h${entry.level} after an h${previous}`).toBeLessThanOrEqual(previous + 1);
+      previous = entry.level;
+    }
+  });
+}
+
+test('no page claims the same id twice', async ({ page }) => {
+  for (const slug of ['menu-button', 'text', 'card', 'list', 'button', 'panel', 'toolbar', 'popover', 'sheet', 'outline-view']) {
+    await page.goto(`/#/components/${slug}`);
+    await page.waitForTimeout(250);
+    const repeated = await page.evaluate(() => {
+      const seen = new Set<string>(), twice: string[] = [];
+      for (const node of document.querySelectorAll('[id]')) {
+        if (seen.has(node.id)) twice.push(node.id);
+        seen.add(node.id);
+      }
+      return twice;
+    });
+    expect(repeated, `${slug} repeats ${repeated.join(', ')}`).toEqual([]);
+  }
+});

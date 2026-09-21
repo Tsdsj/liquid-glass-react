@@ -59,3 +59,94 @@ test('text on glass over the media scene holds AA against the real surface', asy
   const worst = Math.min(grey(band.darkest), grey(band.lightest));
   expect(worst, `worst composited contrast was ${worst.toFixed(2)}:1`).toBeGreaterThanOrEqual(4.5);
 });
+
+/**
+ * A system colour is a fill. Using one as ink is a separate decision, and it has to be measured.
+ *
+ * `--lg-accent` and `--lg-red` are built to sit under white text. Painted *as* text on a light
+ * surface they measured 3.03:1 and 3.14:1 — and Increase Contrast, which exists for exactly
+ * this, only reached 3.94 and 4.01. The stylesheet already had the answer written down for one
+ * control (`variant="tinted"`, see `--lg-ink-toward` in tokens.css); the audit found it had
+ * been applied there and nowhere else.
+ *
+ * Both appearances, because the mix runs in opposite directions: toward black on a light page,
+ * toward white on a dark one.
+ */
+for (const scheme of ['light', 'dark'] as const) {
+  test(`a system colour used as ink is legible — ${scheme}`, async ({ page }) => {
+    await page.emulateMedia({ colorScheme: scheme });
+    await page.goto('/#/components/text');
+    await page.waitForTimeout(500);
+
+    /* Where each tone actually renders on this page: the eyebrow above the title is the
+       accent, and the type page prints the destructive tone in its own example. */
+    for (const [tone, selector] of [
+      ['accent', '.page-eyebrow'],
+      ['destructive', '#text-tone .lg-text[data-tone="destructive"]'],
+    ] as const) {
+      const node = page.locator(selector).first();
+      await expect(node).toBeVisible();
+      const measured = await node.evaluate(element => {
+        /* `color-mix` computes to `color(srgb …)` in the 0–1 range, so the channels have to be
+           scaled before they mean anything to a luminance formula written for bytes. */
+        const read = (value: string) => {
+          const numbers = (value.match(/[\d.]+/g) ?? []).map(Number);
+          return /^color\(srgb/.test(value)
+            ? [numbers[0] * 255, numbers[1] * 255, numbers[2] * 255]
+            : numbers.slice(0, 3);
+        };
+        let backdrop: number[] = [255, 255, 255];
+        for (let parent: Element | null = element; parent; parent = parent.parentElement) {
+          const colour = getComputedStyle(parent).backgroundColor;
+          const parts = (colour.match(/[\d.]+/g) ?? []).map(Number);
+          if (parts.length >= 3 && (parts[3] ?? 1) === 1) { backdrop = parts.slice(0, 3); break; }
+        }
+        return { ink: read(getComputedStyle(element).color), backdrop };
+      });
+      const got = ratio(luminance(measured.ink), luminance(measured.backdrop));
+      expect(got, `tone="${tone}" measured ${got.toFixed(2)}:1 in ${scheme}`).toBeGreaterThanOrEqual(4.5);
+    }
+  });
+}
+
+/**
+ * The code samples are the part of this site people read most closely, and the syntax colours
+ * were the system palette itself: a string measured 1.95:1 on the light block, an attribute
+ * 1.90, a comment 2.37. Every class the tokenizer can emit, in both appearances.
+ */
+for (const scheme of ['light', 'dark'] as const) {
+  test(`every syntax colour is readable — ${scheme}`, async ({ page }) => {
+    await page.emulateMedia({ colorScheme: scheme });
+    await page.goto('/#/components/list');
+    await page.waitForTimeout(400);
+    await page.locator('.demo-code-toggle').first().click();
+    await page.waitForTimeout(200);
+
+    const readings = await page.evaluate(() => {
+      const block = document.querySelector('.demo-card-code pre')!;
+      let backdrop = [255, 255, 255];
+      for (let parent: Element | null = block; parent; parent = parent.parentElement) {
+        const parts = (getComputedStyle(parent).backgroundColor.match(/[\d.]+/g) ?? []).map(Number);
+        if (parts.length >= 3 && (parts[3] ?? 1) === 1) { backdrop = parts.slice(0, 3); break; }
+      }
+      const out: { kind: string; ink: number[] }[] = [];
+      const seen = new Set<string>();
+      for (const span of block.querySelectorAll<HTMLElement>('span[class^="code-"]')) {
+        if (seen.has(span.className)) continue;
+        seen.add(span.className);
+        const parts = (getComputedStyle(span).color.match(/[\d.]+/g) ?? []).map(Number);
+        out.push({ kind: span.className, ink: parts.slice(0, 3) });
+      }
+      /* The block's own colour counts too: plain text is most of what is in it. */
+      const plain = (getComputedStyle(block).color.match(/[\d.]+/g) ?? []).map(Number);
+      out.push({ kind: 'plain', ink: plain.slice(0, 3) });
+      return { backdrop, out };
+    });
+
+    expect(readings.out.length, 'no syntax colours were on screen to measure').toBeGreaterThan(2);
+    for (const reading of readings.out) {
+      const got = ratio(luminance(reading.ink), luminance(readings.backdrop));
+      expect(got, `${reading.kind} measured ${got.toFixed(2)}:1 in ${scheme}`).toBeGreaterThanOrEqual(4.5);
+    }
+  });
+}

@@ -115,7 +115,7 @@ export const overlayDocs: ComponentDoc[] = [
     when: [
       '一个按钮后面挂着好几个相关操作，平时不需要都摆出来。',
       '每组控制在七项左右，用分隔线分组，而不是拉成一条长清单。',
-      '如果用户是在“选一个值”而不是“做一件事”，那不是菜单。',
+      '如果用户是在「选一个值」而不是「做一件事」，那不是菜单。',
     ],
     examples: [
       {
@@ -156,7 +156,7 @@ export const overlayDocs: ComponentDoc[] = [
       },
       {
         id: 'menu-single', title: '勾选是多选还是单选',
-        description: 'selection="single" 之后，带勾的项变成 menuitemradio，读屏会说「三项之中的第二项，已选中」。默认是多选，每一项各自独立。',
+        description: 'selection="single" 之后，读屏会说「三项之中的第二项，已选中」。默认是多选，每一项各自独立。',
         height: 240,
         render: function MenuSelection() {
           const [sort, setSort] = useState('name');
@@ -219,7 +219,7 @@ export const overlayDocs: ComponentDoc[] = [
       { name: 'destructive', type: 'boolean', description: '标红。危险操作仍然需要确认或撤销。' },
       { name: 'alternate', type: 'GlassMenuAlternate', description: '按住 Option 时这一行换成的样子。原地替换，不是多一行。' },
       { name: 'aria-label', type: 'string', required: true, description: '这个菜单是做什么的。' },
-      { name: 'selection', type: "'multiple' | 'single'", default: "'multiple'", description: '勾在这里表示什么。single 让带勾的项变成 menuitemradio。' },
+      { name: 'selection', type: "'multiple' | 'single'", default: "'multiple'", description: '勾在这里表示什么。single 表示这一组互斥，读屏会按「几项之中的第几项」来念。' },
       { name: 'align', type: "'start' | 'center' | 'end'", default: "'end'", description: '相对按钮的对齐方式。' },
       { name: 'placement', type: "'below' | 'above' | 'auto'", default: "'auto'", description: '朝哪个方向展开。auto 表示下方放不下就翻到上方。' },
     ],
@@ -274,7 +274,9 @@ export const overlayDocs: ComponentDoc[] = [
         ],
         render: function PopUpDemo({ knobs }) {
           const [quality, setQuality] = useState('medium');
-          return <div id="popup-demo" style={{ display: 'grid', gap: 12, justifyItems: 'center' }}>
+          {/* No id of its own: the stage around it already carries `popup-demo`, and two
+              elements with one id is two answers to the same anchor. */}
+          return <div style={{ display: 'grid', gap: 12, justifyItems: 'center' }}>
             <GlassMenuButton kind="popUp" aria-label="画质" value={quality} onValueChange={setQuality}
               variant={knobs.variant as 'glass'} controlSize={knobs.controlSize as 'regular'}
               options={[
@@ -334,10 +336,10 @@ export const overlayDocs: ComponentDoc[] = [
       { name: 'align / placement', type: "Align / 'below' | 'above' | 'auto'", description: '菜单相对按钮的位置，同 GlassMenu。' },
     ],
     notes: [
-      '按钮带 aria-haspopup="menu" 与 aria-expanded，菜单打开后焦点直接落在第一项上。',
-      'popUp 的菜单项是 menuitemradio：读屏会说「三项之中的第二项，已选中」，而不是三个各自独立的勾选框。',
-      '键盘路径和 GlassMenu 一致：上下键、Home/End、打字跳转、Escape 关闭并把焦点还给按钮。',
-      '少于三项时开发模式会给一条告警——不是错误，两项是个判断题，但值得停下来想一下。',
+      '读屏会说出这个按钮后面有一个菜单，以及菜单现在是开着还是关着。打开后焦点直接落在第一项上。',
+      'popUp 的菜单是一组单选：读屏会说「三项之中的第二项，已选中」，而不是三个各自独立的勾选框。',
+      '键盘操作和普通菜单一样：上下键、Home/End、打字跳转，Escape 关闭并把焦点还给按钮。',
+      '少于三项时，开发模式会提醒一句。两项不一定错，但值得想想是不是直接摆两个按钮更好。',
     ],
     related: ['menu', 'button', 'action-sheet'],
     imports: ['GlassMenuButton'],
@@ -346,10 +348,10 @@ export const overlayDocs: ComponentDoc[] = [
     slug: 'tooltip', name: 'Tooltip', title: '提示', group: '浮层',
     summary: '把图标按钮的名字显示出来，给看得见但听不见的人。',
     when: [
-      '只有图标的按钮。aria-label 告诉了读屏它是什么，鼠标用户只能靠猜。',
+      '只有图标的按钮。读屏用户听得到它叫什么，鼠标用户只能猜。',
       '文案说「这个按钮做什么」，以动词开头：「恢复默认设置」。不要解释标准控件怎么用。',
       '触摸屏上不要用，组件也不会渲染——没有悬停，只剩下「点一下先弹个东西出来」。',
-      '它是补充说明，不是名字。控件自己仍然要有 aria-label。',
+      '它是补充说明，不是名字——控件自己仍然要有自己的名字。',
     ],
     examples: [
       {
@@ -414,13 +416,13 @@ export const overlayDocs: ComponentDoc[] = [
     ],
     props: [
       { name: 'content', type: 'ReactNode', required: true, description: '这个控件做什么，以动词开头。' },
-      { name: 'children', type: 'ReactElement', required: true, description: '它描述的那个控件。组件用 cloneElement 接上去，不加包裹层，所以布局不会变。' },
+      { name: 'children', type: 'ReactElement', required: true, description: '它描述的那个控件。不会多包一层，所以布局不变。' },
       { name: 'delay', type: 'number', default: '600', description: '悬停多久后出现。聚焦不受这个值影响，立刻出现。' },
       { name: 'placement', type: "'above' | 'below'", default: "'above'", description: '朝哪边展开。放不下时自动翻到另一边。' },
     ],
     notes: [
-      '用 aria-describedby 关联，不是 aria-labelledby——它是补充说明。控件自己的名字必须另外给。',
-      '`(pointer: coarse)` 下整个组件不渲染：触摸屏没有悬停，硬做只会变成「点一下先弹个东西挡住按钮」。',
+      '提示是控件的补充说明，不是它的名字；名字必须另外给。',
+      '触摸屏上整个组件不渲染：那里没有悬停，硬做只会变成「点一下先弹个东西挡住按钮」。',
       '按 Escape 关掉，不影响其他任何东西。指针按下也会关——你已经点了，不需要再被告知它是什么。',
       '同一时刻只有一个提示；指针移到下一个按钮时，前一个直接让位。',
     ],
@@ -529,10 +531,9 @@ export const overlayDocs: ComponentDoc[] = [
       { name: 'longPressDelay', type: 'number', default: '500', description: '触摸按住多久才打开。手指移动超过 10px 就取消——那是在滚动。' },
     ],
     notes: [
-      '键盘路径是 Shift+F10 和菜单键，这是平台自己打开右键菜单的方式，也是唯一的一条。没有它整个功能就只有指针能用。',
-      '打开后的键盘模型和 GlassMenu 是同一份代码：上下移动、Home/End、打字跳转、Escape 关闭并还回焦点。',
-      '包裹层是一个真正的盒子而不是 display: contents——后者会把元素从无障碍树里摘掉，而且键盘打开时没有位置可量。',
-      '页面一滚动就关掉：菜单钉在打开时的那个点上，内容滑走了它就指错了地方。',
+      '键盘用 Shift+F10 或者菜单键打开，这是系统自己的方式。没有它，右键菜单就只有指针能用。',
+      '打开之后和普通菜单完全一样：上下移动、Home/End、打字跳转，Escape 关闭并把焦点还回去。',
+      '页面一滚动菜单就关掉——它钉在打开时的那个点上，内容滑走了它就指错地方了。',
     ],
     related: ['menu', 'menu-button', 'action-sheet'],
     imports: ['ContextMenu'],
@@ -641,7 +642,7 @@ export const overlayDocs: ComponentDoc[] = [
     notes: [
       '打开时焦点被限制在面板里，按 Escape 关闭，关掉后焦点回到原来的按钮。',
       '横条对键盘用户是一个可调节的控件：上下方向键换高度，在最低档再往下就关闭。',
-      '拖动全程跟手，松手后弹回最近的高度；开启“减少动效”后直接切换，不做动画。',
+      '拖动全程跟手，松手后弹回最近的高度；开启「减少动效」后直接切换，不做动画。',
       '卡片形态下没有横条，也没有那个滑块：没有可调的高度，就不该有调它的控件。其余（焦点、Escape、压暗）两种形态一样。',
     ],
     related: ['dialog', 'action-sheet', 'panel'],
@@ -651,12 +652,12 @@ export const overlayDocs: ComponentDoc[] = [
     summary: '一个必须当场回答的问题，最多三个选项。',
     when: [
       '操作不可撤销，并且后果比较重：删除、覆盖、退出未保存的内容。',
-      '如果这件事是可以撤销的，就直接做，然后给一个“撤销”，不要打断用户。',
+      '如果这件事是可以撤销的，就直接做，然后给一个「撤销」，不要打断用户。',
       '别拿它来通知。只是想让人知道发生了什么，用轻提示。',
     ],
     examples: [
       {
-        id: 'alert-destructive', title: '危险操作', description: '有危险选项时，焦点一开始就落在“取消”上。按 Escape 等于取消。',
+        id: 'alert-destructive', title: '危险操作', description: '有危险选项时，焦点一开始就落在「取消」上。按 Escape 等于取消。',
         backdrop: 'both',
         height: 210,
         knobs: [
@@ -749,7 +750,7 @@ toast({ message: '已删除', action: { label: '撤销', onSelect: restore } });
       { name: 'role', type: "'default' | 'cancel' | 'destructive'", default: "'default'", description: '每个选项的性质，决定配色和初始焦点。' },
     ],
     notes: [
-      '按 Escape 等于选择“取消”，而不是悄悄关掉——用户按它就是想要一个明确的退出。',
+      '按 Escape 等于选择「取消」，而不是悄悄关掉——用户按它就是想要一个明确的退出。',
       '三个选项时会改成竖着排，避免文字被挤成一团。',
     ],
     related: ['dialog', 'toast', 'action-sheet'],
@@ -758,7 +759,7 @@ toast({ message: '已删除', action: { label: '撤销', onSelect: restore } });
     slug: 'action-sheet', name: 'GlassActionSheet', title: '操作表', group: '浮层',
     summary: '针对某个对象的一小组选择。',
     when: [
-      '用户点了“更多”，需要在几件事里挑一件做。',
+      '用户点了「更多」，需要在几件事里挑一件做。',
       '控制在六项以内。再多就应该是菜单或一整页。',
       '危险选项排在最后并标红，取消单独隔开——免得手滑点到。',
     ],
@@ -956,17 +957,17 @@ toast({ message: '已删除', action: { label: '撤销', onSelect: restore } });
     props: [
       { name: 'title / description', type: 'string', required: true, description: '标题和一句说明，都会念给读屏用户。' },
       { name: 'dismissOnBackdrop', type: 'boolean', default: 'true', description: '点击外面关闭。按下和松开都在外面才算数，拖选文字不会误关。' },
-      { name: 'closeLabel', type: 'string', description: '右上角关闭按钮的名字。不传就用 GlassProvider 的 strings 表，再没有就是英文 “Close”。' },
+      { name: 'closeLabel', type: 'string', description: '右上角关闭按钮的名字。不传就用 GlassProvider 的 strings 表，再没有就是英文 「Close」。' },
     ],
     notes: [
-      '焦点被限制在对话框内，背后的内容对读屏是隐藏的，这些都由浏览器保证。',
+      '焦点关在对话框里，背后的内容读屏也听不到。',
       '打开时锁住页面滚动，关掉后焦点回到原来的按钮。',
     ],
     related: ['sheet', 'alert', 'popover'],
   },
   {
     slug: 'toast', name: 'ToastProvider', title: '轻提示', group: '浮层',
-    summary: '在角落里说一句刚发生了什么，顺便给一个“撤销”。',
+    summary: '在角落里说一句刚发生了什么，顺便给一个「撤销」。',
     when: [
       '操作已经完成，用户不需要做任何事——但应该知道它发生了。',
       '可以撤销的操作用它：先做，再给一个撤销，而不是每次都先弹窗问一遍。',
@@ -1128,7 +1129,7 @@ toast({
       },
       {
         id: 'banner-placement', title: '放在哪里',
-        description: '默认在你放它的地方——通常是内容顶部，或者 Screen 的 top 插槽里。placement="top" 才会把它钉到窗口顶部；默认不这样做，是因为一个自己决定位置的组件没法被组合，而布局本来就知道自己的顶在哪。',
+        description: '默认就在你放它的地方——通常是内容顶部，或者 Screen 的 top 插槽里。要把它钉到窗口顶部，传 placement="top"。默认不这样做：一个自己决定位置的组件没法被组合，而布局本来就知道自己的顶在哪。',
         height: 240,
         render: function BannerPlacement() {
           return <div id="banner-placement-demo" style={{ width: '100%', maxWidth: 420, display: 'grid', gap: 10 }}>
@@ -1157,10 +1158,10 @@ toast({
       { name: 'placement', type: "'inline' | 'top'", default: "'inline'", description: '在流里（默认），还是钉在窗口顶部。' },
     ],
     notes: [
-      '用 role="status" 客气地播报：横幅是来汇报的，不是来打断的。必须当场回答的用警告框。',
-      '上滑关闭只是关闭按钮之外的一条路，不是替代——没有可见入口的手势，对键盘用户等于不存在。',
+      '读屏会挑一个空隙把它念出来，不打断你正在做的事。必须当场回答的，用警告框。',
+      '上滑关闭是关闭按钮之外多的一条路，不是替代——只有手势没有按钮，键盘用户就关不掉它。',
       '用户开启「减少动效」后不再跟手形变，手势本身仍然可用。',
-      '关闭按钮有 44×44 的点击范围。',
+      '关闭按钮手指下有 44×44 的可点范围，光标下至少 24×24。',
     ],
     related: ['toast', 'alert', 'sheet'],
   },
@@ -1175,7 +1176,7 @@ toast({
     examples: [
       {
         id: 'palette-basic', title: '基础用法',
-        description: '这个例子绑的是 ⌘J（Windows / Linux 上是 Ctrl-J），因为本站的 ⌘K 已经归文档搜索了——两个命令抢同一组键的时候，赢的是先挂上去的那个，开发模式下库会直接说出来。默认值就是 mod k。焦点一直在输入框里：上下键移动的是高亮，不是焦点，否则下一个字就打不进去了。',
+        description: '这个例子绑的是 ⌘J（Windows 和 Linux 上是 Ctrl-J），因为本站的 ⌘K 已经归文档搜索了——两个命令抢同一组键时，赢的是先挂上去的那个。默认的快捷键就是 mod k。焦点一直留在输入框里，上下键移动的是高亮，所以打字一直有效。',
         backdrop: 'both', height: 220,
         knobs: [
           { name: 'limit', label: '最多显示', type: 'number', value: 6, min: 1, max: 6, step: 1 },
@@ -1207,7 +1208,7 @@ toast({
       },
       {
         id: 'palette-filter', title: '匹配规则可以换掉',
-        description: '默认规则是：输入的每个词都要在命令的名字、分组、说明或 keywords 里出现过，顺序和大小写都不管。已经自己排过序或者问过服务端的，传 filter={false}，面板就照着给的顺序画。',
+        description: '默认规则是：你输入的每个词都要在命令的名字、分组、说明或者 keywords 里出现过，顺序和大小写都不管。已经自己排好序、或者结果是从服务端拿回来的，传 filter={false}，面板就照给的顺序画。',
         height: 200,
         render: function PaletteFilter() {
           const [open, setOpen] = useState(false);
@@ -1280,10 +1281,10 @@ toast({
       { name: 'limit', type: 'number', default: '50', description: '最多画多少条。没画出来的仍然能搜到。' },
     ],
     notes: [
-      '输入框是 combobox，列表是 listbox，高亮用 aria-activedescendant——焦点始终在输入框里，所以打字一直有效。',
+      '焦点始终在输入框里，上下键移动的是高亮而不是焦点，所以你可以一直接着打字。',
       '上下键移动高亮并跳过不可用的命令，Home/End 到两端，回车执行，Escape 关闭并把焦点还回原处。',
-      '面板不记任何东西：没有历史、没有“最近使用”。要这些的话由应用自己排序，并给一个清除的入口。',
-      '打开它的快捷键在有模态窗时不生效——这是 useShortcut 的规则；关闭它的那个绑在面板内部，所以是例外。',
+      '面板不记任何东西：没有历史，也没有「最近使用」。要这些的话自己排序，并且给一个清除的入口。',
+      '有对话框开着的时候，打开面板的快捷键不响；面板自己的 Escape 照常。',
     ],
     related: ['menu-bar', 'search-field', 'menu', 'dialog'],
     imports: ['CommandPalette', 'MenuBar', 'GlassButton', 'Text'],
@@ -1357,7 +1358,7 @@ toast({
       },
       {
         id: 'panel-over-media', title: '压在画面上',
-        description: '面板是浮动层，所以它是玻璃——底下的画面从它身上透出来，而它上面的字仍然读得清。这也是"一边调一边看"能成立的原因：它没有把要看的东西盖死。',
+        description: '面板浮在内容之上，所以它是玻璃：底下的画面从它身上透出来，而它上面的字仍然读得清。这也是「一边调一边看」能成立的原因——它没有把要看的东西盖死。',
         backdrop: 'both', height: 320,
         render: function PanelOverMedia() {
           const [exposure, setExposure] = useState(45);
@@ -1381,7 +1382,7 @@ toast({
       { name: 'collapsed', type: 'boolean', description: '是否收成一条标题栏。' },
       { name: 'defaultCollapsed', type: 'boolean', default: 'false', description: '非受控时的初始状态。' },
       { name: 'onCollapsedChange', type: '(collapsed: boolean) => void', description: '收起或展开。' },
-      { name: 'position', type: '{ x: number; y: number }', description: '相对于最近的定位祖先的偏移。' },
+      { name: 'position', type: '{ x: number; y: number }', description: '相对外层容器的位置。' },
       { name: 'defaultPosition', type: '{ x: number; y: number }', default: '{ x: 24, y: 24 }', description: '非受控时的初始位置。' },
       { name: 'onPositionChange', type: '(position: PanelPoint) => void', description: '被拖动或用方向键移动之后。' },
       { name: 'width', type: 'number', default: '280', description: '宽度，单位 px。面板不支持拖动改大小。' },
@@ -1389,11 +1390,11 @@ toast({
       { name: 'accessory', type: 'ReactNode', description: '标题栏尾部、收起与关闭之前的额外控件。' },
     ],
     notes: [
-      'role="dialog" 且 aria-modal="false"：它是一扇窗，但不拦着你——焦点不会被关在里面，背后也没有 inert。',
+      '它是一扇窗，但不拦着你：焦点不会被关在里面，背后照常能点。',
       '标题栏可以聚焦，方向键移动面板，Shift + 方向键走大步。只能用鼠标摆位置的面板，等于有些人没法摆。',
-      '位置会被限制在容器里，拖不出去也找不回不来。容器需要 position: relative。',
-      '没有最小化：HIG 说面板一般不需要它。收起是收成标题栏，不是收进 Dock。',
-      'HUD（深色半透明）那一种没有做。系统自己的控件大多不配它，它也不跟随浅深色设置——需要的话用 material="clear" 压在图片上。',
+      '面板拖不出容器，所以也不会找不回来。外层容器需要 position: relative。',
+      '没有最小化。收起是收成一条标题栏，留在原地。',
+      '深色半透明的那一种（HUD）没有做。要压在图片上的话，用 material="clear"。',
     ],
     related: ['dialog', 'popover', 'split-view', 'sheet'],
     imports: ['Panel', 'GlassSlider', 'GlassButton', 'Card', 'Text'],

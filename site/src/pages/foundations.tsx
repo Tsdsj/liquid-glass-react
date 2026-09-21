@@ -53,7 +53,7 @@ export function MaterialsFoundation() {
 
     <Section title="告诉它背后是什么">
       <Text variant="subhead" tone="secondary">
-        小块玻璃要知道背后是深是浅才能翻转。这个库不会去“看”页面——那意味着截屏和读取像素。
+        小块玻璃要知道背后是深是浅才能翻转。这个库不会去「看」页面——那意味着截屏和读取像素。
         改成由你直接说明，里面的玻璃自动继承。不确定时保持默认，它会走保守路线。
       </Text>
       <CodeBlock code={`<GlassBackdrop tone="dark">
@@ -67,7 +67,7 @@ export function MaterialsFoundation() {
 export function ColorFoundation() {
   return <Page eyebrow="基础" title="色彩"
     lede="一套系统色，加一套按用途命名的颜色。主题色只有一个，留给最重要的那个操作。">
-    <Rule>颜色用来帮助理解，不是用来装饰。同一个颜色不要既表示“可以点”又表示“不能点”。也不要让颜色成为唯一的信息——色觉不同的人会看不到你想表达的区别。</Rule>
+    <Rule>颜色用来帮助理解，不是用来装饰。同一个颜色不要既表示「可以点」又表示「不能点」。也不要让颜色成为唯一的信息——色觉不同的人会看不到你想表达的区别。</Rule>
 
     <Section title="系统色">
       <Text variant="subhead" tone="secondary">每个颜色都有浅色、深色和高对比度三套值，会自动切换。</Text>
@@ -113,7 +113,7 @@ export function TypographyFoundation() {
         <div className="type-specimens">
           {TEXT_STYLES.map(([style, size, leading]) => <div key={style} className="type-row">
             <Text as="span" variant={style} className="type-sample">{style}</Text>
-            <Text as="span" variant="caption1" tone="tertiary" tabular>{size} / {leading}</Text>
+            <Text as="span" variant="caption1" tone="secondary" tabular>{size} / {leading}</Text>
           </div>)}
         </div>
       </Card>
@@ -122,7 +122,7 @@ export function TypographyFoundation() {
     <Section title="两件和网页有关的事">
       <Card fill="secondary" radius={20} padding={20}>
         <ul className="plain-list">
-          <li><Text as="span" variant="subhead">苹果的系统字体不能打包进网站。在苹果设备上会自动用上，其它平台会退到该系统自己的字体，字形宽度并不相同——所以字号是按像素定死的，并在这些平台上重新核对过行长。</Text></li>
+          <li><Text as="span" variant="subhead">苹果的系统字体不能打包进网站。在苹果设备上会自动用上，其它平台会退到该系统自己的字体，字形宽度并不相同——所以字号按像素定死，也在这些平台上核对过一行能放多少字。</Text></li>
           <li><Text as="span" variant="subhead">为拉丁字母设计的紧缩字距不适合中日韩文字，组件会自动关掉。</Text></li>
         </ul>
       </Card>
@@ -133,7 +133,7 @@ export function TypographyFoundation() {
 export function LayoutFoundation() {
   return <Page eyebrow="基础" title="布局与形状"
     lede="4 的倍数的间距、44 的点击范围，以及三种圆角：固定、胶囊、同心。">
-    <Rule>嵌在圆角容器里的形状，圆角要等于外框圆角减去内边距。算大了角会“被掐住”，算小了会“喇叭口”。两种都很显眼。</Rule>
+    <Rule>嵌在圆角容器里的形状，圆角要等于外框圆角减去内边距。算大了角会「被掐住」，算小了会「喇叭口」。两种都很显眼。</Rule>
 
     <Section title="同心圆角">
       <DemoSettings showSurface={false}>
@@ -180,7 +180,7 @@ export function MotionFoundation() {
     lede="动效要说明白一件事：状态、反馈、位置关系，或者刚才那一下的结果。说不清它在讲什么，就不该有。">
     <Rule>在手指按下时就给反馈，不要等松开。拖动过程中一直跟手。任何动画都可以被中途抓住并改变方向——用户不该等它播完。</Rule>
 
-    <Section title="控件是可以拖的" description="分段控件、开关、滑块都能拖。只能点的实现，是一套界面“不像那么回事”最明显的地方。">
+    <Section title="控件是可以拖的" description="分段控件、开关、滑块都能拖。只能点的实现，是一套界面「不像那么回事」最明显的地方。">
       <DemoSettings showSurface={false}>
         <Demo height={210}>
           <div style={{ display: 'grid', gap: 18, width: 300 }}>
@@ -198,7 +198,7 @@ export function MotionFoundation() {
 --lg-duration-spring: 520ms;  /* 回弹总时长 */
 --lg-press-scale: 1.06;       /* 按下时朝指针方向放大多少 */`} />
       <Text variant="subhead" tone="secondary" style={{ marginBlockStart: 12 }}>
-        用户开启“减少动效”后，弹性、位移和拖动形变都会关掉，只保留状态本身的变化。
+        用户开启「减少动效」后，弹性、位移和拖动形变都会关掉，只保留状态本身的变化。
       </Text>
     </Section>
   </Page>;

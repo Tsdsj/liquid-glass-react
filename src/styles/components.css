@@ -91,7 +91,7 @@
 .lg-switch-track[data-renderer="shared"] { background: var(--lg-fill); }
 .lg-slider-lens[data-renderer="shared"] { background: #fff; box-shadow: 0 1px 4px rgb(0 0 0 / .2), 0 3px 8px rgb(0 0 0 / .12); }
 .lg-group .lg-button[data-renderer="shared"], .lg-toolbar-group .lg-button[data-renderer="shared"], .lg-popover .lg-button[data-renderer="shared"] { --lg-fg: inherit; --lg-muted: inherit; --lg-focus: inherit; color: inherit; }
-.lg-button[data-renderer="shared"]:is([data-variant="destructive"],[data-variant="destructiveProminent"]) { color: var(--lg-red); }
+.lg-button[data-renderer="shared"]:is([data-variant="destructive"],[data-variant="destructiveProminent"]) { color: color-mix(in srgb, var(--lg-red) var(--lg-ink-amount), var(--lg-ink-toward)); }
 .lg-root[data-transparency="opaque"] { background: var(--lg-opaque); }
 .lg-root[data-transparency="opaque"] .lg-decoration > .lg-backdrop { backdrop-filter: none; -webkit-backdrop-filter: none; }
 .lg-root[data-transparency="opaque"] > .lg-decoration .lg-tint { background: var(--lg-opaque); }
@@ -511,7 +511,7 @@
 .lg-menu-item:not(:disabled):active { background: var(--lg-pressed); transform: scale(.975); transition-duration: var(--lg-duration-press); }
 .lg-menu-item:focus { outline: 2px solid var(--lg-focus); outline-offset: -2px; }
 .lg-menu-item:disabled { opacity: .45; cursor: not-allowed; }
-.lg-menu-item[data-destructive="true"] { color: var(--lg-red); }
+.lg-menu-item[data-destructive="true"] { color: color-mix(in srgb, var(--lg-red) var(--lg-ink-amount), var(--lg-ink-toward)); }
 /* The hint inside a menu is a `Kbd`, so it inherits the glyph order and the spoken name — but
    not the key-cap border: a row of outlined caps down the trailing edge of a menu is a column
    of boxes, and the menu is already a list of rows. Quiet text, the way the system draws it. */
@@ -694,8 +694,8 @@
 .lg-text[data-tone="secondary"] { color: var(--lg-label-secondary); }
 .lg-text[data-tone="tertiary"] { color: var(--lg-label-tertiary); }
 .lg-text[data-tone="quaternary"] { color: var(--lg-label-quaternary); }
-.lg-text[data-tone="accent"] { color: var(--lg-accent); }
-.lg-text[data-tone="destructive"] { color: var(--lg-red); }
+.lg-text[data-tone="accent"] { color: color-mix(in srgb, var(--lg-accent) var(--lg-ink-amount), var(--lg-ink-toward)); }
+.lg-text[data-tone="destructive"] { color: color-mix(in srgb, var(--lg-red) var(--lg-ink-amount), var(--lg-ink-toward)); }
 .lg-text[data-tabular="true"] { font-variant-numeric: tabular-nums; }
 /* Latin negative tracking is wrong for CJK, which is drawn on a full em square. */
 .lg-text:lang(zh), .lg-text:lang(ja), .lg-text:lang(ko) { letter-spacing: normal; }
@@ -809,7 +809,7 @@
 }
 .lg-button[data-renderer="shared"][data-variant="glassProminent"]:not(:disabled):is(:active,[data-pressed="true"]) { background: color-mix(in srgb, var(--lg-accent) 80%, #000); }
 .lg-button[data-renderer="shared"][data-variant="destructiveProminent"] { background: var(--lg-red); color: #fff; --lg-fg: #fff; }
-.lg-button[data-variant="plain"] { color: var(--lg-accent); }
+.lg-button[data-variant="plain"] { color: color-mix(in srgb, var(--lg-accent) var(--lg-ink-amount), var(--lg-ink-toward)); }
 @media (hover: hover) {
   .lg-button[data-variant="plain"]:not(:disabled):hover { background: var(--lg-fill-quaternary); }
 }
@@ -825,7 +825,7 @@
 @media (hover: hover) {
   .lg-button[data-variant="tinted"]:not(:disabled):hover { background: color-mix(in srgb, var(--lg-accent) 24%, transparent); }
 }
-.lg-button[data-variant="destructive"] { color: var(--lg-red); }
+.lg-button[data-variant="destructive"] { color: color-mix(in srgb, var(--lg-red) var(--lg-ink-amount), var(--lg-ink-toward)); }
 @media (hover: hover) {
   .lg-button[data-variant="destructive"]:not(:disabled):hover { background: color-mix(in srgb, var(--lg-red) 12%, transparent); }
 }
@@ -1086,7 +1086,7 @@
 }
 .lg-action-item:not(:disabled):active { background: var(--lg-pressed); transform: scale(.985); transition-duration: var(--lg-duration-press); }
 .lg-action-item:focus-visible, .lg-action-cancel:focus-visible { outline: var(--lg-focus-width) solid var(--lg-focus); outline-offset: calc(var(--lg-focus-offset) * -1); }
-.lg-action-item[data-destructive="true"] { color: var(--lg-red); }
+.lg-action-item[data-destructive="true"] { color: color-mix(in srgb, var(--lg-red) var(--lg-ink-amount), var(--lg-ink-toward)); }
 .lg-action-item:disabled { opacity: .45; cursor: not-allowed; }
 /* Cancel is separated so it cannot be hit while aiming for something else. */
 .lg-action-cancel { margin-block-start: var(--lg-space-2); font-weight: var(--lg-weight-semibold); background: var(--lg-fill-tertiary); }
@@ -1264,7 +1264,7 @@
 /* The back button reads as a destination, not a control: no glass, no fill, just the chevron
    and the previous screen's name. The chevron points backwards, which is the leading edge and
    therefore mirrors itself in RTL along with everything else. */
-.lg-stack-back { padding-inline: var(--lg-space-1) var(--lg-space-2); color: var(--lg-accent); max-width: 40vw; }
+.lg-stack-back { padding-inline: var(--lg-space-1) var(--lg-space-2); color: color-mix(in srgb, var(--lg-accent) var(--lg-ink-amount), var(--lg-ink-toward)); max-width: 40vw; }
 .lg-stack-back-chevron { transform: scaleX(-1); flex: 0 0 auto; }
 :dir(rtl) .lg-stack-back-chevron { transform: none; }
 .lg-stack-back-title { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
@@ -1341,11 +1341,24 @@
 .lg-disclosure-body { padding: 0 var(--lg-space-4) var(--lg-space-4); }
 
 /* ---------- PageControl: where you are in an ordered set ---------- */
-.lg-page-control { display: inline-flex; width: fit-content; padding: var(--lg-space-2) var(--lg-space-3); touch-action: none; }
-.lg-page-control > .lg-content { display: flex; align-items: center; gap: var(--lg-space-1); }
+.lg-page-control { --lg-page-dot-size: 18px;
+  display: inline-flex; width: fit-content; padding: var(--lg-space-2) var(--lg-space-3); touch-action: none; }
+/**
+ * The gap is arithmetic, not taste.
+ *
+ * A dot is smaller than the 24px WCAG 2.2 asks of a target, and what excuses it is that
+ * standard's *spacing* exception: draw a 24px circle centred on each undersized target, and
+ * if no two circles touch, the size is allowed. 18px of dot with a 4px gap put the centres
+ * 22px apart — the circles overlapped, so the exception did not apply and the row was simply
+ * under the floor. Six pixels of gap put the centres 24 apart and the exception holds, which
+ * costs two pixels and nothing else.
+ */
+.lg-page-control > .lg-content { display: flex; align-items: center;
+  gap: max(var(--lg-space-1), calc(24px - var(--lg-page-dot-size))); }
 .lg-page-control[data-orientation="vertical"] > .lg-content { flex-direction: column; }
 /* The dot is drawn at 8px and hit at 44, the same way every other small control here works. */
-.lg-page-dot { position: relative; display: grid; place-items: center; width: 18px; height: 18px;
+.lg-page-dot { position: relative; display: grid; place-items: center;
+  width: var(--lg-page-dot-size); height: var(--lg-page-dot-size);
   border: 0; padding: 0; background: transparent; cursor: pointer; }
 .lg-page-dot > span { width: 7px; height: 7px; border-radius: 999px; background: var(--lg-glass-fg-secondary);
   opacity: .42; transition: opacity var(--lg-duration-release) var(--lg-ease), scale var(--lg-duration-spring) var(--lg-spring); }
@@ -1361,15 +1374,19 @@
  * The hit region grows on the **cross** axis only.
  *
  * Growing it on both, the way a standalone button does, makes each dot's region overlap its
- * neighbours': the dots are 18px apart, so dot 2's region covers dot 1's centre entirely, and
- * being later in the DOM it wins the hit test. Measured: tapping the first dot selected the
- * second. Along the row the dots are adjacent targets and share the axis between them — which
- * the row being draggable makes liveable, and which is the same compromise the system control
- * makes, but it does mean a dot is 18px wide and the cursor floor is 24. Said, not hidden.
+ * neighbours': dot 2's region would cover dot 1's centre entirely, and being later in the DOM
+ * it wins the hit test. Measured: tapping the first dot selected the second. Along the row the
+ * dots are adjacent targets and share the axis between them, which the row being draggable
+ * makes liveable, and which is the same compromise the system control makes.
+ *
+ * For a cursor that is now fully legal: 24px between centres means WCAG 2.2's spacing
+ * exception applies (see the gap above). For a fingertip it is not — 18px is under 44 and no
+ * exception covers it, because putting 44px regions side by side would put each dot's region
+ * over its neighbour's centre. The drag gesture is what makes it usable; said, not hidden.
  *
  * This used to be inside `@media (pointer: coarse)`, on the reading that a hit region is a
- * touch affair. A cursor has a floor too — 24px, WCAG 2.2 — and 18x18 of artwork was the whole
- * target for it. The size comes from `--lg-hit-min`, so each pointer gets its own answer.
+ * touch affair. A cursor has a floor too, and 18x18 of artwork was the whole target for it.
+ * The size comes from `--lg-hit-min`, so each pointer gets its own answer.
  */
 .lg-page-dot::after { content: ''; position: absolute; inset-block-start: 50%; inset-inline-start: 50%;
   translate: -50% -50%; width: 100%; height: var(--lg-hit-min); }
@@ -1684,8 +1701,14 @@
 /* `min-height`, not a hit pseudo-element: a path level is a word you click, so the target is
    the box itself and making the box the target is the whole fix. Footnote type in 2px of
    padding came to 22 — a hair under the 24 a cursor needs, which is exactly the kind of miss
-   that only turns up when someone measures. */
-.lg-path-level { display: inline-flex; align-items: center; gap: var(--lg-space-1); min-width: 0;
+   that only turns up when someone measures.
+
+   The width needed the same treatment and only showed up once the audit measured a level with
+   a two-character name: 「设计」 came to 42px against a fingertip's 44. `--lg-hit-width` rather
+   than `--lg-hit-min` so a cursor gets nothing — every level already clears 24 — and the bar,
+   which collapses on measured width, simply folds one level sooner on a touch screen. */
+.lg-path-level { display: inline-flex; align-items: center; gap: var(--lg-space-1);
+  min-width: var(--lg-hit-width); justify-content: center;
   min-height: var(--lg-hit-min);
   padding: 2px var(--lg-space-2); border-radius: var(--lg-radius-xs); border: 0; background: transparent;
   color: var(--lg-label-secondary); text-decoration: none; cursor: default;

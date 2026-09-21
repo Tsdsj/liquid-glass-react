@@ -156,3 +156,28 @@ test.describe('on a touch device', () => {
     expect(result.band, 'a dot does not own the 40px band over its own centre').toEqual([true, true, true, true]);
   });
 });
+
+/**
+ * A dot is smaller than a target is allowed to be, and what excuses it is arithmetic.
+ *
+ * WCAG 2.2 Target Size (Minimum) lets an undersized target through when a 24px circle centred
+ * on it does not reach a neighbour's. The dots were 18px with a 4px gap — centres 22px apart,
+ * circles overlapping — so the exception did not apply and the row was simply under the floor
+ * for a cursor, with nothing said about it. Six pixels of gap is the whole fix.
+ *
+ * The cross axis is separate and stays a stated compromise: 44px regions side by side would
+ * put each dot's region over its neighbour's centre, which is worse than a small target.
+ */
+test('the dots are far enough apart for the size exception to apply', async ({ page }) => {
+  await page.goto('/#/components/page-control');
+  await page.waitForTimeout(400);
+  const spacing = await page.locator('#page-control-demo').evaluate(node => {
+    const dots = [...node.querySelectorAll('.lg-page-dot')].map(dot => dot.getBoundingClientRect());
+    const centre = (box: DOMRect) => box.left + box.width / 2;
+    return dots.slice(1).map((box, index) => centre(box) - centre(dots[index]));
+  });
+  expect(spacing.length, 'no dots to measure').toBeGreaterThan(1);
+  for (const gap of spacing) {
+    expect(gap, `two dots are ${gap.toFixed(1)}px apart, centre to centre`).toBeGreaterThanOrEqual(24);
+  }
+});

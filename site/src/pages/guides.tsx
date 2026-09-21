@@ -58,7 +58,7 @@ export function ThemingGuide() {
       <CodeBlock code={`:root, [data-lg-theme="light"] { --lg-accent: #6d28d9; }
 [data-lg-theme="dark"]        { --lg-accent: #8b5cf6; }`} />
       <Text variant="subhead" tone="secondary">
-        按钮文字会保持白色，所以主题色需要足够深。开关打开时的绿色不跟着变——那个绿色本身就是“已打开”的意思。
+        按钮文字会保持白色，所以主题色需要足够深。主题色被当成**文字**用的时候（扁平按钮的标签、`tone="accent"` 的文字）会自动压暗一档再画，否则浅色页面上读不清。开关打开时的绿色不跟着变——那个绿色本身就是「已打开」的意思。
       </Text>
     </Section>
 
@@ -103,7 +103,7 @@ export function ThemingGuide() {
 {/* 你比浏览器更清楚的时候，两个方向都能压过去 */}
 <GlassProvider platform="touch">…</GlassProvider>`} />
       <Text variant="subhead" tone="secondary">
-        带触控板的平板在手机宽度下也会报“有光标”，所以还要看窗口宽度——36px 的控件放在 390px 的屏幕上，是对的问题给了错的答案。
+        带触控板的平板在手机宽度下也会报「有光标」，所以还要看窗口宽度：36px 的控件放在 390px 的屏幕上，是对的问题给了错的答案。
       </Text>
     </Section>
   </Page>;
@@ -162,7 +162,7 @@ export default function RootLayout({ children }) {
 
     <Section title="多个渲染根">
       <Text variant="subhead" tone="secondary">
-        同一个页面上挂了好几个独立的 React 根时，给每个根一个不同的 id 前缀，避免生成的 id 撞车。
+        同一个页面上挂了好几个独立的 React 根时，给每个根一个不同的 id 前缀，否则自动生成的 id 会撞车。
       </Text>
       <CodeBlock code={`renderToString(<App />, { identifierPrefix: 'sidebar-' });
 hydrateRoot(container, <App />, { identifierPrefix: 'sidebar-' });`} />
@@ -171,7 +171,7 @@ hydrateRoot(container, <App />, { identifierPrefix: 'sidebar-' });`} />
 }
 
 export function MigrationGuide() {
-  return <Page eyebrow="指南" title="从 0.1 升级" lede="这一版有破坏性改动，主要是把“内容”和“浮在内容之上的操作”彻底分开了。">
+  return <Page eyebrow="指南" title="从 0.1 升级" lede="这一版有破坏性改动，主要是把「内容」和「浮在内容之上的操作」彻底分开了。">
     <Section title="改名">
       <Card radius={20} padding={20}>
         <ul className="plain-list">

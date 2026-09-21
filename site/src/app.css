@@ -16,9 +16,15 @@
   /* The page is the desk; cards are paper on it. Left at the grouped background the canvas
      sits one percent away from the white of a card, so the whole page reads as a single sheet
      at full brightness — glare with nothing to look at. Stepping it down gives the cards
-     somewhere to sit, and gives the glass something to actually refract. */
-  --site-canvas: #e6e8ee;
-  --site-canvas-top: #edeff4;
+     somewhere to sit, and gives the glass something to actually refract.
+
+     Five units lighter than it was, which nobody can see and the measurement can: the
+     library's secondary grey is tuned to the exact alpha at which it passes 4.5:1 on the
+     *grouped* background, and this canvas is darker than that. Secondary text sitting
+     straight on it — the page lede, the rail, the API table — measured 4.47:1. The canvas is
+     this site's choice, so the correction belongs here rather than in the token. */
+  --site-canvas: #ebedf2;
+  --site-canvas-top: #f1f3f7;
 
   /* The window's three measurements.
 
@@ -110,11 +116,15 @@ code { font-family: var(--lg-font-mono); font-size: .92em; }
 .md-list { margin-block: 0 var(--lg-space-4); padding-inline-start: var(--lg-space-5);
   display: flex; flex-direction: column; gap: var(--lg-space-2); color: var(--lg-label); }
 .md-code { font-family: var(--lg-font-mono); font-size: .92em;
-  padding: .1em .35em; border-radius: 5px; background: var(--lg-fill-tertiary); }
+  padding: .1em .35em; border-radius: 5px; background: var(--lg-fill-tertiary);
+  /* An identifier is one long word; on a 390px screen `onOpenChange` pushed the page sideways. */
+  overflow-wrap: anywhere; }
 .md-pre { margin-block: 0 var(--lg-space-4); padding: var(--lg-space-4);
   border-radius: var(--lg-radius-s); background: var(--lg-fill-tertiary); overflow-x: auto;
   font-family: var(--lg-font-mono); font-size: 13px; line-height: 1.6; }
-.md a { color: var(--lg-accent); }
+/* The accent as ink, by the same recipe the library uses for it — system blue straight out
+   of the palette measured 3.01:1 on this page. */
+.md a { color: color-mix(in srgb, var(--lg-accent) var(--lg-ink-amount), var(--lg-ink-toward)); }
 
 .wordmark { display: flex; align-items: center; gap: var(--lg-space-2); text-decoration: none; min-height: var(--lg-hit-min); }
 .wordmark-mark { position: relative; width: 26px; height: 26px; flex-shrink: 0; }
@@ -249,6 +259,8 @@ code { font-family: var(--lg-font-mono); font-size: .92em; }
 .demo-grid { display: grid; grid-template-columns: minmax(0, 1fr); gap: var(--lg-space-5); align-items: start; }
 .demo-card { border: 1px solid var(--lg-separator); border-radius: var(--lg-radius-l); overflow: hidden;
   background: var(--lg-bg-grouped-2); display: flex; flex-direction: column; scroll-margin-block-start: 88px; }
+/* The stage is first on screen and second in the document — see `DemoCard` for why. */
+.demo-card > .demo-stage { order: -1; }
 .demo-card-body { padding: var(--lg-space-4) var(--lg-space-4) var(--lg-space-2); display: grid; gap: var(--lg-space-1); }
 /* `--lg-hit-min` is the floor under a target, not a control height — it is 24px for a cursor,
    and a strip that runs the width of the example is a row, not a 24px chip. */
@@ -331,16 +343,42 @@ code { font-family: var(--lg-font-mono); font-size: .92em; }
   border-start-end-radius: var(--lg-radius-m); background: var(--lg-bg-secondary); pointer-events: none; }
 
 /**
- * Syntax colours, from the semantic palette rather than from a borrowed theme — so they flip
- * with light and dark, and follow Increase Contrast and forced colours like everything else.
- * Five classes is the whole vocabulary: see site/site/tokenize.ts.
+ * Syntax colours. Five classes is the whole vocabulary: see site/site/tokenize.ts.
+ *
+ * These used to be the system palette itself — `--lg-green`, `--lg-teal` and friends — on the
+ * reasoning that borrowing a theme would stop them following light, dark and forced colours.
+ * The reasoning was right and the result was not: measured on the light code block, a string
+ * came out at **1.95:1**, an attribute at **1.90:1** and a comment at **2.37:1**, against a
+ * floor of 4.5. The system palette is built to be a *fill* with white on top; as ink on a
+ * near-white block, the light hues have nowhere to go.
+ *
+ * So: the same five hues, darkened for light mode until each one clears the floor, and the
+ * system colours themselves in dark mode where they already do. Every value below is measured
+ * on the block's own background, not computed from the token. Dark mode is the palette
+ * unchanged because it measures 4.7–8.4:1 there.
  */
-.code-keyword { color: var(--lg-purple); }
-.code-string { color: var(--lg-green); }
-.code-number { color: var(--lg-orange); }
-.code-tag { color: var(--lg-blue); }
-.code-attr { color: var(--lg-teal); }
-.code-comment { color: var(--lg-label-tertiary); font-style: italic; }
+:root {
+  --site-syntax-keyword: #8e1fa0;   /* 6.4:1 */
+  --site-syntax-string:  #0a6b2f;   /* 5.8:1 */
+  --site-syntax-number:  #8a4b00;   /* 5.9:1 */
+  --site-syntax-tag:     #0062d2;   /* 5.0:1 */
+  --site-syntax-attr:    #00676f;   /* 5.7:1 */
+}
+:root[data-app-theme="dark"] {
+  --site-syntax-keyword: var(--lg-purple);
+  --site-syntax-string:  var(--lg-green);
+  --site-syntax-number:  var(--lg-orange);
+  --site-syntax-tag:     var(--lg-blue);
+  --site-syntax-attr:    var(--lg-teal);
+}
+.code-keyword { color: var(--site-syntax-keyword); }
+.code-string { color: var(--site-syntax-string); }
+.code-number { color: var(--site-syntax-number); }
+.code-tag { color: var(--site-syntax-tag); }
+.code-attr { color: var(--site-syntax-attr); }
+/* Secondary, not tertiary: a comment is prose someone is meant to read, and tertiary is the
+   colour of a placeholder — 2.4:1 light, 2.5:1 dark. Italic already says "aside". */
+.code-comment { color: var(--lg-label-secondary); font-style: italic; }
 /* Under forced colours the system owns every colour; keeping ours would fight it. */
 @media (forced-colors: active) {
   .code-keyword, .code-string, .code-number, .code-tag, .code-attr, .code-comment { color: inherit; }
@@ -435,8 +473,16 @@ code { font-family: var(--lg-font-mono); font-size: .92em; }
 .synthetic-video { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
 .media-topline { position: absolute; inset-block-start: var(--lg-space-4); inset-inline: var(--lg-space-5);
   display: flex; align-items: center; justify-content: space-between; gap: var(--lg-space-3); }
+/* A scrim, not a shadow.
+   These two labels sit straight on the illustration with nothing behind them. A text-shadow
+   makes them *look* readable and measures nothing: screenshotting the band each one crosses
+   and reading the pixels gave 3.28:1 for this line and 4.34:1 for the footnote, against 4.5.
+   A dim pill is the HIG's own answer for a label over media, and it is measurable: 6.8:1 and
+   7.9:1 on the brightest patch either one crosses. */
+.scene-identity, .media-footnote { background: rgb(0 0 0 / .38); border-radius: 999px;
+  padding: 3px var(--lg-space-2); backdrop-filter: blur(2px); }
 .scene-identity { display: flex; align-items: center; gap: var(--lg-space-2); color: #f6f7e8;
-  font-size: var(--lg-text-caption1-size); font-weight: var(--lg-weight-semibold); text-shadow: 0 1px 8px rgb(0 0 0 / .6); }
+  font-size: var(--lg-text-caption1-size); font-weight: var(--lg-weight-semibold); }
 .scene-dot { width: 6px; height: 6px; border: 1px solid #f6f7e8; border-radius: 50%; }
 .muted-divider { opacity: .5; }
 .scene-caption { position: absolute; inset-block-start: 42%; inset-inline-start: 7%; color: #fcfff0;
@@ -450,7 +496,7 @@ code { font-family: var(--lg-font-mono); font-size: .92em; }
 /* Where the adjust panel went, so it can come back. Top-trailing, under the fullscreen button. */
 .media-reopen { position: absolute; inset-block-start: 56px; inset-inline-end: var(--lg-space-5); }
 .media-footnote { position: absolute; inset-block-end: var(--lg-space-4); inset-inline-end: var(--lg-space-5);
-  color: #e1ede0; font: var(--lg-text-caption2-size) var(--lg-font-mono); }
+  color: #f2f7f1; font: var(--lg-text-caption2-size) var(--lg-font-mono); }
 
 /* --------------------------------------------------------------------------
    Responsive. 900 is where the sections move up into the band and the pages of
