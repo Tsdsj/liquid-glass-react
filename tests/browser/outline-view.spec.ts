@@ -181,6 +181,32 @@ test('the tree says how deep each row is', async ({ page }) => {
   expect(indents[1] - indents[0], 'a level does not step in').toBeGreaterThan(8);
 });
 
+/**
+ * A `treeitem` is the `<li>`, and the `<li>` **contains its children**.
+ *
+ * So `.lg-outline-item:hover` is true for the row under the pointer and for every folder it is
+ * inside — put the pointer on a file three deep and four rows lit up. The selection background
+ * had already been moved off the item for exactly this reason, with a comment saying so, and
+ * the hover was left on it.
+ *
+ * The row is the thing you point at, so the row is what answers.
+ */
+test('hovering a row lights that row, not every folder above it', async ({ page }) => {
+  await open(page);
+  await twist(page, 'drafts').click();
+  await expect(row(page, 'drafts')).toHaveAttribute('aria-expanded', 'true');
+
+  await page.locator('#outline-basic-demo [data-key="proposal-old"] > .lg-outline-row').hover();
+  const lit = await page.locator('#outline-basic-demo .lg-outline-row').evaluateAll(nodes => nodes
+    .filter(node => {
+      const painted = getComputedStyle(node).backgroundColor;
+      /* The selected row is painted too and is not what this is about. */
+      return painted !== 'rgba(0, 0, 0, 0)' && !(node.parentElement as HTMLElement).dataset.selected;
+    })
+    .map(node => (node.parentElement as HTMLElement).dataset.key));
+  expect(lit, `${lit.length} rows are lit: ${lit.join(', ')}`).toEqual(['proposal-old']);
+});
+
 test('a row is big enough to hit with whatever you are pointing with', async ({ page }) => {
   await open(page);
   /* An outline is a desktop idiom — the HIG lists it as unsupported on iOS — and a compact

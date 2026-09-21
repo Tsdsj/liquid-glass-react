@@ -17,6 +17,19 @@ const css = readFileSync(new URL('../../src/styles/components.css', import.meta.
  * already emitted, and was reported as ungated. That is a false positive about formatting,
  * which is the worst kind: the rule was right and the checker said it was wrong.
  */
+/**
+ * Comments out, newlines kept.
+ *
+ * Prose is not a rule, and a checker that reads it as one teaches people to write worse
+ * comments to keep it quiet. This was a real failure: a comment explaining why a `:hover` rule
+ * had to move was reported as an ungated `:hover` rule. The filter it replaces only skipped
+ * lines that *began* with `/*`, so it caught a one-line comment and missed the second line of
+ * a block one. Removing them first also keeps a commented-out `@media` from opening a context
+ * the scan below would then try to match a brace for.
+ */
+const withoutComments = source => source.replace(/\/\*[\s\S]*?\*\//g,
+  comment => comment.replace(/[^\n]/g, ''));
+
 function topLevelLines(source) {
   /* Cut out every at-rule block, braces matched, however it is wrapped. What is left is the
      top level, and it can then be read a line at a time without formatting mattering. */
@@ -41,7 +54,7 @@ function topLevelLines(source) {
 test('every hover rule is gated on a pointer that can hover', () => {
   // A touch screen has no hover, so the last control tapped keeps the state until something else
   // is tapped — a highlight stuck on the button you just pressed.
-  const stray = topLevelLines(css).filter(line => line.includes(':hover') && !line.trim().startsWith('/*'));
+  const stray = topLevelLines(withoutComments(css)).filter(line => line.includes(':hover'));
   assert.deepEqual(stray, [], `ungated hover rules:\n${stray.join('\n')}`);
 });
 

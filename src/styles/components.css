@@ -1795,8 +1795,12 @@ a.lg-path-level, button.lg-path-level { cursor: pointer; }
   font-size: var(--lg-text-subhead-size); line-height: var(--lg-text-subhead-leading);
   cursor: default; user-select: none; -webkit-user-select: none;
   transition: background var(--lg-duration-press) var(--lg-ease); }
+/* On the row, not on the item — for the same reason the selection background is, one rule up.
+   A `treeitem` is the `<li>`, and the `<li>` contains its children, so `:hover` on it is true
+   for the row under the pointer *and* for every folder that row is inside: pointing at a file
+   three deep lit four rows. The row is what you point at, so the row is what answers. */
 @media (hover: hover) {
-  .lg-outline-item:not([data-disabled="true"]):hover > .lg-outline-row { background: var(--lg-fill-quaternary); }
+  .lg-outline-item:not([data-disabled="true"]) > .lg-outline-row:hover { background: var(--lg-fill-quaternary); }
 }
 .lg-outline-item[data-selected="true"] > .lg-outline-row { background: var(--lg-accent); color: var(--lg-accent-contrast); }
 .lg-outline-item[data-selected="true"] > .lg-outline-row .lg-outline-value { color: inherit; opacity: .8; }
