@@ -807,22 +807,9 @@
   /* Home indicator and notch: the bar floats above the safe area, never under it. */
   padding: var(--lg-space-3) var(--lg-margin) calc(var(--lg-space-3) + env(safe-area-inset-bottom)); pointer-events: none; }
 .lg-tabbar[data-layout="tabbar"] > * { pointer-events: auto; }
-/* A source list runs the full height of the window and is one material. The rail itself does
-   not scroll — the list inside it does, so the sections stay put while the pages move. */
 .lg-tabbar[data-layout="sidebar"] { flex-direction: column; align-items: stretch; z-index: var(--lg-z-sidebar);
   inset-block: 0; inset-inline-start: 0; width: var(--lg-sidebar-width);
-  padding: var(--lg-space-4) var(--lg-space-4) calc(var(--lg-space-4) + env(safe-area-inset-bottom));
-  overflow: hidden; overscroll-behavior: contain; }
-.lg-tabbar[data-layout="sidebar"] > .lg-tabbar-group { flex: 1 1 auto; min-height: 0; display: flex; flex-direction: column; }
-.lg-tabbar[data-layout="sidebar"] > .lg-tabbar-group > .lg-content { flex: 1 1 auto; display: flex; flex-direction: column; min-height: 0; }
-.lg-tabbar[data-layout="sidebar"] .lg-tab-links { flex: 0 1 auto; min-height: 0;
-  overflow-y: auto; overscroll-behavior: contain; }
-.lg-tabbar[data-layout="sidebar"] .lg-tabbar-divider { flex: 0 0 auto; height: 1px; background: var(--lg-edge);
-  margin: var(--lg-space-3) var(--lg-space-2); }
-/* `flex-basis: 0`, not `auto`: shrinking is distributed by basis, and a list of forty pages
-   has a basis tall enough to squash the four section links above it to nothing. */
-.lg-tabbar[data-layout="sidebar"] .lg-tabbar-accessory { flex: 1 1 0; min-height: 0;
-  overflow-y: auto; overscroll-behavior: contain; scrollbar-gutter: stable; }
+  padding: var(--lg-space-5) var(--lg-space-4) calc(var(--lg-space-5) + env(safe-area-inset-bottom)); overflow-y: auto; overscroll-behavior: contain; }
 .lg-tabbar-header { padding: var(--lg-space-2) var(--lg-space-3) var(--lg-space-4); }
 .lg-tabbar-group { padding: 6px; }
 /* pan-y: scrolling the page (or the sidebar) always beats dragging the lens on a touch screen.

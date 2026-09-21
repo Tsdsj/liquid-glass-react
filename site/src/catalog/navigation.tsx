@@ -938,6 +938,35 @@ push({ key: 'general', title: '通用', content: <General /> });`,
   alternate: { label: '全部关闭', shortcut: '⌥ mod w', onSelect: closeAll } }`,
       },
       {
+        id: 'menubar-selection', title: '三选一和三个开关，在读屏里不是一回事',
+        description: '「外观」是一组互斥的值，「显示」是三个各自独立的开关。selection 按菜单给而不是按栏给，因为一条菜单栏里两种都有是常态；把一组单选画成复选框，等于告诉读屏用户「选了另一个，这个还留着」。',
+        height: 240,
+        render: function MenuBarSelection() {
+          const [look, setLook] = useState('system');
+          const [shown, setShown] = useState<string[]>(['ruler']);
+          const toggle = (key: string) => setShown(list => list.includes(key) ? list.filter(item => item !== key) : [...list, key]);
+          return <div id="menubar-selection-demo" style={{ display: 'grid', gap: 16, justifyItems: 'center' }}>
+            <MenuBar aria-label="选择语义示例" menus={[
+              { key: 'look', title: '外观', selection: 'single', items: [
+                { key: 'system', label: '跟随系统', checked: look === 'system', onSelect: () => setLook('system') },
+                { key: 'light', label: '浅色', checked: look === 'light', onSelect: () => setLook('light') },
+                { key: 'dark', label: '深色', checked: look === 'dark', onSelect: () => setLook('dark') },
+              ] },
+              { key: 'show', title: '显示', items: [
+                { key: 'ruler', label: '标尺', checked: shown.includes('ruler'), onSelect: () => toggle('ruler') },
+                { key: 'grid', label: '网格', checked: shown.includes('grid'), onSelect: () => toggle('grid') },
+                { key: 'guides', label: '参考线', checked: shown.includes('guides'), onSelect: () => toggle('guides') },
+              ] },
+            ]} />
+            <Text variant="caption1" tone="secondary" role="status">
+              外观：{look} · 显示：{shown.length ? shown.join('、') : '都关着'}
+            </Text>
+          </div>;
+        },
+        code: `{ key: 'look', title: '外观', selection: 'single', items: [...] }   {/* menuitemradio */}
+{ key: 'show', title: '显示', items: [...] }                       {/* menuitemcheckbox */}`,
+      },
+      {
         id: 'menubar-disabled', title: '不适用的时候置灰，不要拿走',
         description: '菜单栏是靠位置记住的。一个命令这会儿不能用，它也得在原来那一行——否则下次要找它的人只能重新学一遍。整个菜单也一样。',
         height: 220,
@@ -968,6 +997,7 @@ push({ key: 'general', title: '通用', content: <General /> });`,
       { name: 'menus', type: 'MenuBarMenu[]', required: true, description: '每一项是一个标题加它的菜单内容。' },
       { name: 'title', type: 'string', required: true, description: '标题文字，尽量一个词。' },
       { name: 'items', type: 'GlassMenuItem[]', required: true, description: '这个菜单里的命令，和 GlassMenu 完全一样。' },
+      { name: 'selection', type: "'multiple' | 'single'", default: "'multiple'", description: '勾在这个菜单里表示什么。按菜单给，因为一条栏里两种都有是常态。' },
       { name: 'disabled', type: 'boolean', description: '整个菜单不可用。它仍然画出来，位置不变。' },
       { name: 'aria-label', type: 'string', required: true, description: '这排菜单属于什么。' },
       { name: 'open', type: 'string | null', description: '当前打开的是哪个菜单，由应用控制时传。null 表示没有打开的。' },

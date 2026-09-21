@@ -34,7 +34,7 @@ test('it stays visible once the page scrolls, instead of parking under the app b
    * which is the only time anyone wants one.
    */
   const { barBottom, outlineTop } = await page.evaluate(() => ({
-    barBottom: document.querySelector('.app-bar')!.getBoundingClientRect().bottom,
+    barBottom: document.querySelector('.app-header')!.getBoundingClientRect().bottom,
     outlineTop: document.querySelector('.outline-compact')!.getBoundingClientRect().top,
   }));
   expect(outlineTop, `the outline is ${(barBottom - outlineTop).toFixed(0)}px under the app bar`).toBeGreaterThanOrEqual(barBottom - 1);

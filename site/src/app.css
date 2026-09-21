@@ -20,15 +20,21 @@
   --site-canvas: #e6e8ee;
   --site-canvas-top: #edeff4;
 
-  /* How wide the page itself is allowed to get. It steps up with the window so the content is
-     not stranded in the middle of a 1900px display, and it stops, because past about 1300px
-     nothing is gained but distance between the sidebar and the outline.
+  /* The window's three measurements.
 
-     The **line** is not this: prose is already capped at `--lg-readable` where it is written.
-     A second cap here in `ch` made things worse rather than better — `ch` resolves against
-     each element's own font size, and a card that inherits the document's 16px got 847px out
-     of the same declaration that gave a 12px lede 635. Measured, removed. */
-  --doc-column: 980px;
+     `--shell-max` is the band and the body together: one box, so the name in the band, the
+     first item in the rail and the page heading all sit on the same two verticals. It stops
+     at a width where a 1920 display gets even margins rather than a page stretched to the
+     glass, which is what every documentation site the reader has arrived from does.
+
+     `--shell-rail` is the list of pages in the section you are in. `--doc-aside` is the
+     outline of the page you are on.
+
+     The **line** is not here: prose is capped at `--lg-readable` where it is written. A second
+     cap in `ch` made things worse — `ch` resolves against each element's own font size, so one
+     declaration gave a 12px lede 635px and a card inheriting the document's 16px got 847. */
+  --shell-max: 100%;
+  --shell-rail: 252px;
   --doc-aside: 200px;
 }
 :root[data-app-theme="dark"] { --site-canvas: #000; --site-canvas-top: #0a0a0d; }
@@ -57,20 +63,32 @@ code { font-family: var(--lg-font-mono); font-size: .92em; }
    that slides away as you scroll.
    -------------------------------------------------------------------------- */
 .app-shell { min-height: 100dvh; display: flex; flex-direction: column; }
-/* `Screen` owns the top bar and the scroll edge; what is left here is the column itself and
-   the room the floating tab bar needs at the bottom, which is not a Screen slot because the
-   tab bar becomes a sidebar at 1024 and stops being a bottom bar at all. */
+/* `Screen` owns the top band and the scroll edge; what is left here is the column itself and
+   the room the floating tab bar needs at the bottom of a phone. */
 .app-main { display: flex; flex-direction: column; flex: 1; min-width: 0; }
 .app-main .lg-screen-content { display: flex; flex-direction: column; flex: 1;
   padding-block-end: calc(96px + env(safe-area-inset-bottom)); }
-.app-content { flex: 1; width: 100%; max-width: var(--doc-column); margin-inline: auto;
-  padding-inline: var(--lg-margin); outline: none; }
-/* No background, border or shadow of its own — the glass groups inside carry it. */
-.app-bar { display: flex; align-items: center; justify-content: space-between; gap: var(--lg-space-3);
-  width: 100%; max-width: var(--doc-column); margin-inline: auto; }
-/* Commands only exist where there is a window to put them on. */
-.app-bar-commands { display: none; }
-.app-footer { width: 100%; max-width: var(--doc-column); margin-inline: auto;
+
+/* ---------- The band ----------
+   Full bleed, because a band that stopped short of the window would be a wide toolbar rather
+   than the top of a window. The row inside it is what lines up with the page. */
+.app-header { width: 100%; }
+.app-header-inner { display: flex; align-items: center; gap: var(--lg-space-4);
+  width: 100%; max-width: var(--shell-max); margin-inline: auto; }
+.app-header-actions { margin-inline-start: auto; }
+/* The areas are written into the band, and on a phone they are not in it: the tab bar pins
+   itself to the bottom of the viewport in its capsule form, so it leaves the row it is
+   declared in and lands under the thumb. Taking it out of the flow here instead — a
+   `display: none` — left a phone with no section navigation at all, which is what the compact
+   test now says out loud. */
+
+/* ---------- Body: the rail and the page ---------- */
+.app-body { flex: 1; width: 100%; max-width: var(--shell-max); margin-inline: auto; min-width: 0; }
+/* No rail on a phone: a list of forty page names above the page is not navigation, it is a
+   wall. The section's own index page and ⌘K are the two ways through there. */
+.app-rail { display: none; }
+.app-content { flex: 1; min-width: 0; padding-inline: var(--lg-margin); outline: none; }
+.app-footer { width: 100%; max-width: var(--shell-max); margin-inline: auto;
   padding: var(--lg-space-8) var(--lg-margin) var(--lg-space-6);
   display: flex; flex-wrap: wrap; gap: var(--lg-space-3); align-items: center; justify-content: space-between;
   border-block-start: 1px solid var(--lg-separator); margin-block-start: var(--lg-space-10); }
@@ -100,7 +118,8 @@ code { font-family: var(--lg-font-mono); font-size: .92em; }
 .wordmark-mark i + i { inset-inline-start: 6px; inset-block-start: 4px; rotate: 14deg; opacity: 1;
   background: color-mix(in srgb, var(--lg-accent) 22%, transparent); }
 
-/* Section-level navigation, only shown once the bar has become a sidebar. */
+/* The pages of the section you are in. In the rail on a wide window; nowhere on a phone, where
+   the section's own index page and ⌘K are the two ways through. */
 .subnav { display: flex; flex-direction: column; gap: 2px; padding-block-start: var(--lg-space-4); }
 .subnav-group { display: flex; flex-direction: column; gap: 2px; padding-block-end: var(--lg-space-3); }
 .subnav-title { padding-inline: var(--lg-space-3); padding-block: var(--lg-space-2) var(--lg-space-1); }
@@ -115,7 +134,6 @@ code { font-family: var(--lg-font-mono); font-size: .92em; }
   transition: background var(--lg-duration-press) var(--lg-ease), color var(--lg-duration-press) var(--lg-ease); }
 .subnav-link:hover { background: var(--lg-fill-quaternary); color: var(--lg-label); }
 .subnav-link[aria-current="page"] { background: var(--lg-fill-tertiary); color: var(--lg-label); font-weight: var(--lg-weight-semibold); }
-.lg-tabbar[data-layout="tabbar"] .lg-tabbar-accessory { display: none; }
 
 /* --------------------------------------------------------------------------
    Pages
@@ -132,7 +150,10 @@ code { font-family: var(--lg-font-mono); font-size: .92em; }
 .section-lede { max-width: var(--lg-readable); margin-block-start: calc(var(--lg-space-2) * -1); }
 .rule-note { border-inline-start: 3px solid var(--lg-accent); padding-inline-start: var(--lg-space-4);
   padding-block: var(--lg-space-1); margin-block: var(--lg-space-4); max-width: var(--lg-readable); }
-.when-card { max-width: var(--lg-readable); }
+/* The box takes the column and the **line** inside it takes the measure. Capping the box
+   instead left a card that stopped 250px short of the code block above it, which reads as a
+   card that failed to load rather than as a line that knows when to stop. */
+.when-card > .plain-list { max-width: var(--lg-readable); }
 /* Same reason as the sidebar labels above, found at 390px/AX5 by the layout sweep: these
    sentences quote export names and attribute values — `NavigationStack`, `role="separator"` —
    and a Latin token that long has nowhere to break inside Chinese prose. At AX5 on a phone one
@@ -149,9 +170,21 @@ code { font-family: var(--lg-font-mono); font-size: .92em; }
    -------------------------------------------------------------------------- */
 .overview-hero { display: flex; flex-direction: column; align-items: flex-start;
   gap: var(--lg-space-4); padding-block: var(--lg-space-8) var(--lg-space-6); }
-.overview-title { font-size: clamp(var(--lg-text-title1-size), 5vw, calc(var(--lg-text-largetitle-size) * 1.32));
-  line-height: 1.15; max-width: 18ch; }
-.overview-lede { max-width: var(--lg-readable); font-size: var(--lg-text-body-size); }
+/* The one display size on the site, and the one place it belongs: a landing page opens with a
+   headline, not with a window title. The desktop text table tops out at 26px for `largeTitle`
+   — right for a title bar and far too quiet for the first line anybody reads. Still derived
+   from the table rather than typed in, so it follows the text-size preference up and down.
+
+   `.lg-text` is in the selector because without it this rule never applied at all. `Text`
+   styles itself through `.lg-text[data-variant="largeTitle"]`, which is a class *and* an
+   attribute; a lone `.overview-title` is one class and loses on specificity no matter which
+   stylesheet loads later. The hero has been rendering at the plain 26px this whole time, and
+   so has the lede below it — a site can write a size the library quietly ignores, and nothing
+   says so. */
+.lg-text.overview-title { font-size: clamp(var(--lg-text-title1-size), 4.2vw, calc(var(--lg-text-largetitle-size) * 2));
+  line-height: 1.12; letter-spacing: -.02em; max-width: 18ch; }
+.lg-text.overview-lede { max-width: var(--lg-readable); font-size: var(--lg-text-body-size);
+  line-height: var(--lg-text-body-leading); }
 .hero-actions { display: flex; flex-wrap: wrap; gap: var(--lg-space-3); margin-block-start: var(--lg-space-2); }
 /* A short row of numbers, separated by rules rather than by boxes: three cards here would
    compete with the three principle cards further down for the same kind of attention. */
@@ -194,12 +227,12 @@ code { font-family: var(--lg-font-mono); font-size: .92em; }
    -------------------------------------------------------------------------- */
 .demo-settings { display: flex; flex-wrap: wrap; gap: var(--lg-space-2); justify-content: flex-end;
   margin-block-end: var(--lg-space-2); }
-/* `min(100%, …)` as the floor, not the bare 420px: a track whose minimum is wider than the
-   space it has does not shrink, it overflows, and that is a horizontal scrollbar on a phone.
-   420 rather than 320 because a demo of a row of buttons at 327px wrapped into three rows —
-   the example was showing the reader what happens in a narrow column, not what the component
-   looks like. */
-.demo-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 420px), 1fr)); gap: var(--lg-space-4); align-items: start; }
+/* One example per row, the full width of the column.
+   Two and three up looked economical and were not: at three the button page's row of seven
+   buttons wrapped into three lines, and the reader was being shown what the component does in
+   a narrow column rather than what it looks like. It also left holes — the adjustable example
+   spans the row, so any row above it with an odd number of cards had an empty cell in it. */
+.demo-grid { display: grid; grid-template-columns: minmax(0, 1fr); gap: var(--lg-space-5); align-items: start; }
 .demo-card { border: 1px solid var(--lg-separator); border-radius: var(--lg-radius-l); overflow: hidden;
   background: var(--lg-bg-grouped-2); display: flex; flex-direction: column; scroll-margin-block-start: 88px; }
 .demo-card-body { padding: var(--lg-space-4) var(--lg-space-4) var(--lg-space-2); display: grid; gap: var(--lg-space-1); }
@@ -274,6 +307,12 @@ code { font-family: var(--lg-font-mono); font-size: .92em; }
   font: max(12px, var(--lg-text-footnote-size))/1.8 var(--lg-font-mono); white-space: pre; tab-size: 2; }
 .code-block > pre code { font-size: inherit; }
 .code-copy { position: absolute; inset-block-start: var(--lg-space-2); inset-inline-end: var(--lg-space-2); }
+/* The block scrolls sideways under the button, so the button needs the block's own colour
+   behind it — a line of code sliding through a piece of glass reads as a rendering fault.
+   The reserved `padding-inline-end` only keeps the *unscrolled* line clear. */
+.code-block::after { content: ''; position: absolute; inset-block-start: 1px; inset-inline-end: 1px;
+  width: 104px; height: calc(var(--lg-space-2) * 2 + var(--lg-height-small));
+  border-start-end-radius: var(--lg-radius-m); background: var(--lg-bg-secondary); pointer-events: none; }
 
 /**
  * Syntax colours, from the semantic palette rather than from a borrowed theme — so they flip
@@ -386,31 +425,57 @@ code { font-family: var(--lg-font-mono); font-size: .92em; }
   color: #e1ede0; font: var(--lg-text-caption2-size) var(--lg-font-mono); }
 
 /* --------------------------------------------------------------------------
-   Responsive. 1024 is where the navigation becomes a sidebar; 1280 is where
-   there is finally room for the outline as well.
+   Responsive. 900 is where the sections move up into the band and the pages of
+   the current section get a column of their own; 1280 is where there is finally
+   room for the page's outline as well.
    -------------------------------------------------------------------------- */
-@media (min-width: 1024px) {
-  :root { --doc-column: 1000px; }
-  .app-main { padding-inline-start: var(--lg-sidebar-width); padding-block-end: var(--lg-space-10); }
-  /* The title bar is pinned to the viewport, so the rail is not in its containing block and
-     it was centring against the whole window while the content centred against what is left
-     of it — 130px out of step, which is what made the toolbar read as floating rather than as
-     part of the page. */
-  .app-main > .lg-screen-bar[data-edge="top"] { padding-inline: var(--lg-sidebar-width) 0; }
-  .app-content, .app-bar, .app-footer { padding-inline: var(--lg-margin-regular); }
-  /* The window has a title bar from here up: commands on the leading side.
-     The preferences popover stays. Taking it away looked like removing a duplicate and was
-     not: a menu bar and a settings panel are two different things on a desktop — the menus are
-     the fast, keyboard-reachable path, and the panel is where the sentence explaining that
-     these switches sit *on top of* the system's own settings can actually fit. */
-  .app-bar-commands { display: block; }
+@media (min-width: 900px) {
+  :root { --shell-max: 1440px; }
+  .app-main { padding-block-end: var(--lg-space-10); }
+  /* The room the floating bar needed at the bottom of a phone goes with the bar. */
+  .app-main .lg-screen-content { padding-block-end: var(--lg-space-8); }
+  .app-header-inner { min-height: 44px; }
+  /* The band is full bleed and the row inside it is what lines up with the page, so the bar's
+     own padding has to be the page's padding and nothing else. */
+  .app-main > .lg-screen-bar[data-edge="top"] { padding-inline: 0; }
+  .app-header-inner, .app-body, .app-footer { padding-inline: var(--lg-margin-regular); }
+  .app-content { padding-inline: 0; }
+
+  /* The sections come up into the band and the floating bar at the bottom goes away with them.
+     One element either way: this is the same `TabBar`, told to stay in its capsule form and
+     placed rather than pinned. */
+  .app-sections { position: static; padding: 0; }
+  .app-sections .lg-tabbar-group { --lg-radius: 999px; }
+  /* Minimising on scroll belongs to the bar that floats over the content on a phone, where
+     shrinking it gives the page back some room. In a band that is already 60px tall and pinned,
+     it just takes the section names away while you read. */
+  .app-sections[data-minimized="true"] .lg-tab-label { display: inline; }
+  .app-sections[data-minimized="true"] .lg-tab-link { padding-inline: var(--lg-space-4); }
+
+  /* Two columns. The rail is a column of the page, not a panel floating over it — it does not
+     pass under anything, so it carries a rule rather than a material, and the glass in this
+     view is the band, which content really does scroll beneath. */
+  .app-body[data-rail="true"] { display: grid; grid-template-columns: var(--shell-rail) minmax(0, 1fr);
+    gap: var(--lg-space-8); align-items: start; }
+  .app-rail { display: block; position: sticky; inset-block-start: var(--lg-screen-top, 64px); min-width: 0;
+    max-height: calc(100dvh - var(--lg-screen-top, 64px) - var(--lg-space-4));
+    overflow-y: auto; overscroll-behavior: contain; scrollbar-gutter: stable;
+    padding-block: var(--lg-space-2) var(--lg-space-8); padding-inline-end: var(--lg-space-4);
+    border-inline-end: 1px solid var(--lg-separator); }
+  /* Without sibling pages there is no rail. The page keeps the same leading edge rather than
+     centring itself in the space the rail left — the name in the band, the first item in the
+     rail and every page heading on the site sit on one vertical, and a landing page that
+     started 200px to the right of it would be the only thing that did not. */
+  .app-body[data-rail="false"] .app-content { max-width: none; }
 }
 @media (min-width: 1280px) {
-  :root { --doc-column: 1180px; }
   .component-layout { display: grid; grid-template-columns: minmax(0, 1fr) var(--doc-aside); gap: var(--lg-space-8); align-items: start; }
   .outline-compact { display: none; }
-  .outline { display: flex; flex-direction: column; gap: 2px; position: sticky; inset-block-start: 88px;
-    padding-block: var(--lg-space-6); }
+  .outline { display: flex; flex-direction: column; gap: 2px; position: sticky;
+    inset-block-start: calc(var(--lg-screen-top, 64px) + var(--lg-space-4));
+    max-height: calc(100dvh - var(--lg-screen-top, 64px) - var(--lg-space-8));
+    overflow-y: auto; overscroll-behavior: contain;
+    padding-block: var(--lg-space-4); }
   .outline-title { padding-inline: var(--lg-space-3); padding-block-end: var(--lg-space-2); }
   .outline-link { display: block; padding: var(--lg-space-2) var(--lg-space-3); border-radius: var(--lg-radius-s);
     overflow-wrap: anywhere;
@@ -421,9 +486,9 @@ code { font-family: var(--lg-font-mono); font-size: .92em; }
   .outline-link[aria-current="location"] { color: var(--lg-label); border-inline-start-color: var(--lg-accent);
     font-weight: var(--lg-weight-semibold); }
 }
-/* One more step and then it stops. A 1900px display gets a wider page, not a wider line. */
+/* One more step and then it stops. A 1900px display gets even margins, not a wider line. */
 @media (min-width: 1600px) {
-  :root { --doc-column: 1300px; --doc-aside: 216px; }
+  :root { --shell-max: 1520px; --shell-rail: 272px; --doc-aside: 216px; }
 }
 @media (pointer: coarse) {
   .subnav-link, .outline-link { min-height: var(--lg-hit-min); }

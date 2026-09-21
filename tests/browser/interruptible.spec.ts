@@ -76,13 +76,18 @@ function biggestStep(frames: number[]) {
 const CONTROLS = [
   {
     name: '分段控件', url: '/#/components/segmented-control', axis: 'x' as const,
+    scrollTo: undefined as string | undefined,
     lens: '#segmented-basic .lg-selection-lens',
     other: '#segmented-basic .lg-segment:not(:has(input:checked))',
   },
   {
-    name: '侧边栏', url: '/#/components/button', axis: 'y' as const,
-    lens: '.lg-tabbar[data-layout="sidebar"] .lg-selection-lens',
-    other: '.lg-tabbar[data-layout="sidebar"] .lg-tab-link:not([aria-current="page"])',
+    /* The expanded form of the tab bar, on its own page: the site keeps the bar in its capsule
+       form and puts the areas in the band, so this is where the sidebar form lives now. It is
+       partway down a long page, hence `scrollTo`. */
+    name: '侧边栏', url: '/#/components/tab-bar', axis: 'y' as const,
+    scrollTo: '#tabbar-sidebar-demo',
+    lens: '#tabbar-sidebar-demo .lg-selection-lens',
+    other: '#tabbar-sidebar-demo .lg-tab-link:not([aria-current="page"])',
   },
 ];
 
@@ -90,6 +95,7 @@ for (const control of CONTROLS) {
   test(`pressing an option it is not on leaves the ${control.name} lens where it is`, async ({ page }) => {
     await page.setViewportSize({ width: 1280, height: 900 });
     await page.goto(control.url);
+    if (control.scrollTo) await page.locator(control.scrollTo).scrollIntoViewIfNeeded();
     await page.waitForTimeout(900);
 
     const box = (await page.locator(control.other).first().boundingBox())!;
@@ -145,6 +151,7 @@ for (const control of CONTROLS) {
   test(`pressing does not cancel the ${control.name} glide`, async ({ page }) => {
     await page.setViewportSize({ width: 1280, height: 900 });
     await page.goto(control.url);
+    if (control.scrollTo) await page.locator(control.scrollTo).scrollIntoViewIfNeeded();
     await page.waitForTimeout(900);
 
     const lens = page.locator(control.lens);

@@ -54,7 +54,14 @@ test('the pointer glow is far dimmer in the dark appearance than in the light on
   const peak = async (scheme: 'light' | 'dark') => {
     await page.emulateMedia({ colorScheme: scheme });
     await page.goto('/#/components/button');
-    await page.waitForSelector('#main');
+    /* Reloaded, then waited on the *theme* rather than on the markup. The second call lands on
+       the URL the first one is already at, which is a same-document navigation the application
+       never sees; and `#main` exists after the first render while the appearance is written to
+       `<html>` in an effect after it. Between the two, this read the previous appearance's
+       tokens about one full run in three — green every time the file ran on its own, which is
+       what a race looks like from the outside. */
+    await page.reload();
+    await expect(page.locator('html')).toHaveAttribute('data-app-theme', scheme);
     return page.locator('.lg-root').first().evaluate(node =>
       Number(getComputedStyle(node).getPropertyValue('--lg-shine-alpha')));
   };
@@ -69,7 +76,8 @@ test('the press flash follows the same rule', async ({ page }) => {
   const flash = async (scheme: 'light' | 'dark') => {
     await page.emulateMedia({ colorScheme: scheme });
     await page.goto('/#/components/button');
-    await page.waitForSelector('#main');
+    await page.reload();
+    await expect(page.locator('html')).toHaveAttribute('data-app-theme', scheme);
     return page.locator('.lg-root').first().evaluate(node =>
       Number(getComputedStyle(node).getPropertyValue('--lg-flash-alpha')));
   };

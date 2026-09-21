@@ -2,7 +2,6 @@ import { useEffect, useState, type MouseEvent, type ReactNode } from 'react';
 import { GlassProvider, LibraryIcon, Screen, TabBar, Text, ToastProvider, ToolbarGroup } from '@ttqtt/liquid-glass-react';
 import { Icon } from '../icons.js';
 import { PreferencesButton, type SitePreferences } from './preferences.js';
-import { SiteMenuBar } from './menus.js';
 import { ComponentSearch } from './search.js';
 import { sectionOf } from '../router.js';
 
@@ -89,52 +88,58 @@ export function Shell({ path, go, secondaryNav, children }: {
         跳到主要内容
       </a>
 
-      {/* One navigational element that scales: a floating capsule on phones, a sidebar at 1024. */}
-      <TabBar aria-label="主导航" current={section} minimizeOnScroll sidebarBreakpoint={1024}
-        sidebarHeader={<a className="wordmark" href="#/overview" onClick={navigate('overview')}>
-          <span className="wordmark-mark" aria-hidden="true"><i /><i /></span>
-          <Text as="span" variant="headline" emphasized>Liquid Glass UI</Text>
-        </a>}
-        accessory={secondaryNav}
-        items={SECTIONS.map(item => ({
-          key: item.key, href: `#/${item.path}`, label: item.label,
-          icon: <Icon name={item.icon} size={18} />, onSelect: navigate(item.path),
-        }))} />
-
       {/**
-        * The site's own shell used to be three hand-written rules and a `position: sticky`
-        * header, and the review of the compact outline found what that was missing: not one
-        * `ScrollEdge` anywhere, so the toolbar simply floated over whatever scrolled past it.
-        * `Screen` is where that rule lives now — it pins the bar, gives it the safe-area
-        * inset, reserves the measured bar height from the content, and owns the one edge
-        * effect the view is allowed.
-        */}
-      {/**
-        * The window's title bar: commands on the leading side, the two things that are not
-        * commands on the trailing side.
+        * One band across the top, the way every documentation site anyone will arrive from is
+        * built: the name, the sections, and the two things that are not navigation.
         *
-        * The menu bar only exists from 1024 up, which is the same width at which the tab bar
-        * becomes a sidebar — below it there is no window to put a menu bar on.
+        * The sections live **here** rather than in the left column, and that is the change that
+        * makes the left column a documentation sidebar instead of two lists of different kinds
+        * stacked in one rail. It is also what the reader already knows: top-level areas across
+        * the top, the pages of the area you are in down the side.
         *
-        * The preferences popover stays at every width. Hiding it once the menus could carry
-        * the same five settings looked like removing a duplicate, and it is not one: the menus
-        * are the fast path, and the panel is the only place the sentence saying these switches
-        * layer *on top of* the system's own settings will fit.
+        * `Screen` still owns the band — it pins it, measures it, publishes the height as
+        * `--lg-screen-top` (which the sidebar below sticks to) and draws the one scroll edge
+        * this view is allowed, so content dissolves into the bar instead of sliding under a
+        * hard line.
         */}
-      <Screen scroll="page" className="app-main" top={
-        <header className="app-bar">
-          <div className="app-bar-commands">
-            <SiteMenuBar value={preferences} onChange={setPreferences} go={go} />
+      <Screen scroll="page" className="app-main" edge="hard" edgeHeight={64} top={
+        <div className="app-header">
+          <div className="app-header-inner">
+            <a className="wordmark" href="#/overview" onClick={navigate('overview')}>
+              <span className="wordmark-mark" aria-hidden="true"><i /><i /></span>
+              <Text as="span" variant="headline" emphasized>Liquid Glass UI</Text>
+            </a>
+            {/**
+              * One navigational element at every width. `sidebarBreakpoint` is out of reach on
+              * purpose: the capsule *is* the desktop form here, sitting in the band, and on a
+              * phone the same element drops back to the floating bar at the bottom of the
+              * screen. Two renderings of one list would be two lists to keep in step.
+              */}
+            <TabBar aria-label="主导航" current={section} minimizeOnScroll sidebarBreakpoint={Number.MAX_SAFE_INTEGER}
+              className="app-sections"
+              items={SECTIONS.map(item => ({
+                key: item.key, href: `#/${item.path}`, label: item.label,
+                icon: <Icon name={item.icon} size={18} />, onSelect: navigate(item.path),
+              }))} />
+            <ToolbarGroup className="app-header-actions">
+              <ComponentSearch onNavigate={go} />
+              <PreferencesButton value={preferences} onChange={setPreferences} />
+            </ToolbarGroup>
           </div>
-          <ToolbarGroup>
-            <ComponentSearch onNavigate={go} />
-            <PreferencesButton value={preferences} onChange={setPreferences} />
-          </ToolbarGroup>
-        </header>
+        </div>
       }>
-        <main id="main" tabIndex={-1} className="app-content">
-          <div className="page-enter" key={path}>{children}</div>
-        </main>
+        {/**
+          * Two columns under the band, and only where there is something to put in the first
+          * one. The overview and the changelog have no sibling pages, so they get the width
+          * instead of a 260px column of nothing — which is what a sidebar with four links in a
+          * 1000px rail had become.
+          */}
+        <div className="app-body" data-rail={secondaryNav ? 'true' : 'false'}>
+          {secondaryNav && <div className="app-rail">{secondaryNav}</div>}
+          <main id="main" tabIndex={-1} className="app-content">
+            <div className="page-enter" key={path}>{children}</div>
+          </main>
+        </div>
         <footer className="app-footer">
           <Text variant="caption1" tone="tertiary">
             Liquid Glass UI · 独立设计研究，非 Apple 官方产品，不含 Apple 字体、SF Symbols 或壁纸素材。

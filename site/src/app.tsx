@@ -119,7 +119,12 @@ export function App() {
    */
   if (path === '_probe/refs') return <RefProbe />;
   if (path === '_probe/warnings') return <WarnProbe />;
-  return <Shell path={path} go={go} secondaryNav={<SecondaryNav path={path} go={go} />}>
+  /* Asked before the element is made, not after. `<SecondaryNav/>` is a truthy element even on
+     a page where it renders nothing, so handing it over unconditionally told the shell to keep
+     a 252px column for a list that was not there. */
+  const section = sectionOf(path);
+  const hasSiblings = section === 'components' || section === 'foundations' || section === 'guides';
+  return <Shell path={path} go={go} secondaryNav={hasSiblings ? <SecondaryNav path={path} go={go} /> : undefined}>
     {resolve(path, go)}
   </Shell>;
 }

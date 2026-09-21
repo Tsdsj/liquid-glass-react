@@ -11,9 +11,12 @@ for (const width of [390, 768, 1024, 1440]) {
       await expect(page.locator('h1')).toBeVisible();
       // Nothing may push the document wider than the viewport at any breakpoint.
       expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
-      // The navigation changes form at 1024, and it is one element either way.
+      // The rail of sibling pages appears at 900; the areas are one element at every width.
       await expect(page.getByRole('navigation', { name: '主导航' }))
-        .toHaveAttribute('data-layout', width >= 1024 ? 'sidebar' : 'tabbar');
+        .toHaveAttribute('data-layout', 'tabbar');
+      const rail = page.locator('.app-rail');
+      if (width >= 900 && route.startsWith('components/')) await expect(rail).toBeVisible();
+      else if (width < 900) await expect(rail).toBeHidden();
       // Evidence capture, NOT an automatically approved visual baseline.
       await info.attach(`${route.replace(/\//g, '-')}-${width}`, {
         body: await page.screenshot({ fullPage: true }), contentType: 'image/png',

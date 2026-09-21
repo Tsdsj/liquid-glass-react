@@ -1,32 +1,11 @@
 {
-  "generated": "2026-09-20T22:26:56.334Z",
+  "generated": "2026-09-21T08:53:41.037Z",
   "pages": 44,
   "swept": 44,
   "probes": 2720,
-  "asked": 620,
-  "still": 2,
-  "byPage": {
-    "divider": 1,
-    "toast": 1
-  },
-  "byKind": {
-    "activate lg-stepper-button": 1,
-    "activate button": 1
-  },
-  "sample": [
-    {
-      "slug": "divider",
-      "trigger": "activate",
-      "target": "lg-stepper-button #0",
-      "owed": true,
-      "moved": []
-    },
-    {
-      "slug": "toast",
-      "trigger": "activate",
-      "target": "button #0",
-      "owed": true,
-      "moved": []
-    }
-  ]
+  "asked": 619,
+  "still": 0,
+  "byPage": {},
+  "byKind": {},
+  "sample": []
 }

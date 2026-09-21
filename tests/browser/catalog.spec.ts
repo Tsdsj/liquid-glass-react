@@ -125,23 +125,21 @@ test('演示里的链接不会把读者带离当前页', async ({ page }) => {
   }
 });
 
-test('左栏高亮跟着当前页走', async ({ page }) => {
+test('顶部高亮跟着当前分区走', async ({ page }) => {
   await page.setViewportSize({ width: 1280, height: 900 });
   for (const path of ['overview', 'foundations/materials', 'components', 'guides/install']) {
     await page.goto(`/#/${path}`);
+    // The areas live in the band; the pages of the area live in the rail beside the page.
     const nav = page.getByRole('navigation', { name: '主导航' });
-    await expect(nav).toHaveAttribute('data-layout', 'sidebar');
-    // The section tabs and the page list inside the sidebar are separately labelled navs,
-    // so each marks its own current item; this asserts the section tabs.
     const current = nav.locator('.lg-tab-link[aria-current="page"]');
     await expect(current).toHaveCount(1);
-    // The highlight is drawn by a lens that has to track the vertical axis too. It glides
-    // there on a spring, so this waits for it to arrive rather than sampling mid-flight.
+    // The highlight is drawn by a lens that glides there on a spring, so this waits for it to
+    // arrive rather than sampling mid-flight. Horizontal now that the areas are a row.
     await expect.poll(() => nav.evaluate(node => {
       const lens = node.querySelector('.lg-selection-lens') as HTMLElement | null;
       const active = node.querySelector('.lg-tab-link[aria-current="page"]') as HTMLElement | null;
       if (!lens || !active) return -1;
-      return Math.round(Math.abs(lens.getBoundingClientRect().top - active.getBoundingClientRect().top));
+      return Math.round(Math.abs(lens.getBoundingClientRect().left - active.getBoundingClientRect().left));
     }), `${path}: highlight is not on the current item`).toBeLessThanOrEqual(1);
   }
 });

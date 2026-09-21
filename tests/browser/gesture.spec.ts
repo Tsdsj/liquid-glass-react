@@ -79,7 +79,10 @@ test('crossing into the next segment never throws the lens off the track', async
  */
 for (const control of [
   { name: '分段控件', url: '/#/components/segmented-control', track: '#segmented-basic .lg-segmented-track', axis: 'x' as const },
-  { name: '侧边栏', url: '/#/components/button', track: '.lg-tabbar[data-layout="sidebar"] .lg-tab-links', axis: 'y' as const },
+  /* The sidebar form of the tab bar, on its own documentation page: the site itself keeps the
+     bar in its capsule form and puts the areas in the band, so this is where the expanded form
+     now lives. Same component, same lens, vertical instead of horizontal. */
+  { name: '侧边栏', url: '/#/components/tab-bar', track: '#tabbar-sidebar-demo .lg-tab-links', axis: 'y' as const },
 ]) {
   test(`holding ${control.name} still leaves it still`, async ({ page }) => {
     await page.setViewportSize({ width: 1280, height: 900 });
@@ -108,8 +111,9 @@ for (const control of [
 
 test('sliding the sidebar lens changes section as it crosses each one', async ({ page }) => {
   await page.setViewportSize({ width: 1280, height: 900 });
-  await page.goto('/#/components/button');
-  const links = page.locator('.lg-tabbar[data-layout="sidebar"] .lg-tab-links');
+  await page.goto('/#/components/tab-bar');
+  await page.locator('#tabbar-sidebar-demo').scrollIntoViewIfNeeded();
+  const links = page.locator('#tabbar-sidebar-demo .lg-tab-links');
   const current = (await links.locator('a[aria-current="page"]').boundingBox())!;
   const last = (await links.locator('.lg-tab-link').last().boundingBox())!;
 
@@ -276,7 +280,8 @@ test('nothing springs into place on load', async ({ page }) => {
 
 test('dragging a navigation link does not start a native drag', async ({ page }) => {
   await page.setViewportSize({ width: 1280, height: 900 });
-  await page.goto('/#/components/button');
+  await page.goto('/#/components/tab-bar');
+  await page.locator('#tabbar-sidebar-demo').scrollIntoViewIfNeeded();
   const started = await page.evaluate(() => {
     const seen: boolean[] = [];
     (window as Window & { __drag?: boolean[] }).__drag = seen;
@@ -285,7 +290,7 @@ test('dragging a navigation link does not start a native drag', async ({ page })
   });
   expect(started).toBe(true);
 
-  const links = page.locator('.lg-tabbar[data-layout="sidebar"] .lg-tab-links');
+  const links = page.locator('#tabbar-sidebar-demo .lg-tab-links');
   const lens = links.locator('.lg-selection-lens');
   const current = (await links.locator('a[aria-current="page"]').boundingBox())!;
   const before = (await lens.boundingBox())!;

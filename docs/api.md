@@ -352,9 +352,7 @@ useShortcut('mod k', () => setPaletteOpen(true));
 `TabBarItem`: `key` `href` `label` `icon` `badge` `badgeLabel` `onSelect`。
 是 `<nav>` + 链接 + `aria-current="page"`，**不是** tablist。宽屏自动变形为侧边栏。
 
-侧边栏形态是**源列表**：一整块玻璃跑满窗口高度，分区链接在上，`accessory` 在一条分隔线下面占掉剩下的部分并**自己滚动**（分区因此不会跟着走）。手机上 `accessory` 回到浮动胶囊的上方——那里没有一条栏要填。
-
-> `accessory` 的 flex 基准是 0 而不是 `auto`：收缩是按基准分配的，一个四十页的列表基准高到能把上面四条分区压成一条 47px 的滚动条。
+`sidebarBreakpoint` 是一条宽度，不是一个开关：给一个大到够不着的数，它就在所有宽度上保持胶囊形态，由调用方决定把它**放**在哪。这个站点就是这么用的——胶囊放进顶部通栏，窄屏下它自己 `position: fixed` 落到屏幕底部。
 
 ### `Sidebar`
 `aria-label`(必填) `header` `footer` `side`(`leading`/`trailing`) + `GlassSurfaceOptions`。自动使用大玻璃。

@@ -1,14 +1,27 @@
 import { test, expect } from '@playwright/test';
 
-test('the tab bar and the sidebar are one element that scales', async ({ page }) => {
+/**
+ * One element, two places. The site keeps the tab bar in its capsule form at every width and
+ * moves *where it is*: placed in the band on a wide window, pinned to the bottom of the screen
+ * on a phone. It is the same element and the same four links either way — not a second
+ * component kept in step by hand.
+ *
+ * (The other form, the bar expanded into a sidebar, is `TabBar`'s own and is exercised on its
+ * documentation page. This site no longer uses it: the areas belong in the band and the rail
+ * belongs to the pages of the area you are in.)
+ */
+test('the navigation is one element that moves rather than two that agree', async ({ page }) => {
   await page.setViewportSize({ width: 1280, height: 900 });
   await page.goto('/#/overview');
   const nav = page.getByRole('navigation', { name: '主导航' });
-  await expect(nav).toHaveAttribute('data-layout', 'sidebar');
+  await expect(nav).toHaveAttribute('data-layout', 'tabbar');
+  const band = await page.locator('.app-header').boundingBox();
+  const wide = await nav.boundingBox();
+  expect(wide!.y, 'the areas are not in the band').toBeLessThan(band!.y + band!.height);
 
   await page.setViewportSize({ width: 600, height: 900 });
-  await expect(nav).toHaveAttribute('data-layout', 'tabbar');
-  // Same element, same links — not a second component kept in sync by hand.
+  const narrow = await nav.boundingBox();
+  expect(narrow!.y, 'the areas did not drop to the bottom of the screen').toBeGreaterThan(600);
   await expect(nav.locator('.lg-tab-link')).toHaveCount(4);
 });
 
@@ -59,7 +72,9 @@ test('the skip link moves focus to the main region without changing route', asyn
 
 test('the navigation bar has no background, border or shadow of its own', async ({ page }) => {
   await page.goto('/#/overview');
-  const bar = page.locator('.app-bar');
+  /* The band is drawn by the scroll edge once content goes under it, never by a bar
+     background — which is the custom bar treatment the design removed. */
+  const bar = page.locator('.app-header');
   const style = await bar.evaluate(node => {
     const computed = getComputedStyle(node);
     return { background: computed.backgroundColor, border: computed.borderBottomWidth, shadow: computed.boxShadow };

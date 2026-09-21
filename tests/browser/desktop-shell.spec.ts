@@ -1,17 +1,16 @@
 import { test, expect, type Page } from '@playwright/test';
 
 /**
- * The documentation site as a desktop window.
+ * The documentation site's shape on a wide window.
  *
- * Every assertion here started as a measurement of what was wrong. At 1680×1000 the navigation
- * was a 228×114 capsule floating in a 260×1000 rail with 886px of nothing under it; the title
- * bar centred itself against the whole window while the content centred against what was left
- * of it, so the two were 130px out of step and the toolbar read as unanchored; and the page's
- * own outline stopped 170px short of the right edge.
+ * It is the shape a reader arrives already knowing: a band across the top with the name, the
+ * areas and the search; the pages of the area you are in down the left under a rule; the page
+ * in the middle; its own outline on the right. Getting there took two goes — the first put the
+ * areas *and* the page list in one rail, which left a 260×1000 column holding a 228×114 capsule
+ * and, on pages with no page list, a glass panel with nothing in it.
  *
- * So these are alignment and fit, not appearance: things line up with each other, nothing
- * floats in a column it does not fill, and the chrome is made of the library's own components
- * doing the job they were written for.
+ * So these are about fit and alignment rather than taste: one thing lines up with the next,
+ * every column has something in it, and no column exists when it would be empty.
  */
 
 const box = (page: Page, selector: string) => page.locator(selector).evaluate(node => {
@@ -22,50 +21,79 @@ const box = (page: Page, selector: string) => page.locator(selector).evaluate(no
 test.describe('wide', () => {
   test.use({ viewport: { width: 1680, height: 1000 } });
 
-  test('the title bar and the page are the same column', async ({ page }) => {
+  test('the band spans the window and its row lines up with the page', async ({ page }) => {
     await page.goto('/#/components/button');
-    const bar = await box(page, '.app-bar');
+    const band = await box(page, '.app-header');
+    expect(band.w, 'the band stops short of the window').toBe(1680);
+
+    /* The name sits over the rail and the actions end where the page ends — the two verticals
+       the whole layout is built on. Before, the bar centred against the window while the page
+       centred against what was left of it, 130px out of step. */
+    const wordmark = await box(page, '.wordmark');
+    const rail = await box(page, '.app-rail');
+    expect(Math.abs(wordmark.x - rail.x), `name at ${wordmark.x}, rail at ${rail.x}`).toBeLessThanOrEqual(1);
+
+    const actions = await box(page, '.app-header-actions');
     const content = await box(page, '.app-content');
-    expect({ x: bar.x, w: bar.w }, 'the title bar is not over the page it belongs to')
-      .toEqual({ x: content.x, w: content.w });
+    const right = content.x + content.w;
+    expect(Math.abs((actions.x + actions.w) - right), `actions end ${actions.x + actions.w}, page ends ${right}`)
+      .toBeLessThanOrEqual(1);
+  });
 
-    // And the leading edge of the commands is the leading edge of the heading.
-    const menubar = await box(page, '.app-menubar');
+  test('the areas are in the band, the pages are in the rail', async ({ page }) => {
+    await page.goto('/#/components/button');
+    const sections = await box(page, '.app-sections');
+    const band = await box(page, '.app-header');
+    expect(sections.y, 'the areas are not in the band').toBeGreaterThanOrEqual(band.y - 1);
+    expect(sections.y + sections.h, 'the areas hang out of the band').toBeLessThanOrEqual(band.y + band.h + 1);
+
+    // Four areas, one row, one highlighted.
+    const xs = await page.locator('.app-sections .lg-tab-link')
+      .evaluateAll(nodes => nodes.map(node => Math.round(node.getBoundingClientRect().y)));
+    expect(new Set(xs).size, `the areas are on rows ${[...new Set(xs)].join(', ')}`).toBe(1);
+    await expect(page.locator('.app-sections .lg-tab-link[aria-current="page"]')).toHaveText(/组件/);
+
+    // And the rail holds the pages of this area, with the one you are on marked.
+    await expect(page.locator('.app-rail .subnav-link[aria-current="page"]')).toHaveText(/GlassButton/);
+  });
+
+  test('the rail stays put while the page scrolls, and keeps its own scroll', async ({ page }) => {
+    await page.goto('/#/components/button');
+    const band = await box(page, '.app-header');
+    await page.mouse.wheel(0, 1200);
+    await page.waitForTimeout(400);
+    const after = await box(page, '.app-rail');
+    /* Pinned just under the band rather than carried off the top of the window with the page. */
+    expect(after.y, `the rail is at ${after.y}, the band ends at ${band.y + band.h}`)
+      .toBeGreaterThanOrEqual(band.y + band.h - 4);
+    expect(after.y).toBeLessThan(200);
+
+    const scrolls = await page.locator('.app-rail').evaluate(node => node.scrollHeight > node.clientHeight + 4);
+    expect(scrolls, 'forty page names fit in the rail without scrolling, which cannot be right').toBe(true);
+  });
+
+  test('the section names stay readable once the page has scrolled', async ({ page }) => {
+    await page.goto('/#/components/button');
+    await page.mouse.wheel(0, 1200);
+    await page.waitForTimeout(500);
+    /* `minimizeOnScroll` shrinks the floating bar on a phone, where it is over the content and
+       taking room. In a pinned 60px band it only takes the names away while you read. */
+    await expect(page.locator('.app-sections .lg-tab-link').first().locator('.lg-tab-label')).toBeVisible();
+  });
+
+  test('a page with no siblings gets the width instead of an empty column', async ({ page }) => {
+    await page.goto('/#/overview');
+    await expect(page.locator('.app-rail')).toHaveCount(0);
+    await expect(page.locator('.app-body')).toHaveAttribute('data-rail', 'false');
+
+    /* `<SecondaryNav/>` is a truthy element even where it renders nothing, so asking after the
+       fact kept a 252px column for a list that was not there. */
+    // And it keeps the site's one leading vertical rather than centring in the space.
     const heading = await box(page, 'h1');
-    expect(Math.abs(menubar.x - heading.x), `menu bar at ${menubar.x}, heading at ${heading.x}`).toBeLessThanOrEqual(1);
-  });
-
-  test('the sidebar is a source list that fills its rail', async ({ page }) => {
-    await page.goto('/#/components/button');
-    const rail = await box(page, '.lg-tabbar[data-layout="sidebar"]');
-    const surface = await box(page, '.lg-tabbar-group');
-    /* Within the rail's own padding. The capsule used to be 114px tall in a 1000px rail, which
-       is what made the whole left of the window read as empty. */
-    expect(surface.h, `the source list is ${surface.h} of a ${rail.h} rail`).toBeGreaterThan(rail.h * 0.8);
-
-    // The section links and the page list are one material, not two treatments in one column.
-    const inside = await page.locator('.lg-tabbar-group .lg-tabbar-accessory').count();
-    expect(inside, 'the page list is outside the source list surface').toBe(1);
-  });
-
-  test('the page list scrolls without taking the sections with it', async ({ page }) => {
-    await page.goto('/#/components/button');
-    const links = page.locator('.lg-tabbar[data-layout="sidebar"] .lg-tab-links');
-    const before = await box(page, '.lg-tabbar .lg-tab-link >> nth=0');
-    await page.locator('.lg-tabbar-accessory').evaluate(node => { node.scrollTop = 400; });
-    const after = await box(page, '.lg-tabbar .lg-tab-link >> nth=0');
-    expect(after.y, 'scrolling the page list moved the section links').toBe(before.y);
-    // Four sections in a column, not wrapped into columns of their own.
-    const xs = await links.locator('.lg-tab-link').evaluateAll(nodes =>
-      nodes.map(node => Math.round(node.getBoundingClientRect().x)));
-    expect(new Set(xs).size, `the section links start at ${xs.join(', ')}`).toBe(1);
-
-    /* And all four are on screen at once. A list of forty pages under them is tall enough to
-       take the whole rail if the sections are allowed to shrink to fit around it — they were
-       squeezed into a 47px scroller, which looks like a rendering fault rather than a list. */
-    const list = await box(page, '.lg-tabbar[data-layout="sidebar"] .lg-tab-links');
-    const count = xs.length;
-    expect(list.h, `${count} section links share ${list.h}px`).toBeGreaterThanOrEqual(count * 24);
+    const wordmark = await box(page, '.wordmark');
+    expect(Math.abs(heading.x - wordmark.x), `heading at ${heading.x}, name at ${wordmark.x}`)
+      .toBeLessThanOrEqual(1);
+    expect((await box(page, '.app-content')).w).toBeGreaterThan(900);
   });
 
   test('the outline reaches the trailing edge of the page', async ({ page }) => {
@@ -73,89 +101,69 @@ test.describe('wide', () => {
     const outline = await box(page, '.outline');
     const content = await box(page, '.app-content');
     const gap = content.x + content.w - (outline.x + outline.w);
-    expect(gap, `the outline stops ${gap}px short of the page's trailing edge`).toBeLessThanOrEqual(24);
-  });
-
-  test('prose keeps a measure while examples keep the column', async ({ page }) => {
-    await page.goto('/#/components/button');
-    const lede = await box(page, '.page-lede');
-    const grid = await box(page, '.demo-grid');
-    expect(lede.w, `the summary line is ${lede.w}px wide`).toBeLessThanOrEqual(700);
-    expect(grid.w, 'the examples were capped along with the prose').toBeGreaterThan(900);
-
-    /* And an example is wide enough to be an example. Three to a row gave each one 327px, at
-       which the button page's row of seven buttons wrapped into three lines — the reader was
-       being shown what the component does in a narrow column, not what it looks like. */
-    const first = await box(page, '.demo-card >> nth=0');
-    expect(first.w, `the first example is ${first.w}px wide`).toBeGreaterThanOrEqual(420);
+    expect(gap, `the outline stops ${gap}px short`).toBeLessThanOrEqual(4);
   });
 
   /**
-   * The menu bar is the site's own use of `MenuBar`, and the point of it is that the items do
-   * something. A menu bar of placeholders would be the opposite of what this page is for.
+   * The site writes two type sizes of its own, and for as long as they have existed neither
+   * one applied: `Text` styles itself through `.lg-text[data-variant="…"]`, a class *and* an
+   * attribute, so a rule of one class loses however the stylesheets are ordered. The landing
+   * headline had been rendering at the plain 26px the desktop table gives a window title.
    */
-  test('a menu command changes the window it is in', async ({ page }) => {
-    await page.goto('/#/components/button');
-    const html = page.locator('html');
-    await expect(html).toHaveAttribute('data-lg-text-size', 'l');
-
-    await page.getByRole('menuitem', { name: '文字' }).click();
-    await page.getByRole('menuitemradio', { name: '小' }).click();
-    await expect(html).toHaveAttribute('data-lg-text-size', 'm');
-
-    await page.getByRole('menuitem', { name: '辅助功能' }).click();
-    await page.getByRole('menuitemcheckbox', { name: '减少动效' }).click();
-    /* The attribute the stylesheet answers to, written where the provider writes it. A menu
-       item that only re-rendered its own checkmark would pass a test that looked at the menu. */
-    await expect(html).toHaveAttribute('data-lg-motion', 'reduced');
+  test('the landing page opens at a display size, not a window-title size', async ({ page }) => {
+    await page.goto('/#/overview');
+    const size = await page.locator('.overview-title')
+      .evaluate(node => parseFloat(getComputedStyle(node).fontSize));
+    /* Measured off a probe, not read off the custom property: `--lg-text-largetitle-size` is
+       `calc(26px * 1)` and stays a string until something asks the browser to do the
+       arithmetic, so reading it gives `NaN`. */
+    const largeTitle = await page.evaluate(() => {
+      const probe = document.createElement('div');
+      probe.style.cssText = 'position:absolute;visibility:hidden;font-size:var(--lg-text-largetitle-size)';
+      document.body.append(probe);
+      const size = parseFloat(getComputedStyle(probe).fontSize);
+      probe.remove();
+      return size;
+    });
+    expect(size, `the headline is ${size}px and largeTitle is ${largeTitle}px`).toBeGreaterThan(largeTitle * 1.5);
   });
 
-  test('appearance is a choice out of a list and the switches are not', async ({ page }) => {
+  test('one example per row, using the whole column', async ({ page }) => {
     await page.goto('/#/components/button');
-    /* The roles carry the difference: picking a theme clears the other two, ticking "reduce
-       motion" does not touch the other switches, and a screen reader is told which is which. */
-    await page.getByRole('menuitem', { name: '外观' }).click();
-    await expect(page.getByRole('menuitemradio')).toHaveCount(3);
-    await page.keyboard.press('Escape');
+    const grid = await box(page, '.demo-grid');
+    const first = await box(page, '.demo-card >> nth=0');
+    expect(first.w, `the example is ${first.w}px in a ${grid.w}px column`).toBe(grid.w);
 
-    await page.getByRole('menuitem', { name: '辅助功能' }).click();
-    await expect(page.getByRole('menuitemcheckbox')).toHaveCount(3);
+    // And the prose inside a full-width card still stops at a readable line.
+    const list = await box(page, '.when-card > .plain-list');
+    const card = await box(page, '.when-card');
+    expect(card.w, 'the callout box stops short of the column').toBeGreaterThan(list.w + 40);
+    expect(list.w, `the line inside it is ${list.w}px`).toBeLessThanOrEqual(700);
   });
 });
 
-/**
- * A short window with the largest text is where the source list runs out of room.
- *
- * Coverage rather than proof, and worth saying so: the source list did lay its four sections
- * out two-by-two at one point — `.lg-tab-links` wraps by default, which is the reflow the
- * largest text sizes need on a phone, and a wrapping column becomes *columns* as soon as it is
- * squeezed. Giving the page list a zero flex-basis stopped the squeezing, so nothing reaches
- * that state any more and no revert turns this red. It stays because it is the state that
- * would produce it again.
- */
-test.describe('short window, largest text', () => {
-  test.use({ viewport: { width: 1024, height: 560 } });
+test.describe('laptop', () => {
+  test.use({ viewport: { width: 1280, height: 800 } });
 
-  test('the sections stay in one column when the rail runs out of height', async ({ page }) => {
-    /* The overview, which has no page list under the sections — so nothing else in the column
-       absorbs the shortfall and the links are the only thing left to shrink. */
-    for (const path of ['components/button', 'overview']) {
-      await page.goto(`/#/${path}`);
-      await page.evaluate(() => { document.documentElement.dataset.lgTextSize = 'ax5'; });
-      const xs = await page.locator('.lg-tabbar[data-layout="sidebar"] .lg-tab-link')
-        .evaluateAll(nodes => nodes.map(node => Math.round(node.getBoundingClientRect().x)));
-      expect(new Set(xs).size, `on ${path} the section links start at ${xs.join(', ')}`).toBe(1);
-    }
+  test('the three columns still fit, and nothing runs off the side', async ({ page }) => {
+    await page.goto('/#/components/button');
+    await expect(page.locator('.app-rail')).toBeVisible();
+    await expect(page.locator('.outline')).toBeVisible();
+    expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
   });
 });
 
 test.describe('compact', () => {
   test.use({ viewport: { width: 390, height: 844 } });
 
-  test('there is no menu bar where there is no window', async ({ page }) => {
+  test('the areas drop to the bar at the bottom and the rail goes away', async ({ page }) => {
     await page.goto('/#/components/button');
-    await expect(page.locator('.app-menubar')).toBeHidden();
-    // The settings are still reachable; they are simply all in the popover.
+    await expect(page.locator('.app-rail')).toBeHidden();
+
+    /* Same element, still one list: the bar is pinned to the bottom of the screen here rather
+       than placed in the band. */
+    const bar = await box(page, '.app-sections');
+    expect(bar.y, `the bar is at ${bar.y} in an 844px window`).toBeGreaterThan(600);
     await expect(page.getByRole('button', { name: '打开显示偏好' })).toBeVisible();
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
   });

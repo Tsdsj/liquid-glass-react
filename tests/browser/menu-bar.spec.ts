@@ -231,3 +231,30 @@ test('the alternate is the command that runs while Option is down', async ({ pag
   await page.keyboard.up('Alt');
   await expect(page.locator('#menubar-alternate-last')).toHaveText('全部关闭');
 });
+
+/**
+ * A checkmark means two different things, and the roles are how a screen reader is told which.
+ *
+ * `selection` is per menu rather than per bar because one menu bar routinely has both: an
+ * appearance menu is one choice out of three, and a row of view switches is three independent
+ * ones. A menu of radios announced as checkboxes says that picking another will leave the
+ * first one on, which is not what happens.
+ */
+test('a menu can be one choice out of a list while the one beside it is three switches', async ({ page }) => {
+  await page.goto('/#/components/menu-bar');
+  const demo = page.locator('#menubar-selection-demo');
+  await demo.scrollIntoViewIfNeeded();
+
+  await demo.locator('.lg-menubar-title[data-menu-key="look"]').click();
+  await expect(page.getByRole('menuitemradio')).toHaveCount(3);
+  await expect(page.getByRole('menuitemradio', { name: '跟随系统' })).toHaveAttribute('aria-checked', 'true');
+  await page.getByRole('menuitemradio', { name: '深色' }).click();
+  await expect(demo.getByRole('status')).toContainText('外观：dark');
+
+  await demo.locator('.lg-menubar-title[data-menu-key="show"]').click();
+  await expect(page.getByRole('menuitemcheckbox')).toHaveCount(3);
+  await page.getByRole('menuitemcheckbox', { name: '网格' }).click();
+  // Independent: ticking one leaves the one that was already on.
+  await expect(demo.getByRole('status')).toContainText('ruler');
+  await expect(demo.getByRole('status')).toContainText('grid');
+});
