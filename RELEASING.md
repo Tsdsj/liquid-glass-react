@@ -5,7 +5,15 @@
 发版动作只有一个：**打标签**。其余全部由标签触发。
 
 ```bash
-pnpm version 0.0.2 && git push --follow-tags
+pnpm version 0.0.3 && git push --follow-tags
+```
+
+**如果 `package.json` 里已经写着要发的那个版本号**（这一版就是：0.0.2 提前写进去了，但从没发出去），`pnpm version` 会以 `ERR_PNPM_VERSION_NOT_CHANGED` 拒绝。那种情况下只打标签：
+
+```bash
+git push origin main            # 先把 main 推上去，等 CI 绿
+git tag -a v0.0.2 -m "v0.0.2"
+git push origin v0.0.2          # 这一下才是发版
 ```
 
 **但第一次不行。** 这个包在 2026-09-15 被整包 `unpublish` 了，registry 上现在什么都没有，而 npm 的可信发布者是挂在**包**上的配置——包不存在，就没有那个设置页。所以 0.0.1 必须先手工发一次，见下面的〈首次发布〉。
