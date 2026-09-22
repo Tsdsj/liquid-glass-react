@@ -34,8 +34,15 @@ jobs:
 
       # Trusted publishing needs the OIDC support that landed in npm 11.5.1; the npm that
       # ships with Node 22 is older and would silently fall back to looking for a token.
+      #
+      # Pinned to a major, not `latest`. `latest` means the release toolchain can change on a
+      # morning nobody touched this repository — which is what happened to 0.0.2: npm 12 turned
+      # `npm pack --json` from an array into an object keyed by package name, and the tarball
+      # gate died on it in the publish job, after the suite had passed and the environment had
+      # been approved by hand. The gate reads both shapes now, but a release should still be
+      # reproducible, so moving this number is a decision somebody makes and tests.
       - name: Update npm for trusted publishing
-        run: npm install -g npm@latest
+        run: npm install -g npm@12
 
       - run: pnpm install --frozen-lockfile
       - run: pnpm build

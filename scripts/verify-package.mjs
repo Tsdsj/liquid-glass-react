@@ -10,6 +10,7 @@
 import { execFileSync } from 'node:child_process';
 import { readFileSync } from 'node:fs';
 import path from 'node:path';
+import { packedManifest } from './lib/packed-manifest.mjs';
 
 const root = path.resolve(import.meta.dirname, '..');
 const pkg = JSON.parse(readFileSync(path.join(root, 'package.json'), 'utf8'));
@@ -17,8 +18,19 @@ const failures = [];
 const check = (ok, message) => { if (!ok) failures.push(message); };
 
 /* What the packer would actually put in the tarball. */
-const packed = JSON.parse(execFileSync('npm', ['pack', '--dry-run', '--json'], { cwd: root, encoding: 'utf8' }));
-const shipped = packed[0].files.map(entry => entry.path);
+const raw = JSON.parse(execFileSync('npm', ['pack', '--dry-run', '--json'], { cwd: root, encoding: 'utf8' }));
+const packed = packedManifest(raw);
+if (!packed) {
+  /* Said out loud rather than thrown, because the next shape change will happen too, and a
+     `TypeError` in a publish job tells whoever is reading it nothing about what to fix. */
+  const npmVersion = execFileSync('npm', ['--version'], { cwd: root, encoding: 'utf8' }).trim();
+  console.error(`\nnpm ${npmVersion} answered \`npm pack --json\` in a shape this script does not know:\n`);
+  console.error(`  ${JSON.stringify(raw).slice(0, 400)}\n`);
+  console.error('  Expected an array of manifests (npm 11) or an object keyed by package name (npm 12),');
+  console.error('  with a `files` array on the entry. See scripts/lib/packed-manifest.mjs.');
+  process.exit(1);
+}
+const shipped = packed.files.map(entry => entry.path);
 
 const required = [
   'package.json', 'README.md', 'LICENSE', 'THIRD_PARTY_NOTICES.md',
@@ -56,5 +68,5 @@ if (failures.length) {
   process.exit(1);
 }
 
-const bytes = packed[0].size, unpacked = packed[0].unpackedSize;
+const bytes = packed.size, unpacked = packed.unpackedSize;
 console.log(`${pkg.name}@${pkg.version}: ${shipped.length} files, ${(bytes / 1024).toFixed(1)} KB packed / ${(unpacked / 1024).toFixed(1)} KB unpacked`);

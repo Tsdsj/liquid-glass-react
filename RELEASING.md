@@ -67,11 +67,13 @@ https://tsdsj.github.io/liquid-glass-react/ 。
 
 | 工作流 | 触发 | 做什么 |
 | --- | --- | --- |
-| `ci.yml` | push main、PR、手动 | 类型检查 → 构建 → 74 单元 → 7 SSR → 站点构建 → 462 真实 Chrome → 15 开发模式 → 18 WebKit/Firefox → 核对 tarball → 体积报告 |
+| `ci.yml` | push main、PR、手动 | 类型检查 → 构建 → 82 单元 → 7 SSR → 站点构建 → 462 真实 Chrome → 15 开发模式 → 18 WebKit/Firefox → 核对 tarball → 体积报告 |
 | `pages.yml` | push main、手动 | 构建文档站并部署 |
 | `release.yml` | push `v*` 标签 | 先整个跑一遍 `ci.yml`，再发 npm，再建 GitHub Release |
 
 `release.yml` 用 `workflow_call` 复用 `ci.yml`，不是复制一份——标签走的检查和 PR 走的检查永远是同一套，不会各自漂移。
+
+**发包那一步用的 npm 是钉死大版本的**（`npm install -g npm@12`），不是 `latest`。可信发布需要 11.5.1 以上的 OIDC 支持，但 `latest` 意味着发布工具链会在没人动这个仓库的早上自己变——0.0.2 第一次发版就栽在这里：npm 12 把 `npm pack --json` 从数组改成了以包名为键的对象，`verify:package` 在 publish 作业里炸了，而那时整套检查已经过了、`npm` 环境也已经人工批过。脚本现在两种形状都认（`scripts/lib/packed-manifest.mjs`），但这个版本号该由人来动、动了要试。
 
 浏览器测试跑的是**正式 Google Chrome 渠道**，不是捆绑的 Chromium：折射路径依赖前者。本机第一次跑之前需要
 
