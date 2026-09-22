@@ -2,34 +2,34 @@
   "note": "Per-file emitted size, NOT tree-shaken application import cost. Per-file gzip totals are not a network-transfer prediction.",
   "files": [
     {
-      "file": "site/dist/assets/index-BOK6RtSZ.js",
-      "bytes": 395215,
-      "gzipBytes": 126062
-    },
-    {
-      "file": "dist/index.js",
-      "bytes": 83678,
-      "gzipBytes": 22412
+      "file": "site/dist/assets/index-By-UaRs_.js",
+      "bytes": 765678,
+      "gzipBytes": 253008
     },
     {
       "file": "dist/style.css",
-      "bytes": 83481,
-      "gzipBytes": 17447
+      "bytes": 202138,
+      "gzipBytes": 51736
     },
     {
-      "file": "site/dist/assets/index-2vKVD3wy.css",
-      "bytes": 78216,
-      "gzipBytes": 13774
+      "file": "dist/index.js",
+      "bytes": 176972,
+      "gzipBytes": 48231
     },
     {
       "file": "dist/components.css",
-      "bytes": 67029,
-      "gzipBytes": 12808
+      "bytes": 165050,
+      "gzipBytes": 40225
+    },
+    {
+      "file": "site/dist/assets/index-CaX3cnvU.css",
+      "bytes": 133618,
+      "gzipBytes": 22316
     },
     {
       "file": "dist/tokens.css",
-      "bytes": 16340,
-      "gzipBytes": 4997
+      "bytes": 36984,
+      "gzipBytes": 12256
     }
   ]
 }

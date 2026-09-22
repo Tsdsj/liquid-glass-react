@@ -39,7 +39,7 @@ pnpm test:e2e --project=chromium
 
 **SSR（`tests/ssr.test.mjs`，7 项）** —— 服务端导入不需要 DOM，多个渲染根的 id 不冲突，默认打开的对话框在服务端输出安全标记。它导入的是 `dist/`，因此测的是真正发布的产物。
 
-**浏览器（`tests/browser/`，450 项，真实 Google Chrome）**：
+**浏览器（`tests/browser/`，462 项，真实 Google Chrome）**：
 
 | 文件 | 覆盖 |
 | --- | --- |

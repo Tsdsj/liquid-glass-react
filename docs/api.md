@@ -1,6 +1,6 @@
 # API
 
-`@ttqtt/liquid-glass-react` 共 105 个导出：67 个组件与 Provider、14 个 Hook、24 个常量表、纯函数与诊断工具。所有组件都是 `'use client'`。
+`@ttqtt/liquid-glass-react` 共 105 个导出：66 个组件与 Provider、14 个 Hook、25 个常量表、纯函数与诊断工具。所有组件都是 `'use client'`。
 
 样式在应用入口引一次：
 
