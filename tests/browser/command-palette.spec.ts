@@ -40,6 +40,9 @@ const highlighted = (panel: ReturnType<typeof palette>) => panel.locator('[role=
 test('the focus ring goes round the panel, not across the middle of it', async ({ page }) => {
   const panel = await openPalette(page);
   await expect(input(panel)).toBeFocused();
+  /* Tab first, because the ring is no longer on from the moment it opens — see the test below.
+     Tab does not move anything here; it is the reader asking where the keyboard is. */
+  await page.keyboard.press('Tab');
   /* After the entry animation, not during it. Measured mid-scale the panel is a few pixels
      narrower and a few higher than it will be, which is enough for a strip taken from those
      coordinates to miss the ring entirely — and the failure then reads as "no ring". */
@@ -280,4 +283,47 @@ test('one thing wears the focus ring, not two', async ({ page }) => {
     .map(element => (element as HTMLElement).className));
   expect(rings.length, `rings on ${rings.join(', ') || 'nothing'}`).toBe(1);
   expect(rings[0]).toContain('lg-palette');
+});
+
+/**
+ * It opens quiet.
+ *
+ * A text field matches `:focus-visible` however the focus reached it — that is what the
+ * selector is specified to do, because for a field the ring also says typing will land there.
+ * It is the wrong answer when the field was focused *at* the reader: the palette came up with
+ * a 2px accent ring around the whole panel, every time, before anything had been touched.
+ *
+ * So the ring waits for focus to actually move, and the caret carries the meantime.
+ */
+test('the palette opens without a ring, and puts one on the moment the reader asks', async ({ page }) => {
+  const panel = await openPalette(page);
+  await expect(input(panel)).toBeFocused();
+
+  const outline = () => panel.evaluate(node => getComputedStyle(node).outlineColor);
+  expect(await outline(), 'the ring was already on before anything was touched')
+    .toMatch(/rgba\(0, 0, 0, 0\)|transparent/);
+
+  /* And the field still works, which is the whole reason the ring was not needed. */
+  await page.keyboard.type('导出');
+  await expect(input(panel)).toHaveValue('导出');
+
+  await page.keyboard.press('Tab');
+  expect(await outline(), 'Tab did not bring the ring back').not.toMatch(/rgba\(0, 0, 0, 0\)|transparent/);
+});
+
+/**
+ * Tab has nowhere to go, and it used to go there anyway.
+ *
+ * The field is the palette's only focus stop, and everything outside a modal dialog is inert —
+ * so Tab walked off the end of the dialog and left focus on `<body>`. The ring went out, the
+ * keys stopped reaching the field, and the only way back in was the mouse. A keyboard user's
+ * first instinct in an unfamiliar panel is Tab.
+ */
+test('Tab keeps the keyboard in the palette instead of losing it to the page', async ({ page }) => {
+  const panel = await openPalette(page);
+  await page.keyboard.type('导');
+  await page.keyboard.press('Tab');
+  await expect(input(panel), 'Tab moved focus out of the only focus stop there is').toBeFocused();
+  await page.keyboard.type('出');
+  await expect(input(panel), 'typing stopped working after Tab').toHaveValue('导出');
 });

@@ -147,8 +147,8 @@
 .lg-button[data-renderer="shared"]:not(:disabled):is(:active,[data-pressed="true"]) { --lg-scale: var(--lg-press-scale-shared); background: var(--lg-pressed); box-shadow: 0 1px 2px rgb(0 0 0 / .08), 0 10px 26px rgb(0 0 0 / .16), inset 0 1px 0 rgb(255 255 255 / .5); z-index: 2; }
 .lg-button[data-renderer="shared"]:not(:disabled):is(:active,[data-pressed="true"])::before { content: ''; position: absolute; inset: 0; border-radius: inherit; background: radial-gradient(circle at var(--lg-light-x,50%) var(--lg-light-y,50%),rgb(255 255 255 / .38),transparent 70%); pointer-events: none; }
 .lg-button:disabled { cursor: not-allowed; opacity: .48; }
-.lg-button[data-variant="primary"] { --lg-fg: var(--lg-accent-contrast); color: var(--lg-accent-contrast); background: var(--lg-accent); }
-.lg-button[data-variant="primary"] > .lg-decoration .lg-tint { background: var(--lg-accent); opacity: .92; }
+.lg-button[data-variant="primary"] { --lg-fg: var(--lg-accent-contrast); color: var(--lg-accent-contrast); background: var(--lg-accent-fill); }
+.lg-button[data-variant="primary"] > .lg-decoration .lg-tint { background: var(--lg-accent-fill); opacity: .92; }
 .lg-button[data-variant="primary"]:not(:disabled):is(:active,[data-pressed="true"]) > .lg-decoration .lg-tint { opacity: .78; }
 .lg-icon-button { width: var(--lg-control-height,44px); height: var(--lg-control-height,44px); padding: 0; }
 .lg-icon-button svg { width: 19px; height: 19px; flex-shrink: 0; transition: transform var(--lg-duration-spring) var(--lg-spring-bouncy); }
@@ -325,6 +325,23 @@
 .lg-slider:not([data-disabled="true"]):has(input:active) .lg-slider-lens > .lg-decoration,
 .lg-slider:not([data-disabled="true"]) .lg-slider-lens[data-pulling="true"] > .lg-decoration,
 .lg-slider:has(input:focus-visible) .lg-slider-lens > .lg-decoration { opacity: 1; }
+/**
+ * …unless there is no glass for it to become.
+ *
+ * On a shared surface — inside a popover, a sheet, a toolbar group or a floating panel — the
+ * knob has already given up its own pane, so `useGlassSurface` renders it flat and there are
+ * no decoration layers at all. The rule above then took away the white fill and handed the
+ * gesture to a layer that was never drawn: **press the knob and it disappears.** Reported on
+ * a slider inside a `Panel`; it was equally true in every popover in the library, which is
+ * how it went a whole release unnoticed — nobody had pressed one.
+ *
+ * Glass-on-glass is still not an option, so "held" says itself with what is left: the knob
+ * keeps its fill, grows, and lifts. That is also the system's own answer for a slider inside
+ * a sheet.
+ */
+.lg-slider:not([data-disabled="true"]):has(input:active) .lg-slider-lens[data-renderer="shared"],
+.lg-slider:not([data-disabled="true"]) .lg-slider-lens[data-renderer="shared"][data-pulling="true"],
+.lg-slider:has(input:focus-visible) .lg-slider-lens[data-renderer="shared"] { background: #fff; }
 @media (hover: hover) {
   .lg-slider:not([data-disabled="true"]):hover .lg-slider-lens { --lg-scale: 1.08; }
 }
@@ -390,7 +407,7 @@
 
 .lg-checkbox[data-state="on"] .lg-checkbox-box,
 .lg-checkbox[data-state="mixed"] .lg-checkbox-box,
-.lg-radio[data-state="on"] .lg-radio-dot { background: var(--lg-accent); border-color: var(--lg-accent); }
+.lg-radio[data-state="on"] .lg-radio-dot { background: var(--lg-accent-fill); border-color: var(--lg-accent-fill); }
 /* The dot is drawn with a border rather than a child element, so it scales with the circle. */
 .lg-radio[data-state="on"] .lg-radio-dot::after { content: ''; width: 6px; height: 6px;
   border-radius: 999px; background: var(--lg-accent-contrast); }
@@ -543,7 +560,7 @@
    on paper — 90ms of colour, over before anyone saw it — and the motion sweep said so. */
 .lg-menubar-title:not(:disabled):active { background: var(--lg-pressed); transform: scale(.97); }
 /* The open menu's title is filled, the way the system marks which menu you are in. */
-.lg-menubar-title[aria-expanded="true"] { background: var(--lg-accent); color: var(--lg-accent-contrast); }
+.lg-menubar-title[aria-expanded="true"] { background: var(--lg-accent-fill); color: var(--lg-accent-contrast); }
 .lg-menubar-title:disabled { opacity: .4; cursor: default; }
 .lg-menubar-title:focus-visible { outline: 2px solid var(--lg-focus); outline-offset: -2px; }
 /* A menu bar's menus hang off their title, so they line up with its leading edge, not its box. */
@@ -592,6 +609,16 @@
  */
 .lg-palette:has(.lg-palette-input:focus-visible) { outline: var(--lg-focus-width) solid var(--lg-focus);
   outline-offset: var(--lg-focus-offset); }
+/**
+ * …but not for the whole time it is open, which is what the paragraph above used to claim.
+ *
+ * A field matches `:focus-visible` however the focus reached it, so the palette came up with
+ * the ring already drawn, every time, around the entire panel — a blue border on a surface
+ * nobody had touched yet. The ring waits until focus has actually moved: see `markOpenedFocus`
+ * in `system/focus.ts`, which marks whatever the surface focused on its way up and drops the
+ * mark on the first Tab or blur. The caret is what says where typing goes until then.
+ */
+.lg-palette:has(.lg-palette-input[data-lg-autofocus]) { outline-color: transparent; }
 /* 16px on touch or the browser zooms the page when the field takes focus; the desktop tier
    settles it back onto the system's own control size. */
 .lg-palette-input { flex: 1; min-width: 0; border: 0; background: none; color: inherit;
@@ -798,17 +825,17 @@
 /* The one prominent action: the *background* is tinted and the label goes white. Tinting the
    label instead, or tinting several controls, means nothing stands out. */
 .lg-button[data-variant="glassProminent"] { --lg-fg: var(--lg-accent-contrast); color: var(--lg-accent-contrast); }
-.lg-button[data-variant="glassProminent"] > .lg-decoration .lg-tint { background: var(--lg-accent); opacity: .92; }
+.lg-button[data-variant="glassProminent"] > .lg-decoration .lg-tint { background: var(--lg-accent-fill); opacity: .92; }
 .lg-button[data-variant="glassProminent"]:not(:disabled):is(:active,[data-pressed="true"]) > .lg-decoration .lg-tint { opacity: .78; }
 /* On a shared surface — inside a sheet, a dialog, an alert, a toolbar group — a button has no
    decoration layer of its own to tint, so the accent has to come from its own background.
    Without this the label is white on nothing, which on a light surface is invisible. */
-.lg-button[data-renderer="shared"][data-variant="glassProminent"] { background: var(--lg-accent); color: var(--lg-accent-contrast); --lg-fg: var(--lg-accent-contrast); box-shadow: 0 1px 2px rgb(0 0 0 / .1); }
+.lg-button[data-renderer="shared"][data-variant="glassProminent"] { background: var(--lg-accent-fill); color: var(--lg-accent-contrast); --lg-fg: var(--lg-accent-contrast); box-shadow: 0 1px 2px rgb(0 0 0 / .1); }
 @media (hover: hover) {
-  .lg-button[data-renderer="shared"][data-variant="glassProminent"]:not(:disabled):hover { background: color-mix(in srgb, var(--lg-accent) 88%, #000); }
+  .lg-button[data-renderer="shared"][data-variant="glassProminent"]:not(:disabled):hover { background: color-mix(in srgb, var(--lg-accent-fill) 88%, #000); }
 }
-.lg-button[data-renderer="shared"][data-variant="glassProminent"]:not(:disabled):is(:active,[data-pressed="true"]) { background: color-mix(in srgb, var(--lg-accent) 80%, #000); }
-.lg-button[data-renderer="shared"][data-variant="destructiveProminent"] { background: var(--lg-red); color: #fff; --lg-fg: #fff; }
+.lg-button[data-renderer="shared"][data-variant="glassProminent"]:not(:disabled):is(:active,[data-pressed="true"]) { background: color-mix(in srgb, var(--lg-accent-fill) 80%, #000); }
+.lg-button[data-renderer="shared"][data-variant="destructiveProminent"] { background: var(--lg-red-fill); color: #fff; --lg-fg: #fff; }
 .lg-button[data-variant="plain"] { color: color-mix(in srgb, var(--lg-accent) var(--lg-ink-amount), var(--lg-ink-toward)); }
 @media (hover: hover) {
   .lg-button[data-variant="plain"]:not(:disabled):hover { background: var(--lg-fill-quaternary); }
@@ -829,7 +856,7 @@
 @media (hover: hover) {
   .lg-button[data-variant="destructive"]:not(:disabled):hover { background: color-mix(in srgb, var(--lg-red) 12%, transparent); }
 }
-.lg-button[data-variant="destructiveProminent"] { background: var(--lg-red); color: #fff; }
+.lg-button[data-variant="destructiveProminent"] { background: var(--lg-red-fill); color: #fff; }
 .lg-button:is([data-variant="plain"],[data-variant="gray"],[data-variant="tinted"],[data-variant="destructive"],[data-variant="destructiveProminent"]) {
   box-shadow: none; transition: background var(--lg-duration-release) var(--lg-ease), transform var(--lg-duration-spring) var(--lg-spring), color var(--lg-duration-release) var(--lg-ease); }
 
@@ -858,9 +885,9 @@
 .lg-progress[data-variant="circular"] { width: auto; display: inline-flex; }
 .lg-progress-ring { width: 20px; height: 20px; border-radius: 50%; border: 2px solid var(--lg-fill); border-top-color: var(--lg-accent); animation: lg-spin .8s linear infinite; }
 .lg-badge { display: inline-flex; align-items: center; justify-content: center; min-width: 20px; height: 20px; padding-inline: 6px;
-  border-radius: 999px; background: var(--lg-red); color: #fff; font: var(--lg-weight-semibold) var(--lg-text-caption1-size)/1 var(--lg-font-text); font-variant-numeric: tabular-nums; }
+  border-radius: 999px; background: var(--lg-red-fill); color: #fff; font: var(--lg-weight-semibold) var(--lg-text-caption1-size)/1 var(--lg-font-text); font-variant-numeric: tabular-nums; }
 .lg-badge[data-tone="neutral"] { background: var(--lg-fill); color: var(--lg-label); }
-.lg-badge[data-tone="accent"] { background: var(--lg-accent); color: var(--lg-accent-contrast); }
+.lg-badge[data-tone="accent"] { background: var(--lg-accent-fill); color: var(--lg-accent-contrast); }
 .lg-badge[data-dot="true"] { min-width: 10px; width: 10px; height: 10px; padding: 0; }
 
 /* ==========================================================================
@@ -949,6 +976,9 @@
 /* The ring lives on the container because the input's own outline is suppressed; without
    this, keyboard users lose the field entirely. */
 .lg-field-box:has(:focus-visible) { outline-color: var(--lg-focus); }
+/* A dialog hands focus to its first control, so a dialog with a field in it opened with the
+   ring on. Same rule as the palette above. */
+.lg-field-box:has([data-lg-autofocus]) { outline-color: transparent; }
 .lg-field[data-invalid="true"] .lg-field-box { background: color-mix(in srgb, var(--lg-red) 10%, transparent); box-shadow: inset 0 0 0 1px var(--lg-red); }
 .lg-field-input { flex: 1; min-width: 0; border: 0; background: transparent; color: var(--lg-label); outline: none;
   /**
@@ -971,6 +1001,7 @@
 .lg-search-box { min-height: var(--lg-hit-min); padding-inline: var(--lg-space-3); outline: var(--lg-focus-width) solid transparent; outline-offset: var(--lg-focus-offset);
   transition: outline-color var(--lg-duration-press) var(--lg-ease); }
 .lg-search-box:has(:focus-visible) { outline-color: var(--lg-focus); }
+.lg-search-box:has([data-lg-autofocus]) { outline-color: transparent; }
 .lg-search-box > .lg-content { display: flex; align-items: center; gap: var(--lg-space-2); min-height: inherit; }
 .lg-search-icon { color: var(--lg-glass-fg-secondary); flex-shrink: 0; }
 .lg-search-input { flex: 1; min-width: 0; border: 0; background: transparent; color: var(--lg-glass-fg); outline: none;
@@ -1852,7 +1883,7 @@ a.lg-path-level, button.lg-path-level { cursor: pointer; }
  * composites over it rather than replacing it.
  */
 .lg-outline-lens { position: absolute; inset-inline: 0; inset-block-start: 0; height: 0; z-index: 0;
-  background: var(--lg-accent); border-radius: var(--lg-radius-s); pointer-events: none;
+  background: var(--lg-accent-fill); border-radius: var(--lg-radius-s); pointer-events: none;
   transition: translate var(--lg-duration-spring) var(--lg-spring),
     height var(--lg-duration-release) var(--lg-ease); }
 .lg-outline-lens[data-shown="false"] { opacity: 0; }

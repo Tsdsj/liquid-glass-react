@@ -333,9 +333,36 @@
   --lg-gray4: rgb(209 209 214);  --lg-gray5: rgb(229 229 234);  --lg-gray6: rgb(242 242 247);
 
   /* App accent. System blue by default: one accent, reserved for the primary action and
-     for selection. Fork this single pair to re-brand — nothing else encodes the colour. */
+     for selection. Fork this single value to re-brand — nothing else encodes the colour, and
+     the two derived values below follow whatever it becomes. */
   --lg-accent: var(--lg-blue);
   --lg-accent-contrast: #fff;
+  /**
+   * The accent **as a surface with a label on it**, which is not the same colour as the
+   * accent itself. Same for red.
+   *
+   * `--lg-accent` with `--lg-accent-contrast` looked like a legible pair and measured
+   * **3.52:1 in light and 3.23:1 in dark** — over the 3:1 a large label needs, under the 4.5
+   * everything else does. That pair is painted under a 15px label in more places than a
+   * button: the prominent button, an accent badge, the open title in a menu bar, the
+   * selection in an outline. White on system red was 3.57:1 for the same reason.
+   *
+   * No shade that still reads as *this* blue gets there — Apple's own is around 4.0 — so the
+   * fix is not a darker accent. It is the admission that a brand colour and a surface under
+   * white text are two different jobs. The brand colour stays exactly what it was; the
+   * surface is it, deepened until the label on it can be read. A graphic keeps the brand
+   * colour, because a graphic answers to 3:1: the slider's filled track, the radio dot, the
+   * progress bar, the focus ring.
+   *
+   * 82% is where the measurement lands near 5:1 with room to spare; 88% falls back under.
+   * Declared here rather than mixed at each point of use, because these resolve against
+   * whatever `--lg-accent` the element computed — so an application that re-brands gets a
+   * matching fill for free. `GlassButton`'s `tint` is the one case that sets both: a caller
+   * who names a colour *and* its label colour has already answered this question, and
+   * development mode measures the pair they chose.
+   */
+  --lg-accent-fill: color-mix(in srgb, var(--lg-accent) 82%, #000);
+  --lg-red-fill: color-mix(in srgb, var(--lg-red) 82%, #000);
   /**
    * How to turn a system colour into *ink* — a label painted in it rather than a surface
    * filled with it.
@@ -490,6 +517,11 @@
 
   --lg-accent: var(--lg-blue);
   --lg-accent-contrast: #fff;
+  /* Deepened the same way and for the same reading — white on the dark-mode accent measured
+     3.23:1. A darker fill still stands 3.3:1 clear of the dark surface around it, which is
+     what the edge of a control needs. */
+  --lg-accent-fill: color-mix(in srgb, var(--lg-accent) 82%, #000);
+  --lg-red-fill: color-mix(in srgb, var(--lg-red) 82%, #000);
   /* Same rule as the light appearance, in the other direction: the ink is lifted away from the
      dark wash it sits on rather than pushed into it. */
   --lg-ink-toward: #fff;

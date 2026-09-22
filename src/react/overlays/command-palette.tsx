@@ -13,6 +13,7 @@ import { SharedSurface } from '../system/surface.js';
 import { cx, useControllable } from '../system/utils.js';
 import { triggerElement, type OpenProps } from './anchor.js';
 import { useModalDialog } from './modal.js';
+import { focusOnOpen } from '../system/focus.js';
 
 export interface PaletteCommand {
   id: string;
@@ -99,7 +100,7 @@ export function CommandPalette({
   const [query, setQuery] = useControllable(controlledQuery, defaultQuery, onQueryChange);
   const glass = useGlassSurface<HTMLDialogElement>({ ...surface, material: 'regular', size: 'large', radius: surface.radius ?? 22 }, ref);
 
-  useModalDialog(open, glass.root, triggerRef, () => inputRef.current?.focus({ preventScroll: true }));
+  useModalDialog(open, glass.root, triggerRef, () => focusOnOpen(inputRef.current));
 
   /**
    * Two bindings, not one toggle, because they are two different shortcuts.
@@ -156,6 +157,19 @@ export function CommandPalette({
     else if (event.key === 'Home') { event.preventDefault(); setActive(step(-1, 1)); }
     else if (event.key === 'End') { event.preventDefault(); setActive(step(0, -1)); }
     else if (event.key === 'Enter') { event.preventDefault(); run(active); }
+    /**
+     * Tab has nowhere to go, and letting it try loses the keyboard altogether.
+     *
+     * The field is the palette's only focus stop — the rows are options, named by
+     * `aria-activedescendant`, not focus stops — and everything outside a modal dialog is
+     * inert. So Tab walked off the end of the dialog and landed on `<body>`: the ring went
+     * out, typing stopped working, and the only way back was the mouse. Measured, not
+     * reasoned about.
+     *
+     * Staying put is also what the reader asked for. Tab means "where is the keyboard" as much
+     * as "move it", and the answer here is: still in the field, and now wearing its ring.
+     */
+    else if (event.key === 'Tab') event.preventDefault();
     /* Escape is left alone: it reaches the dialog, which cancels, which closes — the platform's
        own way out rather than a second one that has to be kept in step with it. */
   };

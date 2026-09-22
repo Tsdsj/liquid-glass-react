@@ -150,3 +150,69 @@ for (const scheme of ['light', 'dark'] as const) {
     }
   });
 }
+
+/**
+ * A brand colour and a surface under white text are two different colours.
+ *
+ * `--lg-accent` with `--lg-accent-contrast` looked like a legible pair and measured 3.52:1 in
+ * light and 3.23:1 in dark — over the 3:1 a large label needs, under the 4.5 everything else
+ * does — and it is painted under a 15px label in four places, not one. No shade that still
+ * reads as this blue clears 4.5 with white on it, so the accent kept its job and
+ * `--lg-accent-fill` took the other one. Same for red, which was 3.57:1.
+ *
+ * Read off the element that actually paints the colour: a glass prominent button tints a layer
+ * inside its own decoration rather than setting a background, which is why the first version
+ * of this measured the button's transparent box and passed everything.
+ */
+for (const scheme of ['light', 'dark'] as const) {
+  test(`white on an accent surface is legible — ${scheme}`, async ({ page }) => {
+    await page.emulateMedia({ colorScheme: scheme });
+
+    const measure = async (selector: string, what: string) => {
+      const node = page.locator(selector).first();
+      await expect(node, `${what} is not on screen`).toBeVisible();
+      const pair = await node.evaluate(element => {
+        const read = (value: string) => {
+          const numbers = (value.match(/[\d.]+/g) ?? []).map(Number);
+          return /^color\(srgb/.test(value)
+            ? [numbers[0] * 255, numbers[1] * 255, numbers[2] * 255]
+            : numbers.slice(0, 3);
+        };
+        /* The tint layer if there is one — that is where a glass button's accent lives. */
+        const tint = element.querySelector(':scope > .lg-decoration .lg-tint');
+        return { ink: read(getComputedStyle(element).color), fill: read(getComputedStyle(tint ?? element).backgroundColor) };
+      });
+      const got = ratio(luminance(pair.ink), luminance(pair.fill));
+      expect(got, `${what} measured ${got.toFixed(2)}:1 in ${scheme}`).toBeGreaterThanOrEqual(4.5);
+    };
+
+    await page.goto('/#/components/button');
+    await page.waitForTimeout(400);
+    /* Only the *prominent* variants paint white on the colour; the flat `destructive` button is
+       red ink on nothing, which the ink test above already covers. Red-as-a-surface is measured
+       on the notification badge below, which is the place it actually appears. */
+    await measure('#button-variants .lg-button[data-variant="glassProminent"]', 'a prominent button');
+
+    await page.goto('/#/components/badge');
+    await page.waitForTimeout(400);
+    await measure('#badge-basic .lg-badge[data-tone="accent"]', 'an accent badge');
+    await measure('#badge-basic .lg-badge:not([data-tone="accent"]):not([data-tone="neutral"])', 'a notification badge');
+
+    await page.goto('/#/components/outline-view');
+    await page.waitForTimeout(500);
+    const selected = page.locator('#outline-basic .lg-outline-item[data-selected="true"] > .lg-outline-row').first();
+    await expect(selected).toBeVisible();
+    const lens = await page.locator('#outline-basic .lg-outline-lens').first().evaluate(node => {
+      const value = getComputedStyle(node).backgroundColor;
+      const numbers = (value.match(/[\d.]+/g) ?? []).map(Number);
+      return /^color\(srgb/.test(value) ? [numbers[0] * 255, numbers[1] * 255, numbers[2] * 255] : numbers.slice(0, 3);
+    });
+    const ink = await selected.evaluate(node => {
+      const value = getComputedStyle(node).color;
+      const numbers = (value.match(/[\d.]+/g) ?? []).map(Number);
+      return /^color\(srgb/.test(value) ? [numbers[0] * 255, numbers[1] * 255, numbers[2] * 255] : numbers.slice(0, 3);
+    });
+    const got = ratio(luminance(ink), luminance(lens));
+    expect(got, `the selected outline row measured ${got.toFixed(2)}:1 in ${scheme}`).toBeGreaterThanOrEqual(4.5);
+  });
+}

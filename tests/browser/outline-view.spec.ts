@@ -222,8 +222,18 @@ test('hovering a row lights that row, not every folder above it', async ({ page 
  */
 test('hovering the selected row does not take the selection away', async ({ page }) => {
   await open(page);
-  const accent = await page.evaluate(() =>
-    getComputedStyle(document.documentElement).getPropertyValue('--lg-accent').trim());
+  /* Resolved from the token rather than written down: the selection is painted with
+     `--lg-accent-fill` — the accent deepened until the white label on it can be read — and a
+     literal `rgb(0, 136, 255)` here would be asserting the brand colour, which is a different
+     colour and not the one under the label. It would also break the moment anyone re-brands. */
+  const accent = await page.evaluate(() => {
+    const probe = document.createElement('div');
+    probe.style.cssText = 'position:absolute;visibility:hidden;background:var(--lg-accent-fill)';
+    document.documentElement.append(probe);
+    const value = getComputedStyle(probe).backgroundColor;
+    probe.remove();
+    return value;
+  });
   const painted = () => page.locator('#outline-basic-demo .lg-outline-lens').evaluate(node =>
     ({ background: getComputedStyle(node).backgroundColor, shown: node.dataset.shown }));
 
@@ -233,8 +243,8 @@ test('hovering the selected row does not take the selection away', async ({ page
   const after = await painted();
   expect(after, `the selection was ${before.background} and became ${after.background} under the pointer`)
     .toEqual(before);
-  expect(after.background.replace(/\s/g, ''), `the selection is not the accent (${accent})`)
-    .toMatch(/^rgba?\(0,136,255/);
+  expect(after.background, `the selection is ${after.background}, not the accent surface ${accent}`)
+    .toBe(accent);
 });
 
 /**

@@ -48,6 +48,20 @@ import '@ttqtt/liquid-glass-react/styles.css';
 
 `useGlassPolicy()` 返回解析后的策略，含 `resolvedTheme`、`reduceMotion`、`reduceTransparency`、`increaseContrast`、`forcedColors`。
 
+### 换品牌色：一个变量，两个派生
+
+`--lg-accent` 是品牌色，改它就够了。两个派生值在 `:root` 上由它算出来，所以会跟着变：
+
+| Token | 是什么 | 谁在用 |
+| --- | --- | --- |
+| `--lg-accent` | 品牌色本身 | 图形：焦点环、滑块已填的轨道、单选点、进度条。图形只需要 3:1 |
+| `--lg-accent-fill` | 白字压在上面的那块底色 | 主操作按钮、强调色徽标、菜单栏打开着的标题、勾选与选中高亮 |
+| `--lg-ink-amount` / `--lg-ink-toward` | 品牌色当**文字**用时的配方，不是一个成品颜色 | `tone="accent"`、扁平按钮的标签、返回按钮，都写成 `color-mix(in srgb, var(--lg-accent) var(--lg-ink-amount), var(--lg-ink-toward))`。是配方而不是 token，因为它要跟着按钮**自己**的 `tint` 走 |
+
+拆开是因为量出来必须拆：`--lg-accent` 配白字是**浅色 3.52:1、深色 3.23:1**，配深色页面当文字是 **3.03:1**，而任何还认得出是「iOS 蓝」的颜色配白字都到不了 4.5。一个颜色做不了三件事。`--lg-red` 同样有 `--lg-red-fill`。
+
+`GlassButton` 的 `tint` 是唯一同时设品牌色和底色、并且设成同一个值的地方：传 `tint` 的人已经指定了颜色**和**压在上面的文字色。
+
 ### `platform`：两套度量
 
 `auto`（默认）读的是 `(pointer: fine) and (min-width: 768px)`——有光标，且屏幕宽到画桌面布局是诚实的。带触控板的平板在手机宽度下也报 fine，而那里 36px 的控件是对的问题给了错的答案。解析后的值在 `useGlassPolicy().resolvedPlatform`；显式覆盖时会写成 `<html>` 上的 `data-lg-platform`，`auto` 什么都不写（媒体查询已经是答案了）。
@@ -315,7 +329,7 @@ useShortcut('mod k', () => setPaletteOpen(true));
 `value`（省略即不确定）、`total`、`variant`(`bar`/`circular`)、`aria-label`(必填)。
 
 ### `GlassBadge`
-`count` `max`(99) `tone`(`notification`/`neutral`/`accent`) `dot` `aria-label`。没有内容时不渲染。增强对比度下加一圈边框——白字压红色本身已经是 4.6:1 过 AA，这是一致性：其他表面在这个设置下都会长出边线。
+`count` `max`(99) `tone`(`notification`/`neutral`/`accent`) `dot` `aria-label`。没有内容时不渲染。增强对比度下加一圈边框，和其他表面一致。白字压的是 `--lg-red-fill` 而不是 `--lg-red`：后者量出来只有 3.57:1。
 
 ### `Picker`
 `label`(必填) `labelHidden` `options: PickerOption[]`（`value` `label` `disabled`）、`value`/`defaultValue`/`onValueChange` `presentation` `disabled` `name`。

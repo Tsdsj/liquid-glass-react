@@ -223,7 +223,7 @@ export function AccessibilityFoundation() {
         <ul className="plain-list">
           <li><Text as="span" variant="subhead">每个能操作的东西都有名字、有正确的类型、有不小于 44×44 的点击范围。只有图标的按钮必须自己给名字。</Text></li>
           <li><Text as="span" variant="subhead">颜色不是唯一信号；正文对比度不低于 4.5 比 1。</Text></li>
-          <li><Text as="span" variant="subhead">键盘焦点永远看得见，而且只在用键盘时出现——鼠标点一下不会留下一圈框。</Text></li>
+          <li><Text as="span" variant="subhead">键盘焦点永远看得见。按钮这类控件只在用键盘走到时才出现焦点框，鼠标点一下不会留下一圈框；输入框不一样，它只要有焦点就戴着，因为那个框同时在说「打字会落在这里」。</Text></li>
           <li><Text as="span" variant="subhead">文字放到最大时，布局要重新排开，不能截断或溢出。</Text></li>
           <li><Text as="span" variant="subhead">从右到左的语言里整体镜像，但媒体控制和时钟不镜像——那两类的方向有固定含义。</Text></li>
         </ul>

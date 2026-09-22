@@ -1,6 +1,7 @@
 'use client';
 import { useEffect, useRef, type RefObject } from 'react';
 import { lockScroll } from './anchor.js';
+import { markOpenedFocus } from '../system/focus.js';
 
 /**
  * A native modal `<dialog>`, driven by controlled React state.
@@ -31,6 +32,10 @@ export function useModalDialog(
     restore.current = document.activeElement as HTMLElement | null;
     if (!dialog.open) dialog.showModal();
     latest.current?.(dialog);
+    /* `showModal()` gives focus to the dialog's first control on its own, so a dialog holding
+       a text field comes up with that field's ring already lit. Same rule as the overlays that
+       place focus themselves — see `markOpenedFocus`. */
+    if (dialog.contains(document.activeElement)) markOpenedFocus(document.activeElement);
     const unlock = lockScroll();
     return () => {
       if (dialog.open) dialog.close();

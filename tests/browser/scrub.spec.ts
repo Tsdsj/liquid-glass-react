@@ -91,3 +91,78 @@ test('reduced motion keeps selection working but removes the drag choreography',
   await expect(page.locator('#segmented-basic').getByRole('radio', { name: '月', exact: true })).toBeChecked();
   await expect(track.locator('.lg-selection-lens')).not.toHaveAttribute('data-pulling', 'true');
 });
+
+/**
+ * A knob on somebody else's surface has to stay visible when it is held.
+ *
+ * Pressing the slider inside a floating `Panel` made the knob vanish. The pressed state says
+ * "lift into glass" — `background: transparent`, and let the glass layers underneath show —
+ * but a control on a shared surface has already given up its own pane, so it renders flat and
+ * has no layers. The press took the fill away and handed the knob to something that was never
+ * drawn. Reported on a `Panel`; it was equally true in every popover, sheet and toolbar group
+ * in the library, which is why a whole release went by without anyone noticing.
+ *
+ * Measured against the track it sits on rather than on its own, and that distinction is the
+ * test: a transparent knob screenshots as whatever is behind it, and "there are bright pixels
+ * in this box" is true either way. The knob is white and the filled track is the accent, so
+ * the question with an answer is *how far apart they are* — 255 against 130 when it is drawn,
+ * and the track's own colour when it is not.
+ */
+test('a slider knob on a shared surface is still there while you hold it', async ({ page }) => {
+  await page.goto('/#/components/panel');
+  const demo = page.locator('#panel-basic-demo');
+  await demo.scrollIntoViewIfNeeded();
+  const lens = demo.locator('.lg-slider-lens').first();
+  await expect(lens).toBeVisible();
+  expect(await lens.evaluate(node => node.dataset.renderer),
+    'this slider is not on a shared surface, so it cannot prove anything').toBe('shared');
+
+  /** The knob's centre and the track a knob-and-a-half to its leading side, in grey levels. */
+  const sample = async () => {
+    const shot = (await page.screenshot()).toString('base64');
+    const box = await lens.evaluate(node => {
+      const rect = node.getBoundingClientRect();
+      return { x: rect.left + rect.width / 2, y: rect.top + rect.height / 2, w: rect.width };
+    });
+    return page.evaluate(async ([data, at]) => {
+      const binary = atob(data);
+      const bytes = new Uint8Array(binary.length);
+      for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
+      const bitmap = await createImageBitmap(new Blob([bytes], { type: 'image/png' }));
+      const canvas = new OffscreenCanvas(bitmap.width, bitmap.height);
+      const context = canvas.getContext('2d')!;
+      context.drawImage(bitmap, 0, 0);
+      /* Device pixels: a screenshot is not necessarily one pixel per CSS pixel. */
+      const scale = bitmap.width / window.innerWidth;
+      const grey = (x: number, y: number) => {
+        const [r, g, b] = context.getImageData(Math.round(x * scale), Math.round(y * scale), 1, 1).data;
+        return Math.round((r + g + b) / 3);
+      };
+      return { knob: grey(at.x, at.y), track: grey(at.x - at.w * 1.6, at.y) };
+    }, [shot, box] as const);
+  };
+
+  const atRest = await sample();
+  expect(atRest.knob - atRest.track,
+    `at rest the knob reads ${atRest.knob} and the track beside it ${atRest.track} — this is not the knob`)
+    .toBeGreaterThan(60);
+
+  const box = (await lens.boundingBox())!;
+  await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2);
+  await page.mouse.down();
+  await page.waitForTimeout(260);
+  const held = await sample();
+  await page.mouse.up();
+
+  /**
+   * Against itself, not against a floor.
+   *
+   * A transparent knob is not black — it is the panel's own glass seen through a hole, with the
+   * lift shadow around it, and that measured **217** where the knob measures 255. Bright enough
+   * to pass "is there something light here", and on screen it is a knob that disappeared. What
+   * has an answer is whether it changed: the knob is `#fff` at rest and `#fff` held, so any
+   * real dimming is the fill being taken away.
+   */
+  expect(atRest.knob - held.knob,
+    `the knob dimmed from ${atRest.knob} to ${held.knob} the moment it was held`).toBeLessThan(15);
+});

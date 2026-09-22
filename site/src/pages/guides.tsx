@@ -58,7 +58,7 @@ export function ThemingGuide() {
       <CodeBlock code={`:root, [data-lg-theme="light"] { --lg-accent: #6d28d9; }
 [data-lg-theme="dark"]        { --lg-accent: #8b5cf6; }`} />
       <Text variant="subhead" tone="secondary">
-        按钮文字会保持白色，所以主题色需要足够深。主题色被当成**文字**用的时候（扁平按钮的标签、`tone="accent"` 的文字）会自动压暗一档再画，否则浅色页面上读不清。开关打开时的绿色不跟着变——那个绿色本身就是「已打开」的意思。
+        改这一个变量就够了：白字压在上面的那块底色、以及主题色被当成文字用的时候（扁平按钮的标签、`tone="accent"` 的文字），都从它算出来，各自压暗到能读为止。开关打开时的绿色不跟着变——那个绿色本身就是「已打开」的意思。
       </Text>
     </Section>
 

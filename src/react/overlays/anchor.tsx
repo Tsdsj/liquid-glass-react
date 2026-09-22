@@ -1,6 +1,7 @@
 'use client';
 import { cloneElement, useEffect, useRef, type ButtonHTMLAttributes, type ReactElement, type Ref, type RefObject } from 'react';
 import { assignRef, focusable } from '../system/utils.js';
+import { focusOnOpen } from '../system/focus.js';
 
 export type TriggerProps = ButtonHTMLAttributes<HTMLButtonElement> & { ref?: Ref<HTMLButtonElement> };
 export interface OpenProps {
@@ -148,7 +149,7 @@ export function usePopover(
       ? node.querySelector<HTMLElement>('[role="menuitemradio"][aria-checked="true"]:not(:disabled)')
         ?? node.querySelector<HTMLElement>('[role="menuitem"]:not(:disabled),[role="menuitemcheckbox"]:not(:disabled),[role="menuitemradio"]:not(:disabled)')
       : focusable(node)[0];
-    (first ?? node).focus({ preventScroll: true });
+    focusOnOpen(first ?? node);
     const resize = new ResizeObserver(schedule); resize.observe(node); if (trigger.current) resize.observe(trigger.current);
     window.addEventListener('resize', schedule); window.addEventListener('scroll', schedule, true);
     return () => { resize.disconnect(); cancelAnimationFrame(frame); window.removeEventListener('resize', schedule); window.removeEventListener('scroll', schedule, true); };

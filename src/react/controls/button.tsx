@@ -156,8 +156,17 @@ export function GlassButton(
     }
   }, [glass.root, tint, tintContrast, variant]);
 
+  /**
+   * `--lg-accent-fill` too, and set to the tint itself rather than derived from it.
+   *
+   * The default accent is deepened before anything paints white on it, because the brand blue
+   * and a surface under a label are two different jobs (see `--lg-accent-fill` in tokens.css).
+   * A caller who passes `tint` has already done that job: they named the colour *and* the
+   * colour of the label on it, and the measurement above checks the pair they actually chose.
+   * Deepening it again would paint a colour nobody asked for and quietly break a dark label.
+   */
   const tinted = tint
-    ? { '--lg-accent': tint, '--lg-accent-contrast': tintContrast ?? '#fff' } as CSSProperties
+    ? { '--lg-accent': tint, '--lg-accent-fill': tint, '--lg-accent-contrast': tintContrast ?? '#fff' } as CSSProperties
     : undefined;
 
   return <button {...props} ref={glass.ref} type={type} disabled={disabled || loading} aria-busy={loading || undefined}
