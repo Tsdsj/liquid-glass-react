@@ -62,6 +62,16 @@ export function WarnProbe() {
       <GlassButton variant="glassProminent" tint="#ffd60a">继续</GlassButton>
     </section>
 
+    {/*
+      A tint on a variant that cannot paint with it. `tint` publishes the accent tokens on the
+      button whatever the variant, but only the four that draw with the accent read them back,
+      so on the default `glass` it renders a button identical to one with no tint — which reads
+      as "my colour was wrong" rather than "this prop does not apply here".
+    */}
+    <section id="tint-ignored">
+      <GlassButton tint="#3f5bd9">草稿</GlassButton>
+    </section>
+
     {/* A correct composition, to show the rules do not fire on everything. */}
     <section id="clean">
       <GlassGroup>

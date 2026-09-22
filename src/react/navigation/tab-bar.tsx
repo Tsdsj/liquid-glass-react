@@ -114,8 +114,11 @@ export function TabBar({
       <span className="lg-tab-label">{item.label}</span>
       {item.badge !== undefined && <GlassBadge count={item.badge} aria-label={item.badgeLabel} className="lg-tab-badge" />}
     </>;
+    /* `key` is deliberately not in here: React 19 warns when a props object carrying one is
+       spread into JSX, and a warning printed three times per render is how a library teaches
+       people to stop reading their console. It goes on the tag, below. */
     const shared = {
-      key: item.key, className: 'lg-tab-link', 'data-kind': kind,
+      className: 'lg-tab-link', 'data-kind': kind,
       'aria-current': (item.key === current ? 'page' : undefined) as 'page' | undefined,
       onClick: item.onSelect ? (event: MouseEvent<HTMLAnchorElement | HTMLButtonElement>) => item.onSelect!(event) : undefined,
     };
@@ -128,8 +131,8 @@ export function TabBar({
      * `aria-current="page"` reads the same on it.
      */
     return item.href === undefined
-      ? <button {...shared} type="button">{inside}</button>
-      : <a {...shared} href={item.href} draggable={false}>{inside}</a>;
+      ? <button key={item.key} {...shared} type="button">{inside}</button>
+      : <a key={item.key} {...shared} href={item.href} draggable={false}>{inside}</a>;
   };
 
   return <nav {...props} ref={ref} aria-label={label} className={cx('lg-tabbar', className)}

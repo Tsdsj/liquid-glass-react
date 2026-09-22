@@ -24,6 +24,7 @@ const RULES = [
   { id: 'mixed-group', match: /mixes icon-only and text buttons/ },
   { id: 'short-menu', match: /GlassMenuButton has 2 items/ },
   { id: 'tint-contrast', match: /tint #ffd60a renders as rgb\(.+\) on rgb\(.+\) — \d\.\d\d:1/ },
+  { id: 'tint-ignored', match: /tint is set on variant="glass", which does not paint with the accent/ },
 ];
 
 async function warningsOn(page: import('@playwright/test').Page, path: string) {
@@ -46,6 +47,27 @@ for (const rule of RULES) {
 test('a correct composition draws no warnings at all', async ({ page }) => {
   const warnings = await warningsOn(page, '/#/components/button');
   expect(warnings, `the documentation site should not be breaking its own rules:\n${warnings.join('\n')}`).toEqual([]);
+});
+
+/**
+ * And React itself has nothing to say about our markup.
+ *
+ * Making `TabBarItem.href` optional moved the tab's props into an object so the `<a>` and the
+ * `<button>` branches could share them — and `key` went into the object with the rest, which
+ * React 19 warns about on every spread. Three tabs, three lines, on every page of the site:
+ * noise a library prints into its users' consoles is how it teaches them to stop reading them.
+ * Found by someone building with the package, not by this suite, which only ever read our own
+ * `[liquid-glass-ui]` lines.
+ */
+test('React has no complaints about the markup the library emits', async ({ page }) => {
+  const lines: string[] = [];
+  page.on('console', message => { if (message.type() === 'error' || message.type() === 'warning') lines.push(message.text()); });
+  page.on('pageerror', error => lines.push(String(error)));
+  await page.goto('/#/components/list');
+  await page.waitForSelector('#main');
+  await page.waitForTimeout(700);
+  const react = lines.filter(line => !line.includes('[liquid-glass-ui]') && !/DevTools|favicon/i.test(line));
+  expect(react, `React printed:\n${react.join('\n')}`).toEqual([]);
 });
 
 /**
