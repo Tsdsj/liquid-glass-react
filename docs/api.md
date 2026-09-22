@@ -2,12 +2,13 @@
 
 `@ttqtt/liquid-glass-react` 共 105 个导出：67 个组件与 Provider、14 个 Hook、24 个常量表、纯函数与诊断工具。所有组件都是 `'use client'`。
 
-样式必须引入一次，顺序不能颠倒：
+样式在应用入口引一次：
 
 ```ts
-import '@ttqtt/liquid-glass-react/tokens.css';
-import '@ttqtt/liquid-glass-react/styles.css';
+import '@ttqtt/liquid-glass-react/style.css';
 ```
+
+`style.css` 就是 `tokens.css` + `components.css`，两个分开的入口也导出着，给只想要变量的场合用——但**不要两个都引**，那会把变量加载两遍。（0.0.2 之前这里写的是 `styles.css`，那个路径不存在，照抄会得到 `ERR_PACKAGE_PATH_NOT_EXPORTED`。）
 
 ## 每个组件都接受的东西
 
@@ -132,6 +133,8 @@ import '@ttqtt/liquid-glass-react/styles.css';
 
 并排的两到三栏，**只在 regular 环境**；低于 768px 折叠成 `NavigationStack`。
 
+> **紧凑档只渲染 `sidebar` 和 `compact`。** `children` 和 `inspector` 不在 DOM 里——不是隐藏，是不渲染。栈的根页就是侧栏，选中一项把 `compact` 推上去。所以一个「侧栏 + children」的两栏视图在手机上主内容会整个消失，除非你把同样的东西也传给 `compact`。`compact` 因此是必填的。
+
 | 属性 | 类型 | 默认 | 说明 |
 | --- | --- | --- | --- |
 | `sidebar` | `ReactNode` | — | 前导栏 |
@@ -218,6 +221,10 @@ import '@ttqtt/liquid-glass-react/styles.css';
 `ListSection`: `header` `footer`（标题式大小写）、`headingLevel`（`1`–`6`，默认 `3`）。分区标题是真标题——读屏用户靠它找到这一组——所以嵌得更深时是把它放到对的深度，不是取消它。
 `ListRow`: `label` `secondaryLabel` `value` `leading` `accessory` `href` `onSelect` `disclosure` `destructive` `disabled`。可导航行渲染为真实 `<a>` 或 `<button>`。
 
+**箭头是自动的**：能点的行默认带 `>`，带了 `accessory`（开关、步进器）的行不带——那个位置已经有东西了。`disclosure` 是用来推翻这个默认的，不是用来打开它的：同一个列表里既有带徽标的行又有不带的，看起来会像两种东西，这时显式传 `disclosure={false}` 统一掉。
+
+**窄到 400px 以下**（按列表自己的宽度算，不是窗口），`value` 会换到第二行、跟着标签左对齐。三栏分栏里的中间栏经常就这么窄，而在一行里 `value`、`accessory` 和箭头都是不让步的，标题会被挤没。
+
 `disabled` 的跳转行**不渲染 `href`**，改渲染 `<button disabled>`：带 `href` 的 `<a>` 无论 `aria-disabled` 写什么，回车和点击都照样导航——`aria-disabled` 只是播报，不是实现。
 
 ### `Kbd` / `useShortcut()`
@@ -277,7 +284,7 @@ useShortcut('mod k', () => setPaletteOpen(true));
 ### `GlassButton` / `GlassIconButton`
 `variant`: `glass` | `glassProminent` | `plain` | `gray` | `tinted` | `destructive` | `destructiveProminent`。
 `icon` / `trailingIcon`：图标插槽。是插槽而不是 children，因为图标和文字之间的间距是系统值。
-`tint` / `tintContrast`：这一个按钮的色调，和压在它上面的文字色（默认白）。**一屏仍然只有一个主操作**——tint 换的是它的颜色，不是让你摆三个。开发模式会量**按钮实际画出来的那一对**——渲染后的 `color`，对上按钮自己的色调层、背景和每一层祖先合成到不透明的结果——低于 4.5:1 告警：库挑不出能读的文字色（所以没有全局 `accent`），但它能验调用方挑的那个。
+`tint` / `tintContrast`：这一个按钮的色调，和压在它上面的文字色（默认白）。**只有用强调色作画的那几个变体会用它**——`glassProminent`、`primary`、`tinted`、`plain`；默认的 `glass`、`gray` 和两个 destructive（红是它们的定义）拿到 `tint` 也不会变色，开发模式会为此出声。**一屏仍然只有一个主操作**——tint 换的是它的颜色，不是让你摆三个。开发模式会量**按钮实际画出来的那一对**——渲染后的 `color`，对上按钮自己的色调层、背景和每一层祖先合成到不透明的结果——低于 4.5:1 告警：库挑不出能读的文字色（所以没有全局 `accent`），但它能验调用方挑的那个。
 
 > 早先它比的是 `tint` 对 `tintContrast`，也就是**主操作**按钮画出来的那一对。`tinted`、`plain`、`destructive` 的标签是色调本身压在同色的淡底上，于是护栏量的是屏幕上不存在的两个颜色，并放行了实际 2.87:1 的按钮。改成量渲染结果之后，当场逮到本站自己的绿色确认按钮：4.45:1。
 `controlSize`: `small`(32) | `regular`(44) | `large`(50) | `extraLarge`(60)——注意与选择玻璃厚度的 `size` 不同。

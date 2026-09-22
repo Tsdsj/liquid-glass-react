@@ -157,6 +157,23 @@ export function GlassButton(
   }, [glass.root, tint, tintContrast, variant]);
 
   /**
+   * A tint nothing paints is worth a word, because it fails by looking untouched.
+   *
+   * `tint` publishes `--lg-accent` and `--lg-accent-fill` on the button whatever the variant,
+   * but only the four variants that draw with the accent read them back. Passed to the default
+   * `glass`, or to either destructive variant — which are red by definition — it renders a
+   * button identical to one with no `tint` at all, and the caller's most likely reading of
+   * that is that their colour was wrong.
+   */
+  useEffect(() => {
+    if (!inDevelopment() || !tint) return;
+    const node = glass.root.current; if (!node) return;
+    if (['primary', 'glassProminent', 'plain', 'tinted'].includes(variant)) return;
+    warnOnce(node, 'tint-ignored',
+      `tint is set on variant="${variant}", which does not paint with the accent, so it has no effect. Use variant="glassProminent" (or "primary" / "tinted" / "plain") to tint a button; the destructive variants are red by definition.`);
+  }, [glass.root, tint, variant]);
+
+  /**
    * `--lg-accent-fill` too, and set to the tint itself rather than derived from it.
    *
    * The default accent is deepened before anything paints white on it, because the brand blue

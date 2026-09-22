@@ -9,7 +9,7 @@ import { demoLink } from '../site/demo.js';
 import type { ComponentDoc } from './types.js';
 
 /** Demo navigation must not move the reader off the page they are reading. */
-const hold = (event: MouseEvent<HTMLAnchorElement>) => event.preventDefault();
+const hold = (event: MouseEvent<HTMLAnchorElement | HTMLButtonElement>) => event.preventDefault();
 
 export const navigationDocs: ComponentDoc[] = [
   {
@@ -168,7 +168,7 @@ export const navigationDocs: ComponentDoc[] = [
         ],
         render: function TabBarBasic({ knobs }) {
           const [current, setCurrent] = useState('home');
-          const pick = (key: string) => (event: MouseEvent<HTMLAnchorElement>) => { event.preventDefault(); setCurrent(key); };
+          const pick = (key: string) => (event: MouseEvent<HTMLAnchorElement | HTMLButtonElement>) => { event.preventDefault(); setCurrent(key); };
           const badge = Number(knobs.badge);
           return <div className="demo-tabbar-frame">
             <TabBar aria-label="示例导航" current={current} sidebarBreakpoint={99999}
@@ -201,7 +201,7 @@ export const navigationDocs: ComponentDoc[] = [
         height: 340,
         render: function TabBarSidebar() {
           const [current, setCurrent] = useState('library');
-          const pick = (key: string) => (event: MouseEvent<HTMLAnchorElement>) => { event.preventDefault(); setCurrent(key); };
+          const pick = (key: string) => (event: MouseEvent<HTMLAnchorElement | HTMLButtonElement>) => { event.preventDefault(); setCurrent(key); };
           return <div id="tabbar-sidebar-demo" style={{ position: 'relative', width: '100%', height: 280 }}>
             {/* Breakpoint 0: always the sidebar form, so the two forms can be read side by side. */}
             <TabBar aria-label="宽屏导航" current={current} sidebarBreakpoint={0}

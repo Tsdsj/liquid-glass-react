@@ -26,8 +26,11 @@ export interface PaletteCommand {
   icon?: ReactNode;
   /** Written the way `Kbd` writes one: `"mod k"`, `"⇧⌘P"`. Drawn on the trailing edge. */
   shortcut?: string;
-  /** Words this should match on without showing them — synonyms, an old name. */
-  keywords?: string;
+  /**
+   * Words this should match on without showing them — synonyms, an old name, a romanisation.
+   * A list or one string; a string is split on whitespace, so both read the same to the filter.
+   */
+  keywords?: string | string[];
   /** Shown but not runnable. A command that does not apply right now still belongs in the list. */
   disabled?: boolean;
   onSelect: () => void;
@@ -67,7 +70,8 @@ export interface CommandPaletteProps extends Omit<DialogHTMLAttributes<HTMLDialo
 
 /** Every word of the query has to turn up somewhere in the command. Case and order do not matter. */
 const defaultFilter = (command: PaletteCommand, query: string) => {
-  const haystack = `${command.label} ${command.group ?? ''} ${command.detail ?? ''} ${command.keywords ?? ''}`.toLocaleLowerCase();
+  const keywords = Array.isArray(command.keywords) ? command.keywords.join(' ') : command.keywords ?? '';
+  const haystack = `${command.label} ${command.group ?? ''} ${command.detail ?? ''} ${keywords}`.toLocaleLowerCase();
   return query.toLocaleLowerCase().split(/\s+/).filter(Boolean).every(word => haystack.includes(word));
 };
 
@@ -128,7 +132,20 @@ export function CommandPalette({
    */
   const listKey = matches.map(command => command.id).join(' ');
   useEffect(() => { setActive(matches.findIndex(command => !command.disabled)); }, [listKey]); // eslint-disable-line react-hooks/exhaustive-deps
-  useEffect(() => { if (!open) { setQuery(''); } }, [open]); // eslint-disable-line react-hooks/exhaustive-deps
+  /**
+   * Opening resets the highlight as well as the query — the palette keeps nothing between two
+   * openings, which is what the API documentation promises and what makes ⌘K, Enter a
+   * predictable pair of keystrokes.
+   *
+   * Clearing only the query was not enough: with the same commands on screen the list's
+   * contents were unchanged, so the effect above never re-ran, and the palette came back with
+   * an empty field and last time's row lit up — pointing at a different command from the one
+   * under the cursor.
+   */
+  useEffect(() => {
+    if (open) setActive(matches.findIndex(command => !command.disabled));
+    else setQuery('');
+  }, [open]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const listId = `${id}-list`;
   const optionId = (index: number) => `${listId}-${index}`;

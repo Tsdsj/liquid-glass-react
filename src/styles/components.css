@@ -671,6 +671,17 @@
 .lg-screen-bar[data-edge="bottom"] { inset-block-end: 0; padding: var(--lg-space-3) var(--lg-margin);
   padding-block-end: calc(var(--lg-space-3) + env(safe-area-inset-bottom)); }
 .lg-screen[data-scroll="page"] > .lg-screen-bar { position: fixed; }
+/**
+ * A bar in a screen slot is positioned by the slot.
+ *
+ * `.lg-tabbar` fixes itself to the viewport, which is right when it is the only thing holding
+ * it up. Inside a screen it meant the bar was positioned twice and padded for the home
+ * indicator twice — and, because a fixed child leaves the flow, the slot measured **zero**.
+ * The screen then reserved 24px of its own padding for a 60px bar, and the last stretch of
+ * every page sat under it. Only the tab-bar form: at sidebar widths the same element is a
+ * full-height column down the side, which is not something a bottom slot can hold up.
+ */
+.lg-screen-bar > .lg-tabbar[data-layout="tabbar"] { position: static; padding: 0; }
 /* Reserved from the measured bar heights, so it is right at every text size. */
 .lg-screen-content { padding-block: calc(var(--lg-screen-top, 0px) + var(--lg-screen-inset, 12px))
   calc(var(--lg-screen-bottom, 0px) + var(--lg-screen-inset, 12px)); }
@@ -749,7 +760,10 @@
 .lg-list-section { display: flex; flex-direction: column; gap: var(--lg-space-2); }
 .lg-list-header { padding-inline: var(--lg-space-4); }
 .lg-list-footer { padding-inline: var(--lg-space-4); }
-.lg-list-group { list-style: none; margin: 0; padding: 0; background: var(--lg-bg-grouped-2); border-radius: var(--lg-radius-l); overflow: hidden; }
+.lg-list-group { list-style: none; margin: 0; padding: 0; background: var(--lg-bg-grouped-2); border-radius: var(--lg-radius-l); overflow: hidden;
+  /* The rows reflow against the width of the list, not of the window: a list in the middle
+     column of a split view is far narrower than the viewport it is in. */
+  container-type: inline-size; container-name: lg-list; }
 .lg-list[data-variant="plain"] .lg-list-group { border-radius: 0; background: var(--lg-bg); }
 .lg-list-row { position: relative; --lg-row-inset: var(--lg-space-4); }
 /* Separator insets past the leading glyph, and never draws under the last row. */
@@ -767,7 +781,24 @@
 .lg-row-leading { display: inline-flex; align-items: center; justify-content: center; width: 28px; height: 28px; flex-shrink: 0; color: var(--lg-label-secondary); }
 .lg-row-labels { display: flex; flex-direction: column; min-width: 0; flex: 1; }
 .lg-row-label { overflow-wrap: anywhere; }
-.lg-row-value { color: var(--lg-label-secondary); flex-shrink: 0; }
+.lg-row-value { color: var(--lg-label-secondary); flex: 0 1 auto; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+/**
+ * Below about 400px the value moves to its own line rather than squeezing the label out.
+ *
+ * Every slot but the label was rigid, so in a narrow column the four decorations took the full
+ * width and the one piece of content — the row's own title — was handed what was left. At the
+ * 193px a three-column split view produces on an 800px window that was **41px**, and
+ * `overflow-wrap: anywhere` turned the title into a column of single characters 238px tall.
+ * The rule that broke it is the one worth stating: a decoration never outranks the content it
+ * decorates.
+ */
+@container lg-list (max-width: 400px) {
+  .lg-row-hit:has(.lg-row-value) { flex-wrap: wrap; }
+  .lg-row-hit:has(.lg-row-value) > .lg-row-value {
+    order: 1; flex-basis: 100%; white-space: normal; text-align: start;
+    margin-inline-start: calc(var(--lg-row-inset) - var(--lg-space-4));
+  }
+}
 .lg-row-accessory { display: inline-flex; align-items: center; flex-shrink: 0; }
 .lg-row-chevron { color: var(--lg-label-tertiary); flex-shrink: 0; }
 .lg-row-hit:focus-visible { outline: var(--lg-focus-width) solid var(--lg-focus); outline-offset: calc(var(--lg-focus-offset) * -1); }
@@ -914,6 +945,8 @@
 .lg-tab-link { position: relative; z-index: 1; display: inline-flex; align-items: center; justify-content: center; gap: var(--lg-space-2);
   min-height: var(--lg-hit-min); min-width: var(--lg-hit-min); padding-inline: var(--lg-space-4); border-radius: 999px;
   color: var(--lg-glass-fg-secondary); text-decoration: none; font: var(--lg-weight-medium) var(--lg-text-footnote-size)/1.2 var(--lg-font-text);
+  /* A tab is a <button> when its section has no URL; the UA chrome goes either way. */
+  border: 0; background: transparent; cursor: pointer; appearance: none;
   transition: color var(--lg-duration-release) var(--lg-ease), transform var(--lg-duration-spring) var(--lg-spring); }
 .lg-tabbar[data-layout="sidebar"] .lg-tab-link { justify-content: flex-start; font-size: var(--lg-text-subhead-size); }
 @media (hover: hover) {
@@ -998,7 +1031,13 @@
 .lg-field-message { margin: 0; }
 .lg-visually-hidden { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
 .lg-search { display: block; }
-.lg-search-box { min-height: var(--lg-hit-min); padding-inline: var(--lg-space-3); outline: var(--lg-focus-width) solid transparent; outline-offset: var(--lg-focus-offset);
+/* The control scale, not the hit floor. `--lg-hit-min` is the smallest a *target* may be —
+   24px with a cursor, from WCAG 2.2 — and reading it as a height made this the one input in
+   the library that was 24px tall on a desktop while the text field beside it was 36 and the
+   17px placeholder inside it looked clipped. On a touch screen the two numbers happen to be
+   the same, which is why it only ever looked wrong with a mouse. `--lg-height-comfortable`
+   is the field scale the API table publishes: 44 touch / 36 pointer. */
+.lg-search-box { min-height: var(--lg-height-comfortable); padding-inline: var(--lg-space-3); outline: var(--lg-focus-width) solid transparent; outline-offset: var(--lg-focus-offset);
   transition: outline-color var(--lg-duration-press) var(--lg-ease); }
 .lg-search-box:has(:focus-visible) { outline-color: var(--lg-focus); }
 .lg-search-box:has([data-lg-autofocus]) { outline-color: transparent; }
@@ -1122,7 +1161,15 @@
 /* Cancel is separated so it cannot be hit while aiming for something else. */
 .lg-action-cancel { margin-block-start: var(--lg-space-2); font-weight: var(--lg-weight-semibold); background: var(--lg-fill-tertiary); }
 .lg-toast-region { position: fixed; z-index: var(--lg-z-toast); inset-inline: 0; inset-block-end: 0; display: flex; flex-direction: column;
-  align-items: center; gap: var(--lg-space-2); padding: var(--lg-space-4) var(--lg-margin) calc(var(--lg-space-4) + env(safe-area-inset-bottom));
+  align-items: center; gap: var(--lg-space-2); padding: var(--lg-space-4) var(--lg-margin);
+  /* Above the bottom bar, not on top of it. `Screen` publishes its measured bar height on the
+     document root precisely so something rendered outside it — a toast lives in a portal at
+     the end of <body> — can stay clear of it. Without this the toast landed on the same pixel
+     row as the tab bar, `pointer-events: auto`, and took the whole main navigation out for as
+     long as it was up; moving the pointer towards the tabs hovered the toast, which pauses its
+     timer, so it did not even leave on its own. `max` rather than `+`: the bar has already
+     cleared the home indicator, and adding the inset again would float the toast above it. */
+  padding-block-end: max(var(--lg-screen-bottom, 0px), calc(env(safe-area-inset-bottom) + var(--lg-space-4)));
   pointer-events: none; }
 .lg-toast { pointer-events: auto; max-width: min(480px, 100%); padding: var(--lg-space-2) var(--lg-space-2) var(--lg-space-2) var(--lg-space-5);
   animation: lg-toast-in var(--lg-duration-overlay) var(--lg-ease-out); }

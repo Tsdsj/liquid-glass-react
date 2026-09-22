@@ -487,7 +487,11 @@
   --lg-selected: rgb(255 255 255 / .84);
   --lg-pressed-alpha: .78;
   --lg-selected-alpha: .84;
-  --lg-focus: var(--lg-blue);
+  /* The ring is a graphic, so it answers to the brand colour, not to the fill under a label.
+     It was `--lg-blue` — which is the same colour until somebody re-brands, and then the whole
+     site keeps ringing in system blue while the API docs promise otherwise. */
+  --lg-focus: var(--lg-accent);
+  color-scheme: light;
 
   /* ---- Legacy aliases (0.1.x). Removed once every component is migrated. ---- */
   --lg-fg: var(--lg-label);
@@ -581,7 +585,10 @@
   --lg-selected: rgb(255 255 255 / .16);
   --lg-pressed-alpha: .22;
   --lg-selected-alpha: .16;
-  --lg-focus: var(--lg-blue);
+  --lg-focus: var(--lg-accent);
+  /* So the scrollbars, the caret and the native form widgets inside a dark surface are dark
+     too. It goes on the surface rather than on `<html>` for the same reason the colours do. */
+  color-scheme: dark;
 
   --lg-fg: var(--lg-label);
   --lg-muted: var(--lg-label-secondary);

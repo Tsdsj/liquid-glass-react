@@ -78,10 +78,28 @@ export function GlassProvider({ children, strings, ...overrides }: GlassProvider
    */
   const outermost = parent === initial;
   const { motion, transparency, contrast, platform } = merged;
+  const { resolvedTheme } = value;
   useEffect(() => {
     if (!outermost || typeof document === 'undefined') return;
     const root = document.documentElement;
     const written: Array<[string, string | null]> = [
+      /**
+       * Theme is written *always*, including for `'system'` — and that is the one place the
+       * rule below does not hold.
+       *
+       * The other three have a media query behind them in the stylesheet, so `'system'` is
+       * already answered without an attribute. Colour has none: the dark values hang off
+       * `[data-lg-theme="dark"]` and nothing else, because a theme is declared per surface so
+       * that a dark toolbar can sit in a light page, and `prefers-color-scheme` cannot say
+       * that. The consequence went unnoticed for a release: with `theme="system"` — the
+       * README's own example — the provider stamped the glass and left `<html>` alone, so on a
+       * dark system the bars went dark and every card, list and form stayed light.
+       *
+       * The root is only the default. Every surface still declares its own, so the dark
+       * toolbar in a light page keeps working; this just stops the page itself from being the
+       * one surface nobody sets.
+       */
+      ['data-lg-theme', resolvedTheme],
       ['data-lg-motion', motion === 'system' ? null : motion],
       ['data-lg-transparency', transparency === 'system' ? null : transparency],
       ['data-lg-contrast', contrast === 'system' ? null : contrast],
@@ -101,7 +119,7 @@ export function GlassProvider({ children, strings, ...overrides }: GlassProvider
         if (value === null) root.removeAttribute(name); else root.setAttribute(name, value);
       }
     };
-  }, [outermost, motion, transparency, contrast, platform]);
+  }, [outermost, resolvedTheme, motion, transparency, contrast, platform]);
 
   // Identity is stable while nothing is passed, so an untranslated tree never re-renders on this.
   const mergedStrings = useMemo(

@@ -72,7 +72,7 @@ export function ThemingGuide() {
     </Section>
 
     <Section title="不要让主题闪一下">
-      <Rule>主题必须在页面画出来之前就定好。等 React 跑起来再设置，用户会先看到错误的主题闪一下；开了系统深色模式的人还会先看到白屏。</Rule>
+      <Rule>主题必须在页面画出来之前就定好。`GlassProvider` 会把它解析出来的主题写到根节点上，但那要等 React 跑起来——在那之前的那一两帧，开了系统深色的人会先看到白屏。下面这段脚本把同一件事提前到首帧，两边写的是同一个属性。</Rule>
       <CodeBlock code={`<!-- 放在 <head> 里，在其它脚本之前 -->
 <script>
   var stored = localStorage.getItem('theme') || 'system';

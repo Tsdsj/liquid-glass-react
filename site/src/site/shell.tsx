@@ -50,7 +50,9 @@ export function Shell({ path, go, secondaryNav, children }: {
     const dark = preferences.theme === 'dark'
       || (preferences.theme === 'system' && matchMedia('(prefers-color-scheme: dark)').matches);
     root.dataset.appTheme = dark ? 'dark' : 'light';
-    root.setAttribute('data-lg-theme', dark ? 'dark' : 'light');
+    /* `data-lg-theme` is the library's to write — `GlassProvider` publishes the theme it
+       resolved, and two writers for one attribute is how they end up disagreeing. The boot
+       script in index.html still sets it before first paint, which is the part React cannot do. */
     root.style.colorScheme = dark ? 'dark' : 'light';
     root.dataset.lgTextSize = preferences.textSize;
     try {
@@ -74,7 +76,7 @@ export function Shell({ path, go, secondaryNav, children }: {
      part of it because the inset lives on the bar. */
 
   const section = sectionOf(path);
-  const navigate = (target: string) => (event: MouseEvent<HTMLAnchorElement>) => { event.preventDefault(); go(target); };
+  const navigate = (target: string) => (event: MouseEvent<HTMLAnchorElement | HTMLButtonElement>) => { event.preventDefault(); go(target); };
 
   return <GlassProvider
     theme={preferences.theme}

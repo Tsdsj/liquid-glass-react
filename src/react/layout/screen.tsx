@@ -75,6 +75,27 @@ export function Screen({
     return () => observer.disconnect();
   }, [top, bottom]);
 
+  /**
+   * The same two numbers, published on the document root.
+   *
+   * Anything rendered into a portal — a toast region, an application's own floating button —
+   * is a sibling of the screen, not a descendant, so the variables on the screen's own box are
+   * out of its reach. It asks for the last screen mounted, which is the right answer because a
+   * page has one: two screens stacked would each be claiming the whole viewport.
+   */
+  useEffect(() => {
+    if (typeof document === 'undefined') return;
+    const root = document.documentElement;
+    const before = [root.style.getPropertyValue('--lg-screen-top'), root.style.getPropertyValue('--lg-screen-bottom')] as const;
+    root.style.setProperty('--lg-screen-top', `${bars.top}px`);
+    root.style.setProperty('--lg-screen-bottom', `${bars.bottom}px`);
+    return () => {
+      for (const [name, value] of [['--lg-screen-top', before[0]], ['--lg-screen-bottom', before[1]]] as const) {
+        if (value) root.style.setProperty(name, value); else root.style.removeProperty(name);
+      }
+    };
+  }, [bars.top, bars.bottom]);
+
   const container = scroll === 'container';
   const variables = {
     '--lg-screen-top': `${bars.top}px`,

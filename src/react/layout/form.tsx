@@ -25,16 +25,22 @@ export interface FormSectionProps extends Omit<HTMLAttributes<HTMLElement>, 'tit
   header?: ReactNode;
   /** Explanation under the group. Attached to the section, so it is read with it. */
   footer?: ReactNode;
+  /**
+   * Which heading the header is. `h3` by default, which is right under a page title and a
+   * section title; a form that sits directly under the page title wants `2`, or the outline a
+   * screen reader reads skips a level. Same prop, same reason, as `ListSection`.
+   */
+  headingLevel?: 1 | 2 | 3 | 4 | 5 | 6;
   children: ReactNode;
 }
 
-export function FormSection({ header, footer, children, className, ref, ...props }: FormSectionProps) {
+export function FormSection({ header, footer, headingLevel = 3, children, className, ref, ...props }: FormSectionProps) {
   const generated = useId();
   const headerId = header ? `${generated}-header` : undefined;
   const footerId = footer ? `${generated}-footer` : undefined;
   return <section {...props} ref={ref} className={cx('lg-form-section', className)}
     aria-labelledby={headerId} aria-describedby={footerId}>
-    {header && <Text as="h3" id={headerId} variant="subhead" emphasized tone="secondary" className="lg-form-header">{header}</Text>}
+    {header && <Text as={`h${headingLevel}` as const} id={headerId} variant="subhead" emphasized tone="secondary" className="lg-form-header">{header}</Text>}
     <div className="lg-form-group">{children}</div>
     {footer && <Text id={footerId} variant="footnote" tone="secondary" className="lg-form-footer">{footer}</Text>}
   </section>;

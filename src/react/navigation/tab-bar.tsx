@@ -11,14 +11,15 @@ import { GlassBadge } from '../controls/badge.js';
 
 export interface TabBarItem {
   key: string;
-  href: string;
+  /** Where the section lives. Leave it out when the section has no URL: the tab becomes a button. */
+  href?: string;
   label: ReactNode;
   icon?: ReactNode;
   /** Count shown on the tab. Give the badge an accessible name that says what it counts. */
   badge?: number;
   badgeLabel?: string;
-  /** Intercept navigation for a client router or an in-page demo. */
-  onSelect?: (event: MouseEvent<HTMLAnchorElement>) => void;
+  /** Intercept navigation for a client router, or handle the press when there is no `href`. */
+  onSelect?: (event: MouseEvent<HTMLAnchorElement | HTMLButtonElement>) => void;
 }
 
 /** The ref and any HTML attributes land on the `<nav>`, which is the whole bar. */
@@ -107,13 +108,29 @@ export function TabBar({
 
   /* draggable={false}: a link that is also a drag target would otherwise start a native drag on
      the first pointer move, which both shows the URL ghost and cancels the gesture. */
-  const link = (item: TabBarItem, kind: 'tab' | 'search') => <a key={item.key} className="lg-tab-link" data-kind={kind}
-    href={item.href} draggable={false} aria-current={item.key === current ? 'page' : undefined}
-    onClick={item.onSelect ? event => item.onSelect!(event) : undefined}>
-    {item.icon && <span className="lg-tab-icon" aria-hidden="true">{item.icon}</span>}
-    <span className="lg-tab-label">{item.label}</span>
-    {item.badge !== undefined && <GlassBadge count={item.badge} aria-label={item.badgeLabel} className="lg-tab-badge" />}
-  </a>;
+  const link = (item: TabBarItem, kind: 'tab' | 'search') => {
+    const inside = <>
+      {item.icon && <span className="lg-tab-icon" aria-hidden="true">{item.icon}</span>}
+      <span className="lg-tab-label">{item.label}</span>
+      {item.badge !== undefined && <GlassBadge count={item.badge} aria-label={item.badgeLabel} className="lg-tab-badge" />}
+    </>;
+    const shared = {
+      key: item.key, className: 'lg-tab-link', 'data-kind': kind,
+      'aria-current': (item.key === current ? 'page' : undefined) as 'page' | undefined,
+      onClick: item.onSelect ? (event: MouseEvent<HTMLAnchorElement | HTMLButtonElement>) => item.onSelect!(event) : undefined,
+    };
+    /**
+     * A section without a URL is a button, not a link to nowhere.
+     *
+     * `href` used to be required, which left an application that keeps its sections in state —
+     * most of them — inventing an address it then had to cancel in `onSelect`. An `<a>` with no
+     * `href` is not focusable and is not announced as anything; a `<button>` is both, and
+     * `aria-current="page"` reads the same on it.
+     */
+    return item.href === undefined
+      ? <button {...shared} type="button">{inside}</button>
+      : <a {...shared} href={item.href} draggable={false}>{inside}</a>;
+  };
 
   return <nav {...props} ref={ref} aria-label={label} className={cx('lg-tabbar', className)}
     data-layout={asSidebar ? 'sidebar' : 'tabbar'} data-minimized={minimized ? 'true' : undefined}>

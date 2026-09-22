@@ -101,6 +101,15 @@ export function TextField(props: TextFieldProps) {
       {trailing && <span className="lg-field-trailing">{trailing}</span>}
     </div>
     {error && <Text id={errorId} variant="footnote" tone="destructive" className="lg-field-message">{error}</Text>}
-    {hint && !error && <Text id={hintId} variant="footnote" tone="secondary" className="lg-field-message">{hint}</Text>}
+    {/**
+      * The hint stays while the error is up.
+      *
+      * Hiding it used to leave `aria-describedby` pointing at an element that was no longer in
+      * the document, which is a dangling IDREF — a screen reader may read the error, or read
+      * nothing, depending on which one it is. And it took the wrong sentence away: the error
+      * says what went wrong, the hint says what a right answer looks like, and the moment the
+      * field is wrong is the moment that is most worth having on screen.
+      */}
+    {hint && <Text id={hintId} variant="footnote" tone="secondary" className="lg-field-message">{hint}</Text>}
   </div>;
 }
