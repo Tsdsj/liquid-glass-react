@@ -12,6 +12,16 @@ import { test, expect } from '@playwright/test';
  * comment says what the first version measured instead.
  */
 
+/** Relative luminance of an 8-bit sRGB triple, per WCAG. Same formula as `contrast.spec.ts`. */
+function luminance([r, g, b]: number[]) {
+  const channel = (value: number) => {
+    const s = value / 255;
+    return s <= .03928 ? s / 12.92 : ((s + .055) / 1.055) ** 2.4;
+  };
+  return .2126 * channel(r) + .7152 * channel(g) + .0722 * channel(b);
+}
+const ratio = (a: number, b: number) => { const [hi, lo] = a > b ? [a, b] : [b, a]; return (hi + .05) / (lo + .05); };
+
 /* ------------------------------------------------------------------------------------------
    1. `theme="system"` reaches the content layer
    ------------------------------------------------------------------------------------------ */
@@ -185,6 +195,79 @@ test('a list row keeps its label in a narrow column', async ({ page }) => {
   expect(measured!.label, `the label got ${measured!.label.toFixed(1)}px of a 193px row`).toBeGreaterThan(100);
   expect(measured!.height, `the row grew to ${measured!.height.toFixed(0)}px`).toBeLessThan(140);
 });
+
+/* ------------------------------------------------------------------------------------------
+   5b. A list inside glass does not repaint the glass
+   ------------------------------------------------------------------------------------------ */
+
+/**
+ * Both list variants declare an opaque background, and `plain` declares `--lg-bg` — the *page*
+ * background, pure black in dark. Put a navigation list in a sidebar and it punched a black
+ * rectangle through the material, squared off against the panel's 26px corner.
+ *
+ * Measured against the panel's own radius and padding rather than against 10px, so a caller
+ * who passes their own `radius` to the sidebar is still measured correctly.
+ */
+for (const scheme of ['light', 'dark'] as const) {
+  test(`a list in a sidebar paints nothing and takes the panel's corner — ${scheme}`, async ({ page }) => {
+    await page.emulateMedia({ colorScheme: scheme });
+    await page.goto('/#/components/sidebar');
+    await page.waitForTimeout(500);
+
+    const measured = await page.locator('#sidebar-basic .lg-list-group').first().evaluate(group => {
+      const surface = group.closest('.lg-root') as HTMLElement;
+      const style = getComputedStyle(surface);
+      const read = (name: string) => parseFloat(style.getPropertyValue(name)) || 0;
+      return {
+        background: getComputedStyle(group).backgroundColor,
+        radius: parseFloat(getComputedStyle(group).borderTopLeftRadius),
+        expected: Math.max(0, read('--lg-radius-container') - read('--lg-concentric-inset')),
+      };
+    });
+    expect(measured.background, 'the list painted over the glass').toBe('rgba(0, 0, 0, 0)');
+    expect(measured.radius, `the group's corner was ${measured.radius}px against a concentric ${measured.expected}px`)
+      .toBeCloseTo(measured.expected, 0);
+  });
+}
+
+/* ------------------------------------------------------------------------------------------
+   5c. A list column says which row the detail belongs to
+   ------------------------------------------------------------------------------------------ */
+
+/**
+ * `split-views.md:13` — "persistently highlight the current selection in each pane that leads
+ * to the detail view". `ListRow` had no way to say it: nothing emitted `aria-current`, and the
+ * stylesheet only ever styled `[aria-current]` on a tab link and a path level. A list used as
+ * the middle column of a split view could not show what was selected, so the documentation
+ * site's own sidebar demo had hand-rolled rows with their own class to get around it.
+ *
+ * The colour is checked against the label on it, not against a constant: this is the same
+ * `--lg-accent-fill` the outline view selects with, and that pairing is the one that has to
+ * keep clearing 4.5:1 if the brand colour is ever changed.
+ */
+for (const scheme of ['light', 'dark'] as const) {
+  test(`the selected row is announced and drawn — ${scheme}`, async ({ page }) => {
+    await page.emulateMedia({ colorScheme: scheme });
+    await page.goto('/#/components/sidebar');
+    await page.waitForTimeout(500);
+
+    const row = page.locator('#sidebar-basic .lg-list-row[data-selected="true"]').first();
+    await expect(row).toBeVisible();
+    expect(await row.locator('.lg-row-hit').getAttribute('aria-current'), 'nothing was announced').toBe('true');
+
+    const pair = await row.locator('.lg-row-hit').evaluate(hit => {
+      const read = (value: string) => {
+        const numbers = (value.match(/[\d.]+/g) ?? []).map(Number);
+        return /^color\(srgb/.test(value) ? [numbers[0] * 255, numbers[1] * 255, numbers[2] * 255] : numbers.slice(0, 3);
+      };
+      const label = hit.querySelector('.lg-row-label')!;
+      return { fill: read(getComputedStyle(hit).backgroundColor), ink: read(getComputedStyle(label).color) };
+    });
+    expect(pair.fill.join(), 'the selected row was not filled').not.toBe([0, 0, 0].join());
+    const got = ratio(luminance(pair.ink), luminance(pair.fill));
+    expect(got, `the selected row's label measured ${got.toFixed(2)}:1 in ${scheme}`).toBeGreaterThanOrEqual(4.5);
+  });
+}
 
 /* ------------------------------------------------------------------------------------------
    6. Nothing is described by an element that is not there

@@ -59,6 +59,16 @@ export interface ListRowProps extends Omit<LiHTMLAttributes<HTMLLIElement>, 'val
   onSelect?: (event: MouseEvent<HTMLElement>) => void;
   /** Force the chevron on or off; by default it appears for navigating rows. */
   disclosure?: boolean;
+  /**
+   * This row is the one the rest of the view is showing.
+   *
+   * A list used as a column of a split view has to say which row the detail belongs to —
+   * `split-views.md`: "persistently highlight the current selection in each pane that leads to
+   * the detail view" — and until this prop existed there was no way to. It reads as
+   * `aria-current`: `"page"` on a row that is a link, `"true"` on one that is a button,
+   * because a button does not navigate to a page.
+   */
+  selected?: boolean;
   destructive?: boolean;
   disabled?: boolean;
 }
@@ -67,8 +77,9 @@ export interface ListRowProps extends Omit<LiHTMLAttributes<HTMLLIElement>, 'val
  * technology get the right affordance — a `div` with an onClick is not a row, it is a trap.
  * Minimum height is the 44pt hit region even when the text is a single short line.
  */
-export function ListRow({ label, secondaryLabel, value, leading, accessory, href, onSelect, disclosure, destructive, disabled, className, ref, ...props }: ListRowProps) {
+export function ListRow({ label, secondaryLabel, value, leading, accessory, href, onSelect, disclosure, selected, destructive, disabled, className, ref, ...props }: ListRowProps) {
   const interactive = !!href || !!onSelect;
+  const current = selected ? (href && !disabled ? 'page' : 'true') : undefined;
   const showChevron = disclosure ?? (interactive && !accessory);
   const body = <>
     {leading && <span className="lg-row-leading" aria-hidden="true">{leading}</span>}
@@ -80,9 +91,10 @@ export function ListRow({ label, secondaryLabel, value, leading, accessory, href
     {accessory && <span className="lg-row-accessory">{accessory}</span>}
     {showChevron && <LibraryIcon name="chevronForward" size={17} className="lg-row-chevron" />}
   </>;
-  return <li {...props} ref={ref} className={cx('lg-list-row', className)} data-interactive={interactive ? 'true' : undefined} data-disabled={disabled ? 'true' : undefined}>
+  return <li {...props} ref={ref} className={cx('lg-list-row', className)} data-interactive={interactive ? 'true' : undefined}
+    data-selected={selected ? 'true' : undefined} data-disabled={disabled ? 'true' : undefined}>
     {href && !disabled
-      ? <a className="lg-row-hit" href={href} draggable={false} onClick={onSelect}>{body}</a>
+      ? <a className="lg-row-hit" href={href} draggable={false} aria-current={current} onClick={onSelect}>{body}</a>
       : onSelect || href
         /**
          * A disabled navigating row drops its `href` rather than keeping it and adding
@@ -90,7 +102,7 @@ export function ListRow({ label, secondaryLabel, value, leading, accessory, href
          * ARIA says about it. `aria-disabled` describes the button; `disabled` is what makes
          * it true, and it is what takes the row out of the tab order.
          */
-        ? <button className="lg-row-hit" type="button" onClick={onSelect} disabled={disabled} aria-disabled={disabled || undefined}>{body}</button>
-        : <div className="lg-row-hit">{body}</div>}
+        ? <button className="lg-row-hit" type="button" onClick={onSelect} disabled={disabled} aria-disabled={disabled || undefined} aria-current={current}>{body}</button>
+        : <div className="lg-row-hit" aria-current={current}>{body}</div>}
   </li>;
 }

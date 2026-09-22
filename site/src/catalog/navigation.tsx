@@ -287,15 +287,25 @@ export const navigationDocs: ComponentDoc[] = [
           return <Sidebar aria-label="示例侧栏" style={{ width: Number(knobs.width), position: 'static' }}
             header={knobs.header === true ? <Text variant="subhead" emphasized>资料库</Text> : undefined}
             footer={knobs.footer === true ? <Text variant="caption1" tone="secondary">12 个项目</Text> : undefined}>
-            <div style={{ display: 'grid', gap: 4 }}>
-              {['全部', '最近', '收藏', '归档'].map((label, index) =>
-                <a key={label} {...demoLink} onClick={hold} className="demo-sidebar-row"
-                  aria-current={index === 1 ? 'page' : undefined}>{label}</a>)}
-            </div>
+            {/* A real List: inside glass it paints nothing and takes the panel's corner, so the
+                rows read as part of the material rather than as a block laid on top of it. */}
+            <List variant="plain">
+              <ListSection>
+                {['全部', '最近', '收藏', '归档'].map((label, index) =>
+                  <ListRow key={label} label={label} disclosure={false} selected={index === 1}
+                    onSelect={event => event.preventDefault()} />)}
+              </ListSection>
+            </List>
           </Sidebar>;
         },
         code: knobs => `<Sidebar aria-label="资料库"${knobs.header ? '\n  header={<Text variant="subhead" emphasized>资料库</Text>}' : ''}${knobs.footer ? '\n  footer={<Text variant="caption1" tone="secondary">12 个项目</Text>}' : ''}>
-  <nav>…</nav>
+  <List variant="plain">
+    <ListSection>
+      <ListRow label="全部" onSelect={…} />
+      <ListRow label="最近" onSelect={…} selected />
+      …
+    </ListSection>
+  </List>
 </Sidebar>`,
       },
       {

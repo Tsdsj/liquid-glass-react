@@ -47,6 +47,20 @@ README 首页的写法就是 `theme="system"`。系统是深色时，栏和按�
 - **`FormSection` 有了 `headingLevel`**，和 `ListSection` 一样。之前一个 `h1` 页题下面的四个表单分组只能是 `h3`，中间跳一级。
 - **`tint` 传给用不上它的变体时，开发模式会出声**。`tint` 会在按钮上写下 `--lg-accent` 和 `--lg-accent-fill`，但只有 `glassProminent` / `primary` / `tinted` / `plain` 会读它——传给默认的 `glass`，按钮和没传时长得一模一样，而且原先一声不吭。
 
+### 修复（列表放进玻璃里会砸出一个方角黑块）
+
+把导航列表放进 `Sidebar`，材质上会出现一个不透明的黑色方块。两个变体都声明了不透明底色——这在页面上是对的——而 `plain` 声明的是 `--lg-bg`，**页面**底色，深色下是纯黑。于是它既比所在的面板更黑，又用 0 圆角顶着面板自己的 26px 圆角。
+
+内容块去重画它所在的那个表面，和玻璃套玻璃是同一个错误的两面。现在玻璃表面里的列表不画底色，圆角由容器算出来——用的是 `Card` 和 `Concentric` 本来就在用的 `--lg-radius-container` / `--lg-concentric-inset`，所以给 `Sidebar` 传了自己的 `radius` 它也跟得上。`GlassSheet` 和 `GlassAlert` 不在此列：它们是被模态呈现的一页，满屏时本来就是实色。
+
+顺带，`--lg-radius-container` 现在由每一块玻璃发布，所以 `Concentric` 放进玻璃里和放进 `Card` 里一样好使。
+
+### 新增（`ListRow` 的 `selected`）
+
+`split-views.md` 要求「每一栏都要持续高亮当前选中项」，而 `ListRow` 此前**没有任何办法说出这件事**——没有东西发出 `aria-current`，样式表也只给标签链接和路径层级画过 `[aria-current]`。一个当作分栏中间列用的列表，看不出选中的是哪一条。（本站自己的侧栏示例因此一直是手写的 `<a>` 加自定义类名；现在换回了真组件。）
+
+`selected` 落成 `aria-current`：链接是 `"page"`，按钮是 `"true"`。颜色和 `OutlineView` 的选中透镜同一对——同一个界面里不该有两种「选中」——强制配色下换成系统的 `Highlight` / `HighlightText`。
+
 ### 文档
 
 - `docs/api.md` 第 5 行教人引入 `styles.css`，**这个路径不存在**，照抄会得到 `ERR_PACKAGE_PATH_NOT_EXPORTED`。正确的是 `style.css`，而且引它一个就够了。

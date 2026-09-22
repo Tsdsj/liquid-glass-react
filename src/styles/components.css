@@ -1,5 +1,9 @@
 /* Import tokens.css once before this stylesheet. All component styles are namespaced. */
-.lg-root { position: relative; box-sizing: border-box; border: 0; border-radius: var(--lg-radius,18px); color: var(--lg-fg); background: transparent; font-family: var(--lg-font); box-shadow: var(--lg-shadow); -webkit-tap-highlight-color: transparent; }
+.lg-root { position: relative; box-sizing: border-box; border: 0; border-radius: var(--lg-radius,18px); color: var(--lg-fg); background: transparent; font-family: var(--lg-font); box-shadow: var(--lg-shadow); -webkit-tap-highlight-color: transparent;
+  /* The same name `Card` publishes, so `Concentric` — and anything else that derives a corner
+     from its container — works inside a glass surface exactly as it does inside a card. The
+     inset is published by whichever part of the surface declares the padding. */
+  --lg-radius-container: var(--lg-radius,18px); }
 .lg-root *, .lg-root *::before, .lg-root *::after { box-sizing: border-box; }
 .lg-content { position: relative; z-index: 1; min-width: 0; }
 .lg-decoration { position: absolute; inset: 0; border-radius: inherit; pointer-events: none; z-index: 0; }
@@ -765,6 +769,27 @@
      column of a split view is far narrower than the viewport it is in. */
   container-type: inline-size; container-name: lg-list; }
 .lg-list[data-variant="plain"] .lg-list-group { border-radius: 0; background: var(--lg-bg); }
+/**
+ * A list inside a floating glass surface paints nothing, and takes a concentric corner.
+ *
+ * Both variants declare an opaque background, which is right on a page and wrong on glass.
+ * `plain` paints `--lg-bg` — the *page* background, pure black in dark — so a navigation list
+ * dropped into a sidebar punched an opaque black rectangle through the material and squared it
+ * off against the panel's own 26px corner. A content block that repaints the surface it is
+ * sitting on is the same mistake as glass on glass, seen from the other side.
+ *
+ * Sheets and dialogs are excluded because they are not utility surfaces: a sheet is a page
+ * presented modally, it goes opaque at full height, and a grouped list on it is meant to read
+ * as grouped blocks exactly as it would on the page it came from.
+ *
+ * The radius is derived from the container rather than picked, through the properties `Card`
+ * and `Concentric` already share, so it follows a caller who passes their own `radius` and
+ * survives a retune of the scale.
+ */
+.lg-root:not(.lg-sheet):not(.lg-dialog) .lg-list-group {
+  background: transparent;
+  border-radius: max(0px, calc(var(--lg-radius-container, 26px) - var(--lg-concentric-inset, 0px)));
+}
 .lg-list-row { position: relative; --lg-row-inset: var(--lg-space-4); }
 /* Separator insets past the leading glyph, and never draws under the last row. */
 .lg-list-row + .lg-list-row::before { content: ''; position: absolute; inset-block-start: 0; inset-inline: var(--lg-row-inset) 0; height: 1px; background: var(--lg-separator); }
@@ -778,6 +803,27 @@
 .lg-list-row[data-interactive="true"] .lg-row-hit:active { background: var(--lg-fill-tertiary); }
 .lg-list-row[data-disabled="true"] { opacity: .45; }
 .lg-list-row[data-disabled="true"] .lg-row-hit { cursor: not-allowed; }
+/**
+ * The selected row, for a list used as a column of a split view.
+ *
+ * Same colour and the same reasoning as `OutlineView`'s selection lens — the fill a white
+ * label reads on, not the brand colour — because a reader moving between the two should not
+ * have to learn that these are two different kinds of "selected". Hover and press are restated
+ * so that pointing at the current row does not wash the selection off it, and the separator
+ * that would otherwise cut across the fill is taken out on both of its edges.
+ */
+.lg-list-row[data-selected="true"] > .lg-row-hit { background: var(--lg-accent-fill); border-radius: var(--lg-radius-s); }
+.lg-list-row[data-selected="true"] > .lg-row-hit:active { background: var(--lg-accent-fill); }
+/* Inside the same query as the hover it is cancelling — a rule that answers a hover has no
+   business existing on a device that cannot hover, which is what `stylesheet.test.mjs` checks. */
+@media (hover: hover) {
+  .lg-list-row[data-selected="true"] > .lg-row-hit:hover { background: var(--lg-accent-fill); }
+}
+.lg-list-row[data-selected="true"] > .lg-row-hit,
+.lg-list-row[data-selected="true"] > .lg-row-hit :is(.lg-text, .lg-row-chevron, .lg-row-leading) { color: var(--lg-accent-contrast); }
+.lg-list-row[data-selected="true"] > .lg-row-hit .lg-row-value { opacity: .8; }
+.lg-list-row[data-selected="true"]::before,
+.lg-list-row[data-selected="true"] + .lg-list-row::before { background: transparent; }
 .lg-row-leading { display: inline-flex; align-items: center; justify-content: center; width: 28px; height: 28px; flex-shrink: 0; color: var(--lg-label-secondary); }
 .lg-row-labels { display: flex; flex-direction: column; min-width: 0; flex: 1; }
 .lg-row-label { overflow-wrap: anywhere; }
@@ -970,7 +1016,8 @@
 /* ---------- Sidebar ---------- */
 .lg-sidebar { position: sticky; inset-block-start: var(--lg-space-4); align-self: start; z-index: var(--lg-z-sidebar); }
 .lg-sidebar[data-side="trailing"] { order: 1; }
-.lg-sidebar-surface { display: flex; flex-direction: column; gap: var(--lg-space-3); padding: var(--lg-space-4); max-height: calc(100dvh - var(--lg-space-8)); }
+.lg-sidebar-surface { display: flex; flex-direction: column; gap: var(--lg-space-3); padding: var(--lg-space-4); max-height: calc(100dvh - var(--lg-space-8));
+  --lg-concentric-inset: var(--lg-space-4); }
 .lg-sidebar-surface > .lg-content { display: flex; flex-direction: column; gap: var(--lg-space-3); min-height: 0; }
 .lg-sidebar-body { overflow-y: auto; overscroll-behavior: contain; scrollbar-gutter: stable; min-height: 0; }
 .lg-sidebar-header, .lg-sidebar-footer { flex-shrink: 0; }
@@ -1298,6 +1345,10 @@
   .lg-button:disabled { color: GrayText; opacity: 1; }
   .lg-root[data-renderer="shared"] { border-color: ButtonText; }
   .lg-button[data-variant="primary"], .lg-tab[aria-selected="true"] { background: Highlight; color: HighlightText; }
+  /* The system's own selection colours, which is the only pair guaranteed to be legible here. */
+  .lg-list-row[data-selected="true"] > .lg-row-hit { background: Highlight; }
+  .lg-list-row[data-selected="true"] > .lg-row-hit,
+  .lg-list-row[data-selected="true"] > .lg-row-hit :is(.lg-text, .lg-row-chevron, .lg-row-leading) { color: HighlightText; }
   .lg-root:focus-visible,.lg-root :focus-visible { outline: 3px solid Highlight; }
   .lg-selection-lens { border: 2px solid Highlight; background: Canvas; }
   .lg-slider-fill,.lg-switch-thumb { background: Highlight; }
@@ -1848,7 +1899,7 @@ a.lg-path-level, button.lg-path-level { cursor: pointer; }
 .lg-panel[data-collapsed="true"] .lg-panel-chevron { rotate: -90deg; }
 [dir="rtl"] .lg-panel[data-collapsed="true"] .lg-panel-chevron { rotate: 90deg; }
 .lg-panel-body { position: relative; z-index: 1; padding: 0 var(--lg-space-4) var(--lg-space-4);
-  display: flex; flex-direction: column; gap: var(--lg-space-3); }
+  display: flex; flex-direction: column; gap: var(--lg-space-3); --lg-concentric-inset: var(--lg-space-4); }
 /* `hidden` is a presentation hint and any `display` beats it. Collapsing the panel set the
    attribute — so the body left the accessibility tree — and the `display: flex` above kept
    drawing it: a rolled-up panel the same height as an open one, with its controls visible and

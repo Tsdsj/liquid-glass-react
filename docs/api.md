@@ -219,7 +219,11 @@ import '@ttqtt/liquid-glass-react/style.css';
 ### `List` / `ListSection` / `ListRow`
 `List`: `variant`(`insetGrouped`/`plain`)。
 `ListSection`: `header` `footer`（标题式大小写）、`headingLevel`（`1`–`6`，默认 `3`）。分区标题是真标题——读屏用户靠它找到这一组——所以嵌得更深时是把它放到对的深度，不是取消它。
-`ListRow`: `label` `secondaryLabel` `value` `leading` `accessory` `href` `onSelect` `disclosure` `destructive` `disabled`。可导航行渲染为真实 `<a>` 或 `<button>`。
+`ListRow`: `label` `secondaryLabel` `value` `leading` `accessory` `href` `onSelect` `disclosure` `selected` `destructive` `disabled`。可导航行渲染为真实 `<a>` 或 `<button>`。
+
+**`selected` 表示「详情栏现在显示的是这一行」**——分栏视图的每一栏都要能说出这件事。它落成 `aria-current`：行是链接时是 `"page"`，是按钮时是 `"true"`（按钮不导航到某一页）。画出来是 `--lg-accent-fill` 配 `--lg-accent-contrast`，和 `OutlineView` 的选中透镜同一对颜色——同一个界面里不该有两种「选中」。
+
+**列表放进玻璃里会自己让开。** `insetGrouped` 和 `plain` 都声明了不透明底色，这在页面上对、在玻璃上不对：`plain` 画的是 `--lg-bg`（**页面**底色，深色下是纯黑），所以把导航列表放进 `Sidebar` 会在材质上砸出一个方角黑块。现在玻璃表面里的列表不画底色，圆角按容器算（`--lg-radius-container` 减 `--lg-concentric-inset`，和 `Card` / `Concentric` 是同一套机制，所以你给 `Sidebar` 传了自己的 `radius` 它也跟得上）。`GlassSheet` 和 `GlassAlert` 例外——它们是「被模态呈现的一页」，满屏时本来就是实色，上面的分组列表就该读成分组。
 
 **箭头是自动的**：能点的行默认带 `>`，带了 `accessory`（开关、步进器）的行不带——那个位置已经有东西了。`disclosure` 是用来推翻这个默认的，不是用来打开它的：同一个列表里既有带徽标的行又有不带的，看起来会像两种东西，这时显式传 `disclosure={false}` 统一掉。
 
