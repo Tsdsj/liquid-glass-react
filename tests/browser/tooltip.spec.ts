@@ -53,14 +53,38 @@ test('focus shows it at once, and Escape takes it away', async ({ page }) => {
   await expect(button).toBeFocused();
 });
 
-test('pressing the control dismisses it', async ({ page }) => {
+/**
+ * The rule, not the trigger: after you press the control, its help stays shut until you leave
+ * it and come back.
+ *
+ * Dismissing on press was all this asserted, and that passed on macOS while CI on Linux found
+ * the tooltip still on screen five seconds after the click. A press is followed by the control
+ * taking focus — and can be followed by the pointer being re-delivered to the same element —
+ * and either of those asked for the tooltip again while the hand had not moved. Which one it
+ * was on that runner is not something this repository can reproduce, so the component now
+ * answers the question the test asks here instead: it is shut, it stays shut while you are
+ * still on it, and leaving and returning is what brings it back.
+ */
+test('pressing the control dismisses it until you leave and come back', async ({ page }) => {
   await page.goto(PAGE);
   const button = page.getByRole('button', { name: '恢复默认设置' });
   await button.scrollIntoViewIfNeeded();
   await button.hover();
   await expect(page.locator(TIP)).toBeVisible({ timeout: 2000 });
+
   await button.click();
+  /* Focused on purpose: macOS and Linux disagree about whether a click focuses a button, and
+     the assertion should not depend on which of them is running it. */
+  await button.evaluate((node: HTMLElement) => node.focus());
   await expect(page.locator(TIP)).toBeHidden();
+
+  // Longer than the 600ms open delay, with the pointer still on the control.
+  await page.waitForTimeout(1200);
+  await expect(page.locator(TIP), 'it came back on its own while the pointer had not moved').toBeHidden();
+
+  await page.mouse.move(4, 4);
+  await button.hover();
+  await expect(page.locator(TIP), 'leaving and returning did not bring it back').toBeVisible({ timeout: 2000 });
 });
 
 test('only one is ever open', async ({ page }) => {

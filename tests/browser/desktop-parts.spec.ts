@@ -36,8 +36,14 @@ test('a path too long for its box folds in the middle and keeps the ends', async
   await page.goto('/#/components/path-bar');
   const bar = page.locator('#path-basic-demo .lg-path');
   await bar.scrollIntoViewIfNeeded();
+  /* Narrowed on purpose rather than trusting the demo's own width. The same path fits in that
+     width on Linux and does not on macOS — the fallback face is narrower — so the first
+     version of this measured the font and called it a fold, and went red the first time CI ran
+     it somewhere without PingFang. 320px cannot hold this path on any face. */
+  await page.locator('#path-basic-demo').evaluate(node => { (node as HTMLElement).style.width = '320px'; });
+  await page.waitForTimeout(400);
   const more = bar.getByRole('button', { name: 'More levels' });
-  await expect(more, 'nothing folded at the demo width').toBeVisible();
+  await expect(more, 'nothing folded at 320px').toBeVisible();
 
   /* The two levels that say what this is are the two that never go. */
   const labels = await bar.locator('.lg-path-label').allInnerTexts();
@@ -220,11 +226,23 @@ test('a path level is wide enough for a fingertip, and unchanged for a cursor', 
     const page = await context.newPage();
     await page.goto('/#/components/path-bar');
     await page.waitForTimeout(500);
-    const widths = await page.locator('#path-basic-demo').evaluate(node =>
-      [...node.querySelectorAll('.lg-path-level')].map(level => level.getBoundingClientRect().width));
-    expect(widths.length, 'no levels to measure').toBeGreaterThan(1);
-    for (const width of widths) {
+    const measured = await page.locator('#path-basic-demo').evaluate(node => {
+      const levels = [...node.querySelectorAll('.lg-path-level')];
+      return {
+        widths: levels.map(level => level.getBoundingClientRect().width),
+        declared: levels.map(level => parseFloat(getComputedStyle(level).minWidth)),
+      };
+    });
+    expect(measured.widths.length, 'no levels to measure').toBeGreaterThan(1);
+    for (const width of measured.widths) {
       expect(width, `a level is ${width.toFixed(0)}px wide for ${what}`).toBeGreaterThanOrEqual(floor);
+    }
+    /* The declared floor as well as the drawn width. A level whose *text* happens to be wide
+       enough passes the measurement on one machine and fails it on the next: 「设计」 is 24px
+       across on macOS and 23.23px on the Linux fallback face, which is how this defect reached
+       a release with a green suite behind it. What has to hold is that the floor is asked for. */
+    for (const declared of measured.declared) {
+      expect(declared, `a level declares a ${declared}px floor for ${what}`).toBeGreaterThanOrEqual(floor);
     }
     await context.close();
   }

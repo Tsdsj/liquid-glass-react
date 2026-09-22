@@ -1833,11 +1833,16 @@
    that only turns up when someone measures.
 
    The width needed the same treatment and only showed up once the audit measured a level with
-   a two-character name: 「设计」 came to 42px against a fingertip's 44. `--lg-hit-width` rather
-   than `--lg-hit-min` so a cursor gets nothing — every level already clears 24 — and the bar,
-   which collapses on measured width, simply folds one level sooner on a touch screen. */
+   a two-character name: 「设计」 came to 42px against a fingertip's 44. It was written as
+   `--lg-hit-width`, which is zero for a cursor, on the grounds that every level already clears
+   24 — measured, and only ever on macOS. The same level renders 23.23px on the Linux fallback
+   face, so the floor a cursor is owed was resting on a font. `--lg-hit-min` is the floor for
+   whatever is pointing: 24 with a cursor, 44 with a fingertip, on both axes. It is not the
+   button's `--lg-hit-width`, because that one avoids widening an *absolutely positioned*
+   region past its container; a level is in the flow, so a floor here only makes the bar —
+   which collapses on measured width — fold one level sooner. */
 .lg-path-level { display: inline-flex; align-items: center; gap: var(--lg-space-1);
-  min-width: var(--lg-hit-width); justify-content: center;
+  min-width: var(--lg-hit-min); justify-content: center;
   min-height: var(--lg-hit-min);
   padding: 2px var(--lg-space-2); border-radius: var(--lg-radius-xs); border: 0; background: transparent;
   color: var(--lg-label-secondary); text-decoration: none; cursor: default;

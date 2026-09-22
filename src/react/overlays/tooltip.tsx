@@ -64,9 +64,23 @@ export function Tooltip({
   const [hoverable, setHoverable] = useState(false);
   useEffect(() => { setHoverable(window.matchMedia('(hover: hover) and (pointer: fine)').matches); }, []);
 
+  /**
+   * Set when the control is pressed, cleared when the pointer leaves it or focus does.
+   *
+   * Dismissing on press is not enough on its own: a press is immediately followed by the
+   * control taking focus, and it can be followed by the pointer being re-delivered to the same
+   * element, either of which asks for the tooltip again while the finger has not moved. CI on
+   * Linux caught the result — pressing a control put its own help back on screen and left it
+   * there — and it could not be reproduced on macOS, so what is written here is the rule
+   * rather than the trigger: **after you press it, it stays shut until you leave and come
+   * back.** That is what the desktop platforms do, and it cannot be got wrong by whatever the
+   * next engine decides to dispatch after a click.
+   */
+  const pressed = useRef(false);
   const cancel = () => { if (timer.current) { clearTimeout(timer.current); timer.current = null; } };
   const hide = () => { cancel(); if (openTooltip === token.current) openTooltip = null; setOpen(false); };
   const show = (after: number) => {
+    if (pressed.current) return;
     cancel();
     timer.current = setTimeout(() => { openTooltip = token.current; setOpen(true); }, after);
   };
@@ -126,11 +140,23 @@ export function Tooltip({
        control nameless the rest of the time. */
     'aria-describedby': open ? cx(children.props['aria-describedby'], id) : children.props['aria-describedby'],
     onPointerEnter: event => { children.props.onPointerEnter?.(event); show(delay); },
-    onPointerLeave: event => { children.props.onPointerLeave?.(event); hide(); },
-    onPointerDown: event => { children.props.onPointerDown?.(event); hide(); },
-    // Focus is deliberate, so it does not wait: a keyboard user asked for this control.
-    onFocus: event => { children.props.onFocus?.(event); if (event.target === anchor.current) show(0); },
-    onBlur: event => { children.props.onBlur?.(event); hide(); },
+    onPointerLeave: event => { children.props.onPointerLeave?.(event); pressed.current = false; hide(); },
+    onPointerDown: event => { children.props.onPointerDown?.(event); pressed.current = true; hide(); },
+    /**
+     * Focus is deliberate, so it does not wait: a keyboard user asked for this control.
+     *
+     * `:focus-visible`, not focus — because a click focuses the control too, on every platform
+     * except the one this was written on. macOS does not focus a button on mouse-down, so
+     * `onFocus` there really did mean "tabbed here"; on Windows and Linux the click that had
+     * just dismissed the tooltip immediately focused the button and put it straight back on
+     * screen, where it sat until the pointer left. Found by CI on Linux, which is the only
+     * place in this project that runs a non-Apple pointer.
+     */
+    onFocus: event => {
+      children.props.onFocus?.(event);
+      if (event.target === anchor.current && anchor.current?.matches(':focus-visible')) show(0);
+    },
+    onBlur: event => { children.props.onBlur?.(event); pressed.current = false; hide(); },
   });
 
   return <>
